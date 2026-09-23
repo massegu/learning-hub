@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#214f36" />
+  <title>LEVEL UP · Learning Lab</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+</head>
+<body>
+  <div id="profileGate" class="profile-gate hidden" role="dialog" aria-modal="true">
+    <div class="profile-modal card">
+      <span class="pill">PERFIL</span>
+      <h2>Crea un perfil para empezar</h2>
+      <p>Cada persona tendrá su propio progreso, puntuación e historial. Cambiar de usuario ya no mezcla los resultados.</p>
+      <label>Nombre o alias<input id="newProfileName" maxlength="24" placeholder="Ej. Alex" /></label>
+      <label>Grupo de edad<select id="newProfileAge"><option value="primary">10-12 años</option><option value="middle">12-13 años</option><option value="teen">14+ años</option></select></label>
+      <button id="createProfileBtn" class="primary-btn">Crear perfil</button>
+    </div>
+  </div>
+
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-badge"><span>LU</span></div><div><h1>LEVEL UP</h1><p>Learning Lab</p></div></div>
+      <div class="profile-panel">
+        <small>PERFIL ACTIVO</small>
+        <select id="profileSelect"></select>
+        <div class="profile-actions"><button id="newProfileBtn" class="mini-btn">+ Nuevo</button><button id="deleteProfileBtn" class="mini-btn danger">Eliminar</button></div>
+      </div>
+      <nav id="navMenu" class="nav-menu"></nav>
+      <div class="sidebar-footer">
+        <div class="score-chip"><span>TOTAL</span><strong id="globalScore">0</strong><small>PTS</small></div>
+        <button id="resetProgressBtn" class="ghost-btn">Reiniciar este perfil</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div><p class="eyebrow" id="ageEyebrow">ENTRENAMIENTO PERSONALIZADO</p><h2 id="sectionTitle">Panel</h2></div>
+        <div class="topbar-actions"><div class="session-chip"><span id="activeProfileLabel">—</span></div><div class="session-chip">Sesión <strong id="sessionAttempts">0</strong></div><div class="streak-card">Racha <strong id="streakCount">0</strong> 🔥</div></div>
+      </header>
+
+      <section id="home" class="section active-section">
+        <div class="hero card"><div class="hero-copy"><span class="pill">LEARNING LAB</span><h3>Entrena habilidades. Sube de nivel.</h3><p id="heroText">Elige un área y completa retos adaptados a tu nivel.</p><button class="primary-btn jump-btn" id="heroStartBtn">Empezar →</button></div><div class="hero-visual" aria-hidden="true"><div class="pixel-world"><span class="pixel-block grass b1"></span><span class="pixel-block grass b2"></span><span class="pixel-block dirt b3"></span><span class="pixel-block stone b4"></span><span class="pixel-block grass b5"></span><span class="pixel-block dirt b6"></span></div><div class="hero-level">UP</div><span>TRAIN</span><span>LEVEL UP</span></div></div>
+        <div class="dashboard-grid"><div class="stat card"><span>PTS</span><div><small>Puntos</small><strong id="homePoints">0</strong></div></div><div class="stat card"><span>✓</span><div><small>Aciertos</small><strong id="homeCorrect">0</strong></div></div><div class="stat card"><span>%</span><div><small>Precisión</small><strong id="homeAccuracy">0%</strong></div></div><div class="stat card"><span>#</span><div><small>Ejercicios</small><strong id="homeAttempts">0</strong></div></div></div>
+        <div class="section-grid two-col"><div class="card panel-card"><div class="card-heading"><div><p class="eyebrow">RUTA ACTUAL</p><h3>Áreas de entrenamiento</h3></div><span class="muted">Nivel adaptativo 1-3</span></div><div id="homeLevels" class="level-list"></div></div><div class="card panel-card focus-card"><p class="eyebrow">OBJETIVO</p><h3 id="recommendedTitle">Entrenamiento recomendado</h3><p id="recommendedText">Completa algunos ejercicios para recibir una recomendación.</p><button id="recommendedBtn" class="secondary-btn">Ir al área →</button></div></div>
+      </section>
+
+      <section id="exercise" class="section">
+        <div class="section-intro card block-banner"><div><span class="pill" id="exercisePill">ÁREA</span><h3 id="exerciseHeading">Entrenamiento</h3><p id="exerciseDescription">Retos adaptativos.</p></div><div class="level-badge">Nivel <strong id="exerciseLevel">1</strong></div></div>
+        <div id="languageModeSwitch" class="mode-switch language-switch card hidden"><button class="language-mode-btn active" data-mode="grammar">Gramática</button><button class="language-mode-btn" data-mode="spelling">Ortografía</button><button class="language-mode-btn" data-mode="writing">Escritura</button></div>
+        <div class="exercise-layout"><div class="exercise-card card"><div class="exercise-meta"><span id="exerciseCounter">Ejercicio 1</span><span class="mini-score"><b id="subjectScore">0</b> pts</span></div><div id="exerciseTopic" class="language-topic hidden"></div><div id="exerciseVisual"></div><div id="exercisePrompt" class="prompt"></div><div id="exerciseOptions" class="options-grid"></div><div id="textAnswerArea" class="text-answer-area hidden"><textarea id="textAnswerInput" rows="4" maxlength="500" placeholder="Escribe aquí tu respuesta..."></textarea><button id="textAnswerCheck" class="primary-btn">Ver una respuesta modelo</button></div><div id="selfAssessment" class="self-assessment hidden"><p>Compara tu respuesta con el modelo:</p><div id="modelAnswer" class="explanation"></div><div class="self-buttons"><button data-self="true" class="secondary-btn">Lo he conseguido</button><button data-self="false" class="ghost-light-btn">Necesito practicar</button></div></div><div id="exerciseFeedback" class="feedback"></div><div id="exerciseExplanation" class="explanation hidden"></div><button id="exerciseNext" class="primary-btn hidden">Siguiente →</button></div><aside class="card side-help pixel-note"><p class="eyebrow">PROGRESIÓN</p><h4>Sin repeticiones innecesarias</h4><p id="poolStatus">El banco prioriza ejercicios que todavía no has visto.</p><p class="muted">Cuando completes todos los ejercicios de un banco, se abre un nuevo ciclo.</p></aside></div>
+      </section>
+
+      <section id="division" class="section">
+        <div class="section-intro card"><div><span class="pill">MATEMÁTICAS</span><h3>Divisiones</h3><p>Resultado directo o resolución guiada paso a paso.</p></div><div class="level-badge">Nivel <strong id="divisionLevel">1</strong></div></div>
+        <div class="mode-switch card"><button class="division-mode-btn active" data-div-mode="quick">Modo resultado</button><button class="division-mode-btn" data-div-mode="guided">Paso a paso</button></div>
+        <div id="divisionQuick" class="exercise-layout"><div class="exercise-card card"><div class="exercise-meta"><span id="divisionCounter">Ejercicio 1</span><span class="mini-score"><b id="divisionScore">0</b> pts</span></div><div id="divisionPrompt" class="prompt math-prompt"></div><div class="division-answer-row"><label>Cociente<input id="divisionQuotient" type="number" /></label><label>Resto<input id="divisionRemainder" type="number" /></label></div><button id="divisionCheck" class="primary-btn">Comprobar</button><div id="divisionFeedback" class="feedback"></div><button id="divisionNext" class="primary-btn hidden">Siguiente →</button></div><aside class="card side-help pixel-note"><p class="eyebrow">COMPROBACIÓN</p><div class="formula">divisor × cociente + resto = dividendo</div><p>El resto siempre debe ser menor que el divisor.</p></aside></div>
+        <div id="divisionGuided" class="guided-grid hidden"><div class="exercise-card card"><div class="exercise-meta"><span>División guiada</span><span class="mini-score">Paso <b id="guidedStepNumber">1</b></span></div><div id="guidedOperation" class="long-division"></div><div id="guidedInstruction" class="guided-instruction"></div><div class="guided-answer-row"><input id="guidedAnswer" type="number" /><button id="guidedCheck" class="primary-btn">Comprobar paso</button></div><div id="guidedFeedback" class="feedback"></div><button id="guidedNext" class="primary-btn hidden">Nueva división →</button></div><aside class="card side-help pixel-note"><p class="eyebrow">PISTA</p><h4>Divide → multiplica → resta → baja</h4><p>La app divide la operación en decisiones pequeñas.</p></aside></div>
+      </section>
+
+      <section id="progress" class="section"><div class="section-intro card"><div><span class="pill">PROGRESO</span><h3 id="progressProfileTitle">Evolución</h3><p>Los resultados de este perfil se guardan por separado. Puedes exportarlos en CSV para conservar un histórico fuera del navegador.</p></div><div class="progress-export-actions"><button id="exportDetailCsv" class="secondary-btn">Descargar CSV detallado</button><button id="exportSessionCsv" class="secondary-btn">Descargar evolución por sesiones</button></div></div><div id="progressCards" class="dashboard-grid progress-grid"></div><div class="section-grid two-col"><div class="card panel-card"><p class="eyebrow">ÚLTIMOS RESULTADOS</p><div id="recentResults"></div></div><div class="card panel-card"><p class="eyebrow">COBERTURA DE BANCOS</p><div id="bankCoverage"></div></div></div><div class="card panel-card session-panel"><div class="card-heading"><div><p class="eyebrow">EVOLUCIÓN POR SESIONES</p><h3>Precisión y volumen de práctica</h3></div><span class="muted">Cada entrada corresponde a una sesión de uso.</span></div><div id="sessionEvolution" class="session-evolution"></div></div></section>
+
+      <section id="homework" class="section"><div class="section-intro card"><div><span class="pill">FICHAS</span><h3>Fichas para casa</h3><p>Genera una o varias versiones. Las versiones de un mismo lote intentan no repetir ejercicios entre sí.</p></div></div><div class="worksheet-toolbar card"><label>Número de versiones<select id="worksheetCount"><option value="1">1 ficha</option><option value="2">2 fichas</option><option value="3" selected>3 fichas</option><option value="4">4 fichas</option><option value="5">5 fichas</option></select></label><span>Con 2 o más versiones se descarga un ZIP con varios .docx.</span></div><div id="homeworkGrid" class="homework-grid"></div><div id="docxStatus" class="docx-status"></div></section>
+    </main>
+  </div>
+
+  <script src="data/primary.js"></script><script src="data/middle.js"></script><script src="data/teen.js"></script><script src="js/storage.js"></script><script src="js/docx.js"></script><script src="js/app.js"></script>
+</body>
+</html>
