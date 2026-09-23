@@ -1,3 +1,10 @@
+# Learning Lab V6
+
+Correcciones de estabilidad sobre V5:
+- Reinicio real e independiente del progreso por perfil.
+- La respuesta modelo se puede visualizar aunque el campo de respuesta esté vacío.
+- El botón de respuesta modelo se restablece correctamente en cada ejercicio abierto.
+
 # LEVEL UP · Learning Lab V5
 
 Aplicación web estática para práctica educativa y seguimiento individual.

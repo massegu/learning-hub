@@ -55,8 +55,8 @@
   function openProfileGate(){ $('#profileGate').classList.remove('hidden');$('#newProfileName').focus(); }
   function closeProfileGate(){ $('#profileGate').classList.add('hidden'); }
   function createProfile(){const name=$('#newProfileName').value.trim();if(!name){$('#newProfileName').focus();return;}const p=ProfileStore.create(name,$('#newProfileAge').value);$('#newProfileName').value='';closeProfileGate();activateProfile(p.id);}
-  function activateProfile(id){
-    save();const p=ProfileStore.list().find(x=>x.id===id);if(!p){profile=null;openProfileGate();return;}ProfileStore.setCurrent(id);profile=p;data=window.LEARNING_DATA[p.ageBand];state=normalizeState(ProfileStore.loadProgress(id));subject=data.subjects[0];mode='grammar';currentItem=null;counter=0;buildProfiles();buildNavigation();buildHomework();switchSection('home');updateGlobalUI();
+  function activateProfile(id,options={}){
+    if(!options.skipSave)save();const p=ProfileStore.list().find(x=>x.id===id);if(!p){profile=null;openProfileGate();return;}ProfileStore.setCurrent(id);profile=p;data=window.LEARNING_DATA[p.ageBand];state=normalizeState(ProfileStore.loadProgress(id));subject=data.subjects[0];mode='grammar';currentItem=null;counter=0;buildProfiles();buildNavigation();buildHomework();switchSection('home');updateGlobalUI();
   }
 
   function buildNavigation(){
@@ -79,7 +79,7 @@
     if(currentItem.visual)$('#exerciseVisual').innerHTML=`<div class="shape-visual">${currentItem.visual}</div>`;if(currentItem.angle!==undefined)$('#exerciseVisual').innerHTML=renderAngle(currentItem.angle);
     if(subject==='reading'||subject==='middleReading')$('#exerciseVisual').innerHTML=`<div class="reading-passage"><h4>${escapeHtml(currentItem.title)}</h4><p>${escapeHtml(currentItem.text)}</p></div>`;
     $('#exercisePrompt').textContent=currentItem.q;$('#exerciseLevel').textContent=state.levels[subject]||1;$('#subjectScore').textContent=state.scores[subject]||0;
-    if(currentItem.type==='self'){ $('#textAnswerArea').classList.remove('hidden');$('#textAnswerInput').value=''; }
+    if(currentItem.type==='self'){ $('#textAnswerArea').classList.remove('hidden');$('#textAnswerInput').value='';$('#textAnswerCheck').disabled=false;$('#textAnswerCheck').textContent='Ver una respuesta modelo'; }
     else renderOptions(currentItem);
     updatePoolStatus();
   }
@@ -88,7 +88,7 @@
   function showFeedback(correct,pts,why){const f=$('#exerciseFeedback');f.textContent=correct?`Correcto · +${pts} puntos`:`No esta vez. Respuesta: ${currentItem.a||'revisa el modelo'}`;f.className='feedback '+(correct?'ok':'bad');if(why){$('#exerciseExplanation').textContent=why;$('#exerciseExplanation').classList.remove('hidden');}$('#exerciseNext').classList.remove('hidden');}
   $('#exerciseNext').onclick=showNewExercise;
   $$('.language-mode-btn').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;$$('.language-mode-btn').forEach(x=>x.classList.toggle('active',x===b));counter=0;showNewExercise();});
-  $('#textAnswerCheck').onclick=()=>{if(!$('#textAnswerInput').value.trim())return;$('#modelAnswer').textContent=currentItem.sample||currentItem.a||'Revisa si tu respuesta responde a la pregunta con claridad.';$('#selfAssessment').classList.remove('hidden');$('#textAnswerCheck').disabled=true;};
+  $('#textAnswerCheck').onclick=()=>{const own=$('#textAnswerInput').value.trim();$('#modelAnswer').textContent=currentItem.sample||currentItem.a||'Revisa si tu respuesta responde a la pregunta con claridad.';$('#selfAssessment').classList.remove('hidden');const intro=$('#selfAssessment p');if(intro)intro.textContent=own?'Compara tu respuesta con el modelo:':'Aquí tienes una posible respuesta. Después indica si sabías resolverlo o necesitas practicar:';$('#textAnswerCheck').disabled=true;$('#textAnswerCheck').textContent='Modelo mostrado';};
   $$('.self-buttons button').forEach(b=>b.onclick=()=>{if(answered)return;answered=true;const correct=b.dataset.self==='true';const pts=saveResult(subject,correct,currentItem.id,subject==='language'?mode:'self');$('#textAnswerCheck').disabled=false;showFeedback(correct,pts,currentItem.why);});
   function updatePoolStatus(){const level=state.levels[subject]||1,key=bankKey(subject,subject==='language'?mode:null,level),items=itemsFor(subject,subject==='language'?mode:null),seen=(state.seen[key]||[]).length;$('#poolStatus').textContent=`Banco nivel ${level}: ${Math.min(seen,items.length)} de ${items.length} vistos en este ciclo.`;}
 
@@ -147,7 +147,7 @@
 
   $('#createProfileBtn').onclick=createProfile;$('#newProfileName').addEventListener('keydown',e=>{if(e.key==='Enter')createProfile()});$('#newProfileBtn').onclick=openProfileGate;$('#profileSelect').onchange=e=>activateProfile(e.target.value);
   $('#deleteProfileBtn').onclick=()=>{if(!profile)return;if(confirm(`¿Eliminar el perfil de ${profile.name} y todo su progreso?`)){ProfileStore.remove(profile.id);const list=ProfileStore.list();if(list.length)activateProfile(list[0].id);else{profile=null;buildProfiles();openProfileGate();}}};
-  $('#resetProgressBtn').onclick=()=>{if(profile&&confirm(`¿Reiniciar solo el progreso de ${profile.name}?`)){ProfileStore.resetProgress(profile.id);activateProfile(profile.id)}};
+  $('#resetProgressBtn').onclick=()=>{if(!profile)return;if(confirm(`¿Reiniciar todo el progreso de ${profile.name}? Se borrarán puntos, niveles, historial y ejercicios vistos de este perfil.`)){const id=profile.id;ProfileStore.resetProgress(id);state=blankState();currentItem=null;counter=0;divItem=null;divCount=0;guided=null;save();buildNavigation();buildHomework();switchSection('home');updateGlobalUI();alert(`El progreso de ${profile.name} se ha reiniciado correctamente.`);}};
 
   window.addEventListener('beforeunload',save);
   const list=ProfileStore.list();const id=ProfileStore.currentId();if(list.length)activateProfile(list.some(p=>p.id===id)?id:list[0].id);else{buildProfiles();openProfileGate();}
