@@ -16,7 +16,7 @@
       <h2>Crea un perfil para empezar</h2>
       <p>Cada persona tendrá su propio progreso, puntuación e historial. Cambiar de usuario ya no mezcla los resultados.</p>
       <label>Nombre o alias<input id="newProfileName" maxlength="24" placeholder="Ej. Alex" /></label>
-      <label>Grupo de edad<select id="newProfileAge"><option value="primary">10-12 años</option><option value="middle">12-13 años</option><option value="teen">14+ años</option></select></label>
+      <label>Grupo de edad<select id="newProfileAge"><option value="primary">10-12 años</option><option value="middle">12-13 años</option><option value="teen">14-17 años</option></select></label>
       <button id="createProfileBtn" class="primary-btn">Crear perfil</button>
     </div>
   </div>
@@ -61,12 +61,27 @@
         <div id="divisionGuided" class="guided-grid hidden"><div class="exercise-card card"><div class="exercise-meta"><span>División guiada</span><span class="mini-score">Paso <b id="guidedStepNumber">1</b></span></div><div id="guidedOperation" class="long-division"></div><div id="guidedInstruction" class="guided-instruction"></div><div class="guided-answer-row"><input id="guidedAnswer" type="number" /><button id="guidedCheck" class="primary-btn">Comprobar paso</button></div><div id="guidedFeedback" class="feedback"></div><button id="guidedNext" class="primary-btn hidden">Nueva división →</button></div><aside class="card side-help pixel-note"><p class="eyebrow">PISTA</p><h4>Divide → multiplica → resta → baja</h4><p>La app divide la operación en decisiones pequeñas.</p></aside></div>
       </section>
 
+      <section id="games" class="section">
+        <div class="section-intro card block-banner"><div><span class="pill">JUEGOS</span><h3>Game Lab</h3><p>Retos cortos e interactivos que mezclan lengua, matemáticas, inglés y razonamiento.</p></div><div class="level-badge">Nivel <strong id="gamesLevel">1</strong></div></div>
+        <div class="game-layout"><div class="exercise-card card"><div class="exercise-meta"><span id="gameCounter">Juego 1</span><span class="mini-score"><b id="gamesScore">0</b> pts</span></div><div id="gameTopic" class="language-topic"></div><div id="gamePrompt" class="prompt"></div><div id="gameArea" class="game-area"></div><div id="gameFeedback" class="feedback"></div><button id="gameNext" class="primary-btn hidden">Siguiente juego →</button></div><aside class="card side-help pixel-note"><p class="eyebrow">GAME LAB</p><h4>60 retos por grupo de edad</h4><p>Alterna respuestas rápidas, ordenación y juegos de parejas.</p><p class="muted">El progreso se registra igual que en el resto de áreas.</p></aside></div>
+      </section>
+
       <section id="progress" class="section"><div class="section-intro card"><div><span class="pill">PROGRESO</span><h3 id="progressProfileTitle">Evolución</h3><p>Los resultados de este perfil se guardan por separado. Puedes exportarlos en CSV para conservar un histórico fuera del navegador.</p></div><div class="progress-export-actions"><button id="exportDetailCsv" class="secondary-btn">Descargar CSV detallado</button><button id="exportSessionCsv" class="secondary-btn">Descargar evolución por sesiones</button></div></div><div id="progressCards" class="dashboard-grid progress-grid"></div><div class="section-grid two-col"><div class="card panel-card"><p class="eyebrow">ÚLTIMOS RESULTADOS</p><div id="recentResults"></div></div><div class="card panel-card"><p class="eyebrow">COBERTURA DE BANCOS</p><div id="bankCoverage"></div></div></div><div class="card panel-card session-panel"><div class="card-heading"><div><p class="eyebrow">EVOLUCIÓN POR SESIONES</p><h3>Precisión y volumen de práctica</h3></div><span class="muted">Cada entrada corresponde a una sesión de uso.</span></div><div id="sessionEvolution" class="session-evolution"></div></div></section>
 
-      <section id="homework" class="section"><div class="section-intro card"><div><span class="pill">FICHAS</span><h3>Fichas para casa</h3><p>Genera una o varias versiones. Las versiones de un mismo lote intentan no repetir ejercicios entre sí.</p></div></div><div class="worksheet-toolbar card"><label>Número de versiones<select id="worksheetCount"><option value="1">1 ficha</option><option value="2">2 fichas</option><option value="3" selected>3 fichas</option><option value="4">4 fichas</option><option value="5">5 fichas</option></select></label><span>Con 2 o más versiones se descarga un ZIP con varios .docx.</span></div><div id="homeworkGrid" class="homework-grid"></div><div id="docxStatus" class="docx-status"></div></section>
+      <section id="homework" class="section">
+        <div class="section-intro card"><div><span class="pill">FICHAS</span><h3>Crear paquetes de fichas</h3><p>Selecciona exactamente qué contenidos quieres trabajar y genera una o varias versiones diferentes en DOCX.</p></div></div>
+        <div class="worksheet-builder card">
+          <div class="worksheet-controls"><label>Número de versiones<select id="worksheetCount"><option value="1">1 ficha</option><option value="2">2 fichas</option><option value="3" selected>3 fichas</option><option value="4">4 fichas</option><option value="5">5 fichas</option></select></label><label>Ejercicios por ficha<select id="worksheetQuestions"><option value="10">10</option><option value="12" selected>12</option><option value="15">15</option><option value="20">20</option></select></label></div>
+          <div class="worksheet-heading-row"><div><p class="eyebrow">CONTENIDOS</p><h4>Elige una o varias áreas</h4></div><div class="worksheet-quick-actions"><button id="worksheetAll" class="mini-btn">Seleccionar todo</button><button id="worksheetNone" class="mini-btn">Limpiar</button></div></div>
+          <div id="homeworkOptions" class="homework-options"></div>
+          <button id="generateWorksheetsBtn" class="primary-btn worksheet-generate">Generar fichas seleccionadas</button>
+          <p class="muted worksheet-note">Con 2 o más versiones se descarga un ZIP con varios .docx. El generador intenta evitar repeticiones dentro del mismo lote.</p>
+        </div>
+        <div id="docxStatus" class="docx-status"></div>
+      </section>
     </main>
   </div>
 
-  <script src="data/primary.js"></script><script src="data/middle.js"></script><script src="data/teen.js"></script><script src="js/storage.js"></script><script src="js/docx.js"></script><script src="js/app.js"></script>
+  <script src="data/primary.js"></script><script src="data/middle.js"></script><script src="data/teen.js"></script><script src="data/english.js"></script><script src="data/literacy.js"></script><script src="data/games.js"></script><script src="js/storage.js"></script><script src="js/docx.js"></script><script src="js/app.js"></script>
 </body>
 </html>

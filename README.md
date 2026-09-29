@@ -1,38 +1,39 @@
-# Learning Lab V6
+# LEVEL UP · Learning Lab V7
 
-Correcciones de estabilidad sobre V5:
-- Reinicio real e independiente del progreso por perfil.
-- La respuesta modelo se puede visualizar aunque el campo de respuesta esté vacío.
-- El botón de respuesta modelo se restablece correctamente en cada ejercicio abierto.
-
-# LEVEL UP · Learning Lab V5
-
-Aplicación web estática para práctica educativa y seguimiento individual.
+Aplicación web estática para práctica educativa y seguimiento por perfiles.
 
 ## Grupos de edad
-- 10-12 años: Geometría, Lengua, Divisiones y Lectura.
-- 12-13 años: Lengua, Matemáticas y Comprensión lectora con bancos propios.
-- 14+ años: Lengua, Matemáticas y Social Lab (habilidades sociales y teoría de la mente).
 
-## Seguimiento
-Cada perfil conserva por separado puntuación, niveles, historial y ejercicios vistos en `localStorage` del navegador.
-En Progreso hay dos exportaciones:
-- CSV detallado: una fila por ejercicio.
-- CSV de evolución: una fila por sesión con precisión global y por área.
+- 10-12 años
+- 12-13 años
+- 14-17 años
 
-Los CSV usan punto y coma como separador y UTF-8 con BOM para facilitar la apertura en Excel en configuración española.
+## Novedades V7
 
-Importante: localStorage pertenece al navegador y dispositivo usados. Para un histórico duradero, conviene descargar periódicamente el CSV. La app conserva hasta 5.000 registros de ejercicios por perfil.
+- English Lab para los tres grupos de edad: 60 ejercicios por grupo, con dificultad gradual y tareas de comprensión, producción, interacción, gramática y vocabulario.
+- Lectura + Escritura para los tres grupos: 60 ejercicios por grupo, con textos y tareas sobre temas actuales como gaming, deporte, IA, redes, música, privacidad, estudio y vida digital.
+- Game Lab: 60 retos interactivos por grupo de edad, repartidos entre respuesta rápida, ordenación y emparejado.
+- Fichas DOCX reorganizadas: selección de una o varias áreas, 10/12/15/20 ejercicios por ficha y hasta 5 versiones por lote.
+- Se mantiene el seguimiento por perfil, CSV, dificultad adaptativa, bancos anti-repetición y las áreas existentes.
 
 ## Estructura
+
 - `index.html`
 - `css/styles.css`
 - `data/primary.js`
 - `data/middle.js`
 - `data/teen.js`
+- `data/english.js`
+- `data/literacy.js`
+- `data/games.js`
 - `js/storage.js`
 - `js/docx.js`
 - `js/app.js`
 
-## Publicación en GitHub Pages
-Sube el contenido de esta carpeta a la raíz del repositorio y conserva la publicación desde `main` / `(root)`. GitHub Pages volverá a desplegar automáticamente.
+## Uso
+
+Abre `index.html` o publícalo mediante GitHub Pages. La generación de DOCX y ZIP requiere conexión a internet porque las librerías `docx` y `JSZip` se cargan desde CDN.
+
+## Actualización en GitHub Desktop
+
+Copia el contenido de esta versión dentro de la carpeta local del repositorio, conservando `.git` y `.gitattributes`. Después haz `Commit to main` y `Push origin`. GitHub Pages se actualizará sobre la misma URL.
