@@ -82,7 +82,7 @@
   extras.forEach((x,i)=>add(i<3?1:i<7?2:3,x[0],x[1],x[2],x[3],'La respuesta busca separar hechos, interpretaciones y objetivos sociales.'));
   social.splice(60);
 
-  // Para demostrar escalabilidad, 14+ incluye también Lengua y Matematicas con bancos generados de 60 cada uno.
+  // Para demostrar escalabilidad, 14-17 incluye también Lengua y Matematicas con bancos generados de 60 cada uno.
   const teenLanguage=[];
   const registers=[
     ['Escribe un mensaje adecuado para pedir a un profesor que aclare la fecha de una entrega.','Buenos días, ¿podría confirmar la fecha de entrega, por favor?'],
@@ -133,5 +133,5 @@
     else if(i%3===1){const x=3+(i%11),m=2+(i%5),b=4+(i%9),res=m*x+b;teenMath.push({id:`teen-math-${i}`,level,q:`Resuelve: ${m}x + ${b} = ${res}`,opts:[String(x),String(x+1),String(Math.max(0,x-1)),String(x+2)],a:String(x)});}
     else {const a=2+(i%7),b=3+(i%9),c=a*b;teenMath.push({id:`teen-math-${i}`,level,q:`Si ${a} entradas cuestan ${c*2} €, ¿cuanto cuesta una entrada?`,opts:[`${(c*2)/a} €`,`${c} €`,`${a*2} €`,`${b} €`],a:`${(c*2)/a} €`});}
   }
-  D.teen={label:'14+ años',subjects:['teenLanguage','teenMath','social'],teenLanguage,teenMath,social};
+  D.teen={label:'14-17 años',subjects:['teenLanguage','teenMath','social'],teenLanguage,teenMath,social};
 })();
