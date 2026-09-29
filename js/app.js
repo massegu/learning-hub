@@ -9,11 +9,15 @@
     middleLanguage:{name:'Lengua 12-13',icon:'Aa',desc:'Gramática, ortografía, escritura y precisión lingüística.'},
     middleMath:{name:'Matemáticas 12-13',icon:'∑',desc:'Porcentajes, fracciones, ecuaciones, proporcionalidad y geometría.'},
     middleReading:{name:'Lectura 12-13',icon:'▤',desc:'Comprensión literal, inferencias y uso de evidencias.'},
-    teenLanguage:{name:'Lengua 14+',icon:'Aa',desc:'Registro, argumentación y precisión lingüística.'},
-    teenMath:{name:'Matemáticas 14+',icon:'∑',desc:'Porcentajes, ecuaciones y proporcionalidad.'},
-    social:{name:'Social Lab',icon:'◎',desc:'Habilidades sociales y teoría de la mente.'}
+    teenLanguage:{name:'Lengua 14-17',icon:'Aa',desc:'Registro, argumentación y precisión lingüística.'},
+    teenMath:{name:'Matemáticas 14-17',icon:'∑',desc:'Porcentajes, ecuaciones y proporcionalidad.'},
+    social:{name:'Social Lab',icon:'◎',desc:'Habilidades sociales y teoría de la mente.'},
+    english:{name:'English Lab',icon:'EN',desc:'Inglés comunicativo, gramática, lectura y escritura ajustados al grupo de edad.'},
+    literacy:{name:'Lectura + Escritura',icon:'✎',desc:'Comprensión, pensamiento crítico y escritura con temas actuales.'},
+    games:{name:'Game Lab',icon:'◆',desc:'Juegos didácticos interactivos de respuesta rápida, ordenación y parejas.'}
   };
   let profile=null, data=null, subject=null, mode='grammar', currentItem=null, counter=0, answered=false, guided=null;
+  let gameCurrent=null, gameCount=0, gameAnswered=false, gameOrderPicked=[], gameMatchState=null;
   let state=null;
 
   function blankState(){
@@ -49,7 +53,7 @@
   function nextItem(sub,submode){const level=state.levels[sub]||1;const items=itemsFor(sub,submode);return pickUnseen(bankKey(sub,submode,level),items)}
 
   function buildProfiles(){
-    const list=ProfileStore.list(),sel=$('#profileSelect');const ageLabel=a=>a==='teen'?'14+':a==='middle'?'12-13':'10-12';sel.innerHTML=list.map(p=>`<option value="${p.id}">${escapeHtml(p.name)} · ${ageLabel(p.ageBand)}</option>`).join('');if(profile)sel.value=profile.id;
+    const list=ProfileStore.list(),sel=$('#profileSelect');const ageLabel=a=>a==='teen'?'14-17':a==='middle'?'12-13':'10-12';sel.innerHTML=list.map(p=>`<option value="${p.id}">${escapeHtml(p.name)} · ${ageLabel(p.ageBand)}</option>`).join('');if(profile)sel.value=profile.id;
   }
   function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
   function openProfileGate(){ $('#profileGate').classList.remove('hidden');$('#newProfileName').focus(); }
@@ -60,11 +64,11 @@
   }
 
   function buildNavigation(){
-    const nav=$('#navMenu');const items=[['home','⌂','Inicio']];data.subjects.forEach(s=>items.push([s==='division'?'division':'exercise',SUBJECT_META[s].icon,SUBJECT_META[s].name,s]));items.push(['progress','↗','Progreso'],['homework','⇩','Fichas']);
+    const nav=$('#navMenu');const items=[['home','⌂','Inicio']];data.subjects.forEach(s=>items.push([s==='division'?'division':s==='games'?'games':'exercise',SUBJECT_META[s].icon,SUBJECT_META[s].name,s]));items.push(['progress','↗','Progreso'],['homework','⇩','Fichas']);
     nav.innerHTML=items.map((x,i)=>`<button class="nav-item ${i===0?'active':''}" data-section="${x[0]}" ${x[3]?`data-subject="${x[3]}"`:''}>${x[1]} ${x[2]}</button>`).join('');
-    $$('.nav-item').forEach(b=>b.onclick=()=>{if(b.dataset.subject){subject=b.dataset.subject;if(subject==='division')switchSection('division');else{switchSection('exercise');setupExerciseSubject();}}else switchSection(b.dataset.section)});
+    $$('.nav-item').forEach(b=>b.onclick=()=>{if(b.dataset.subject){subject=b.dataset.subject;if(subject==='division'){switchSection('division');newDivision();}else if(subject==='games'){switchSection('games');setupGames();}else{switchSection('exercise');setupExerciseSubject();}}else switchSection(b.dataset.section)});
   }
-  const titles={home:'Panel',exercise:'Entrenamiento',division:'Divisiones',progress:'Progreso',homework:'Fichas para casa'};
+  const titles={home:'Panel',exercise:'Entrenamiento',division:'Divisiones',games:'Game Lab',progress:'Progreso',homework:'Fichas para casa'};
   function switchSection(id){$$('.section').forEach(s=>s.classList.remove('active-section'));$('#'+id).classList.add('active-section');$$('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.section===id&&(!b.dataset.subject||b.dataset.subject===subject)));$('#sectionTitle').textContent=id==='exercise'?SUBJECT_META[subject].name:titles[id];if(id==='progress')renderProgress();}
 
   function setupExerciseSubject(){
@@ -77,7 +81,7 @@
     answered=false;currentItem=nextItem(subject,subject==='language'?mode:null);if(!currentItem){$('#exercisePrompt').textContent='No hay ejercicios disponibles en este nivel.';return;}counter++;$('#exerciseCounter').textContent=`Ejercicio ${counter}`;$('#exerciseFeedback').textContent='';$('#exerciseFeedback').className='feedback';$('#exerciseExplanation').classList.add('hidden');$('#exerciseNext').classList.add('hidden');$('#selfAssessment').classList.add('hidden');$('#textAnswerArea').classList.add('hidden');$('#exerciseOptions').innerHTML='';$('#exerciseVisual').innerHTML='';
     const topic=currentItem.topic||currentItem.cat||'';$('#exerciseTopic').textContent=topic;$('#exerciseTopic').classList.toggle('hidden',!topic);
     if(currentItem.visual)$('#exerciseVisual').innerHTML=`<div class="shape-visual">${currentItem.visual}</div>`;if(currentItem.angle!==undefined)$('#exerciseVisual').innerHTML=renderAngle(currentItem.angle);
-    if(subject==='reading'||subject==='middleReading')$('#exerciseVisual').innerHTML=`<div class="reading-passage"><h4>${escapeHtml(currentItem.title)}</h4><p>${escapeHtml(currentItem.text)}</p></div>`;
+    if(currentItem.title&&currentItem.text)$('#exerciseVisual').innerHTML=`<div class="reading-passage"><h4>${escapeHtml(currentItem.title)}</h4><p>${escapeHtml(currentItem.text)}</p></div>`;
     $('#exercisePrompt').textContent=currentItem.q;$('#exerciseLevel').textContent=state.levels[subject]||1;$('#subjectScore').textContent=state.scores[subject]||0;
     if(currentItem.type==='self'){ $('#textAnswerArea').classList.remove('hidden');$('#textAnswerInput').value='';$('#textAnswerCheck').disabled=false;$('#textAnswerCheck').textContent='Ver una respuesta modelo'; }
     else renderOptions(currentItem);
@@ -103,10 +107,44 @@
   $('#guidedCheck').onclick=()=>{const v=Number($('#guidedAnswer').value),s=guided.steps[guided.step];if(v!==s.ans){$('#guidedFeedback').textContent='Revisa este paso e inténtalo otra vez.';$('#guidedFeedback').className='feedback bad';return;}$('#guidedFeedback').textContent='Paso correcto.';$('#guidedFeedback').className='feedback ok';if(guided.step<guided.steps.length-1){guided.step++;setTimeout(renderGuided,350)}else{saveResult('division',true,guided.item.id,'guided');$('#guidedCheck').disabled=true;$('#guidedNext').classList.remove('hidden');}};
   $('#guidedNext').onclick=newGuided;
 
-  function updateGlobalUI(){if(!profile||!state)return;const total=Object.values(state.scores).reduce((a,b)=>a+b,0);$('#globalScore').textContent=total;$('#homePoints').textContent=total;$('#homeCorrect').textContent=state.totalCorrect;$('#homeAttempts').textContent=state.totalAttempts;$('#homeAccuracy').textContent=(state.totalAttempts?Math.round(state.totalCorrect/state.totalAttempts*100):0)+'%';$('#streakCount').textContent=state.streak;$('#sessionAttempts').textContent=state.session.attempts;$('#activeProfileLabel').textContent=profile.name;$('#ageEyebrow').textContent=`${data.label} · entrenamiento personalizado`;$('#heroText').textContent=profile.ageBand==='teen'?'Lengua, matemáticas y situaciones sociales actuales con dificultad gradual.':profile.ageBand==='middle'?'Lengua, matemáticas y lectura adaptadas al paso a Secundaria.':'Geometría, lengua, divisiones y lectura con dificultad adaptativa.';renderHomeLevels();}
+  function updateGlobalUI(){if(!profile||!state)return;const total=Object.values(state.scores).reduce((a,b)=>a+b,0);$('#globalScore').textContent=total;$('#homePoints').textContent=total;$('#homeCorrect').textContent=state.totalCorrect;$('#homeAttempts').textContent=state.totalAttempts;$('#homeAccuracy').textContent=(state.totalAttempts?Math.round(state.totalCorrect/state.totalAttempts*100):0)+'%';$('#streakCount').textContent=state.streak;$('#sessionAttempts').textContent=state.session.attempts;$('#activeProfileLabel').textContent=profile.name;$('#ageEyebrow').textContent=`${data.label} · entrenamiento personalizado`;$('#heroText').textContent=profile.ageBand==='teen'?'Lengua, matemáticas, inglés, lectura y escritura, juegos y situaciones sociales actuales con dificultad gradual.':profile.ageBand==='middle'?'Lengua, matemáticas, inglés, lectura y escritura y juegos adaptados al paso a Secundaria.':'Geometría, lengua, divisiones, inglés, lectura y escritura y juegos con dificultad adaptativa.';renderHomeLevels();}
   function renderHomeLevels(){const el=$('#homeLevels');el.innerHTML=data.subjects.map(s=>`<div class="level-row"><strong>${SUBJECT_META[s].name}</strong><div class="level-track"><span style="width:${(state.levels[s]||1)/3*100}%"></span></div><span class="level-tag">NIVEL ${state.levels[s]||1}</span></div>`).join('');const stats=data.subjects.map(s=>{const r=recent(s,10);return{s,n:r.length,acc:r.length?r.filter(x=>x.correct).length/r.length:1}}).sort((a,b)=>a.acc-b.acc||b.n-a.n);const rec=stats[0];$('#recommendedTitle').textContent=rec.n?`Refuerzo: ${SUBJECT_META[rec.s].name}`:`Empieza por ${SUBJECT_META[data.subjects[0]].name}`;$('#recommendedText').textContent=rec.n?`En los últimos ejercicios tu precisión en esta área es del ${Math.round(rec.acc*100)}%.`:'Todavía no hay resultados suficientes para recomendar un área.';$('#recommendedBtn').dataset.subject=rec.n?rec.s:data.subjects[0];}
-  $('#recommendedBtn').onclick=()=>{subject=$('#recommendedBtn').dataset.subject;if(subject==='division'){switchSection('division');newDivision()}else{switchSection('exercise');setupExerciseSubject();}};
-  $('#heroStartBtn').onclick=()=>{subject=data.subjects[0];if(subject==='division'){switchSection('division');newDivision()}else{switchSection('exercise');setupExerciseSubject();}};
+  $('#recommendedBtn').onclick=()=>{subject=$('#recommendedBtn').dataset.subject;if(subject==='division'){switchSection('division');newDivision()}else if(subject==='games'){switchSection('games');setupGames()}else{switchSection('exercise');setupExerciseSubject();}};
+  $('#heroStartBtn').onclick=()=>{subject=data.subjects[0];if(subject==='division'){switchSection('division');newDivision()}else if(subject==='games'){switchSection('games');setupGames()}else{switchSection('exercise');setupExerciseSubject();}};
+
+  // GAME LAB
+  function setupGames(){gameCount=0;showNewGame();}
+  function showNewGame(){
+    gameAnswered=false;gameOrderPicked=[];gameMatchState=null;const level=state.levels.games||1;
+    gameCurrent=pickUnseen(bankKey('games','main',level),(data.games||[]).filter(x=>x.level<=level));
+    if(!gameCurrent){$('#gamePrompt').textContent='No hay juegos disponibles en este nivel.';$('#gameArea').innerHTML='';return;}
+    gameCount++;$('#gameCounter').textContent=`Juego ${gameCount}`;$('#gamesLevel').textContent=level;$('#gamesScore').textContent=state.scores.games||0;$('#gameTopic').textContent=gameCurrent.topic||'Reto';$('#gamePrompt').textContent=gameCurrent.q||'';$('#gameFeedback').textContent='';$('#gameFeedback').className='feedback';$('#gameNext').classList.add('hidden');renderGame();
+  }
+  function renderGame(){
+    const area=$('#gameArea');area.innerHTML='';
+    if(gameCurrent.type==='quick'){
+      area.innerHTML=`<div class="game-quick-grid">${shuffle(gameCurrent.opts||[]).map(o=>`<button class="game-choice">${escapeHtml(o)}</button>`).join('')}</div>`;
+      $$('#gameArea .game-choice').forEach(b=>b.onclick=()=>finishQuickGame(b,b.textContent));return;
+    }
+    if(gameCurrent.type==='order'){
+      const target=document.createElement('div');target.className='order-target';target.innerHTML='<span class="muted">Pulsa las palabras en el orden correcto.</span>';
+      const tray=document.createElement('div');tray.className='token-tray';
+      shuffle(gameCurrent.tokens||[]).forEach((tok,i)=>{const b=document.createElement('button');b.className='word-token';b.textContent=tok;b.dataset.idx=String(i);b.onclick=()=>{if(gameAnswered||b.disabled)return;b.disabled=true;gameOrderPicked.push(tok);renderOrderTarget(target);};tray.appendChild(b)});
+      const controls=document.createElement('div');controls.className='game-controls';controls.innerHTML='<button class="secondary-btn" id="gameOrderReset">Reiniciar orden</button><button class="primary-btn" id="gameOrderCheck">Comprobar</button>';
+      area.append(target,tray,controls);$('#gameOrderReset').onclick=()=>{if(gameAnswered)return;gameOrderPicked=[];renderGame();};$('#gameOrderCheck').onclick=checkOrderGame;return;
+    }
+    if(gameCurrent.type==='match'){
+      const pairs=(gameCurrent.pairs||[]).map((p,i)=>({left:p[0],right:p[1],id:i}));gameMatchState={left:null,right:null,matched:new Set(),errors:0};
+      area.innerHTML=`<div class="match-board"><div class="match-column">${shuffle(pairs).map(p=>`<button class="match-card" data-side="left" data-pair="${p.id}">${escapeHtml(p.left)}</button>`).join('')}</div><div class="match-column">${shuffle(pairs).map(p=>`<button class="match-card" data-side="right" data-pair="${p.id}">${escapeHtml(p.right)}</button>`).join('')}</div></div>`;
+      $$('#gameArea .match-card').forEach(b=>b.onclick=()=>selectMatchCard(b));
+    }
+  }
+  function renderOrderTarget(target){target.innerHTML=gameOrderPicked.length?gameOrderPicked.map(t=>`<span class="placed-token">${escapeHtml(t)}</span>`).join(' '):'<span class="muted">Pulsa las palabras en el orden correcto.</span>';}
+  function finishQuickGame(btn,value){if(gameAnswered)return;gameAnswered=true;const ok=value===gameCurrent.a;$$('#gameArea .game-choice').forEach(b=>{b.disabled=true;if(b.textContent===gameCurrent.a)b.classList.add('correct')});if(!ok)btn.classList.add('wrong');finishGame(ok);}
+  function checkOrderGame(){if(gameAnswered)return;const answer=gameOrderPicked.join(' ').trim();const ok=answer===gameCurrent.answer;gameAnswered=true;finishGame(ok,ok?'Orden correcto.':`Orden esperado: ${gameCurrent.answer}`);}
+  function selectMatchCard(btn){if(gameAnswered||btn.classList.contains('matched'))return;const side=btn.dataset.side,pair=btn.dataset.pair;$$(`#gameArea .match-card[data-side="${side}"]`).forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');gameMatchState[side]={btn,pair};if(gameMatchState.left&&gameMatchState.right){const ok=gameMatchState.left.pair===gameMatchState.right.pair;if(ok){gameMatchState.left.btn.classList.add('matched');gameMatchState.right.btn.classList.add('matched');gameMatchState.matched.add(pair);gameMatchState.left=null;gameMatchState.right=null;if(gameMatchState.matched.size===(gameCurrent.pairs||[]).length){gameAnswered=true;const perfect=gameMatchState.errors===0;finishGame(perfect,perfect?'¡Parejas completadas sin errores!':`Parejas completadas · ${gameMatchState.errors} intento${gameMatchState.errors===1?'':'s'} fallido${gameMatchState.errors===1?'':'s'}.`);}}else{gameMatchState.errors++;const a=gameMatchState.left.btn,b=gameMatchState.right.btn;setTimeout(()=>{a.classList.remove('selected');b.classList.remove('selected');gameMatchState.left=null;gameMatchState.right=null;},350);}}}
+  function finishGame(ok,message){const pts=saveResult('games',ok,gameCurrent.id,gameCurrent.type||'game');$('#gameFeedback').textContent=message||(ok?`Correcto · +${pts} puntos`:'No esta vez. Prueba el siguiente reto.');$('#gameFeedback').className='feedback '+(ok?'ok':'bad');$('#gamesScore').textContent=state.scores.games||0;$('#gamesLevel').textContent=state.levels.games||1;$('#gameNext').classList.remove('hidden');}
+  $('#gameNext').onclick=showNewGame;
 
   function sessionGroups(){
     const groups=new Map();
@@ -140,14 +178,24 @@
   }
 
   function buildHomework(){
-    const grid=$('#homeworkGrid');const cards=data.subjects.map(s=>({s,title:SUBJECT_META[s].name,desc:s==='reading'?'Textos nuevos + preguntas':s==='social'?'Situaciones abiertas para razonar':'10-12 ejercicios diferentes por versión'}));cards.push({s:'mixed',title:'Ficha mixta',desc:'Combina varias áreas del perfil'});grid.innerHTML=cards.map(c=>`<button class="download-card card" data-doc="${c.s}"><span>⇩</span><strong>${c.title}</strong><small>${c.desc}</small></button>`).join('');$$('.download-card').forEach(b=>b.onclick=()=>window.WorksheetGenerator.generate(b.dataset.doc,Number($('#worksheetCount').value),{profile,data,state,meta:SUBJECT_META}));
+    const box=$('#homeworkOptions');if(!box)return;
+    const options=[];
+    data.subjects.forEach(s=>{
+      if(s==='language'){
+        options.push({key:'language:grammar',label:'Lengua · Gramática'},{key:'language:spelling',label:'Lengua · Ortografía'},{key:'language:writing',label:'Lengua · Escritura'});
+      }else options.push({key:s,label:SUBJECT_META[s].name});
+    });
+    box.innerHTML=options.map((o,i)=>`<label class="homework-option"><input type="checkbox" value="${o.key}" ${i<2?'checked':''}><span><strong>${o.label}</strong><small>Banco de fichas independiente</small></span></label>`).join('');
+    $('#worksheetAll').onclick=()=>$$('#homeworkOptions input').forEach(x=>x.checked=true);
+    $('#worksheetNone').onclick=()=>$$('#homeworkOptions input').forEach(x=>x.checked=false);
+    $('#generateWorksheetsBtn').onclick=()=>{const selected=$$('#homeworkOptions input:checked').map(x=>x.value);if(!selected.length){$('#docxStatus').textContent='Selecciona al menos un contenido para generar las fichas.';return;}window.WorksheetGenerator.generateSelection(selected,Number($('#worksheetCount').value),Number($('#worksheetQuestions').value),{profile,data,state,meta:SUBJECT_META});};
   }
 
   $('#exportDetailCsv').onclick=exportDetailCsv;$('#exportSessionCsv').onclick=exportSessionCsv;
 
   $('#createProfileBtn').onclick=createProfile;$('#newProfileName').addEventListener('keydown',e=>{if(e.key==='Enter')createProfile()});$('#newProfileBtn').onclick=openProfileGate;$('#profileSelect').onchange=e=>activateProfile(e.target.value);
   $('#deleteProfileBtn').onclick=()=>{if(!profile)return;if(confirm(`¿Eliminar el perfil de ${profile.name} y todo su progreso?`)){ProfileStore.remove(profile.id);const list=ProfileStore.list();if(list.length)activateProfile(list[0].id);else{profile=null;buildProfiles();openProfileGate();}}};
-  $('#resetProgressBtn').onclick=()=>{if(!profile)return;if(confirm(`¿Reiniciar todo el progreso de ${profile.name}? Se borrarán puntos, niveles, historial y ejercicios vistos de este perfil.`)){const id=profile.id;ProfileStore.resetProgress(id);state=blankState();currentItem=null;counter=0;divItem=null;divCount=0;guided=null;save();buildNavigation();buildHomework();switchSection('home');updateGlobalUI();alert(`El progreso de ${profile.name} se ha reiniciado correctamente.`);}};
+  $('#resetProgressBtn').onclick=()=>{if(!profile)return;if(confirm(`¿Reiniciar todo el progreso de ${profile.name}? Se borrarán puntos, niveles, historial y ejercicios vistos de este perfil.`)){const id=profile.id;ProfileStore.resetProgress(id);state=blankState();currentItem=null;counter=0;divItem=null;divCount=0;guided=null;gameCurrent=null;gameCount=0;gameAnswered=false;save();buildNavigation();buildHomework();switchSection('home');updateGlobalUI();alert(`El progreso de ${profile.name} se ha reiniciado correctamente.`);}};
 
   window.addEventListener('beforeunload',save);
   const list=ProfileStore.list();const id=ProfileStore.currentId();if(list.length)activateProfile(list.some(p=>p.id===id)?id:list[0].id);else{buildProfiles();openProfileGate();}
