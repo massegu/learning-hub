@@ -72,3 +72,28 @@ body{background:
 .worksheet-builder{padding:22px}.worksheet-controls{display:grid;grid-template-columns:repeat(2,minmax(180px,260px));gap:14px;margin-bottom:22px}.worksheet-controls label{font-weight:850;font-size:.78rem;color:var(--muted)}.worksheet-controls select{width:100%;padding:11px 12px;border:2px solid var(--line);border-radius:6px;background:#fffefb;font:inherit;margin-top:6px;color:var(--ink)}.worksheet-heading-row{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:12px}.worksheet-heading-row h4{font-size:1.15rem;margin:5px 0 0}.worksheet-quick-actions{display:flex;gap:7px}.worksheet-quick-actions .mini-btn{color:#285c39;background:#eef5ec;border:1px solid #cbdcc9;padding:9px 11px}.homework-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.homework-option{display:flex;gap:10px;align-items:flex-start;border:2px solid #e0e7df;border-radius:8px;padding:13px;background:#fffefb;cursor:pointer}.homework-option:has(input:checked){border-color:#7fab70;background:#f0f7ec}.homework-option input{margin-top:4px;accent-color:#2f7d4a;transform:scale(1.12)}.homework-option strong{display:block;font-size:.91rem}.homework-option small{display:block;color:var(--muted);font-size:.72rem;margin-top:3px}.worksheet-generate{margin-top:18px}.worksheet-note{margin:12px 0 0}.docx-status{padding:12px 2px;min-height:24px}
 @media(max-width:950px){.game-layout{grid-template-columns:1fr}.homework-options{grid-template-columns:repeat(2,minmax(0,1fr))}.game-quick-grid{grid-template-columns:1fr}}
 @media(max-width:620px){.homework-options,.worksheet-controls,.match-board{grid-template-columns:1fr}.worksheet-heading-row{align-items:flex-start;flex-direction:column}.worksheet-quick-actions{width:100%}.worksheet-quick-actions button{flex:1}}
+
+/* V7.1 hotfix - restore persistent desktop sidebar without changing app logic */
+@media (min-width:951px){
+  .app-shell{display:block;min-height:100vh}
+  .sidebar{
+    position:fixed;
+    left:0;
+    top:0;
+    bottom:0;
+    width:255px;
+    height:100vh;
+    z-index:100;
+    overflow-y:auto;
+  }
+  .main-content{
+    width:auto;
+    max-width:none;
+    margin-left:255px;
+  }
+}
+@media (max-width:950px){
+  .app-shell{display:block}
+  .sidebar{position:relative;left:auto;top:auto;bottom:auto;width:100%;height:auto;z-index:auto}
+  .main-content{margin-left:0;width:100%}
+}
