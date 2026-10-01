@@ -10,6 +10,17 @@
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 </head>
 <body>
+  <div id="authGate" class="auth-gate hidden">
+    <div class="auth-card card">
+      <span class="pill">LEARNING HUB</span>
+      <h2>Accede a tu espacio de entrenamiento</h2>
+      <p>Tu progreso, perfiles y contenido se guardan de forma segura en la nube.</p>
+      <label>Email<input id="authEmail" type="email" autocomplete="email" placeholder="tu@email.com" /></label>
+      <label>Contraseña<input id="authPassword" type="password" autocomplete="current-password" placeholder="Mínimo 6 caracteres" /></label>
+      <div class="auth-actions"><button id="authSignIn" class="primary-btn">Entrar</button><button id="authSignUp" class="secondary-btn">Crear cuenta</button></div>
+      <p id="authMessage" class="muted"></p>
+    </div>
+  </div>
   <div id="profileGate" class="profile-gate hidden" role="dialog" aria-modal="true">
     <div class="profile-modal card">
       <span class="pill">PERFIL</span>
@@ -21,7 +32,7 @@
     </div>
   </div>
 
-  <div class="app-shell">
+  <div id="appShell" class="app-shell hidden">
     <aside class="sidebar">
       <div class="brand"><div class="brand-badge"><span>LU</span></div><div><h1>LEVEL UP</h1><p>Learning Lab</p></div></div>
       <div class="profile-panel">
@@ -39,7 +50,7 @@
     <main class="main-content">
       <header class="topbar">
         <div><p class="eyebrow" id="ageEyebrow">ENTRENAMIENTO PERSONALIZADO</p><h2 id="sectionTitle">Panel</h2></div>
-        <div class="topbar-actions"><div class="session-chip"><span id="activeProfileLabel">—</span></div><div class="session-chip">Sesión <strong id="sessionAttempts">0</strong></div><div class="streak-card">Racha <strong id="streakCount">0</strong> 🔥</div></div>
+        <div class="topbar-actions"><div class="session-chip" id="accountStatus">—</div><div class="session-chip"><span id="activeProfileLabel">—</span></div><div class="session-chip">Sesión <strong id="sessionAttempts">0</strong></div><div class="streak-card">Racha <strong id="streakCount">0</strong> 🔥</div><button id="signOutBtn" class="mini-btn">Salir</button></div>
       </header>
 
       <section id="home" class="section active-section">
@@ -51,7 +62,7 @@
       <section id="exercise" class="section">
         <div class="section-intro card block-banner"><div><span class="pill" id="exercisePill">ÁREA</span><h3 id="exerciseHeading">Entrenamiento</h3><p id="exerciseDescription">Retos adaptativos.</p></div><div class="level-badge">Nivel <strong id="exerciseLevel">1</strong></div></div>
         <div id="languageModeSwitch" class="mode-switch language-switch card hidden"><button class="language-mode-btn active" data-mode="grammar">Gramática</button><button class="language-mode-btn" data-mode="spelling">Ortografía</button><button class="language-mode-btn" data-mode="writing">Escritura</button></div>
-        <div class="exercise-layout"><div class="exercise-card card"><div class="exercise-meta"><span id="exerciseCounter">Ejercicio 1</span><span class="mini-score"><b id="subjectScore">0</b> pts</span></div><div id="exerciseTopic" class="language-topic hidden"></div><div id="exerciseVisual"></div><div id="exercisePrompt" class="prompt"></div><div id="exerciseOptions" class="options-grid"></div><div id="textAnswerArea" class="text-answer-area hidden"><textarea id="textAnswerInput" rows="4" maxlength="500" placeholder="Escribe aquí tu respuesta..."></textarea><button id="textAnswerCheck" class="primary-btn">Ver una respuesta modelo</button></div><div id="selfAssessment" class="self-assessment hidden"><p>Compara tu respuesta con el modelo:</p><div id="modelAnswer" class="explanation"></div><div class="self-buttons"><button data-self="true" class="secondary-btn">Lo he conseguido</button><button data-self="false" class="ghost-light-btn">Necesito practicar</button></div></div><div id="exerciseFeedback" class="feedback"></div><div id="exerciseExplanation" class="explanation hidden"></div><button id="exerciseNext" class="primary-btn hidden">Siguiente →</button></div><aside class="card side-help pixel-note"><p class="eyebrow">PROGRESIÓN</p><h4>Sin repeticiones innecesarias</h4><p id="poolStatus">El banco prioriza ejercicios que todavía no has visto.</p><p class="muted">Cuando completes todos los ejercicios de un banco, se abre un nuevo ciclo.</p></aside></div>
+        <div class="exercise-layout"><div class="exercise-card card"><div class="exercise-meta"><span id="exerciseCounter">Ejercicio 1</span><span class="mini-score"><b id="subjectScore">0</b> pts</span></div><div id="exerciseTopic" class="language-topic hidden"></div><div id="exerciseVisual"></div><div id="exercisePrompt" class="prompt"></div><div id="exerciseOptions" class="options-grid"></div><div id="textAnswerArea" class="text-answer-area hidden"><textarea id="textAnswerInput" rows="4" maxlength="500" placeholder="Escribe aquí tu respuesta..."></textarea><button id="textAnswerCheck" class="primary-btn">Ver una respuesta modelo</button></div><div id="selfAssessment" class="self-assessment hidden"><p>Compara tu respuesta con el modelo:</p><div id="modelAnswer" class="explanation"></div><div class="self-buttons"><button data-self="true" class="secondary-btn">Lo he conseguido</button><button data-self="false" class="ghost-light-btn">Necesito practicar</button></div></div><div id="exerciseFeedback" class="feedback"></div><div id="exerciseExplanation" class="explanation hidden"></div><button id="exerciseNext" class="primary-btn hidden">Siguiente →</button></div><aside class="card side-help pixel-note"><p class="eyebrow">PROGRESIÓN</p><h4>Sin repeticiones innecesarias</h4><p id="poolStatus">El banco se entrega desde el servidor y prioriza contenido no visto.</p><p id="usageHint" class="muted"></p><p class="muted">Cuando completes todos los ejercicios de un banco, se abre un nuevo ciclo.</p></aside></div>
       </section>
 
       <section id="division" class="section">
@@ -62,8 +73,8 @@
       </section>
 
       <section id="games" class="section">
-        <div class="section-intro card block-banner"><div><span class="pill">JUEGOS</span><h3>Game Lab</h3><p>Retos cortos e interactivos que mezclan lengua, matemáticas, inglés y razonamiento.</p></div><div class="level-badge">Nivel <strong id="gamesLevel">1</strong></div></div>
-        <div class="game-layout"><div class="exercise-card card"><div class="exercise-meta"><span id="gameCounter">Juego 1</span><span class="mini-score"><b id="gamesScore">0</b> pts</span></div><div id="gameTopic" class="language-topic"></div><div id="gamePrompt" class="prompt"></div><div id="gameArea" class="game-area"></div><div id="gameFeedback" class="feedback"></div><button id="gameNext" class="primary-btn hidden">Siguiente juego →</button></div><aside class="card side-help pixel-note"><p class="eyebrow">GAME LAB</p><h4>60 retos por grupo de edad</h4><p>Alterna respuestas rápidas, ordenación y juegos de parejas.</p><p class="muted">El progreso se registra igual que en el resto de áreas.</p></aside></div>
+        <div class="section-intro card block-banner"><div><span class="pill">JUEGOS</span><h3>Game Lab</h3><p>Juegos cognitivos interactivos: inhibición, memoria secuencial, interferencia, flexibilidad, búsqueda visual y planificación.</p></div><div class="level-badge">Nivel <strong id="gamesLevel">1</strong></div></div>
+        <div class="game-layout"><div class="exercise-card card"><div class="exercise-meta"><span id="gameCounter">Juego 1</span><span class="mini-score"><b id="gamesScore">0</b> pts</span></div><div id="gameTopic" class="language-topic"></div><div id="gamePrompt" class="prompt"></div><div id="gameArea" class="game-area"></div><div id="gameFeedback" class="feedback"></div><button id="gameNext" class="primary-btn hidden">Siguiente juego →</button></div><aside class="card side-help pixel-note"><p class="eyebrow">GAME LAB</p><h4>Juegos cognitivos reales</h4><p>Cada juego entrena un proceso distinto y responde a tus acciones en tiempo real.</p><p class="muted">El progreso se registra igual que en el resto de áreas.</p></aside></div>
       </section>
 
       <section id="progress" class="section"><div class="section-intro card"><div><span class="pill">PROGRESO</span><h3 id="progressProfileTitle">Evolución</h3><p>Los resultados de este perfil se guardan por separado. Puedes exportarlos en CSV para conservar un histórico fuera del navegador.</p></div><div class="progress-export-actions"><button id="exportDetailCsv" class="secondary-btn">Descargar CSV detallado</button><button id="exportSessionCsv" class="secondary-btn">Descargar evolución por sesiones</button></div></div><div id="progressCards" class="dashboard-grid progress-grid"></div><div class="section-grid two-col"><div class="card panel-card"><p class="eyebrow">ÚLTIMOS RESULTADOS</p><div id="recentResults"></div></div><div class="card panel-card"><p class="eyebrow">COBERTURA DE BANCOS</p><div id="bankCoverage"></div></div></div><div class="card panel-card session-panel"><div class="card-heading"><div><p class="eyebrow">EVOLUCIÓN POR SESIONES</p><h3>Precisión y volumen de práctica</h3></div><span class="muted">Cada entrada corresponde a una sesión de uso.</span></div><div id="sessionEvolution" class="session-evolution"></div></div></section>
@@ -82,6 +93,6 @@
     </main>
   </div>
 
-  <script src="data/primary.js"></script><script src="data/middle.js"></script><script src="data/teen.js"></script><script src="data/english.js"></script><script src="data/literacy.js"></script><script src="data/games.js"></script><script src="js/storage.js"></script><script src="js/docx.js"></script><script src="js/app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/config.js"></script><script src="js/api.js"></script><script src="js/docx.js"></script><script src="js/app.js"></script>
 </body>
 </html>
