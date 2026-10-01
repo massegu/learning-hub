@@ -39,4 +39,6 @@ Existing backend components include:
 - 2 printable worksheets/day
 - 30 cognitive game rounds/day
 
+V8 Supabase integration preview.
+
 These are product defaults for testing and can be changed later.
