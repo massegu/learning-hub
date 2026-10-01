@@ -39,6 +39,12 @@ Existing backend components include:
 - 2 printable worksheets/day
 - 30 cognitive game rounds/day
 
-V8 Supabase integration preview.
-
 These are product defaults for testing and can be changed later.
+
+
+## V8.1
+- Nivel inicial seleccionable al crear cada perfil.
+- Nivel ajustable manualmente por area.
+- Atención muestra el enunciado antes de los estimulos.
+- Game Lab evita repetir las dos mecanicas mas recientes.
+- Se elimina el panel lateral de progresion en ejercicios.
