@@ -48,3 +48,12 @@ These are product defaults for testing and can be changed later.
 - Atención muestra el enunciado antes de los estimulos.
 - Game Lab evita repetir las dos mecanicas mas recientes.
 - Se elimina el panel lateral de progresion en ejercicios.
+
+
+## V9 · Functional cognitive bank
+- New Memory area: lists, errands and conversations in everyday contexts.
+- Attention now alternates naturalistic scenes with lightweight icon-based exercises.
+- Difficulty levels 1–3 differ in visual complexity, distractor similarity and number of criteria.
+- Executive Functions use functional everyday sequences, including image-supported sequences.
+- Hybrid asset strategy: compressed WebP scenes + lightweight emoji/icon stimuli to keep the app small.
+- Supabase `request-learning-content` Edge Function V8 supplies the new content.
