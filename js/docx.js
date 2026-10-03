@@ -6,7 +6,11 @@
     if(it.type==='executive') return `${it.prompt} Situación: ${it.situation||''}`;
     if(it.dividend) return `${it.dividend} ÷ ${it.divisor} = ______    resto ______`;
     if(it.title&&it.text) return `${it.title}: ${it.text}\n${it.q||''}`;
-    if(it.q) return it.q;
+    if(it.model) return `${it.q||'Encuentra el código igual al modelo.'}\nModelo: ${it.model}\nOpciones: ${(it.opts||[]).join(' · ')}`;
+    if(Array.isArray(it.rows)) return `${it.q||'Compara las filas.'}\n${it.rows.map((r,i)=>`Fila ${i+1}: ${r.join(' ')}`).join(' | ')}`;
+    if(Array.isArray(it.memoryContent)){const content=it.memoryContent.map(x=>x.person?`${x.person}: ${x.detail}`:x.detail).join(' · ');return `${it.q||'Memoriza la información.'}\nMaterial: ${content}\n${it.memoryQuestion||''}`;}
+    if(it.type==='order'&&Array.isArray(it.tokens)) return `${it.q||'Ordena la secuencia.'}\nElementos: ${it.tokens.join(' · ')}`;
+    if(it.q) return it.opts?.length?`${it.q}\nOpciones: ${it.opts.join(' · ')}`:it.q;
     return it.prompt||'Actividad';
   }
   async function makeDoc(items,version,profile){

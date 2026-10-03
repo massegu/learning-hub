@@ -29,6 +29,7 @@
       <label>Nombre o alias<input id="newProfileName" maxlength="24" placeholder="Ej. Alex" /></label>
       <label>Grupo de edad<select id="newProfileAge"><option value="primary">10-12 años</option><option value="middle">12-13 años</option><option value="teen">14-17 años</option></select></label>
       <label>Nivel inicial<select id="newProfileLevel"><option value="1">Nivel 1 · Inicio</option><option value="2">Nivel 2 · Intermedio</option><option value="3">Nivel 3 · Avanzado</option></select></label>
+      <label>País / variante de español<select id="newProfileLocale"><option value="es_intl">Español internacional</option><option value="es_es">España</option><option value="es_mx">México</option><option value="es_co">Colombia</option><option value="es_ar">Argentina</option><option value="es_cl">Chile</option><option value="es_pa">Panamá</option><option value="es_cr">Costa Rica</option></select></label>
       <button id="createProfileBtn" class="primary-btn">Crear perfil</button>
     </div>
   </div>
@@ -39,6 +40,7 @@
       <div class="profile-panel">
         <small>PERFIL ACTIVO</small>
         <select id="profileSelect"></select>
+        <label class="profile-locale-label">País / español<select id="profileLocaleSelect"><option value="es_intl">Internacional</option><option value="es_es">España</option><option value="es_mx">México</option><option value="es_co">Colombia</option><option value="es_ar">Argentina</option><option value="es_cl">Chile</option><option value="es_pa">Panamá</option><option value="es_cr">Costa Rica</option></select></label>
         <div class="profile-actions"><button id="newProfileBtn" class="mini-btn">+ Nuevo</button><button id="deleteProfileBtn" class="mini-btn danger">Eliminar</button></div>
       </div>
       <nav id="navMenu" class="nav-menu"></nav>
@@ -62,6 +64,7 @@
 
       <section id="exercise" class="section">
         <div class="section-intro card block-banner"><div><span class="pill" id="exercisePill">ÁREA</span><h3 id="exerciseHeading">Entrenamiento</h3><p id="exerciseDescription">Retos adaptativos.</p></div><label class="level-control">Nivel<select id="exerciseLevelSelect"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label></div>
+        <div id="guidedSessionBar" class="guided-session-bar card hidden"><strong id="guidedSessionTitle">Sesión guiada</strong><span id="guidedSessionProgress"></span><button id="cancelGuidedSession" class="mini-btn">Salir de la sesión</button></div>
         <div id="languageModeSwitch" class="mode-switch language-switch card hidden"><button class="language-mode-btn active" data-mode="grammar">Gramática</button><button class="language-mode-btn" data-mode="spelling">Ortografía</button><button class="language-mode-btn" data-mode="writing">Escritura</button></div>
         <div class="exercise-layout single"><div class="exercise-card card"><div class="exercise-meta"><span id="exerciseCounter">Ejercicio 1</span><span><span id="usageHint" class="muted"></span> · <span class="mini-score"><b id="subjectScore">0</b> pts</span></span></div><div id="exerciseTopic" class="language-topic hidden"></div><div id="exercisePrompt" class="prompt"></div><div id="exerciseVisual"></div><div id="exerciseOptions" class="options-grid"></div><div id="textAnswerArea" class="text-answer-area hidden"><textarea id="textAnswerInput" rows="4" maxlength="500" placeholder="Escribe aquí tu respuesta..."></textarea><button id="textAnswerCheck" class="primary-btn">Ver una respuesta modelo</button></div><div id="selfAssessment" class="self-assessment hidden"><p>Compara tu respuesta con el modelo:</p><div id="modelAnswer" class="explanation"></div><div class="self-buttons"><button data-self="true" class="secondary-btn">Lo he conseguido</button><button data-self="false" class="ghost-light-btn">Necesito practicar</button></div></div><div id="exerciseFeedback" class="feedback"></div><div id="exerciseExplanation" class="explanation hidden"></div><button id="exerciseNext" class="primary-btn hidden">Siguiente →</button></div></div>
       </section>
@@ -73,9 +76,16 @@
         <div id="divisionGuided" class="guided-grid hidden"><div class="exercise-card card"><div class="exercise-meta"><span>División guiada</span><span class="mini-score">Paso <b id="guidedStepNumber">1</b></span></div><div id="guidedOperation" class="long-division"></div><div id="guidedInstruction" class="guided-instruction"></div><div class="guided-answer-row"><input id="guidedAnswer" type="number" /><button id="guidedCheck" class="primary-btn">Comprobar paso</button></div><div id="guidedFeedback" class="feedback"></div><button id="guidedNext" class="primary-btn hidden">Nueva división →</button></div><aside class="card side-help pixel-note"><p class="eyebrow">PISTA</p><h4>Divide → multiplica → resta → baja</h4><p>La app divide la operación en decisiones pequeñas.</p></aside></div>
       </section>
 
-      <section id="games" class="section">
-        <div class="section-intro card block-banner"><div><span class="pill">JUEGOS</span><h3>Game Lab</h3><p>Juegos cognitivos interactivos: inhibición, memoria secuencial, interferencia, flexibilidad, búsqueda visual y planificación.</p></div><label class="level-control">Nivel<select id="gamesLevelSelect"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label></div>
-        <div class="game-layout"><div class="exercise-card card"><div class="exercise-meta"><span id="gameCounter">Juego 1</span><span class="mini-score"><b id="gamesScore">0</b> pts</span></div><div id="gameTopic" class="language-topic"></div><div id="gamePrompt" class="prompt"></div><div id="gameArea" class="game-area"></div><div id="gameFeedback" class="feedback"></div><button id="gameNext" class="primary-btn hidden">Siguiente juego →</button></div><aside class="card side-help pixel-note"><p class="eyebrow">GAME LAB</p><h4>Juegos cognitivos reales</h4><p>Cada juego entrena un proceso distinto y responde a tus acciones en tiempo real.</p><p class="muted">El progreso se registra igual que en el resto de áreas.</p></aside></div>
+      <section id="sessionBuilder" class="section">
+        <div class="section-intro card"><div><span class="pill">SESIÓN</span><h3>Crear sesión de entrenamiento</h3><p>Combina varias áreas en una sesión breve. La plataforma alternará actividades para evitar repeticiones y sobrecarga de una sola función.</p></div></div>
+        <div class="session-builder card">
+          <div class="session-config-grid">
+            <div><p class="eyebrow">OBJETIVOS</p><div id="sessionDomainOptions" class="session-domain-options"></div></div>
+            <div class="session-settings"><label>Número de actividades<select id="sessionActivityCount"><option value="6">6 · sesión breve</option><option value="8" selected>8 · sesión estándar</option><option value="10">10 · sesión larga</option></select></label><div id="sessionEstimate" class="session-estimate">≈ 20–30 min</div></div>
+          </div>
+          <div id="sessionPlanPreview" class="session-plan-preview"></div>
+          <button id="startGuidedSession" class="primary-btn">Crear y empezar sesión</button>
+        </div>
       </section>
 
       <section id="progress" class="section"><div class="section-intro card"><div><span class="pill">PROGRESO</span><h3 id="progressProfileTitle">Evolución</h3><p>Los resultados de este perfil se guardan por separado. Puedes exportarlos en CSV para conservar un histórico fuera del navegador.</p></div><div class="progress-export-actions"><button id="exportDetailCsv" class="secondary-btn">Descargar CSV detallado</button><button id="exportSessionCsv" class="secondary-btn">Descargar evolución por sesiones</button></div></div><div id="progressCards" class="dashboard-grid progress-grid"></div><div class="section-grid two-col"><div class="card panel-card"><p class="eyebrow">ÚLTIMOS RESULTADOS</p><div id="recentResults"></div></div><div class="card panel-card"><p class="eyebrow">COBERTURA DE BANCOS</p><div id="bankCoverage"></div></div></div><div class="card panel-card session-panel"><div class="card-heading"><div><p class="eyebrow">EVOLUCIÓN POR SESIONES</p><h3>Precisión y volumen de práctica</h3></div><span class="muted">Cada entrada corresponde a una sesión de uso.</span></div><div id="sessionEvolution" class="session-evolution"></div></div></section>

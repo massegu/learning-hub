@@ -1,59 +1,20 @@
-# Learning Hub V8 — Supabase integration
+# Learning Hub V11 — International Content & Clinical UX
 
-V8 moves Learning Hub from a browser-only prototype to the first cloud-backed product version.
+V11 simplifies the product and focuses on scalable cognitive training for Spain and Latin America.
 
-## What changed
+## Main changes
+- Game Lab removed from the user-facing product.
+- Profile locale support: International Spanish, Spain, Mexico, Colombia, Argentina, Chile, Panama and Costa Rica.
+- New **Velocidad y razonamiento** area.
+- New **Cognición aplicada** area for realistic, integrated everyday problems.
+- New guided **Crear sesión** workflow that combines several cognitive domains.
+- Attention, Memory and Executive Functions remain the core cognitive areas.
+- Exact-level academic content is preferred when available.
+- Server-side content usage limits remain protected in `content_usage`.
+- Existing real-life image bank is reused; lightweight icon/text/document-style tasks remain the main scalable content strategy.
 
-- Supabase email/password authentication.
-- Learner profiles stored in Supabase.
-- Progress and exercise results synchronized to Supabase.
-- Seven-day trial/account status prepared for Stripe.
-- Exercise banks are no longer shipped in the browser bundle.
-- Content is delivered on demand through the authenticated `request-learning-content` Supabase Edge Function.
-- Trial protection: 30 online exercises/day, 2 printable worksheets/day and 30 game rounds/day.
-- Attention and Executive Functions are now first-class training areas.
-- Printable worksheets can include attention and executive-function activities adapted to the age band.
-- Game Lab now uses interactive cognitive mechanics: Go/No-Go, Stroop/interference, sequence memory, rule switching, visual search and planning.
+## Testing branch
+Upload to `supabase-integration`. Do not merge to `main` until V11 has been tested.
 
-## Deployment
-
-This folder is ready to be uploaded to a new GitHub branch (recommended branch: `supabase-integration`). Do not replace `main` until V8 has been tested.
-
-The frontend uses the Supabase publishable key in `js/config.js`. This key is intended for browser use. Never place a Supabase service-role key in frontend files.
-
-## Supabase backend already configured
-
-Project: `Learning_Hub`
-
-Existing backend components include:
-- `accounts`
-- `learner_profiles`
-- `exercise_results`
-- RLS policies
-- account creation trigger
-- `request-learning-content` Edge Function
-
-## Trial limits in this V8
-
-- 30 online exercises/day
-- 2 printable worksheets/day
-- 30 cognitive game rounds/day
-
-These are product defaults for testing and can be changed later.
-
-
-## V8.1
-- Nivel inicial seleccionable al crear cada perfil.
-- Nivel ajustable manualmente por area.
-- Atención muestra el enunciado antes de los estimulos.
-- Game Lab evita repetir las dos mecanicas mas recientes.
-- Se elimina el panel lateral de progresion en ejercicios.
-
-
-## V9 · Functional cognitive bank
-- New Memory area: lists, errands and conversations in everyday contexts.
-- Attention now alternates naturalistic scenes with lightweight icon-based exercises.
-- Difficulty levels 1–3 differ in visual complexity, distractor similarity and number of criteria.
-- Executive Functions use functional everyday sequences, including image-supported sequences.
-- Hybrid asset strategy: compressed WebP scenes + lightweight emoji/icon stimuli to keep the app small.
-- Supabase `request-learning-content` Edge Function V8 supplies the new content.
+## Backend already deployed
+The Supabase Edge Function has been updated for V11 content domains and locale adaptation.
