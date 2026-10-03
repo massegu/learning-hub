@@ -1,20 +1,23 @@
-# Learning Hub V12 — Content Quality
+# Learning Hub V13 — Quality leveling
 
-V12 focuses on cognitive quality, variety and logical reliability rather than adding more product surface.
+V13 focuses on bringing all training areas closer to the level of challenge and variety already achieved in Memory, Reasoning, Social Lab and Writing.
 
 ## Main changes
-- Automatic validation of generated content before it is served.
-- Anti-repetition for Attention, Memory, Executive Functions, Speed/Reasoning, Applied Cognition and Social Lab.
-- Fixed visual-comparison tasks so only one row can match the model.
-- Larger Speed & Reasoning bank with several mechanics at every level.
-- Applied Cognition expanded with realistic, age-adapted scenarios involving priorities, time, dependencies, uncertainty, monitoring and replanning.
-- Social Lab rebuilt around perspective-taking, fact vs inference, pragmatic language, ambiguity, intention vs impact, repair and multi-person social reasoning.
-- Scenario cards added to the UI so longer applied/social exercises are easier to read.
-- Spain + Latin America locale support from V11 is retained.
-- Game Lab remains removed from the user-facing product.
 
-## Testing branch
-Upload to `supabase-integration`. Do not merge to `main` until V12 has been tested.
+- Stronger anti-repetition for generated cognitive content: recent items and recent mechanics are tracked separately.
+- Attention expanded beyond counting icons: intruders, following instructions, spatial position, double criteria, table search, filtering, rule changes and exact comparison.
+- Fixed the visual collision that could render target and distractor with the same icon in attention tasks.
+- Language rebuilt around functional comprehension and reasoning: main idea, cohesion, inference, ambiguity, register, evidence, implicit meaning, source evaluation, argumentation and contradiction detection.
+- Cognition Applied expanded with additional planning, reprioritisation, parallel-task, information-value and error-analysis scenarios.
+- Social Lab expanded with context, clarification, partial-information and social-norm reasoning.
+- Existing V12 validation remains active: unique options, valid correct answer, multi-select consistency and unique visual-pattern match.
+- International Spanish profile/localisation support remains active.
+- Game Lab remains removed.
 
-## Backend already deployed
-Supabase `request-learning-content` Edge Function has been updated to V13 with the V12 content-quality architecture.
+## Backend
+
+Supabase Edge Function `request-learning-content` is deployed separately from the frontend bundle. V13 requires the corresponding backend version.
+
+## Deployment
+
+Upload this bundle to the `supabase-integration` branch for testing. Do not merge to `main` until the content audit is complete.
