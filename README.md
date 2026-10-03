@@ -1,20 +1,20 @@
-# Learning Hub V11 — International Content & Clinical UX
+# Learning Hub V12 — Content Quality
 
-V11 simplifies the product and focuses on scalable cognitive training for Spain and Latin America.
+V12 focuses on cognitive quality, variety and logical reliability rather than adding more product surface.
 
 ## Main changes
-- Game Lab removed from the user-facing product.
-- Profile locale support: International Spanish, Spain, Mexico, Colombia, Argentina, Chile, Panama and Costa Rica.
-- New **Velocidad y razonamiento** area.
-- New **Cognición aplicada** area for realistic, integrated everyday problems.
-- New guided **Crear sesión** workflow that combines several cognitive domains.
-- Attention, Memory and Executive Functions remain the core cognitive areas.
-- Exact-level academic content is preferred when available.
-- Server-side content usage limits remain protected in `content_usage`.
-- Existing real-life image bank is reused; lightweight icon/text/document-style tasks remain the main scalable content strategy.
+- Automatic validation of generated content before it is served.
+- Anti-repetition for Attention, Memory, Executive Functions, Speed/Reasoning, Applied Cognition and Social Lab.
+- Fixed visual-comparison tasks so only one row can match the model.
+- Larger Speed & Reasoning bank with several mechanics at every level.
+- Applied Cognition expanded with realistic, age-adapted scenarios involving priorities, time, dependencies, uncertainty, monitoring and replanning.
+- Social Lab rebuilt around perspective-taking, fact vs inference, pragmatic language, ambiguity, intention vs impact, repair and multi-person social reasoning.
+- Scenario cards added to the UI so longer applied/social exercises are easier to read.
+- Spain + Latin America locale support from V11 is retained.
+- Game Lab remains removed from the user-facing product.
 
 ## Testing branch
-Upload to `supabase-integration`. Do not merge to `main` until V11 has been tested.
+Upload to `supabase-integration`. Do not merge to `main` until V12 has been tested.
 
 ## Backend already deployed
-The Supabase Edge Function has been updated for V11 content domains and locale adaptation.
+Supabase `request-learning-content` Edge Function has been updated to V13 with the V12 content-quality architecture.
