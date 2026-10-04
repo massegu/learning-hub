@@ -459,9 +459,7 @@
         window.LH_CONFIG?.stripeMode === "test"
           ? "Probar pago · 25 €/mes"
           : "Suscribirme · 25 €/mes";
-      const canSubscribe =
-        ["trial", "cancelled"].includes(st) ||
-        (window.LH_CONFIG?.stripeMode === "test" && st === "complimentary");
+      const canSubscribe = ["trial", "cancelled", "complimentary"].includes(st);
       sub.classList.toggle("hidden", !canSubscribe);
     }
     if (portal)
