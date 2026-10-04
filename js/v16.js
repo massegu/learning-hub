@@ -18,7 +18,6 @@
     const style=document.createElement('style');
     style.id='v16Styles';
     style.textContent=`
-      /* V16: compact, calmer dashboard */
       .main-content{padding-top:18px}
       .topbar{margin-bottom:12px;align-items:center;gap:14px}
       .topbar h2{font-size:1.52rem;margin-top:2px}
@@ -59,14 +58,17 @@
     setTimeout(()=>el.remove(),2200);
   }
 
+  function setText(el,text){ if(el && el.textContent!==text) el.textContent=text; }
+
   function compactHero(){
     const hero=$('#home .hero'); if(!hero) return;
-    const visual=hero.querySelector('.hero-visual'); if(visual) visual.remove();
-    const pill=hero.querySelector('.pill'); if(pill) pill.textContent='ENTRENAMIENTO PERSONALIZADO';
-    const title=hero.querySelector('h3'); if(title) title.textContent='Continúa tu entrenamiento';
-    const text=$('#heroText'); if(text) text.textContent='Retoma la última área trabajada o utiliza el refuerzo recomendado para orientar la sesión.';
+    const visual=hero.querySelector('.hero-visual'); if(visual) visual.style.display='none';
+    setText(hero.querySelector('.pill'),'ENTRENAMIENTO PERSONALIZADO');
+    setText(hero.querySelector('h3'),'Continúa tu entrenamiento');
+    setText($('#heroText'),'Retoma la última área trabajada o utiliza el refuerzo recomendado para orientar la sesión.');
     const btn=$('#heroStartBtn');
-    if(btn){
+    if(btn && !btn.dataset.v16Bound){
+      btn.dataset.v16Bound='1';
       btn.textContent='Continuar entrenamiento →';
       btn.onclick=()=>{
         const wanted=localStorage.getItem(profileKey());
@@ -100,20 +102,28 @@
       const {data,error}=await api.client.from('accounts').select('content_locale').single();
       if(error) throw error;
       currentLocale=data?.content_locale||'es_intl';
-      const sel=$('#v16ContentLocale'); if(sel) sel.value=currentLocale;
+      const sel=$('#v16ContentLocale'); if(sel && sel.value!==currentLocale) sel.value=currentLocale;
       setEyebrow();
     }catch(e){ console.warn('V16 locale load',e); }
   }
 
   async function saveLocale(locale){
+    const sel=$('#v16ContentLocale');
+    if(sel) sel.disabled=true;
     try{
       const api=window.LearningAPI;
+      if(!api?.client||!api.user) throw new Error('Sesión no disponible');
       const {error}=await api.client.from('accounts').update({content_locale:locale}).eq('user_id',api.user.id);
       if(error) throw error;
-      currentLocale=locale; setEyebrow();
+      currentLocale=locale;
+      setEyebrow();
       toast(`Contenido adaptado a: ${LOCALES[locale]}`);
     }catch(e){
-      console.warn('V16 locale save',e); toast('No se pudo guardar la preferencia regional.');
+      console.warn('V16 locale save',e);
+      toast('No se pudo guardar la preferencia regional.');
+      await loadLocale();
+    }finally{
+      if(sel) sel.disabled=false;
     }
   }
 
@@ -133,25 +143,20 @@
   }
 
   function enhance(){
-    injectStyles();
-    compactHero();
-    rememberNavigation();
-    addLocaleControl();
-    bindProfileChanges();
-    setEyebrow();
+    injectStyles(); compactHero(); rememberNavigation(); addLocaleControl(); bindProfileChanges(); setEyebrow();
   }
 
   window.addEventListener('load',()=>{
+    let tries=0;
     const wait=setInterval(()=>{
+      tries++;
       if(window.LearningAPI && $('#appShell')){
         clearInterval(wait);
         enhance();
-        const obs=new MutationObserver(()=>{
-          compactHero(); rememberNavigation(); addLocaleControl(); setEyebrow();
-        });
-        const target=$('#appShell'); if(target) obs.observe(target,{subtree:true,childList:true});
+        // Re-run a few times while the async workspace/profile UI settles; no MutationObserver.
+        [250,700,1500,3000].forEach(ms=>setTimeout(enhance,ms));
       }
+      if(tries>100) clearInterval(wait);
     },120);
-    setTimeout(()=>clearInterval(wait),12000);
   });
 })();
