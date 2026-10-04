@@ -1,132 +1,1223 @@
-(function(){
-  const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-  const shuffle=a=>[...a].sort(()=>Math.random()-.5);
-  const SUBJECT_META={
-    geometry:{name:'Geometría',icon:'△',desc:'Formas, propiedades y ángulos.'}, language:{name:'Lenguaje',icon:'Aa',desc:'Comprensión, cohesión, inferencias, vocabulario y uso funcional del lenguaje.'}, division:{name:'Divisiones',icon:'÷',desc:'Divisiones por una y dos cifras.'}, reading:{name:'Lectura',icon:'▤',desc:'Comprensión literal e inferencial.'},
-    middleLanguage:{name:'Lenguaje 12-13',icon:'Aa',desc:'Comprensión, inferencias, cohesión, pragmática y precisión lingüística.'},middleMath:{name:'Matemáticas 12-13',icon:'∑',desc:'Porcentajes, fracciones, ecuaciones, proporcionalidad y geometría.'},middleReading:{name:'Lectura 12-13',icon:'▤',desc:'Comprensión literal, inferencias y uso de evidencias.'},
-    teenLanguage:{name:'Lenguaje 14-17',icon:'Aa',desc:'Argumentación, inferencias, ambigüedad, pensamiento crítico y precisión lingüística.'},teenMath:{name:'Matemáticas 14-17',icon:'∑',desc:'Porcentajes, ecuaciones y proporcionalidad.'},social:{name:'Social Lab',icon:'◎',desc:'Cognición social, perspectiva, pragmática, ambigüedad, intención e impacto.'},
-    english:{name:'English Lab',icon:'EN',desc:'Inglés comunicativo, gramática, lectura y escritura ajustados al grupo de edad.'},literacy:{name:'Lectura + Escritura',icon:'✎',desc:'Comprensión, pensamiento crítico y escritura con temas actuales.'},
-    attention:{name:'Atención',icon:'◉',desc:'Búsqueda, selección de información relevante, comparación y control de distractores.'},executive:{name:'Funciones ejecutivas',icon:'↻',desc:'Nivel 1: secuenciación · Nivel 2: priorización y distractores · Nivel 3: planificación con restricciones e imprevistos.'},memory:{name:'Memoria',icon:'▦',desc:'Listas, conversaciones, recorridos, asociaciones, encargos y memoria funcional.'},speedReasoning:{name:'Velocidad y razonamiento',icon:'◇',desc:'Comparación rápida, códigos, patrones, discriminación visual y razonamiento.'},applied:{name:'Cognición aplicada',icon:'◎',desc:'Situaciones cotidianas que integran atención, memoria y funciones ejecutivas.'}
+(function () {
+  const $ = (s) => document.querySelector(s),
+    $$ = (s) => [...document.querySelectorAll(s)];
+  const shuffle = (a) => [...a].sort(() => Math.random() - 0.5);
+  const SUBJECT_META = {
+    geometry: {
+      name: "Geometría",
+      icon: "△",
+      desc: "Formas, propiedades y ángulos.",
+    },
+    language: {
+      name: "Lenguaje",
+      icon: "Aa",
+      desc: "Comprensión, cohesión, inferencias, vocabulario y uso funcional del lenguaje.",
+    },
+    division: {
+      name: "Divisiones",
+      icon: "÷",
+      desc: "Divisiones por una y dos cifras.",
+    },
+    reading: {
+      name: "Lectura",
+      icon: "▤",
+      desc: "Comprensión literal e inferencial.",
+    },
+    middleLanguage: {
+      name: "Lenguaje 12-13",
+      icon: "Aa",
+      desc: "Comprensión, inferencias, cohesión, pragmática y precisión lingüística.",
+    },
+    middleMath: {
+      name: "Matemáticas 12-13",
+      icon: "∑",
+      desc: "Porcentajes, fracciones, ecuaciones, proporcionalidad y geometría.",
+    },
+    middleReading: {
+      name: "Lectura 12-13",
+      icon: "▤",
+      desc: "Comprensión literal, inferencias y uso de evidencias.",
+    },
+    teenLanguage: {
+      name: "Lenguaje 14-17",
+      icon: "Aa",
+      desc: "Argumentación, inferencias, ambigüedad, pensamiento crítico y precisión lingüística.",
+    },
+    teenMath: {
+      name: "Matemáticas 14-17",
+      icon: "∑",
+      desc: "Porcentajes, ecuaciones y proporcionalidad.",
+    },
+    social: {
+      name: "Social Lab",
+      icon: "◎",
+      desc: "Cognición social, perspectiva, pragmática, ambigüedad, intención e impacto.",
+    },
+    english: {
+      name: "English Lab",
+      icon: "EN",
+      desc: "Inglés comunicativo, gramática, lectura y escritura ajustados al grupo de edad.",
+    },
+    literacy: {
+      name: "Lectura + Escritura",
+      icon: "✎",
+      desc: "Comprensión, pensamiento crítico y escritura con temas actuales.",
+    },
+    attention: {
+      name: "Atención",
+      icon: "◉",
+      desc: "Búsqueda, selección de información relevante, comparación y control de distractores.",
+    },
+    executive: {
+      name: "Funciones ejecutivas",
+      icon: "↻",
+      desc: "Nivel 1: secuenciación · Nivel 2: priorización y distractores · Nivel 3: planificación con restricciones e imprevistos.",
+    },
+    memory: {
+      name: "Memoria",
+      icon: "▦",
+      desc: "Listas, conversaciones, recorridos, asociaciones, encargos y memoria funcional.",
+    },
+    speedReasoning: {
+      name: "Velocidad y razonamiento",
+      icon: "◇",
+      desc: "Comparación rápida, códigos, patrones, discriminación visual y razonamiento.",
+    },
+    applied: {
+      name: "Cognición aplicada",
+      icon: "◎",
+      desc: "Situaciones cotidianas que integran atención, memoria y funciones ejecutivas.",
+    },
   };
-  const AGE={primary:{label:'10-12 años',subjects:['geometry','language','division','reading','english','literacy','attention','executive','memory','speedReasoning','applied']},middle:{label:'12-13 años',subjects:['middleLanguage','middleMath','middleReading','english','literacy','attention','executive','memory','speedReasoning','applied']},teen:{label:'14-17 años',subjects:['teenLanguage','teenMath','social','english','literacy','attention','executive','memory','speedReasoning','applied']}};
-  let account=null,profiles=[],profile=null,state=null,subject=null,mode='grammar',currentItem=null,counter=0,guidedSession=null;
-  const API=window.LearningAPI;
-  const ICONS={
-    book:'📘',pencil:'✏️',backpack:'🎒',bottle:'🧴',notebook:'📓',folder:'📁',pencilCase:'🖊️',
-    apple:'🍎',banana:'🍌',cup:'☕',bread:'🥖',orange:'🍊',strawberry:'🍓',headphones:'🎧',
-    earbuds:'🎵',speaker:'🔊',microphone:'🎤',glass:'🥛',bowl:'🥣',mug:'☕',tomato:'🍅',
-    pepper:'🫑',musicNote:'🎵',camera:'📷',ticket:'🎟️',popcorn:'🍿',clapper:'🎬',screen:'🖥️',
-    suitcase:'🧳',map:'🗺️',train:'🚆',plane:'✈️',briefcase:'💼',keys:'🔑',wallet:'👛',
-    phone:'📱',keycard:'💳',sandwich:'🥪',yogurt:'🥛',cookie:'🍪',medicine:'💊',milk:'🥛',
-    pasta:'🍝',eggs:'🥚',juice:'🧃'
+  const AGE = {
+    primary: {
+      label: "10-12 años",
+      subjects: [
+        "geometry",
+        "language",
+        "division",
+        "reading",
+        "english",
+        "literacy",
+        "attention",
+        "executive",
+        "memory",
+        "speedReasoning",
+        "applied",
+      ],
+    },
+    middle: {
+      label: "12-13 años",
+      subjects: [
+        "middleLanguage",
+        "middleMath",
+        "middleReading",
+        "english",
+        "literacy",
+        "attention",
+        "executive",
+        "memory",
+        "speedReasoning",
+        "applied",
+      ],
+    },
+    teen: {
+      label: "14-17 años",
+      subjects: [
+        "teenLanguage",
+        "teenMath",
+        "social",
+        "english",
+        "literacy",
+        "attention",
+        "executive",
+        "memory",
+        "speedReasoning",
+        "applied",
+      ],
+    },
   };
-  const iconFor=k=>ICONS[k]||'•';
-  const safeImage=src=>src?`<img class="cognitive-photo" src="${escapeHtml(src)}" alt="" loading="lazy" onerror="this.remove()">`:'';
-  function renderIconSearch(it){
-    const visual=$('#exerciseVisual');
-    const targetPair=it.targetPair?`<div class="target-cue"><span>Objetivo</span><strong>${it.targetPair.map(iconFor).join(' + ')}</strong></div>`:'';
-    const cards=it.type==='pairSearch'
-      ?`<div class="icon-grid pair-grid">${(it.pairs||[]).map(pair=>`<div class="icon-cell pair-cell">${pair.map(k=>`<span>${iconFor(k)}</span>`).join('')}</div>`).join('')}</div>`
-      :`<div class="icon-grid level-${it.level||1}">${(it.icons||[]).map(k=>`<div class="icon-cell">${iconFor(k)}</div>`).join('')}</div>`;
-    visual.innerHTML=targetPair+cards;
+  let account = null,
+    profiles = [],
+    profile = null,
+    state = null,
+    subject = null,
+    mode = "grammar",
+    currentItem = null,
+    counter = 0,
+    guidedSession = null;
+  const API = window.LearningAPI;
+  const ICONS = {
+    book: "📘",
+    pencil: "✏️",
+    backpack: "🎒",
+    bottle: "🧴",
+    notebook: "📓",
+    folder: "📁",
+    pencilCase: "🖊️",
+    apple: "🍎",
+    banana: "🍌",
+    cup: "☕",
+    bread: "🥖",
+    orange: "🍊",
+    strawberry: "🍓",
+    headphones: "🎧",
+    earbuds: "🎵",
+    speaker: "🔊",
+    microphone: "🎤",
+    glass: "🥛",
+    bowl: "🥣",
+    mug: "☕",
+    tomato: "🍅",
+    pepper: "🫑",
+    musicNote: "🎵",
+    camera: "📷",
+    ticket: "🎟️",
+    popcorn: "🍿",
+    clapper: "🎬",
+    screen: "🖥️",
+    suitcase: "🧳",
+    map: "🗺️",
+    train: "🚆",
+    plane: "✈️",
+    briefcase: "💼",
+    keys: "🔑",
+    wallet: "👛",
+    phone: "📱",
+    keycard: "💳",
+    sandwich: "🥪",
+    yogurt: "🥛",
+    cookie: "🍪",
+    medicine: "💊",
+    milk: "🥛",
+    pasta: "🍝",
+    eggs: "🥚",
+    juice: "🧃",
+  };
+  const iconFor = (k) => ICONS[k] || "•";
+  const safeImage = (src) =>
+    src
+      ? `<img class="cognitive-photo" src="${escapeHtml(src)}" alt="" loading="lazy" onerror="this.remove()">`
+      : "";
+  function renderIconSearch(it) {
+    const visual = $("#exerciseVisual");
+    const targetPair = it.targetPair
+      ? `<div class="target-cue"><span>Objetivo</span><strong>${it.targetPair.map(iconFor).join(" + ")}</strong></div>`
+      : "";
+    const cards =
+      it.type === "pairSearch"
+        ? `<div class="icon-grid pair-grid">${(it.pairs || []).map((pair) => `<div class="icon-cell pair-cell">${pair.map((k) => `<span>${iconFor(k)}</span>`).join("")}</div>`).join("")}</div>`
+        : `<div class="icon-grid level-${it.level || 1}">${(it.icons || []).map((k) => `<div class="icon-cell">${iconFor(k)}</div>`).join("")}</div>`;
+    visual.innerHTML = targetPair + cards;
   }
-  function renderMemoryExercise(it){
-    const visual=$('#exerciseVisual'), area=$('#exerciseOptions');
-    const cards=(it.memoryContent||[]).map(x=>x.person
-      ?`<div class="memory-card"><strong>${escapeHtml(x.person)}</strong><span>${escapeHtml(x.detail)}</span></div>`
-      :`<div class="memory-card"><b>${iconFor(x.icon)}</b><span>${escapeHtml(x.detail)}</span></div>`).join('');
-    visual.innerHTML=`<div class="memory-reveal">${cards}</div><div class="memory-timer">Memoriza la información. Después desaparecerá.</div>`;
-    area.innerHTML='';
-    setTimeout(()=>{
-      if(currentItem!==it)return;
-      visual.innerHTML='';
-      $('#exercisePrompt').textContent=it.memoryQuestion||'¿Qué recuerdas?';
-      if(it.type==='memoryMulti') renderMultiSelect(it); else renderOptions(it);
-    },Math.max(2500,Number(it.revealMs||6000)));
+  function renderMemoryExercise(it) {
+    const visual = $("#exerciseVisual"),
+      area = $("#exerciseOptions");
+    const cards = (it.memoryContent || [])
+      .map((x) =>
+        x.person
+          ? `<div class="memory-card"><strong>${escapeHtml(x.person)}</strong><span>${escapeHtml(x.detail)}</span></div>`
+          : `<div class="memory-card"><b>${iconFor(x.icon)}</b><span>${escapeHtml(x.detail)}</span></div>`,
+      )
+      .join("");
+    visual.innerHTML = `<div class="memory-reveal">${cards}</div><div class="memory-timer">Memoriza la información. Después desaparecerá.</div>`;
+    area.innerHTML = "";
+    setTimeout(
+      () => {
+        if (currentItem !== it) return;
+        visual.innerHTML = "";
+        $("#exercisePrompt").textContent =
+          it.memoryQuestion || "¿Qué recuerdas?";
+        if (it.type === "memoryMulti") renderMultiSelect(it);
+        else renderOptions(it);
+      },
+      Math.max(2500, Number(it.revealMs || 6000)),
+    );
   }
-  function renderMultiSelect(it){
-    const selected=new Set();
-    const opts=shuffle(it.opts||[]);
-    $('#exerciseOptions').innerHTML=`<div class="multi-select-grid">${opts.map(o=>`<button class="option-btn multi-option" data-value="${escapeHtml(o)}">${escapeHtml(o)}</button>`).join('')}</div><div class="multi-actions"><span id="multiCount">0/${(it.answers||[]).length} seleccionados</span><button id="multiCheck" class="primary-btn">Comprobar selección</button></div>`;
-    $$('#exerciseOptions .multi-option').forEach(b=>b.onclick=()=>{const v=b.dataset.value;if(selected.has(v)){selected.delete(v);b.classList.remove('selected')}else{selected.add(v);b.classList.add('selected')}$('#multiCount').textContent=`${selected.size}/${(it.answers||[]).length} seleccionados`;});
-    $('#multiCheck').onclick=()=>{const answer=new Set((it.answers||[]).map(String));const ok=selected.size===answer.size&&[...selected].every(v=>answer.has(v));$$('#exerciseOptions .multi-option').forEach(b=>{b.disabled=true;if(answer.has(b.dataset.value))b.classList.add('correct');else if(selected.has(b.dataset.value))b.classList.add('wrong')});$('#multiCheck').disabled=true;showFeedback(ok,saveResult(subject,ok,it.id,'memoryMulti'),ok?'Has reconocido correctamente todos los elementos.':'Revisa los elementos marcados en verde.');};
+  function renderMultiSelect(it) {
+    const selected = new Set();
+    const opts = shuffle(it.opts || []);
+    $("#exerciseOptions").innerHTML =
+      `<div class="multi-select-grid">${opts.map((o) => `<button class="option-btn multi-option" data-value="${escapeHtml(o)}">${escapeHtml(o)}</button>`).join("")}</div><div class="multi-actions"><span id="multiCount">0/${(it.answers || []).length} seleccionados</span><button id="multiCheck" class="primary-btn">Comprobar selección</button></div>`;
+    $$("#exerciseOptions .multi-option").forEach(
+      (b) =>
+        (b.onclick = () => {
+          const v = b.dataset.value;
+          if (selected.has(v)) {
+            selected.delete(v);
+            b.classList.remove("selected");
+          } else {
+            selected.add(v);
+            b.classList.add("selected");
+          }
+          $("#multiCount").textContent =
+            `${selected.size}/${(it.answers || []).length} seleccionados`;
+        }),
+    );
+    $("#multiCheck").onclick = () => {
+      const answer = new Set((it.answers || []).map(String));
+      const ok =
+        selected.size === answer.size &&
+        [...selected].every((v) => answer.has(v));
+      $$("#exerciseOptions .multi-option").forEach((b) => {
+        b.disabled = true;
+        if (answer.has(b.dataset.value)) b.classList.add("correct");
+        else if (selected.has(b.dataset.value)) b.classList.add("wrong");
+      });
+      $("#multiCheck").disabled = true;
+      showFeedback(
+        ok,
+        saveResult(subject, ok, it.id, "memoryMulti"),
+        ok
+          ? "Has reconocido correctamente todos los elementos."
+          : "Revisa los elementos marcados en verde.",
+      );
+    };
   }
-  const blankState=()=>{const subjects=profile?AGE[profile.age_band].subjects:[];const scores={},levels={};const initial=Math.max(1,Math.min(3,Number(profile?.progress?.initialLevel||1)));subjects.forEach(s=>{scores[s]=0;levels[s]=initial});return {scores,levels,totalCorrect:0,totalAttempts:0,history:[],sessions:[],streak:0,session:{id:`s_${Date.now()}`,startedAt:new Date().toISOString(),attempts:0,correct:0}}};
-  function normalizeState(p){const b=blankState(),s=p?.progress||{};return {...b,...s,scores:{...b.scores,...(s.scores||{})},levels:{...b.levels,...(s.levels||{})},history:s.history||[],sessions:s.sessions||[],session:b.session,streak:0};}
-  function escapeHtml(s){return String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
-  function ageData(){return AGE[profile.age_band]}
-  function recent(s,n=10){return state.history.filter(x=>x.subject===s).slice(-n)}
-  function recalcLevel(s){const r=recent(s,10);if(r.length<6)return;const acc=r.filter(x=>x.correct).length/r.length;let l=state.levels[s]||1;if(acc>=.82&&l<3)l++;else if(acc<=.42&&l>1)l--;state.levels[s]=l}
-  async function persist(){if(profile&&state){profile.progress={scores:state.scores,levels:state.levels,totalCorrect:state.totalCorrect,totalAttempts:state.totalAttempts,history:state.history.slice(-5000),sessions:state.sessions.slice(-30),_delivery:profile.progress?._delivery};try{await API.saveProgress(profile.id,profile.progress)}catch(e){console.warn(e)}}}
-  function saveResult(s,correct,itemId,detail='standard'){state.totalAttempts++;state.session.attempts++;if(correct){state.totalCorrect++;state.session.correct++;state.streak++;}else state.streak=0;const pts=correct?(10+(state.streak>0&&state.streak%3===0?5:0)):0;state.scores[s]=(state.scores[s]||0)+pts;const row={ts:new Date().toISOString(),sessionId:state.session.id,sessionStartedAt:state.session.startedAt,subject:s,correct,points:pts,level:state.levels[s]||1,itemId,detail};state.history.push(row);state.history=state.history.slice(-5000);recalcLevel(s);persist();API.saveResult(profile.id,row);updateGlobalUI();return pts}
-  function showAuth(msg=''){ $('#authGate').classList.remove('hidden');$('#appShell').classList.add('hidden');$('#authMessage').textContent=msg; }
-  function hideAuth(){ $('#authGate').classList.add('hidden');$('#appShell').classList.remove('hidden'); }
-  async function boot(){
-    try{const session=await API.getSession();if(!session){showAuth();return;}await loadWorkspace();}catch(e){showAuth(e.message||'No se pudo iniciar la aplicación.');}
+  const blankState = () => {
+    const subjects = profile ? AGE[profile.age_band].subjects : [];
+    const scores = {},
+      levels = {};
+    const initial = Math.max(
+      1,
+      Math.min(3, Number(profile?.progress?.initialLevel || 1)),
+    );
+    subjects.forEach((s) => {
+      scores[s] = 0;
+      levels[s] = initial;
+    });
+    return {
+      scores,
+      levels,
+      totalCorrect: 0,
+      totalAttempts: 0,
+      history: [],
+      sessions: [],
+      streak: 0,
+      session: {
+        id: `s_${Date.now()}`,
+        startedAt: new Date().toISOString(),
+        attempts: 0,
+        correct: 0,
+      },
+    };
+  };
+  function normalizeState(p) {
+    const b = blankState(),
+      s = p?.progress || {};
+    return {
+      ...b,
+      ...s,
+      scores: { ...b.scores, ...(s.scores || {}) },
+      levels: { ...b.levels, ...(s.levels || {}) },
+      history: s.history || [],
+      sessions: s.sessions || [],
+      session: b.session,
+      streak: 0,
+    };
   }
-  async function loadWorkspace(){account=await API.getAccount();profiles=await API.listProfiles();hideAuth();renderAccountStatus();if(!profiles.length){renderProfiles();openProfileGate();return;}activateProfile(localStorage.getItem('lh_current_profile')||profiles[0].id)}
-  function renderAccountStatus(){const chip=$('#accountStatus');if(!chip)return;const st=account?.subscription_status||'trial';let txt=st==='trial'?'Prueba 7 días':st==='complimentary'?'Acceso complimentary':st==='active'?'Suscripción activa':st==='past_due'?'Pago pendiente':st==='cancelled'?'Suscripción cancelada':st; if(st==='trial'&&account.trial_ends_at){const days=Math.max(0,Math.ceil((new Date(account.trial_ends_at)-new Date())/86400000));txt+=` · ${days} día${days===1?'':'s'}`;}chip.textContent=txt;const sub=$('#subscribeBtn'),portal=$('#billingPortalBtn');if(sub){sub.textContent=window.LH_CONFIG?.stripeMode==='test'?'Probar pago · 25 €/mes':'Suscribirme · 25 €/mes';const canSubscribe=['trial','cancelled'].includes(st)||(window.LH_CONFIG?.stripeMode==='test'&&st==='complimentary');sub.classList.toggle('hidden',!canSubscribe);}if(portal)portal.classList.toggle('hidden',!['active','past_due'].includes(st));}
-  function renderProfiles(){const sel=$('#profileSelect');sel.innerHTML=profiles.map(p=>`<option value="${p.id}">${escapeHtml(p.name)} · ${AGE[p.age_band].label}</option>`).join('');if(profile)sel.value=profile.id}
-  function openProfileGate(){$('#profileGate').classList.remove('hidden');$('#newProfileName').focus()}
-  function closeProfileGate(){$('#profileGate').classList.add('hidden')}
-  async function createProfile(){const name=$('#newProfileName').value.trim();if(!name)return;try{const p=await API.createProfile(name,$('#newProfileAge').value,$('#newProfileLevel').value,'es_intl');profiles.push(p);$('#newProfileName').value='';closeProfileGate();activateProfile(p.id)}catch(e){alert(e.message)}}
-  function activateProfile(id){const p=profiles.find(x=>x.id===id);if(!p)return;profile=p;localStorage.setItem('lh_current_profile',id);state=normalizeState(p);subject=ageData().subjects[0];mode='grammar';counter=0;renderProfiles();buildNavigation();buildHomework();buildSessionBuilder();switchSection('home');updateGlobalUI()}
-  function buildNavigation(){const nav=$('#navMenu');const items=[['home','⌂','Inicio']];ageData().subjects.forEach(s=>items.push(['exercise',SUBJECT_META[s].icon,SUBJECT_META[s].name,s]));items.push(['sessionBuilder','▦','Crear sesión'],['progress','↗','Progreso'],['homework','⇩','Fichas']);nav.innerHTML=items.map((x,i)=>`<button class="nav-item ${i===0?'active':''}" data-section="${x[0]}" ${x[3]?`data-subject="${x[3]}"`:''}>${x[1]} ${x[2]}</button>`).join('');$$('.nav-item').forEach(b=>b.onclick=()=>{if(b.dataset.subject){guidedSession=null;hideGuidedBar();subject=b.dataset.subject;switchSection('exercise');setupExercise()}else switchSection(b.dataset.section)})}
-  const titles={home:'Panel',exercise:'Entrenamiento',division:'Divisiones',sessionBuilder:'Crear sesión',progress:'Progreso',homework:'Fichas para casa'};
-  function switchSection(id){$$('.section').forEach(s=>s.classList.remove('active-section'));$('#'+id).classList.add('active-section');$$('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.section===id&&(!b.dataset.subject||b.dataset.subject===subject)));$('#sectionTitle').textContent=id==='exercise'?SUBJECT_META[subject].name:titles[id];if(id==='progress')renderProgress()}
-  function setupExercise(){const m=SUBJECT_META[subject];$('#exercisePill').textContent=m.name.toUpperCase();$('#exerciseHeading').textContent=m.name;$('#exerciseDescription').textContent=m.desc;$('#exerciseLevelSelect').value=String(state.levels[subject]||1);$('#subjectScore').textContent=state.scores[subject]||0;const isLang=subject==='language';$('#languageModeSwitch').classList.toggle('hidden',!isLang);counter=0;newExercise()}
-  async function requestOne(kind,domain=subject,extra={}){const res=await API.requestContent({profile_id:profile.id,kind,domain,subdomain:domain==='language'?mode:null,level:state.levels[domain]||1,count:1,...extra});if(res?.usage){$('#usageHint').textContent=`Uso hoy: ${res.usage.used}/${res.usage.limit} ${kind==='worksheet'?'fichas':kind==='game'?'juegos':'ejercicios'}`;}return res?.items?.[0]||null}
-  async function newExercise(){setLoading(true);try{currentItem=await requestOne('exercise');counter++;renderExercise(currentItem)}catch(e){showContentError(e)}finally{setLoading(false)}}
-  function setLoading(v){if(v)$('#exercisePrompt').textContent='Cargando reto…'}
-  function friendlyContentError(e){
-    const raw=String(e?.message||'');
-    if(/Daily content limit reached/i.test(raw)) return 'Has alcanzado el límite de contenido de hoy para esta modalidad. Podrás continuar cuando se renueve la cuota diaria.';
-    if(/Trial expired/i.test(raw)) return 'El periodo de prueba ha finalizado.';
-    if(/non-2xx|Failed to send|Edge Function/i.test(raw)) return 'No se pudo cargar el contenido. Inténtalo de nuevo en unos segundos.';
-    return raw||'No se pudo cargar el contenido.';
+  function escapeHtml(s) {
+    return String(s ?? "").replace(
+      /[&<>'"]/g,
+      (c) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          "'": "&#39;",
+          '"': "&quot;",
+        })[c],
+    );
   }
-  function showContentError(e){const msg=friendlyContentError(e);$('#exercisePrompt').textContent=msg;$('#exerciseOptions').innerHTML='';$('#exerciseVisual').innerHTML='';$('#exerciseNext').classList.add('hidden')}
-  function renderExercise(it){if(!it){$('#exercisePrompt').textContent='No hay contenido disponible.';return;}$('#exerciseCounter').textContent=`Ejercicio ${counter}`;$('#exerciseFeedback').textContent='';$('#exerciseFeedback').className='feedback';$('#exerciseExplanation').classList.add('hidden');$('#exerciseNext').classList.add('hidden');$('#exerciseOptions').innerHTML='';$('#exerciseVisual').innerHTML='';$('#textAnswerArea').classList.add('hidden');$('#selfAssessment').classList.add('hidden');$('#exerciseTopic').textContent=it.topic||it.theme||'';$('#exerciseTopic').classList.toggle('hidden',!$('#exerciseTopic').textContent);if(it.visual)$('#exerciseVisual').innerHTML=`<div class="shape-visual">${it.visual}</div>`;if(it.angle!==undefined)$('#exerciseVisual').innerHTML=`<div class="angle-box"><strong>${it.angle}°</strong></div>`;if(it.title&&it.text)$('#exerciseVisual').innerHTML=`<div class="reading-passage"><h4>${escapeHtml(it.title)}</h4><p>${escapeHtml(it.text)}</p></div>`;if(it.type==='visualSearch'&&Array.isArray(it.grid))$('#exerciseVisual').innerHTML=`<div class="symbol-grid">${it.grid.map(x=>`<span>${escapeHtml(x)}</span>`).join('')}</div>`;if(it.type==='sceneAttention'&&it.image)$('#exerciseVisual').innerHTML=safeImage(it.image);if(it.type==='iconSearch'||it.type==='pairSearch')renderIconSearch(it);if(it.model)$('#exerciseVisual').innerHTML=`<div class="code-model"><span>MODELO</span><strong>${escapeHtml(it.model)}</strong></div>`;if(Array.isArray(it.modelSequence))$('#exerciseVisual').innerHTML=`<div class="code-model"><span>MODELO</span><strong>${it.modelSequence.map(escapeHtml).join(' &nbsp; ')}</strong></div>`;if(Array.isArray(it.rows))$('#exerciseVisual').innerHTML+=`<div class="pattern-rows">${it.rows.map((r,i)=>`<div><b>Fila ${i+1}</b><span>${r.map(escapeHtml).join(' &nbsp; ')}</span></div>`).join('')}</div>`;if(Array.isArray(it.visualItems))$('#exerciseVisual').innerHTML+=`<div class="v13-visual-items">${it.visualItems.map(x=>`<span>${escapeHtml(x)}</span>`).join('')}</div>`;if(it.scenario)$('#exerciseVisual').innerHTML+=`<div class="scenario-card"><span class="scenario-label">SITUACIÓN</span><p>${escapeHtml(it.scenario)}</p></div>`;$('#exercisePrompt').textContent=it.q||'Actividad';if(it.type==='memoryReveal'||it.type==='memoryMulti'){renderMemoryExercise(it);return;}if(it.type==='self'||(!it.opts&&!it.a&&it.sample)){ $('#textAnswerArea').classList.remove('hidden');$('#textAnswerInput').value='';return;}if(it.type==='order'){renderOrderExercise(it);return;}if(it.type==='sequence'||it.type==='ruleSwitch'){renderCognitiveExercise(it);return;}renderOptions(it)}
-  function renderOptions(it){const opts=shuffle(it.opts||[]);$('#exerciseOptions').innerHTML=opts.map(o=>`<button class="option-btn">${escapeHtml(o)}</button>`).join('');$$('#exerciseOptions .option-btn').forEach(b=>b.onclick=()=>checkOption(b,b.textContent))}
-  function checkOption(btn,value){const correct=value===String(currentItem.a);$$('#exerciseOptions .option-btn').forEach(b=>{b.disabled=true;if(b.textContent===String(currentItem.a))b.classList.add('correct')});if(!correct)btn.classList.add('wrong');const pts=saveResult(subject,correct,currentItem.id,currentItem.type||'standard');showFeedback(correct,pts,currentItem.why)}
-  function renderOrderExercise(it){
-    const tokens=[...(it.tokens||[])], expected=Array.isArray(it.answer)?it.answer:[String(it.answer||'')];
-    const picked=[];
-    const area=$('#exerciseOptions');
-    const render=()=>{
-      const slots=expected.map((_,i)=>`<button class="sequence-slot ${picked[i]?'filled':''}" data-slot="${i}"><span>${i+1}</span>${picked[i]?escapeHtml(picked[i]):'Selecciona un paso'}</button>`).join('');
-      const tray=tokens.map((tok,i)=>`<button class="word-token ${picked.includes(tok)?'used':''}" data-token-index="${i}" ${picked.includes(tok)?'disabled':''}>${escapeHtml(tok)}</button>`).join('');
-      area.innerHTML=`<div class="sequence-workspace"><div class="sequence-slots">${slots}</div><div class="token-bank"><p class="eyebrow">PASOS DISPONIBLES</p><div class="token-tray">${tray}</div></div></div><div class="sequence-actions"><button id="orderUndo" class="secondary-btn" ${picked.length?'':'disabled'}>Deshacer</button><button id="orderReset" class="ghost-light-btn" ${picked.length?'':'disabled'}>Reiniciar</button><button id="orderCheck" class="primary-btn">Comprobar</button></div>`;
-      $$('#exerciseOptions .word-token').forEach(b=>b.onclick=()=>{const tok=tokens[Number(b.dataset.tokenIndex)];if(!picked.includes(tok)&&picked.length<expected.length){picked.push(tok);render();}});
-      $$('#exerciseOptions .sequence-slot.filled').forEach(b=>b.onclick=()=>{const i=Number(b.dataset.slot);picked.splice(i,1);render();});
-      $('#orderUndo').onclick=()=>{picked.pop();render()};
-      $('#orderReset').onclick=()=>{picked.length=0;render()};
-      $('#orderCheck').onclick=()=>{const ok=picked.length===expected.length&&picked.every((x,i)=>x===expected[i]);showFeedback(ok,saveResult(subject,ok,it.id,'planning'),ok?'Secuencia correcta.':`Orden esperado: ${expected.join(' → ')}`)};
+  function ageData() {
+    return AGE[profile.age_band];
+  }
+  function recent(s, n = 10) {
+    return state.history.filter((x) => x.subject === s).slice(-n);
+  }
+  function recalcLevel(s) {
+    const r = recent(s, 10);
+    if (r.length < 6) return;
+    const acc = r.filter((x) => x.correct).length / r.length;
+    let l = state.levels[s] || 1;
+    if (acc >= 0.82 && l < 3) l++;
+    else if (acc <= 0.42 && l > 1) l--;
+    state.levels[s] = l;
+  }
+  async function persist() {
+    if (profile && state) {
+      profile.progress = {
+        scores: state.scores,
+        levels: state.levels,
+        totalCorrect: state.totalCorrect,
+        totalAttempts: state.totalAttempts,
+        history: state.history.slice(-5000),
+        sessions: state.sessions.slice(-30),
+        _delivery: profile.progress?._delivery,
+      };
+      try {
+        await API.saveProgress(profile.id, profile.progress);
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+  }
+  function saveResult(s, correct, itemId, detail = "standard") {
+    state.totalAttempts++;
+    state.session.attempts++;
+    if (correct) {
+      state.totalCorrect++;
+      state.session.correct++;
+      state.streak++;
+    } else state.streak = 0;
+    const pts = correct
+      ? 10 + (state.streak > 0 && state.streak % 3 === 0 ? 5 : 0)
+      : 0;
+    state.scores[s] = (state.scores[s] || 0) + pts;
+    const row = {
+      ts: new Date().toISOString(),
+      sessionId: state.session.id,
+      sessionStartedAt: state.session.startedAt,
+      subject: s,
+      correct,
+      points: pts,
+      level: state.levels[s] || 1,
+      itemId,
+      detail,
+    };
+    state.history.push(row);
+    state.history = state.history.slice(-5000);
+    recalcLevel(s);
+    persist();
+    API.saveResult(profile.id, row);
+    updateGlobalUI();
+    return pts;
+  }
+  function showAuth(msg = "") {
+    $("#authGate").classList.remove("hidden");
+    $("#appShell").classList.add("hidden");
+    $("#authMessage").textContent = msg;
+  }
+  function hideAuth() {
+    $("#authGate").classList.add("hidden");
+    $("#appShell").classList.remove("hidden");
+  }
+  async function boot() {
+    try {
+      const session = await API.getSession();
+      if (!session) {
+        showAuth();
+        return;
+      }
+      await loadWorkspace();
+    } catch (e) {
+      showAuth(e.message || "No se pudo iniciar la aplicación.");
+    }
+  }
+  async function loadWorkspace() {
+    account = await API.getAccount();
+    profiles = await API.listProfiles();
+    hideAuth();
+    renderAccountStatus();
+    if (!profiles.length) {
+      renderProfiles();
+      openProfileGate();
+      return;
+    }
+    activateProfile(
+      localStorage.getItem("lh_current_profile") || profiles[0].id,
+    );
+  }
+  function renderAccountStatus() {
+    const chip = $("#accountStatus");
+    if (!chip) return;
+    const st = account?.subscription_status || "trial";
+    let txt =
+      st === "trial"
+        ? "Prueba 7 días"
+        : st === "complimentary"
+          ? "Acceso complimentary"
+          : st === "active"
+            ? "Suscripción activa"
+            : st === "past_due"
+              ? "Pago pendiente"
+              : st === "cancelled"
+                ? "Suscripción cancelada"
+                : st;
+    if (st === "trial" && account.trial_ends_at) {
+      const days = Math.max(
+        0,
+        Math.ceil((new Date(account.trial_ends_at) - new Date()) / 86400000),
+      );
+      txt += ` · ${days} día${days === 1 ? "" : "s"}`;
+    }
+    chip.textContent = txt;
+    const sub = $("#subscribeBtn"),
+      portal = $("#billingPortalBtn");
+    if (sub) {
+      sub.textContent =
+        window.LH_CONFIG?.stripeMode === "test"
+          ? "Probar pago · 25 €/mes"
+          : "Suscribirme · 25 €/mes";
+      const canSubscribe =
+        ["trial", "cancelled"].includes(st) ||
+        (window.LH_CONFIG?.stripeMode === "test" && st === "complimentary");
+      sub.classList.toggle("hidden", !canSubscribe);
+    }
+    if (portal)
+      portal.classList.toggle("hidden", !["active", "past_due"].includes(st));
+  }
+  function renderProfiles() {
+    const sel = $("#profileSelect");
+    sel.innerHTML = profiles
+      .map(
+        (p) =>
+          `<option value="${p.id}">${escapeHtml(p.name)} · ${AGE[p.age_band].label}</option>`,
+      )
+      .join("");
+    if (profile) sel.value = profile.id;
+  }
+  function openProfileGate() {
+    $("#profileGate").classList.remove("hidden");
+    $("#newProfileName").focus();
+  }
+  function closeProfileGate() {
+    $("#profileGate").classList.add("hidden");
+  }
+  async function createProfile() {
+    const name = $("#newProfileName").value.trim();
+    if (!name) return;
+    try {
+      const p = await API.createProfile(
+        name,
+        $("#newProfileAge").value,
+        $("#newProfileLevel").value,
+        "es_intl",
+      );
+      profiles.push(p);
+      $("#newProfileName").value = "";
+      closeProfileGate();
+      activateProfile(p.id);
+    } catch (e) {
+      alert(e.message);
+    }
+  }
+  function activateProfile(id) {
+    const p = profiles.find((x) => x.id === id);
+    if (!p) return;
+    profile = p;
+    localStorage.setItem("lh_current_profile", id);
+    state = normalizeState(p);
+    subject = ageData().subjects[0];
+    mode = "grammar";
+    counter = 0;
+    renderProfiles();
+    buildNavigation();
+    buildHomework();
+    buildSessionBuilder();
+    switchSection("home");
+    updateGlobalUI();
+  }
+  function buildNavigation() {
+    const nav = $("#navMenu");
+    const items = [["home", "⌂", "Inicio"]];
+    ageData().subjects.forEach((s) =>
+      items.push(["exercise", SUBJECT_META[s].icon, SUBJECT_META[s].name, s]),
+    );
+    items.push(
+      ["sessionBuilder", "▦", "Crear sesión"],
+      ["progress", "↗", "Progreso"],
+      ["homework", "⇩", "Fichas"],
+    );
+    nav.innerHTML = items
+      .map(
+        (x, i) =>
+          `<button class="nav-item ${i === 0 ? "active" : ""}" data-section="${x[0]}" ${x[3] ? `data-subject="${x[3]}"` : ""}>${x[1]} ${x[2]}</button>`,
+      )
+      .join("");
+    $$(".nav-item").forEach(
+      (b) =>
+        (b.onclick = () => {
+          if (b.dataset.subject) {
+            guidedSession = null;
+            hideGuidedBar();
+            subject = b.dataset.subject;
+            switchSection("exercise");
+            setupExercise();
+          } else switchSection(b.dataset.section);
+        }),
+    );
+  }
+  const titles = {
+    home: "Panel",
+    exercise: "Entrenamiento",
+    division: "Divisiones",
+    sessionBuilder: "Crear sesión",
+    progress: "Progreso",
+    homework: "Fichas para casa",
+  };
+  function switchSection(id) {
+    $$(".section").forEach((s) => s.classList.remove("active-section"));
+    $("#" + id).classList.add("active-section");
+    $$(".nav-item").forEach((b) =>
+      b.classList.toggle(
+        "active",
+        b.dataset.section === id &&
+          (!b.dataset.subject || b.dataset.subject === subject),
+      ),
+    );
+    $("#sectionTitle").textContent =
+      id === "exercise" ? SUBJECT_META[subject].name : titles[id];
+    if (id === "progress") renderProgress();
+  }
+  function setupExercise() {
+    const m = SUBJECT_META[subject];
+    $("#exercisePill").textContent = m.name.toUpperCase();
+    $("#exerciseHeading").textContent = m.name;
+    $("#exerciseDescription").textContent = m.desc;
+    $("#exerciseLevelSelect").value = String(state.levels[subject] || 1);
+    $("#subjectScore").textContent = state.scores[subject] || 0;
+    const isLang = subject === "language";
+    $("#languageModeSwitch").classList.toggle("hidden", !isLang);
+    counter = 0;
+    newExercise();
+  }
+  async function requestOne(kind, domain = subject, extra = {}) {
+    const res = await API.requestContent({
+      profile_id: profile.id,
+      kind,
+      domain,
+      subdomain: domain === "language" ? mode : null,
+      level: state.levels[domain] || 1,
+      count: 1,
+      ...extra,
+    });
+    if (res?.usage) {
+      $("#usageHint").textContent =
+        `Uso hoy: ${res.usage.used}/${res.usage.limit} ${kind === "worksheet" ? "fichas" : kind === "game" ? "juegos" : "ejercicios"}`;
+    }
+    return res?.items?.[0] || null;
+  }
+  async function newExercise() {
+    setLoading(true);
+    try {
+      currentItem = await requestOne("exercise");
+      counter++;
+      renderExercise(currentItem);
+    } catch (e) {
+      showContentError(e);
+    } finally {
+      setLoading(false);
+    }
+  }
+  function setLoading(v) {
+    if (v) $("#exercisePrompt").textContent = "Cargando reto…";
+  }
+  function friendlyContentError(e) {
+    const raw = String(e?.message || "");
+    if (/Daily content limit reached/i.test(raw))
+      return "Has alcanzado el límite de contenido de hoy para esta modalidad. Podrás continuar cuando se renueve la cuota diaria.";
+    if (/Trial expired/i.test(raw))
+      return "El periodo de prueba ha finalizado.";
+    if (/non-2xx|Failed to send|Edge Function/i.test(raw))
+      return "No se pudo cargar el contenido. Inténtalo de nuevo en unos segundos.";
+    return raw || "No se pudo cargar el contenido.";
+  }
+  function showContentError(e) {
+    const msg = friendlyContentError(e);
+    $("#exercisePrompt").textContent = msg;
+    $("#exerciseOptions").innerHTML = "";
+    $("#exerciseVisual").innerHTML = "";
+    $("#exerciseNext").classList.add("hidden");
+  }
+  function renderExercise(it) {
+    if (!it) {
+      $("#exercisePrompt").textContent = "No hay contenido disponible.";
+      return;
+    }
+    $("#exerciseCounter").textContent = `Ejercicio ${counter}`;
+    $("#exerciseFeedback").textContent = "";
+    $("#exerciseFeedback").className = "feedback";
+    $("#exerciseExplanation").classList.add("hidden");
+    $("#exerciseNext").classList.add("hidden");
+    $("#exerciseOptions").innerHTML = "";
+    $("#exerciseVisual").innerHTML = "";
+    $("#textAnswerArea").classList.add("hidden");
+    $("#selfAssessment").classList.add("hidden");
+    $("#exerciseTopic").textContent = it.topic || it.theme || "";
+    $("#exerciseTopic").classList.toggle(
+      "hidden",
+      !$("#exerciseTopic").textContent,
+    );
+    if (it.visual)
+      $("#exerciseVisual").innerHTML =
+        `<div class="shape-visual">${it.visual}</div>`;
+    if (it.angle !== undefined)
+      $("#exerciseVisual").innerHTML =
+        `<div class="angle-box"><strong>${it.angle}°</strong></div>`;
+    if (it.title && it.text)
+      $("#exerciseVisual").innerHTML =
+        `<div class="reading-passage"><h4>${escapeHtml(it.title)}</h4><p>${escapeHtml(it.text)}</p></div>`;
+    if (it.type === "visualSearch" && Array.isArray(it.grid))
+      $("#exerciseVisual").innerHTML =
+        `<div class="symbol-grid">${it.grid.map((x) => `<span>${escapeHtml(x)}</span>`).join("")}</div>`;
+    if (it.type === "sceneAttention" && it.image)
+      $("#exerciseVisual").innerHTML = safeImage(it.image);
+    if (it.type === "iconSearch" || it.type === "pairSearch")
+      renderIconSearch(it);
+    if (it.model)
+      $("#exerciseVisual").innerHTML =
+        `<div class="code-model"><span>MODELO</span><strong>${escapeHtml(it.model)}</strong></div>`;
+    if (Array.isArray(it.modelSequence))
+      $("#exerciseVisual").innerHTML =
+        `<div class="code-model"><span>MODELO</span><strong>${it.modelSequence.map(escapeHtml).join(" &nbsp; ")}</strong></div>`;
+    if (Array.isArray(it.rows))
+      $("#exerciseVisual").innerHTML +=
+        `<div class="pattern-rows">${it.rows.map((r, i) => `<div><b>Fila ${i + 1}</b><span>${r.map(escapeHtml).join(" &nbsp; ")}</span></div>`).join("")}</div>`;
+    if (Array.isArray(it.visualItems))
+      $("#exerciseVisual").innerHTML +=
+        `<div class="v13-visual-items">${it.visualItems.map((x) => `<span>${escapeHtml(x)}</span>`).join("")}</div>`;
+    if (it.scenario)
+      $("#exerciseVisual").innerHTML +=
+        `<div class="scenario-card"><span class="scenario-label">SITUACIÓN</span><p>${escapeHtml(it.scenario)}</p></div>`;
+    $("#exercisePrompt").textContent = it.q || "Actividad";
+    if (it.type === "memoryReveal" || it.type === "memoryMulti") {
+      renderMemoryExercise(it);
+      return;
+    }
+    if (it.type === "self" || (!it.opts && !it.a && it.sample)) {
+      $("#textAnswerArea").classList.remove("hidden");
+      $("#textAnswerInput").value = "";
+      return;
+    }
+    if (it.type === "order") {
+      renderOrderExercise(it);
+      return;
+    }
+    if (it.type === "sequence" || it.type === "ruleSwitch") {
+      renderCognitiveExercise(it);
+      return;
+    }
+    renderOptions(it);
+  }
+  function renderOptions(it) {
+    const opts = shuffle(it.opts || []);
+    $("#exerciseOptions").innerHTML = opts
+      .map((o) => `<button class="option-btn">${escapeHtml(o)}</button>`)
+      .join("");
+    $$("#exerciseOptions .option-btn").forEach(
+      (b) => (b.onclick = () => checkOption(b, b.textContent)),
+    );
+  }
+  function checkOption(btn, value) {
+    const correct = value === String(currentItem.a);
+    $$("#exerciseOptions .option-btn").forEach((b) => {
+      b.disabled = true;
+      if (b.textContent === String(currentItem.a)) b.classList.add("correct");
+    });
+    if (!correct) btn.classList.add("wrong");
+    const pts = saveResult(
+      subject,
+      correct,
+      currentItem.id,
+      currentItem.type || "standard",
+    );
+    showFeedback(correct, pts, currentItem.why);
+  }
+  function renderOrderExercise(it) {
+    const tokens = [...(it.tokens || [])],
+      expected = Array.isArray(it.answer)
+        ? it.answer
+        : [String(it.answer || "")];
+    const picked = [];
+    const area = $("#exerciseOptions");
+    const render = () => {
+      const slots = expected
+        .map(
+          (_, i) =>
+            `<button class="sequence-slot ${picked[i] ? "filled" : ""}" data-slot="${i}"><span>${i + 1}</span>${picked[i] ? escapeHtml(picked[i]) : "Selecciona un paso"}</button>`,
+        )
+        .join("");
+      const tray = tokens
+        .map(
+          (tok, i) =>
+            `<button class="word-token ${picked.includes(tok) ? "used" : ""}" data-token-index="${i}" ${picked.includes(tok) ? "disabled" : ""}>${escapeHtml(tok)}</button>`,
+        )
+        .join("");
+      area.innerHTML = `<div class="sequence-workspace"><div class="sequence-slots">${slots}</div><div class="token-bank"><p class="eyebrow">PASOS DISPONIBLES</p><div class="token-tray">${tray}</div></div></div><div class="sequence-actions"><button id="orderUndo" class="secondary-btn" ${picked.length ? "" : "disabled"}>Deshacer</button><button id="orderReset" class="ghost-light-btn" ${picked.length ? "" : "disabled"}>Reiniciar</button><button id="orderCheck" class="primary-btn">Comprobar</button></div>`;
+      $$("#exerciseOptions .word-token").forEach(
+        (b) =>
+          (b.onclick = () => {
+            const tok = tokens[Number(b.dataset.tokenIndex)];
+            if (!picked.includes(tok) && picked.length < expected.length) {
+              picked.push(tok);
+              render();
+            }
+          }),
+      );
+      $$("#exerciseOptions .sequence-slot.filled").forEach(
+        (b) =>
+          (b.onclick = () => {
+            const i = Number(b.dataset.slot);
+            picked.splice(i, 1);
+            render();
+          }),
+      );
+      $("#orderUndo").onclick = () => {
+        picked.pop();
+        render();
+      };
+      $("#orderReset").onclick = () => {
+        picked.length = 0;
+        render();
+      };
+      $("#orderCheck").onclick = () => {
+        const ok =
+          picked.length === expected.length &&
+          picked.every((x, i) => x === expected[i]);
+        showFeedback(
+          ok,
+          saveResult(subject, ok, it.id, "planning"),
+          ok
+            ? "Secuencia correcta."
+            : `Orden esperado: ${expected.join(" → ")}`,
+        );
+      };
     };
     render();
   }
-  function renderCognitiveExercise(it){const area=$('#exerciseOptions');if(it.type==='sequence'){area.innerHTML=`<button class="primary-btn" id="showSeq">Mostrar secuencia</button><div id="seqButtons" class="game-quick-grid"></div>`;$('#showSeq').onclick=()=>{const seq=it.sequence||[];$('#showSeq').textContent=seq.join(' · ');setTimeout(()=>{$('#showSeq').textContent='Ahora repítela';const picked=[];$('#seqButtons').innerHTML=[1,2,3,4].map(n=>`<button class="game-choice">${n}</button>`).join('');$$('#seqButtons button').forEach(b=>b.onclick=()=>{picked.push(Number(b.textContent));if(picked.length===seq.length){const ok=picked.every((x,i)=>x===seq[i]);showFeedback(ok,saveResult(subject,ok,it.id,'workingMemory'))}})},1800)}}else{let i=0,okCount=0;const render=()=>{const r=it.rounds[i];area.innerHTML=`<div class="rule-card"><strong>${escapeHtml(r.rule)}</strong><div class="prompt">${r.n}</div><button class="game-choice" data-v="true">Sí</button><button class="game-choice" data-v="false">No</button></div>`;$$('#exerciseOptions button').forEach(b=>b.onclick=()=>{if((b.dataset.v==='true')===Boolean(r.a))okCount++;i++;if(i<it.rounds.length)render();else{const ok=okCount>=Math.ceil(it.rounds.length*.75);showFeedback(ok,saveResult(subject,ok,it.id,'ruleSwitch'),`${okCount}/${it.rounds.length} respuestas correctas`)}})};render()}}
-  function showFeedback(correct,pts,why=''){const f=$('#exerciseFeedback');f.textContent=why||(correct?`Correcto · +${pts} puntos`:`No esta vez. Respuesta: ${currentItem.a||'revisa el modelo'}`);f.className='feedback '+(correct?'ok':'bad');$('#exerciseNext').classList.remove('hidden')}
-  $('#exerciseNext').onclick=()=>{if(guidedSession){advanceGuidedSession()}else newExercise()};$$('.language-mode-btn').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;$$('.language-mode-btn').forEach(x=>x.classList.toggle('active',x===b));newExercise()});
-  $('#textAnswerCheck').onclick=()=>{$('#modelAnswer').textContent=currentItem.sample||currentItem.a||'Revisa si tu respuesta responde con claridad.';$('#selfAssessment').classList.remove('hidden')};$$('.self-buttons button').forEach(b=>b.onclick=()=>{const ok=b.dataset.self==='true';showFeedback(ok,saveResult(subject,ok,currentItem.id,'self'))});
-  function updateGlobalUI(){if(!profile)return;const total=Object.values(state.scores).reduce((a,b)=>a+Number(b||0),0);if($('#gamesScore'))$('#gamesScore').textContent=state.scores.games||0;if($('#subjectScore')&&subject)$('#subjectScore').textContent=state.scores[subject]||0;$('#globalScore').textContent=total;$('#homePoints').textContent=total;$('#homeCorrect').textContent=state.totalCorrect;$('#homeAttempts').textContent=state.totalAttempts;$('#homeAccuracy').textContent=(state.totalAttempts?Math.round(state.totalCorrect/state.totalAttempts*100):0)+'%';$('#streakCount').textContent=state.streak;$('#sessionAttempts').textContent=state.session.attempts;$('#activeProfileLabel').textContent=profile.name;$('#ageEyebrow').textContent=`${AGE[profile.age_band].label} · ${LOCALE_LABELS[profile.locale||'es_intl']}`;renderHomeLevels()}
-  function renderHomeLevels(){$('#homeLevels').innerHTML=ageData().subjects.map(s=>`<div class="level-row"><strong>${SUBJECT_META[s].name}</strong><div class="level-track"><span style="width:${(state.levels[s]||1)/3*100}%"></span></div><span class="level-tag">NIVEL ${state.levels[s]||1}</span></div>`).join('');const stats=ageData().subjects.map(s=>{const r=recent(s,10);return{s,n:r.length,acc:r.length?r.filter(x=>x.correct).length/r.length:1}}).sort((a,b)=>a.acc-b.acc||b.n-a.n);const rec=stats[0];$('#recommendedTitle').textContent=rec.n?`Refuerzo: ${SUBJECT_META[rec.s].name}`:`Empieza por ${SUBJECT_META[ageData().subjects[0]].name}`;$('#recommendedText').textContent=rec.n?`Precisión reciente: ${Math.round(rec.acc*100)}%.`:'Todavía no hay resultados suficientes.';$('#recommendedBtn').dataset.subject=rec.n?rec.s:ageData().subjects[0]}
-  $('#recommendedBtn').onclick=()=>{guidedSession=null;hideGuidedBar();subject=$('#recommendedBtn').dataset.subject;switchSection('exercise');setupExercise()};$('#heroStartBtn').onclick=()=>{$('#recommendedBtn').click()};
-  function renderProgress(){$('#progressProfileTitle').textContent=`Evolución de ${profile.name}`;$('#progressCards').innerHTML=ageData().subjects.map(s=>{const r=state.history.filter(x=>x.subject===s),c=r.filter(x=>x.correct).length,acc=r.length?Math.round(c/r.length*100):0;return `<div class="progress-subject card"><small>${SUBJECT_META[s].name}</small><strong>${acc}%</strong><div class="bar"><span style="width:${acc}%"></span></div><small>${r.length} ejercicios · nivel ${state.levels[s]||1}</small></div>`}).join('');$('#recentResults').innerHTML=state.history.slice(-12).reverse().map(x=>`<div class="recent-row"><span>${SUBJECT_META[x.subject]?.name||x.subject}</span><span>${x.correct?'✓ Correcto':'× A revisar'}</span><strong>${x.points||0}</strong></div>`).join('')||'<p class="muted">Aún no hay resultados.</p>';$('#bankCoverage').innerHTML='<p class="muted">El catálogo se entrega desde el servidor y se amplía progresivamente. El banco completo no se descarga al dispositivo.</p>';$('#sessionEvolution').innerHTML='<p class="muted">La evolución detallada se irá completando con nuevas sesiones.</p>'}
-  function csvEscape(v){const s=String(v??'');return /[;"\n]/.test(s)?`"${s.replaceAll('"','""')}"`:s}function downloadText(text,name){const blob=new Blob(['\uFEFF'+text],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
-  $('#exportDetailCsv').onclick=()=>{const rows=[['usuario','grupo','fecha','area','nivel','resultado','puntos','id']];state.history.forEach(x=>rows.push([profile.name,AGE[profile.age_band].label,x.ts,x.subject,x.level,x.correct?'correcto':'revisar',x.points,x.itemId]));downloadText(rows.map(r=>r.map(csvEscape).join(';')).join('\n'),`LearningLab_${profile.name}_detalle.csv`)};$('#exportSessionCsv').onclick=()=>downloadText('usuario;grupo;ejercicios;aciertos\n'+[profile.name,AGE[profile.age_band].label,state.totalAttempts,state.totalCorrect].map(csvEscape).join(';'),`LearningLab_${profile.name}_resumen.csv`);
-  function buildHomework(){const options=ageData().subjects;$('#homeworkOptions').innerHTML=options.map((s,i)=>`<label class="homework-option"><input type="checkbox" value="${s}" ${['attention','executive','memory','speedReasoning','applied'].includes(s)||i<1?'checked':''}><span><strong>${SUBJECT_META[s].name}</strong><small>${['attention','executive','memory','speedReasoning','applied'].includes(s)?'Ficha cognitiva funcional adaptada a la edad':'Ficha de práctica'}</small></span></label>`).join('');$('#worksheetAll').onclick=()=>$$('#homeworkOptions input').forEach(x=>x.checked=true);$('#worksheetNone').onclick=()=>$$('#homeworkOptions input').forEach(x=>x.checked=false)}
-  $('#generateWorksheetsBtn').onclick=async()=>{const selected=$$('#homeworkOptions input:checked').map(x=>x.value);if(!selected.length)return $('#docxStatus').textContent='Selecciona al menos un contenido.';const count=Number($('#worksheetCount').value),questions=Number($('#worksheetQuestions').value);$('#docxStatus').textContent='Preparando fichas desde el banco seguro…';try{const all=[];for(let i=0;i<count;i++){const res=await API.requestContent({profile_id:profile.id,kind:'worksheet',domains:selected,questions,level:Math.max(...selected.map(s=>state.levels[s]||1))});all.push(res.items||[])}await window.WorksheetGenerator.generate(all,profile);$('#docxStatus').textContent=`${count} ficha${count>1?'s':''} creada${count>1?'s':''}.`;}catch(e){$('#docxStatus').textContent=e?.message||'No se pudieron generar las fichas.'}};
-  function hideGuidedBar(){if($('#guidedSessionBar'))$('#guidedSessionBar').classList.add('hidden')}
-  function updateGuidedBar(){if(!guidedSession){hideGuidedBar();return;}const bar=$('#guidedSessionBar');bar.classList.remove('hidden');$('#guidedSessionTitle').textContent='Sesión guiada';$('#guidedSessionProgress').textContent=`Actividad ${guidedSession.index+1} de ${guidedSession.plan.length} · ${SUBJECT_META[guidedSession.plan[guidedSession.index]].name}`;}
-  function buildSessionBuilder(){const domains=['attention','memory','executive','speedReasoning','applied'];const holder=$('#sessionDomainOptions');if(!holder)return;holder.innerHTML=domains.map(s=>`<label class="session-domain"><input type="checkbox" value="${s}" ${['attention','memory','executive'].includes(s)?'checked':''}><span><b>${SUBJECT_META[s].icon}</b><strong>${SUBJECT_META[s].name}</strong><small>${SUBJECT_META[s].desc}</small></span></label>`).join('');const update=()=>{const n=Number($('#sessionActivityCount').value);const selected=$$('#sessionDomainOptions input:checked').map(x=>x.value);const plan=[];for(let i=0;i<n;i++)if(selected.length)plan.push(selected[i%selected.length]);$('#sessionPlanPreview').innerHTML=plan.length?`<p class="eyebrow">VISTA PREVIA</p><div class="session-plan-chips">${plan.map((d,i)=>`<span>${i+1}. ${SUBJECT_META[d].name}</span>`).join('')}</div>`:'<p class="muted">Selecciona al menos un área.</p>';$('#sessionEstimate').textContent=n<=6?'≈ 15–20 min':n<=8?'≈ 20–30 min':'≈ 30–40 min';};$$('#sessionDomainOptions input').forEach(x=>x.onchange=update);$('#sessionActivityCount').onchange=update;update()}
-  function startGuidedSession(){const n=Number($('#sessionActivityCount').value);const selected=$$('#sessionDomainOptions input:checked').map(x=>x.value);if(!selected.length)return alert('Selecciona al menos un área.');const plan=[];for(let i=0;i<n;i++)plan.push(selected[i%selected.length]);guidedSession={plan,index:0};subject=plan[0];switchSection('exercise');updateGuidedBar();setupExercise()}
-  function advanceGuidedSession(){if(!guidedSession)return newExercise();guidedSession.index++;if(guidedSession.index>=guidedSession.plan.length){const completed=guidedSession.plan.length;guidedSession=null;hideGuidedBar();switchSection('sessionBuilder');$('#sessionPlanPreview').innerHTML=`<div class="session-complete"><strong>Sesión completada</strong><span>${completed} actividades realizadas. Los resultados ya están guardados en Progreso.</span></div>`;return;}subject=guidedSession.plan[guidedSession.index];updateGuidedBar();setupExercise()}
-  if($('#startGuidedSession'))$('#startGuidedSession').onclick=startGuidedSession;if($('#cancelGuidedSession'))$('#cancelGuidedSession').onclick=()=>{guidedSession=null;hideGuidedBar();switchSection('sessionBuilder')};
-  $('#createProfileBtn').onclick=createProfile;$('#newProfileBtn').onclick=openProfileGate;$('#profileSelect').onchange=e=>activateProfile(e.target.value);$('#deleteProfileBtn').onclick=async()=>{if(!profile||!confirm(`¿Eliminar el perfil de ${profile.name}?`))return;await API.deleteProfile(profile.id);profiles=profiles.filter(p=>p.id!==profile.id);profile=null;if(profiles.length)activateProfile(profiles[0].id);else{renderProfiles();openProfileGate()}};$('#resetProgressBtn').onclick=()=>{if(confirm('¿Reiniciar el progreso de este perfil?')){state=blankState();persist();updateGlobalUI()}};
-  if($('#subscribeBtn'))$('#subscribeBtn').onclick=()=>API.openStripeCheckout();if($('#billingPortalBtn'))$('#billingPortalBtn').onclick=()=>API.openBillingPortal();
-  $('#authSignIn').onclick=async()=>{try{await API.signIn($('#authEmail').value.trim(),$('#authPassword').value);await loadWorkspace()}catch(e){$('#authMessage').textContent=e.message}};$('#authSignUp').onclick=async()=>{try{const d=await API.signUp($('#authEmail').value.trim(),$('#authPassword').value);if(d.session)await loadWorkspace();else $('#authMessage').textContent='Cuenta creada. Revisa tu correo para confirmar el registro.'}catch(e){$('#authMessage').textContent=e.message}};$('#signOutBtn').onclick=async()=>{await API.signOut();profile=null;showAuth('Sesión cerrada.')};
-  ['#authEmail','#authPassword'].forEach(sel=>$(sel).addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#authSignIn').click();}}));
-  $('#exerciseLevelSelect').onchange=async e=>{state.levels[subject]=Number(e.target.value);await persist();counter=0;newExercise()};
-  window.addEventListener('beforeunload',()=>{persist()});boot();
+  function renderCognitiveExercise(it) {
+    const area = $("#exerciseOptions");
+    if (it.type === "sequence") {
+      area.innerHTML = `<button class="primary-btn" id="showSeq">Mostrar secuencia</button><div id="seqButtons" class="game-quick-grid"></div>`;
+      $("#showSeq").onclick = () => {
+        const seq = it.sequence || [];
+        $("#showSeq").textContent = seq.join(" · ");
+        setTimeout(() => {
+          $("#showSeq").textContent = "Ahora repítela";
+          const picked = [];
+          $("#seqButtons").innerHTML = [1, 2, 3, 4]
+            .map((n) => `<button class="game-choice">${n}</button>`)
+            .join("");
+          $$("#seqButtons button").forEach(
+            (b) =>
+              (b.onclick = () => {
+                picked.push(Number(b.textContent));
+                if (picked.length === seq.length) {
+                  const ok = picked.every((x, i) => x === seq[i]);
+                  showFeedback(
+                    ok,
+                    saveResult(subject, ok, it.id, "workingMemory"),
+                  );
+                }
+              }),
+          );
+        }, 1800);
+      };
+    } else {
+      let i = 0,
+        okCount = 0;
+      const render = () => {
+        const r = it.rounds[i];
+        area.innerHTML = `<div class="rule-card"><strong>${escapeHtml(r.rule)}</strong><div class="prompt">${r.n}</div><button class="game-choice" data-v="true">Sí</button><button class="game-choice" data-v="false">No</button></div>`;
+        $$("#exerciseOptions button").forEach(
+          (b) =>
+            (b.onclick = () => {
+              if ((b.dataset.v === "true") === Boolean(r.a)) okCount++;
+              i++;
+              if (i < it.rounds.length) render();
+              else {
+                const ok = okCount >= Math.ceil(it.rounds.length * 0.75);
+                showFeedback(
+                  ok,
+                  saveResult(subject, ok, it.id, "ruleSwitch"),
+                  `${okCount}/${it.rounds.length} respuestas correctas`,
+                );
+              }
+            }),
+        );
+      };
+      render();
+    }
+  }
+  function showFeedback(correct, pts, why = "") {
+    const f = $("#exerciseFeedback");
+    f.textContent =
+      why ||
+      (correct
+        ? `Correcto · +${pts} puntos`
+        : `No esta vez. Respuesta: ${currentItem.a || "revisa el modelo"}`);
+    f.className = "feedback " + (correct ? "ok" : "bad");
+    $("#exerciseNext").classList.remove("hidden");
+  }
+  $("#exerciseNext").onclick = () => {
+    if (guidedSession) {
+      advanceGuidedSession();
+    } else newExercise();
+  };
+  $$(".language-mode-btn").forEach(
+    (b) =>
+      (b.onclick = () => {
+        mode = b.dataset.mode;
+        $$(".language-mode-btn").forEach((x) =>
+          x.classList.toggle("active", x === b),
+        );
+        newExercise();
+      }),
+  );
+  $("#textAnswerCheck").onclick = () => {
+    $("#modelAnswer").textContent =
+      currentItem.sample ||
+      currentItem.a ||
+      "Revisa si tu respuesta responde con claridad.";
+    $("#selfAssessment").classList.remove("hidden");
+  };
+  $$(".self-buttons button").forEach(
+    (b) =>
+      (b.onclick = () => {
+        const ok = b.dataset.self === "true";
+        showFeedback(ok, saveResult(subject, ok, currentItem.id, "self"));
+      }),
+  );
+  function updateGlobalUI() {
+    if (!profile) return;
+    const total = Object.values(state.scores).reduce(
+      (a, b) => a + Number(b || 0),
+      0,
+    );
+    if ($("#gamesScore"))
+      $("#gamesScore").textContent = state.scores.games || 0;
+    if ($("#subjectScore") && subject)
+      $("#subjectScore").textContent = state.scores[subject] || 0;
+    $("#globalScore").textContent = total;
+    $("#homePoints").textContent = total;
+    $("#homeCorrect").textContent = state.totalCorrect;
+    $("#homeAttempts").textContent = state.totalAttempts;
+    $("#homeAccuracy").textContent =
+      (state.totalAttempts
+        ? Math.round((state.totalCorrect / state.totalAttempts) * 100)
+        : 0) + "%";
+    $("#streakCount").textContent = state.streak;
+    $("#sessionAttempts").textContent = state.session.attempts;
+    $("#activeProfileLabel").textContent = profile.name;
+    $("#ageEyebrow").textContent =
+      `${AGE[profile.age_band].label} · Español internacional`;
+    renderHomeLevels();
+  }
+  function renderHomeLevels() {
+    $("#homeLevels").innerHTML = ageData()
+      .subjects.map(
+        (s) =>
+          `<div class="level-row"><strong>${SUBJECT_META[s].name}</strong><div class="level-track"><span style="width:${((state.levels[s] || 1) / 3) * 100}%"></span></div><span class="level-tag">NIVEL ${state.levels[s] || 1}</span></div>`,
+      )
+      .join("");
+    const stats = ageData()
+      .subjects.map((s) => {
+        const r = recent(s, 10);
+        return {
+          s,
+          n: r.length,
+          acc: r.length ? r.filter((x) => x.correct).length / r.length : 1,
+        };
+      })
+      .sort((a, b) => a.acc - b.acc || b.n - a.n);
+    const rec = stats[0];
+    $("#recommendedTitle").textContent = rec.n
+      ? `Refuerzo: ${SUBJECT_META[rec.s].name}`
+      : `Empieza por ${SUBJECT_META[ageData().subjects[0]].name}`;
+    $("#recommendedText").textContent = rec.n
+      ? `Precisión reciente: ${Math.round(rec.acc * 100)}%.`
+      : "Todavía no hay resultados suficientes.";
+    $("#recommendedBtn").dataset.subject = rec.n
+      ? rec.s
+      : ageData().subjects[0];
+  }
+  $("#recommendedBtn").onclick = () => {
+    guidedSession = null;
+    hideGuidedBar();
+    subject = $("#recommendedBtn").dataset.subject;
+    switchSection("exercise");
+    setupExercise();
+  };
+  $("#heroStartBtn").onclick = () => {
+    $("#recommendedBtn").click();
+  };
+  function renderProgress() {
+    $("#progressProfileTitle").textContent = `Evolución de ${profile.name}`;
+    $("#progressCards").innerHTML = ageData()
+      .subjects.map((s) => {
+        const r = state.history.filter((x) => x.subject === s),
+          c = r.filter((x) => x.correct).length,
+          acc = r.length ? Math.round((c / r.length) * 100) : 0;
+        return `<div class="progress-subject card"><small>${SUBJECT_META[s].name}</small><strong>${acc}%</strong><div class="bar"><span style="width:${acc}%"></span></div><small>${r.length} ejercicios · nivel ${state.levels[s] || 1}</small></div>`;
+      })
+      .join("");
+    $("#recentResults").innerHTML =
+      state.history
+        .slice(-12)
+        .reverse()
+        .map(
+          (x) =>
+            `<div class="recent-row"><span>${SUBJECT_META[x.subject]?.name || x.subject}</span><span>${x.correct ? "✓ Correcto" : "× A revisar"}</span><strong>${x.points || 0}</strong></div>`,
+        )
+        .join("") || '<p class="muted">Aún no hay resultados.</p>';
+    $("#bankCoverage").innerHTML =
+      '<p class="muted">El catálogo se entrega desde el servidor y se amplía progresivamente. El banco completo no se descarga al dispositivo.</p>';
+    $("#sessionEvolution").innerHTML =
+      '<p class="muted">La evolución detallada se irá completando con nuevas sesiones.</p>';
+  }
+  function csvEscape(v) {
+    const s = String(v ?? "");
+    return /[;"\n]/.test(s) ? `"${s.replaceAll('"', '""')}"` : s;
+  }
+  function downloadText(text, name) {
+    const blob = new Blob(["\uFEFF" + text], {
+      type: "text/csv;charset=utf-8",
+    });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+  }
+  $("#exportDetailCsv").onclick = () => {
+    const rows = [
+      [
+        "usuario",
+        "grupo",
+        "fecha",
+        "area",
+        "nivel",
+        "resultado",
+        "puntos",
+        "id",
+      ],
+    ];
+    state.history.forEach((x) =>
+      rows.push([
+        profile.name,
+        AGE[profile.age_band].label,
+        x.ts,
+        x.subject,
+        x.level,
+        x.correct ? "correcto" : "revisar",
+        x.points,
+        x.itemId,
+      ]),
+    );
+    downloadText(
+      rows.map((r) => r.map(csvEscape).join(";")).join("\n"),
+      `LearningLab_${profile.name}_detalle.csv`,
+    );
+  };
+  $("#exportSessionCsv").onclick = () =>
+    downloadText(
+      "usuario;grupo;ejercicios;aciertos\n" +
+        [
+          profile.name,
+          AGE[profile.age_band].label,
+          state.totalAttempts,
+          state.totalCorrect,
+        ]
+          .map(csvEscape)
+          .join(";"),
+      `LearningLab_${profile.name}_resumen.csv`,
+    );
+  function buildHomework() {
+    const options = ageData().subjects;
+    $("#homeworkOptions").innerHTML = options
+      .map(
+        (s, i) =>
+          `<label class="homework-option"><input type="checkbox" value="${s}" ${["attention", "executive", "memory", "speedReasoning", "applied"].includes(s) || i < 1 ? "checked" : ""}><span><strong>${SUBJECT_META[s].name}</strong><small>${["attention", "executive", "memory", "speedReasoning", "applied"].includes(s) ? "Ficha cognitiva funcional adaptada a la edad" : "Ficha de práctica"}</small></span></label>`,
+      )
+      .join("");
+    $("#worksheetAll").onclick = () =>
+      $$("#homeworkOptions input").forEach((x) => (x.checked = true));
+    $("#worksheetNone").onclick = () =>
+      $$("#homeworkOptions input").forEach((x) => (x.checked = false));
+  }
+  $("#generateWorksheetsBtn").onclick = async () => {
+    const selected = $$("#homeworkOptions input:checked").map((x) => x.value);
+    if (!selected.length)
+      return ($("#docxStatus").textContent =
+        "Selecciona al menos un contenido.");
+    const count = Number($("#worksheetCount").value),
+      questions = Number($("#worksheetQuestions").value);
+    $("#docxStatus").textContent = "Preparando fichas desde el banco seguro…";
+    try {
+      const all = [];
+      for (let i = 0; i < count; i++) {
+        const res = await API.requestContent({
+          profile_id: profile.id,
+          kind: "worksheet",
+          domains: selected,
+          questions,
+          level: Math.max(...selected.map((s) => state.levels[s] || 1)),
+        });
+        all.push(res.items || []);
+      }
+      await window.WorksheetGenerator.generate(all, profile);
+      $("#docxStatus").textContent =
+        `${count} ficha${count > 1 ? "s" : ""} creada${count > 1 ? "s" : ""}.`;
+    } catch (e) {
+      $("#docxStatus").textContent =
+        e?.message || "No se pudieron generar las fichas.";
+    }
+  };
+  function hideGuidedBar() {
+    if ($("#guidedSessionBar")) $("#guidedSessionBar").classList.add("hidden");
+  }
+  function updateGuidedBar() {
+    if (!guidedSession) {
+      hideGuidedBar();
+      return;
+    }
+    const bar = $("#guidedSessionBar");
+    bar.classList.remove("hidden");
+    $("#guidedSessionTitle").textContent = "Sesión guiada";
+    $("#guidedSessionProgress").textContent =
+      `Actividad ${guidedSession.index + 1} de ${guidedSession.plan.length} · ${SUBJECT_META[guidedSession.plan[guidedSession.index]].name}`;
+  }
+  function buildSessionBuilder() {
+    const domains = [
+      "attention",
+      "memory",
+      "executive",
+      "speedReasoning",
+      "applied",
+    ];
+    const holder = $("#sessionDomainOptions");
+    if (!holder) return;
+    holder.innerHTML = domains
+      .map(
+        (s) =>
+          `<label class="session-domain"><input type="checkbox" value="${s}" ${["attention", "memory", "executive"].includes(s) ? "checked" : ""}><span><b>${SUBJECT_META[s].icon}</b><strong>${SUBJECT_META[s].name}</strong><small>${SUBJECT_META[s].desc}</small></span></label>`,
+      )
+      .join("");
+    const update = () => {
+      const n = Number($("#sessionActivityCount").value);
+      const selected = $$("#sessionDomainOptions input:checked").map(
+        (x) => x.value,
+      );
+      const plan = [];
+      for (let i = 0; i < n; i++)
+        if (selected.length) plan.push(selected[i % selected.length]);
+      $("#sessionPlanPreview").innerHTML = plan.length
+        ? `<p class="eyebrow">VISTA PREVIA</p><div class="session-plan-chips">${plan.map((d, i) => `<span>${i + 1}. ${SUBJECT_META[d].name}</span>`).join("")}</div>`
+        : '<p class="muted">Selecciona al menos un área.</p>';
+      $("#sessionEstimate").textContent =
+        n <= 6 ? "≈ 15–20 min" : n <= 8 ? "≈ 20–30 min" : "≈ 30–40 min";
+    };
+    $$("#sessionDomainOptions input").forEach((x) => (x.onchange = update));
+    $("#sessionActivityCount").onchange = update;
+    update();
+  }
+  function startGuidedSession() {
+    const n = Number($("#sessionActivityCount").value);
+    const selected = $$("#sessionDomainOptions input:checked").map(
+      (x) => x.value,
+    );
+    if (!selected.length) return alert("Selecciona al menos un área.");
+    const plan = [];
+    for (let i = 0; i < n; i++) plan.push(selected[i % selected.length]);
+    guidedSession = { plan, index: 0 };
+    subject = plan[0];
+    switchSection("exercise");
+    updateGuidedBar();
+    setupExercise();
+  }
+  function advanceGuidedSession() {
+    if (!guidedSession) return newExercise();
+    guidedSession.index++;
+    if (guidedSession.index >= guidedSession.plan.length) {
+      const completed = guidedSession.plan.length;
+      guidedSession = null;
+      hideGuidedBar();
+      switchSection("sessionBuilder");
+      $("#sessionPlanPreview").innerHTML =
+        `<div class="session-complete"><strong>Sesión completada</strong><span>${completed} actividades realizadas. Los resultados ya están guardados en Progreso.</span></div>`;
+      return;
+    }
+    subject = guidedSession.plan[guidedSession.index];
+    updateGuidedBar();
+    setupExercise();
+  }
+  if ($("#startGuidedSession"))
+    $("#startGuidedSession").onclick = startGuidedSession;
+  if ($("#cancelGuidedSession"))
+    $("#cancelGuidedSession").onclick = () => {
+      guidedSession = null;
+      hideGuidedBar();
+      switchSection("sessionBuilder");
+    };
+  $("#createProfileBtn").onclick = createProfile;
+  $("#newProfileBtn").onclick = openProfileGate;
+  $("#profileSelect").onchange = (e) => activateProfile(e.target.value);
+  $("#deleteProfileBtn").onclick = async () => {
+    if (!profile || !confirm(`¿Eliminar el perfil de ${profile.name}?`)) return;
+    await API.deleteProfile(profile.id);
+    profiles = profiles.filter((p) => p.id !== profile.id);
+    profile = null;
+    if (profiles.length) activateProfile(profiles[0].id);
+    else {
+      renderProfiles();
+      openProfileGate();
+    }
+  };
+  $("#resetProgressBtn").onclick = () => {
+    if (confirm("¿Reiniciar el progreso de este perfil?")) {
+      state = blankState();
+      persist();
+      updateGlobalUI();
+    }
+  };
+  if ($("#subscribeBtn"))
+    $("#subscribeBtn").onclick = () => API.openStripeCheckout();
+  if ($("#billingPortalBtn"))
+    $("#billingPortalBtn").onclick = () => API.openBillingPortal();
+  $("#authSignIn").onclick = async () => {
+    try {
+      await API.signIn($("#authEmail").value.trim(), $("#authPassword").value);
+      await loadWorkspace();
+    } catch (e) {
+      $("#authMessage").textContent = e.message;
+    }
+  };
+  $("#authSignUp").onclick = async () => {
+    try {
+      const d = await API.signUp(
+        $("#authEmail").value.trim(),
+        $("#authPassword").value,
+      );
+      if (d.session) await loadWorkspace();
+      else
+        $("#authMessage").textContent =
+          "Cuenta creada. Revisa tu correo para confirmar el registro.";
+    } catch (e) {
+      $("#authMessage").textContent = e.message;
+    }
+  };
+  $("#signOutBtn").onclick = async () => {
+    await API.signOut();
+    profile = null;
+    showAuth("Sesión cerrada.");
+  };
+  ["#authEmail", "#authPassword"].forEach((sel) =>
+    $(sel).addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        $("#authSignIn").click();
+      }
+    }),
+  );
+  $("#exerciseLevelSelect").onchange = async (e) => {
+    state.levels[subject] = Number(e.target.value);
+    await persist();
+    counter = 0;
+    newExercise();
+  };
+  window.addEventListener("beforeunload", () => {
+    persist();
+  });
+  boot();
 })();
