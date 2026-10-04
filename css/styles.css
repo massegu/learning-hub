@@ -2513,3 +2513,25 @@ body {
 .billing-btn.hidden {
   display: none !important;
 }
+
+.topbar .mini-btn {
+  color: var(--accent-dark);
+  background: #eef5ec;
+  border: 1px solid #cfe0cf;
+  font-weight: 800;
+}
+
+.topbar .mini-btn:hover {
+  background: #dfeedd;
+  border-color: #9fbd9f;
+}
+
+.topbar .billing-btn {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.topbar .billing-btn:hover {
+  background: var(--accent-dark);
+}
