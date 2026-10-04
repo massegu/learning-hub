@@ -141,3 +141,8 @@ body{background:
 
 /* V13: richer cognitive content */
 .v13-visual-items{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:12px;margin:16px 0 20px}.v13-visual-items span{min-height:72px;display:grid;place-items:center;font-size:2rem;border:1px solid var(--line);border-radius:8px;background:#fbfcf8}.scenario-card{max-width:980px}.scenario-card p{font-size:1rem;line-height:1.62}.exercise-card .prompt{max-width:1180px}
+
+/* V14 */
+.level-control::before{content:'Dificultad';font-size:.68rem;color:var(--muted);margin-right:6px}.auth-card input:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+
+.billing-btn{white-space:nowrap}.billing-btn.hidden{display:none!important}

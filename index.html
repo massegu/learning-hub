@@ -29,7 +29,6 @@
       <label>Nombre o alias<input id="newProfileName" maxlength="24" placeholder="Ej. Alex" /></label>
       <label>Grupo de edad<select id="newProfileAge"><option value="primary">10-12 años</option><option value="middle">12-13 años</option><option value="teen">14-17 años</option></select></label>
       <label>Nivel inicial<select id="newProfileLevel"><option value="1">Nivel 1 · Inicio</option><option value="2">Nivel 2 · Intermedio</option><option value="3">Nivel 3 · Avanzado</option></select></label>
-      <label>País / variante de español<select id="newProfileLocale"><option value="es_intl">Español internacional</option><option value="es_es">España</option><option value="es_mx">México</option><option value="es_co">Colombia</option><option value="es_ar">Argentina</option><option value="es_cl">Chile</option><option value="es_pa">Panamá</option><option value="es_cr">Costa Rica</option></select></label>
       <button id="createProfileBtn" class="primary-btn">Crear perfil</button>
     </div>
   </div>
@@ -40,7 +39,6 @@
       <div class="profile-panel">
         <small>PERFIL ACTIVO</small>
         <select id="profileSelect"></select>
-        <label class="profile-locale-label">País / español<select id="profileLocaleSelect"><option value="es_intl">Internacional</option><option value="es_es">España</option><option value="es_mx">México</option><option value="es_co">Colombia</option><option value="es_ar">Argentina</option><option value="es_cl">Chile</option><option value="es_pa">Panamá</option><option value="es_cr">Costa Rica</option></select></label>
         <div class="profile-actions"><button id="newProfileBtn" class="mini-btn">+ Nuevo</button><button id="deleteProfileBtn" class="mini-btn danger">Eliminar</button></div>
       </div>
       <nav id="navMenu" class="nav-menu"></nav>
@@ -53,7 +51,7 @@
     <main class="main-content">
       <header class="topbar">
         <div><p class="eyebrow" id="ageEyebrow">ENTRENAMIENTO PERSONALIZADO</p><h2 id="sectionTitle">Panel</h2></div>
-        <div class="topbar-actions"><div class="session-chip" id="accountStatus">—</div><div class="session-chip"><span id="activeProfileLabel">—</span></div><div class="session-chip">Sesión <strong id="sessionAttempts">0</strong></div><div class="streak-card">Racha <strong id="streakCount">0</strong> 🔥</div><button id="signOutBtn" class="mini-btn">Salir</button></div>
+        <div class="topbar-actions"><div class="session-chip" id="accountStatus">—</div><button id="subscribeBtn" class="mini-btn billing-btn hidden">Suscribirme · 25 €/mes</button><button id="billingPortalBtn" class="mini-btn billing-btn hidden">Gestionar suscripción</button><div class="session-chip"><span id="activeProfileLabel">—</span></div><div class="session-chip">Sesión <strong id="sessionAttempts">0</strong></div><div class="streak-card">Racha <strong id="streakCount">0</strong> 🔥</div><button id="signOutBtn" class="mini-btn">Salir</button></div>
       </header>
 
       <section id="home" class="section active-section">

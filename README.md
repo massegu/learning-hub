@@ -1,23 +1,23 @@
-# Learning Hub V13 — Quality leveling
+# Learning Hub V14
 
-V13 focuses on bringing all training areas closer to the level of challenge and variety already achieved in Memory, Reasoning, Social Lab and Writing.
+V14 focuses on reliability, meaningful difficulty, reduced repetition and a simpler international-Spanish UX.
 
-## Main changes
+## Changes
+- Pressing Enter in email/password signs in.
+- Country selector removed from learner UX; content defaults to neutral international Spanish.
+- Existing locale field remains in the database for future optional localization.
+- Attention no longer uses the fragile icon-counting mechanic; it favors functional search, scenes, double criteria, rule changes and relevance filtering.
+- Executive Functions now have intentionally distinct difficulty bands:
+  - Level 1: sequencing.
+  - Level 2: prioritization, distractors, monitoring and estimation.
+  - Level 3: multiple constraints, dependencies, replanning, uncertainty and risk.
+- Stronger anti-repetition across generated domains.
+- Expanded Attention, Language and Executive-Function content.
+- Supabase backend request-learning-content version 15.
 
-- Stronger anti-repetition for generated cognitive content: recent items and recent mechanics are tracked separately.
-- Attention expanded beyond counting icons: intruders, following instructions, spatial position, double criteria, table search, filtering, rule changes and exact comparison.
-- Fixed the visual collision that could render target and distractor with the same icon in attention tasks.
-- Language rebuilt around functional comprehension and reasoning: main idea, cohesion, inference, ambiguity, register, evidence, implicit meaning, source evaluation, argumentation and contradiction detection.
-- Cognition Applied expanded with additional planning, reprioritisation, parallel-task, information-value and error-analysis scenarios.
-- Social Lab expanded with context, clarification, partial-information and social-norm reasoning.
-- Existing V12 validation remains active: unique options, valid correct answer, multi-select consistency and unique visual-pattern match.
-- International Spanish profile/localisation support remains active.
-- Game Lab remains removed.
+## Payments
+Stripe test-mode integration is the next integration step. Do not place Stripe secret keys in frontend files. Use a server-side Edge Function + Stripe Checkout/webhooks.
 
-## Backend
 
-Supabase Edge Function `request-learning-content` is deployed separately from the frontend bundle. V13 requires the corresponding backend version.
-
-## Deployment
-
-Upload this bundle to the `supabase-integration` branch for testing. Do not merge to `main` until the content audit is complete.
+## Stripe test integration
+V15 añade el flujo de suscripción de prueba de Learning Hub (25 EUR/mes) con Stripe Managed Payments. El checkout y el portal de cliente son alojados por Stripe. El webhook de Supabase sincroniza estados de suscripción. Antes de probar el webhook, configura en Supabase el secreto `STRIPE_WEBHOOK_SECRET` con el signing secret del endpoint de Stripe del entorno de prueba.
