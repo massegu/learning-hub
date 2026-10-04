@@ -6,3 +6,11 @@ window.LH_CONFIG = {
     "https://billing.stripe.com/p/login/test_7sYfZj7NyeJUc064It1ZS00",
   stripeMode: "test",
 };
+
+// V16 UI/localization layer. Kept separate so the core app stays easy to roll back.
+(function loadV16(){
+  const s=document.createElement('script');
+  s.src='js/v16.js?v=16.0.0';
+  s.defer=true;
+  document.head.appendChild(s);
+})();
