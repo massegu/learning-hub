@@ -16,6 +16,12 @@ window.LH_CONFIG = {
     next.onload=()=>{
       const latest=document.createElement('script');
       latest.src='js/v16_4.js?v=16.4.0';
+      latest.onload=()=>{
+        const v165=document.createElement('script');
+        v165.src='js/v16_5.js?v=16.5.0';
+        v165.defer=true;
+        document.head.appendChild(v165);
+      };
       latest.defer=true;
       document.head.appendChild(latest);
     };
