@@ -14,16 +14,22 @@ window.LH_CONFIG = {
     const next=document.createElement('script');
     next.src='js/v16_3.js?v=16.3.1';
     next.onload=()=>{
-      const latest=document.createElement('script');
-      latest.src='js/v16_4.js?v=16.4.0';
-      latest.onload=()=>{
+      const v164=document.createElement('script');
+      v164.src='js/v16_4.js?v=16.4.0';
+      v164.onload=()=>{
         const v165=document.createElement('script');
         v165.src='js/v16_5.js?v=16.5.0';
+        v165.onload=()=>{
+          const v166=document.createElement('script');
+          v166.src='js/v16_6.js?v=16.6.0';
+          v166.defer=true;
+          document.head.appendChild(v166);
+        };
         v165.defer=true;
         document.head.appendChild(v165);
       };
-      latest.defer=true;
-      document.head.appendChild(latest);
+      v164.defer=true;
+      document.head.appendChild(v164);
     };
     next.defer=true;
     document.head.appendChild(next);
