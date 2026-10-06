@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760">
+  <defs>
+    <style>
+      .o{stroke:#173c2a;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.t{font-family:Arial,sans-serif;font-weight:800;fill:#173c2a}.z{font-size:22px}.s{font-size:18px}.thin{stroke-width:3}
+    </style>
+    <linearGradient id="sky" x1="0" x2="1"><stop offset="0" stop-color="#f7f1d8"/><stop offset="1" stop-color="#e7f2de"/></linearGradient>
+  </defs>
+  <rect width="1200" height="760" rx="28" fill="url(#sky)"/>
+  <path d="M0 560 Q170 500 340 560 T680 560 T1020 560 T1200 540 V760 H0Z" fill="#dce8c8"/>
+  <rect x="42" y="32" width="360" height="58" rx="20" fill="#173c2a"/><text x="66" y="69" font-size="28" fill="#fff" font-family="Arial" font-weight="900">FESTIVAL URBANO</text>
+  <!-- stage -->
+  <rect x="420" y="110" width="350" height="180" rx="16" fill="#fff8eb" class="o"/>
+  <path d="M450 255V145h290v110" fill="#ffcc72" class="o"/>
+  <circle cx="492" cy="137" r="13" fill="#ff6b6b"/><circle cx="548" cy="137" r="13" fill="#ffd166"/><circle cx="604" cy="137" r="13" fill="#79c69e"/><circle cx="660" cy="137" r="13" fill="#6aa6ff"/>
+  <!-- musicians -->
+  <circle cx="520" cy="190" r="18" fill="#f0c5a6" class="o"/><path d="M500 212h40v42h-40z" fill="#de6a63" class="o"/><path d="M530 222l40 24M568 235l22 20" class="o" fill="none"/><ellipse cx="590" cy="256" rx="27" ry="10" fill="#b87a4b" class="o"/>
+  <circle cx="648" cy="190" r="18" fill="#d7a27e" class="o"/><path d="M628 212h40v42h-40z" fill="#4e87c7" class="o"/><rect x="676" y="214" width="10" height="48" rx="5" fill="#173c2a"/><circle cx="681" cy="207" r="8" fill="#ff6b6b"/>
+  <!-- drink stall -->
+  <rect x="70" y="190" width="245" height="160" rx="14" fill="#fff" class="o"/><path d="M58 198h270l-24-45H82z" fill="#ff9f66" class="o"/><text x="102" y="225" class="t z">BEBIDAS</text><rect x="95" y="250" width="55" height="72" rx="8" fill="#8fd7d0" class="o"/><rect x="166" y="250" width="55" height="72" rx="8" fill="#ffd166" class="o"/><rect x="237" y="250" width="55" height="72" rx="8" fill="#ff6b6b" class="o"/>
+  <!-- red camera target near stall, B3 zone roughly -->
+  <rect x="322" y="286" width="54" height="38" rx="6" fill="#e45252" class="o"/><circle cx="348" cy="305" r="11" fill="#fff7ec" class="o thin"/><rect x="332" y="278" width="18" height="9" rx="3" fill="#173c2a"/>
+  <!-- people and props -->
+  <g>
+    <!-- A1 --> <text x="70" y="405" class="t s">A1</text><circle cx="120" cy="432" r="20" fill="#f0c5a6" class="o"/><path d="M96 455h48v62H96z" fill="#6aa6ff" class="o"/><path d="M94 468l-24 25M146 468l24 25" class="o" fill="none"/><circle cx="83" cy="500" r="10" fill="#ffd166"/>
+    <!-- A2 --> <text x="215" y="405" class="t s">A2</text><circle cx="265" cy="432" r="20" fill="#d8a482" class="o"/><path d="M241 455h48v62H241z" fill="#ff8d66" class="o"/><path d="M245 433q20-28 40 0" fill="#ffd166" class="o"/><rect x="295" y="474" width="22" height="34" rx="6" fill="#79c69e" class="o"/>
+    <!-- A3 --> <text x="360" y="405" class="t s">A3</text><circle cx="410" cy="432" r="20" fill="#efc3a5" class="o"/><path d="M386 455h48v62H386z" fill="#8c74c8" class="o"/><circle cx="402" cy="430" r="7" fill="none" class="o thin"/><circle cx="418" cy="430" r="7" fill="none" class="o thin"/><path d="M409 430h4" class="o thin"/><rect x="442" y="476" width="14" height="26" rx="4" fill="#173c2a"/>
+    <!-- A4 --> <text x="505" y="405" class="t s">A4</text><circle cx="555" cy="432" r="20" fill="#dca985" class="o"/><path d="M531 455h48v62H531z" fill="#65b58a" class="o"/><path d="M535 432q20-30 40 0" fill="#ff6b6b" class="o"/><circle cx="595" cy="494" r="18" fill="#ffd166" class="o"/>
+    <!-- B1 --> <text x="650" y="405" class="t s">B1</text><circle cx="700" cy="432" r="20" fill="#efc3a5" class="o"/><path d="M676 455h48v62H676z" fill="#ffd166" class="o"/><path d="M680 432q20-30 40 0" fill="#65b58a" class="o"/><path d="M744 500l58 0" class="o"/><circle cx="754" cy="508" r="7" fill="#173c2a"/><circle cx="792" cy="508" r="7" fill="#173c2a"/>
+    <!-- B2 --> <text x="795" y="405" class="t s">B2</text><circle cx="845" cy="432" r="20" fill="#dba983" class="o"/><path d="M821 455h48v62H821z" fill="#ef767a" class="o"/><rect x="874" y="468" width="18" height="34" rx="5" fill="#6aa6ff" class="o"/>
+    <!-- B3 --> <text x="940" y="405" class="t s">B3</text><circle cx="990" cy="432" r="20" fill="#efc3a5" class="o"/><path d="M966 455h48v62H966z" fill="#5aa98b" class="o"/><circle cx="982" cy="430" r="7" fill="none" class="o thin"/><circle cx="998" cy="430" r="7" fill="none" class="o thin"/><rect x="1024" y="475" width="18" height="34" rx="5" fill="#e45252" class="o"/>
+    <!-- B4 target cap + skateboard --> <text x="1080" y="405" class="t s">B4</text><circle cx="1120" cy="432" r="20" fill="#dba983" class="o"/><path d="M1096 455h48v62H1096z" fill="#4e87c7" class="o"/><path d="M1100 432q20-30 40 0" fill="#ffd166" class="o"/><rect x="1088" y="525" width="70" height="11" rx="6" fill="#b65f40" class="o"/><circle cx="1100" cy="540" r="7" fill="#173c2a"/><circle cx="1146" cy="540" r="7" fill="#173c2a"/>
+  </g>
+  <!-- lower row -->
+  <g>
+    <text x="95" y="595" class="t s">C1</text><rect x="120" y="610" width="72" height="48" rx="8" fill="#fff" class="o"/><circle cx="145" cy="635" r="10" fill="#e45252"/><path d="M175 620l20 20" class="o"/>
+    <text x="280" y="595" class="t s">C2</text><circle cx="332" cy="622" r="20" fill="#efc3a5" class="o"/><path d="M308 645h48v62H308z" fill="#ff9f66" class="o"/><circle cx="324" cy="620" r="7" fill="none" class="o thin"/><circle cx="340" cy="620" r="7" fill="none" class="o thin"/><rect x="365" y="659" width="17" height="28" rx="4" fill="#173c2a"/><rect x="392" y="650" width="34" height="44" rx="8" fill="#79c69e" class="o"/>
+    <text x="500" y="595" class="t s">C3</text><path d="M520 682q25-42 50 0" fill="#ff6b6b" class="o"/><rect x="582" y="635" width="70" height="48" rx="8" fill="#fff" class="o"/><text x="595" y="665" class="t s">MERCH</text>
+    <text x="750" y="595" class="t s">C4</text><circle cx="804" cy="622" r="20" fill="#dba983" class="o"/><path d="M780 645h48v62H780z" fill="#6aa6ff" class="o"/><rect x="838" y="660" width="22" height="34" rx="6" fill="#79c69e" class="o"/>
+    <rect x="920" y="600" width="180" height="110" rx="16" fill="#fff4d7" class="o"/><text x="948" y="640" class="t z">FOTO</text><circle cx="972" cy="675" r="18" fill="#6aa6ff"/><circle cx="1034" cy="675" r="18" fill="#ff6b6b"/>
+  </g>
+</svg>
