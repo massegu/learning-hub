@@ -29,9 +29,41 @@
     if(it.memoryQuestion) return it.memoryQuestion;
     return it.q||it.prompt||'Actividad';
   }
-  function optionParagraphs(it, TextRun, Paragraph){
+  function hashSeed(text){
+    let h=2166136261;
+    for(const ch of String(text||'')){
+      h^=ch.charCodeAt(0);
+      h=Math.imul(h,16777619);
+    }
+    return h>>>0;
+  }
+  function seededShuffle(arr,seed){
+    const out=[...arr];
+    let x=seed||1;
+    const rnd=()=>{ x^=x<<13; x^=x>>>17; x^=x<<5; return ((x>>>0)%1000000)/1000000; };
+    for(let i=out.length-1;i>0;i--){
+      const j=Math.floor(rnd()*(i+1));
+      [out[i],out[j]]=[out[j],out[i]];
+    }
+    return out;
+  }
+  function balancedOptions(it,itemIndex,version){
     if(!Array.isArray(it.opts)||!it.opts.length) return [];
-    return it.opts.map((x,i)=>new Paragraph({
+    const opts=[...new Set(it.opts.map(x=>String(x)))];
+    const answer=it.a===undefined?null:String(it.a);
+    const seed=hashSeed(`${it.contentKey||it.id||it.q||''}|${itemIndex}|${version}`);
+    if(!answer||!opts.includes(answer)) return seededShuffle(opts,seed);
+    const wrong=seededShuffle(opts.filter(x=>x!==answer),seed);
+    const positions=opts.length===4?[0,2,1,3]:Array.from({length:opts.length},(_,i)=>i);
+    const target=positions[(itemIndex+version-1)%positions.length]%opts.length;
+    const out=[...wrong];
+    out.splice(target,0,answer);
+    return out;
+  }
+  function optionParagraphs(it, TextRun, Paragraph, itemIndex, version){
+    const opts=balancedOptions(it,itemIndex,version);
+    if(!opts.length) return [];
+    return opts.map((x,i)=>new Paragraph({
       spacing:{after:55,line:270},
       children:[new TextRun({text:`${String.fromCharCode(65+i)}. ${clean(x)}`,size:18,color:'173326',font:'Aptos'})]
     }));
@@ -76,7 +108,7 @@
         block.push(new Paragraph({spacing:{after:75},children:[]}));
       }
       block.push(new Paragraph({spacing:{after:90,line:300},children:[new TextRun({text:prompt,bold:true,size:21,color:ink,font:'Aptos'})]}));
-      const op=optionParagraphs(it,TextRun,Paragraph);
+      const op=optionParagraphs(it,TextRun,Paragraph,i,version);
       if(op.length){
         block.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:softBorders,rows:[new TableRow({children:[new TableCell({margins:{top:130,bottom:130,left:160,right:160},children:op})]})]}));
         block.push(new Paragraph({spacing:{after:70},children:[]}));
