@@ -22,6 +22,12 @@ window.LH_CONFIG = {
         v165.onload=()=>{
           const v166=document.createElement('script');
           v166.src='js/v16_6.js?v=16.6.0';
+          v166.onload=()=>{
+            const v167=document.createElement('script');
+            v167.src='js/v16_7.js?v=16.7.0';
+            v167.defer=true;
+            document.head.appendChild(v167);
+          };
           v166.defer=true;
           document.head.appendChild(v166);
         };
