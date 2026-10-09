@@ -145,6 +145,7 @@
     mode = "grammar",
     currentItem = null,
     counter = 0,
+    requestGeneration = 0,
     guidedSession = null;
   const API = window.LearningAPI;
   const ICONS = {
@@ -193,6 +194,12 @@
     pasta: "🍝",
     eggs: "🥚",
     juice: "🧃",
+    ball: "⚽",
+    doll: "🧸",
+    bear: "🧸",
+    car: "🚗",
+    cap: "🧢",
+    gift: "🎁",
   };
   const iconFor = (k) => ICONS[k] || "•";
   const safeImage = (src) =>
@@ -220,7 +227,10 @@
           : `<div class="memory-card"><b>${iconFor(x.icon)}</b><span>${escapeHtml(x.detail)}</span></div>`,
       )
       .join("");
-    visual.innerHTML = `<div class="memory-reveal">${cards}</div><div class="memory-timer">Memoriza la información. Después desaparecerá.</div>`;
+    const memoryInstruction = window.ContentPolicy.forProfile(profile)
+      ? "Mira bien. Después taparemos las cosas."
+      : "Memoriza la información. Después desaparecerá.";
+    visual.innerHTML = `<div class="memory-reveal">${cards}</div><div class="memory-timer">${memoryInstruction}</div>`;
     area.innerHTML = "";
     setTimeout(
       () => {
@@ -275,7 +285,7 @@
     };
   }
   const blankState = () => {
-    const subjects = profile ? AGE[profile.age_band].subjects : [];
+    const subjects = profile ? ageData().subjects : [];
     const scores = {},
       levels = {};
     const initial = Math.max(
@@ -330,7 +340,7 @@
     );
   }
   function ageData() {
-    return AGE[profile.age_band];
+    return window.ContentPolicy.forProfile(profile) || AGE[profile.age_band];
   }
   function recent(s, n = 10) {
     return state.history.filter((x) => x.subject === s).slice(-n);
@@ -347,6 +357,7 @@
   async function persist() {
     if (profile && state) {
       profile.progress = {
+        ...profile.progress,
         scores: state.scores,
         levels: state.levels,
         totalCorrect: state.totalCorrect,
@@ -504,6 +515,8 @@
     const p = profiles.find((x) => x.id === id);
     if (!p) return;
     profile = p;
+    currentItem = null;
+    requestGeneration++;
     localStorage.setItem("lh_current_profile", id);
     state = normalizeState(p);
     subject = ageData().subjects[0];
@@ -573,16 +586,41 @@
     $("#exercisePill").textContent = m.name.toUpperCase();
     $("#exerciseHeading").textContent = m.name;
     $("#exerciseDescription").textContent = m.desc;
+    if (window.ContentPolicy.forProfile(profile)) {
+      const descriptions = {
+        language: "Lee, escucha y juega con las palabras.",
+        division: "Cuenta y resuelve problemas con cosas que conoces.",
+        reading: "Lee una historia corta y responde.",
+        attention: "Mira con calma y busca lo que te pedimos.",
+        executive: "Piensa qué hacer y ordena los pasos.",
+        memory: "Mira las cosas e intenta recordarlas.",
+        speedReasoning: "Busca parejas y descubre qué viene después.",
+        applied: "Piensa qué puedes hacer en cada situación.",
+      };
+      $("#exerciseDescription").textContent = descriptions[subject];
+    }
     $("#exerciseLevelSelect").value = String(state.levels[subject] || 1);
     $("#subjectScore").textContent = state.scores[subject] || 0;
-    const isLang = subject === "language";
+    const isLang = subject === "language" && !window.ContentPolicy.forProfile(profile);
     $("#languageModeSwitch").classList.toggle("hidden", !isLang);
     counter = 0;
     newExercise();
   }
-  async function requestOne(kind, domain = subject, extra = {}) {
+  async function requestForProfile(payload, targetProfile = profile) {
     const res = await API.requestContent({
-      profile_id: profile.id,
+      ...payload,
+      profile_id: targetProfile.id,
+    });
+    // Server authentication, subscription checks and usage accounting happen
+    // first. The browser never supplies local content after a rejected call.
+    const selected = window.EarlyContent.adaptResponse(res, payload, targetProfile);
+    if (window.ContentPolicy.forProfile(targetProfile)) {
+      await API.saveProgress(targetProfile.id, targetProfile.progress);
+    }
+    return selected;
+  }
+  async function requestOne(kind, domain = subject, extra = {}) {
+    const res = await requestForProfile({
       kind,
       domain,
       subdomain: domain === "language" ? mode : null,
@@ -597,13 +635,22 @@
     return res?.items?.[0] || null;
   }
   async function newExercise() {
+    const requestedProfile = profile;
+    const requestedSubject = subject;
+    const generation = ++requestGeneration;
+    currentItem = null;
+    $("#exerciseOptions").innerHTML = "";
+    $("#exerciseVisual").innerHTML = "";
+    $("#exerciseNext").classList.add("hidden");
     setLoading(true);
     try {
-      currentItem = await requestOne("exercise");
+      const item = await requestOne("exercise");
+      if (profile !== requestedProfile || subject !== requestedSubject || generation !== requestGeneration) return;
+      currentItem = item;
       counter++;
       renderExercise(currentItem);
     } catch (e) {
-      showContentError(e);
+      if (profile === requestedProfile && subject === requestedSubject && generation === requestGeneration) showContentError(e);
     } finally {
       setLoading(false);
     }
@@ -633,6 +680,7 @@
       $("#exercisePrompt").textContent = "No hay contenido disponible.";
       return;
     }
+    if (window.ContentPolicy.forProfile(profile)) window.ContentPolicy.validateEarly(it);
     $("#exerciseCounter").textContent = `Ejercicio ${counter}`;
     $("#exerciseFeedback").textContent = "";
     $("#exerciseFeedback").className = "feedback";
@@ -678,6 +726,9 @@
     if (it.scenario)
       $("#exerciseVisual").innerHTML +=
         `<div class="scenario-card"><span class="scenario-label">SITUACIÓN</span><p>${escapeHtml(it.scenario)}</p></div>`;
+    if (it.stimulus)
+      $("#exerciseVisual").innerHTML =
+        `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus)}</div>`;
     $("#exercisePrompt").textContent = it.q || "Actividad";
     if (it.type === "memoryReveal" || it.type === "memoryMulti") {
       renderMemoryExercise(it);
@@ -1035,6 +1086,7 @@
       $$("#homeworkOptions input").forEach((x) => (x.checked = false));
   }
   $("#generateWorksheetsBtn").onclick = async () => {
+    const worksheetProfile = profile;
     const selected = $$("#homeworkOptions input:checked").map((x) => x.value);
     if (!selected.length)
       return ($("#docxStatus").textContent =
@@ -1045,16 +1097,18 @@
     try {
       const all = [];
       for (let i = 0; i < count; i++) {
-        const res = await API.requestContent({
-          profile_id: profile.id,
+        const res = await requestForProfile({
           kind: "worksheet",
           domains: selected,
           questions,
           level: Math.max(...selected.map((s) => state.levels[s] || 1)),
-        });
+        }, worksheetProfile);
+        if (!Array.isArray(res.items) || res.items.length !== questions)
+          throw new Error('El banco no ha entregado una ficha completa.');
+        window.ActivityModel.validateBatch([res.items], worksheetProfile);
         all.push(res.items || []);
       }
-      await window.WorksheetGenerator.generate(all, profile);
+      await window.WorksheetGenerator.generate(all, worksheetProfile);
       $("#docxStatus").textContent =
         `${count} ficha${count > 1 ? "s" : ""} creada${count > 1 ? "s" : ""}.`;
     } catch (e) {

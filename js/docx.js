@@ -11,24 +11,6 @@
   }
   function prefix(profile){return `LearningLab_${ageLabel(profile)}_${stamp()}`}
   function downloadBlob(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
-  function materialText(it){
-    if(Array.isArray(it.memoryContent)) return it.memoryContent.map(x=>x.person?`${x.person}: ${x.detail}`:x.detail).join(' · ');
-    if(it.scenario) return it.scenario;
-    if(it.title&&it.text) return `${it.title}: ${it.text}`;
-    if(it.model) return `Modelo: ${it.model}`;
-    if(Array.isArray(it.modelSequence)) return `Modelo: ${it.modelSequence.join('  ')}`;
-    if(Array.isArray(it.rows)) return it.rows.map((r,i)=>`Fila ${i+1}: ${r.join(' ')}`).join('   |   ');
-    if(Array.isArray(it.visualItems)) return it.visualItems.join('   ');
-    if(it.type==='cancel'&&Array.isArray(it.stimuli)) return it.stimuli.join('   ');
-    return '';
-  }
-  function promptText(it){
-    if(it.dividend) return `${it.dividend} ÷ ${it.divisor}`;
-    if(it.type==='executive'&&it.prompt) return it.prompt;
-    if(it.type==='order'&&Array.isArray(it.tokens)) return `${it.q||'Ordena la secuencia.'}\nElementos disponibles: ${it.tokens.join(' · ')}`;
-    if(it.memoryQuestion) return it.memoryQuestion;
-    return it.q||it.prompt||'Actividad';
-  }
   function hashSeed(text){
     let h=2166136261;
     for(const ch of String(text||'')){
@@ -60,25 +42,27 @@
     out.splice(target,0,answer);
     return out;
   }
-  function optionParagraphs(it, TextRun, Paragraph, itemIndex, version){
+  function optionParagraphs(it, TextRun, Paragraph, itemIndex, version, size=18){
     const opts=balancedOptions(it,itemIndex,version);
     if(!opts.length) return [];
     return opts.map((x,i)=>new Paragraph({
       spacing:{after:55,line:270},
-      children:[new TextRun({text:`${String.fromCharCode(65+i)}. ${clean(x)}`,size:18,color:'173326',font:'Aptos'})]
+      children:[new TextRun({text:`${String.fromCharCode(65+i)}. ${clean(x)}`,size,color:'173326',font:'Aptos'})]
     }));
   }
-  function visualToText(it){
-    if(!it.visual) return '';
-    const tmp=document.createElement('div');
-    tmp.innerHTML=String(it.visual);
-    return clean(tmp.innerText||tmp.textContent||'');
-  }
-  async function makeDoc(items,version,profile){
+  async function makeDoc(items,version,profile,models){
     const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,WidthType,AlignmentType,BorderStyle,Footer,PageBreak}=window.docx;
     const green='1F633B',green2='2F7D4A',light='EDF5E9',sand='F6F1E5',ink='173326',muted='607064',white='FFFFFF',line='D6DED6';
     const noBorders={top:{style:BorderStyle.NONE,size:0,color:white},bottom:{style:BorderStyle.NONE,size:0,color:white},left:{style:BorderStyle.NONE,size:0,color:white},right:{style:BorderStyle.NONE,size:0,color:white},insideHorizontal:{style:BorderStyle.NONE,size:0,color:white},insideVertical:{style:BorderStyle.NONE,size:0,color:white}};
     const softBorders={top:{style:BorderStyle.SINGLE,size:6,color:line},bottom:{style:BorderStyle.SINGLE,size:6,color:line},left:{style:BorderStyle.SINGLE,size:6,color:line},right:{style:BorderStyle.SINGLE,size:6,color:line},insideHorizontal:{style:BorderStyle.NONE,size:0,color:white},insideVertical:{style:BorderStyle.NONE,size:0,color:white}};
+    const early=Boolean(window.ContentPolicy.forProfile(profile));
+    const textSize=early?28:19;
+    const paragraph=value=>new Paragraph({spacing:{line:early?360:285,after:70},children:[new TextRun({text:value,size:textSize,color:ink,font:'Aptos'})]});
+    function renderMaterial(material){
+      if(material.type==='text') return [paragraph(material.text)];
+      if(material.type==='list') return material.items.map((value,i)=>paragraph(`${i+1}. ${value}`));
+      return [new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:softBorders,rows:material.rows.map(row=>new TableRow({children:row.map(value=>new TableCell({margins:{top:100,bottom:100,left:120,right:120},children:[paragraph(value)]}))}))})];
+    }
     const header=new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:noBorders,rows:[new TableRow({children:[
       new TableCell({width:{size:70,type:WidthType.PERCENTAGE},shading:{fill:light},margins:{top:170,bottom:170,left:220,right:160},children:[
         new Paragraph({children:[new TextRun({text:'FICHA DE ENTRENAMIENTO',bold:true,size:34,color:green,font:'Aptos Display'})]}),
@@ -94,21 +78,23 @@
     const children=[header,new Paragraph({spacing:{after:80},children:[]}),identity,new Paragraph({spacing:{after:120},children:[]})];
 
     items.forEach((it,i)=>{
-      if(i>0 && i%5===0) children.push(new Paragraph({children:[new PageBreak()]}));
-      let material=clean(materialText(it));
-      const lightweightVisual=clean(visualToText(it));
-      if(!material && lightweightVisual && !it.image) material=lightweightVisual;
-      const prompt=clean(promptText(it));
+      if(i>0 && i%(early?3:5)===0) children.push(new Paragraph({children:[new PageBreak()]}));
+      const model=models[i];
+      const prompt=model.question;
       const block=[new Paragraph({spacing:{after:90},children:[new TextRun({text:`ACTIVIDAD ${i+1}`,bold:true,size:15,color:green2,font:'Aptos'})]})];
-      if(material){
+      if(model.stimulus.length){
         block.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:softBorders,rows:[new TableRow({children:[new TableCell({shading:{fill:light},margins:{top:140,bottom:140,left:170,right:170},children:[
-          new Paragraph({spacing:{after:55},children:[new TextRun({text:'INFORMACIÓN',bold:true,size:13,color:green,font:'Aptos'})]}),
-          new Paragraph({spacing:{line:285},children:[new TextRun({text:material,size:19,color:ink,font:'Aptos'})]})
+          new Paragraph({spacing:{after:55},children:[new TextRun({text:early?'MIRA':'INFORMACIÓN',bold:true,size:early?20:13,color:green,font:'Aptos'})]}),
+          ...model.stimulus.flatMap(renderMaterial)
         ]})]})]}));
         block.push(new Paragraph({spacing:{after:75},children:[]}));
       }
-      block.push(new Paragraph({spacing:{after:90,line:300},children:[new TextRun({text:prompt,bold:true,size:21,color:ink,font:'Aptos'})]}));
-      const op=optionParagraphs(it,TextRun,Paragraph,i,version);
+      block.push(new Paragraph({spacing:{after:90,line:early?360:300},children:[new TextRun({text:prompt,bold:true,size:early?28:21,color:ink,font:'Aptos'})]}));
+      if(model.tokens.length){
+        block.push(paragraph('Palabras o pasos disponibles:'));
+        model.tokens.forEach((token,j)=>block.push(paragraph(`${j+1}. ${token}`)));
+      }
+      const op=optionParagraphs(it,TextRun,Paragraph,i,version,early?28:18);
       if(op.length){
         block.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:softBorders,rows:[new TableRow({children:[new TableCell({margins:{top:130,bottom:130,left:160,right:160},children:op})]})]}));
         block.push(new Paragraph({spacing:{after:70},children:[]}));
@@ -116,7 +102,7 @@
       const openAnswer=!op.length || it.type==='self' || it.sample || it.type==='order';
       if(openAnswer){
         block.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:softBorders,rows:[new TableRow({children:[new TableCell({shading:{fill:'FBFCF8'},margins:{top:120,bottom:120,left:160,right:160},children:[
-          new Paragraph({children:[new TextRun({text:'RESPUESTA / ORGANIZACIÓN',bold:true,size:13,color:muted,font:'Aptos'})]}),
+          new Paragraph({children:[new TextRun({text:early?'TU RESPUESTA':'RESPUESTA / ORGANIZACIÓN',bold:true,size:early?20:13,color:muted,font:'Aptos'})]}),
           new Paragraph({spacing:{before:90},children:[new TextRun({text:' ',size:18})]}),
           new Paragraph({children:[new TextRun({text:' ',size:18})]})
         ]})]})]}));
@@ -132,16 +118,21 @@
     return Packer.toBlob(doc);
   }
   async function generate(itemsByVersion,profile){
+    // Validate every version before creating any file: no partial download and
+    // no guessing a missing stimulus from the supplied correct answer.
+    const models=window.ActivityModel.validateBatch(itemsByVersion,profile);
+    if(!window.docx) throw new Error('No se ha cargado el generador DOCX. Comprueba la conexión.');
+    if(itemsByVersion.length>1&&!window.JSZip) throw new Error('No se ha cargado el generador ZIP. Comprueba la conexión.');
     const p=prefix(profile);
     if(itemsByVersion.length===1){
-      downloadBlob(await makeDoc(itemsByVersion[0],1,profile),`${p}_ficha_01.docx`);
+      downloadBlob(await makeDoc(itemsByVersion[0],1,profile,models[0]),`${p}_ficha_01.docx`);
       return;
     }
-    const zip=new JSZip();
+    const zip=new window.JSZip();
     for(let i=0;i<itemsByVersion.length;i++){
-      zip.file(`${p}_ficha_${pad(i+1)}.docx`,await makeDoc(itemsByVersion[i],i+1,profile));
+      zip.file(`${p}_ficha_${pad(i+1)}.docx`,await makeDoc(itemsByVersion[i],i+1,profile,models[i]));
     }
     downloadBlob(await zip.generateAsync({type:'blob'}),`${p}_fichas.zip`);
   }
-  window.WorksheetGenerator={generate};
+  window.WorksheetGenerator={generate,integrityVersion:1};
 })();

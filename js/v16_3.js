@@ -86,6 +86,7 @@
   }
 
   function worksheetGeneratorV163(){
+    if(window.WorksheetGenerator?.integrityVersion) return true;
     if(!window.docx||!window.JSZip) return false;
     function clean(v){return String(v??'').replace(/\s+/g,' ').trim();}
     function materialText(it){if(Array.isArray(it.memoryContent))return it.memoryContent.map(x=>x.person?`${x.person}: ${x.detail}`:x.detail).join(' · ');if(it.scenario)return it.scenario;if(it.title&&it.text)return `${it.title}: ${it.text}`;if(it.model)return `Modelo: ${it.model}`;if(Array.isArray(it.modelSequence))return `Modelo: ${it.modelSequence.join('  ')}`;if(Array.isArray(it.rows))return it.rows.map((r,i)=>`Fila ${i+1}: ${r.join(' ')}`).join('   |   ');if(Array.isArray(it.visualItems))return it.visualItems.join('   ');return'';}

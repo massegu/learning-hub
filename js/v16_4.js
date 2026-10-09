@@ -100,6 +100,7 @@
   }
 
   function installWorksheetGenerator(){
+    if(window.WorksheetGenerator?.integrityVersion) return;
     if(!window.docx||!window.JSZip) return;
     async function makeDoc(items,version,profile){
       const D=window.docx;

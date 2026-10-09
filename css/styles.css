@@ -2535,3 +2535,6 @@ body {
 .topbar .billing-btn:hover {
   background: var(--accent-dark);
 }
+.reading-passage table { width:100%; border-collapse:collapse; margin:12px 0; }
+.reading-passage td { padding:10px 14px; border:1px solid var(--line); text-align:left; }
+.reading-passage li { margin:8px 0; }

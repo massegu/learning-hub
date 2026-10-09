@@ -69,6 +69,8 @@
 
   function patchDescriptions(){
     const route=currentRoute();
+    // The explicit early profile supplies its own child-facing descriptions.
+    if(route==="early") return;
     if(route==="early" || route==="junior"){
       const active=$("#navMenu .nav-item.active[data-subject]")?.dataset.subject;
       const desc=$("#exerciseDescription");
