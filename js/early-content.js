@@ -56,31 +56,49 @@
       ['count', 'toys', (o, n, v) => { const k = 2 + v % 5; return choice('Cuenta los puntos. ¿Cuántos hay?', [list(Array(k).fill('●'))], k, [k - 1, k + 1]); }],
       ['addition', 'school', (o, n, v) => { const k = 1 + v % 4; return choice(`¿${o.gender === 'f' ? 'Cuántas' : 'Cuántos'} ${o.plural} hay ahora?`, [text(`Hay ${amount(k, o)}. ${n} trae ${o.some}.`)], k + 1, [k, k + 2]); }],
       ['subtraction', 'school', (o, n, v) => { const k = 2 + v % 4; return choice(`¿${o.gender === 'f' ? 'Cuántas' : 'Cuántos'} ${o.plural} quedan?`, [text(`Hay ${k} ${o.plural}. ${n} guarda ${o.some}.`)], k - 1, [k, k + 1]); }],
-      ['compare', 'school', (o, n, v) => { const k = 1 + v % 4; return choice('¿Quién tiene más lápices?', [table([[n, String(k)], ['Sol', String(k + 1)]])], 'Sol', [n, 'Tienen los mismos']); }],
+      ['compare', 'school', (o, n, v) => { const k = 1 + v % 4, first = v % 2 === 1; return choice('¿Quién tiene más lápices?', [table([[n, String(first ? k + 1 : k)], ['Sol', String(first ? k : k + 1)]])], first ? n : 'Sol', [first ? 'Sol' : n, 'Tienen los mismos']); }],
     ],
     attention: [
       ['matching', 'school', (o, n, v) => choice('Mira el modelo. ¿Cuál es igual?', [text(`Modelo: ${shapes[v % 4]}`)], shapes[v % 4], shapes.filter(x => x !== shapes[v % 4]))],
       ['search', 'playground', (o, n, v) => { const s = shapes[v % 4], k = 1 + Math.floor(v / 4) % 3; return choice(`Busca esta figura: ${s}. ¿Cuántas hay?`, [list([...Array(k).fill(s), shapes[(v + 1) % 4], shapes[(v + 2) % 4]])], k, [k + 1, k + 2]); }],
       ['oddOne', 'toys', (o, n, v) => choice('Mira las figuras. ¿Cuál es diferente?', [list([shapes[v % 4], shapes[v % 4], shapes[(v + 1) % 4]])], shapes[(v + 1) % 4], [shapes[v % 4], shapes[(v + 2) % 4]])],
-      ['matching', 'backpack', (o, n, v) => { const row = [String(1 + v % 6), String(7 + Math.floor(v / 6))]; return choice('Mira el modelo. ¿Qué fila es igual?', [text(`Modelo: ${row.join(' · ')}`), table([['A', row.join(' · ')], ['B', [...row].reverse().join(' · ')], ['C', '1 · 1']])], 'A', ['B', 'C']); }],
+      ['matching', 'backpack', (o, n, v) => {
+        const row = [String(1 + v % 6), String(7 + Math.floor(v / 6))];
+        const labels = ['A','B','C'], position = Math.floor(v / 6) % 3;
+        const wrong = [[...row].reverse().join(' · '), '1 · 1'];
+        const rows = labels.map((label,i)=>[label,i===position ? row.join(' · ') : wrong.shift()]);
+        return choice('Mira el modelo. ¿Qué fila es igual?', [text(`Modelo: ${row.join(' · ')}`), table(rows)], labels[position], labels.filter((_,i)=>i!==position));
+      }],
       ['findPlace', 'school', (o, n) => choice(`Busca ${o.name}. ¿Dónde está?`, [table([[o.name, o.place], ['la flor', 'el jardín']])], o.place, ['el jardín', 'el baño'])],
     ],
     memory: [
       ['rememberObjects', 'backpack', (o, n, v, level) => {
-        const items = Array.from({length: policy.early.memoryElements[level - 1]}, (_, i) => objects[(v + i) % objects.length]);
-        return choice('Mira lo que hay en la mochila.', [list(items.map(x => x.name))], o.name, [objects[(v + 5) % objects.length].name, objects[(v + 6) % objects.length].name], {
-          type: 'memoryReveal', memoryQuestion: '¿Qué había en la mochila?',
+        const sets = [
+          ['la mochila del colegio', [objects[0], objects[2], objects[5], objects[6]]],
+          ['la mochila de la excursión', [objects[10], objects[6], objects[4], objects[9]]],
+          ['la bolsa de los juguetes', [objects[1], objects[3], objects[7], objects[8]]],
+        ];
+        const [place, candidates] = sets[v % sets.length];
+        const items = Array.from({length: policy.early.memoryElements[level - 1]}, (_, i) => candidates[(Math.floor(v / 3) + i) % candidates.length]);
+        const wrong = objects.filter(x => !items.some(it => it.name === x.name)).slice(0, 2);
+        return choice(`Mira lo que hay en ${place}.`, [list(items.map(x => x.name))], items[0].name, wrong.map(x => x.name), {
+          type: 'memoryReveal',
+          memoryQuestion: `¿Qué había en ${place}?`,
+          answerEvidence: {type:'listItem',block:0,index:0},
           memoryContent: items.map(x => ({icon: x.icon, detail: x.name})), revealMs: 7000,
         });
       }],
-      ['rememberPlace', 'bedroom', (o, n) => choice(`Mira dónde está ${o.name}.`, [text(`${o.name[0].toUpperCase() + o.name.slice(1)} está en ${o.place}.`)], o.place, ['el jardín', 'el baño'], {
+      ['rememberPlace', 'bedroom', (o, n) => choice(`Mira dónde está ${o.name}.`, [table([[o.name,o.place]])], o.place, ['el jardín', 'el baño'], {
+        answerEvidence: {type:'tableCell',block:0,row:0,column:1,subjectColumn:0},
         type: 'memoryReveal', memoryQuestion: `¿Dónde estaba ${o.name}?`, memoryContent: [{icon: o.icon, detail: `${o.name}: ${o.place}`}], revealMs: 6500,
       })],
       ['rememberPair', 'birthday', (o, n, v) => { const c = colors[v % 4]; return choice('Mira los globos de cada persona.', [table([[n, c], ['Sol', colors[(v + 1) % 4]]])], c, colors.filter(x => x !== c), {
         type: 'memoryReveal', memoryQuestion: `¿De qué color era el globo de ${n}?`, memoryContent: [{person: n, detail: `Globo ${c}`}, {person: 'Sol', detail: `Globo ${colors[(v + 1) % 4]}`}], revealMs: 7000,
+        answerEvidence: {type:'tableCell',block:0,row:0,column:1,subjectColumn:0},
       }); }],
       ['rememberOrder', 'school', (o, n, v, level) => { const items = Array.from({length: Math.min(3, policy.early.memoryElements[level - 1])}, (_, i) => objects[(v + i) % objects.length]); return choice('Mira estas cosas en orden.', [list(items.map(x => x.name))], items[0].name, items.slice(1).map(x => x.name), {
         type: 'memoryReveal', memoryQuestion: '¿Qué cosa estaba primero?', memoryContent: items.map((x, i) => ({icon: x.icon, detail: `${i + 1}. ${x.name}`})), revealMs: 7500,
+        answerEvidence: {type:'listItem',block:0,index:0},
       }); }],
     ],
     executive: [
@@ -88,32 +106,72 @@
         ['Vas a nadar. Necesitas el bañador, la toalla y las chanclas.', 'Mirar las tres cosas antes de salir'],
         ['Vas al colegio. Necesitas el libro, el cuaderno y el estuche.', 'Mirar las tres cosas antes de salir'],
         ['Vas de excursión. Necesitas la gorra, el agua y la merienda.', 'Mirar las tres cosas antes de salir'],
-      ]; const [s, a] = plans[v % 3]; return choice('¿Qué puedes hacer para no olvidar nada?', [text(s)], a, ['Salir sin mirar la mochila', 'Llevar solo un juguete']); }],
-      ['inhibition', 'playground', (o, n) => choice('¿Qué puede hacer mientras espera?', [text(`${n} quiere subir al tobogán. Hay una niña delante.`)], 'Esperar su turno', ['Empujar a la niña', 'Colarse delante'])],
+        ['Quieres pintar. Necesitas el papel, la pintura y el pincel.', 'Preparar las cosas antes de pintar'],
+        ['Quieres jugar al balón. Primero debes recoger los juguetes del suelo.', 'Recoger los juguetes antes de jugar'],
+        ['Vas a poner la mesa. Necesitas un plato para cada persona.', 'Contar las personas y buscar los platos'],
+      ]; const index = v % plans.length, [s, a] = plans[index];
+        const wrong = [
+          ['Revisar solo la toalla', 'Llevar solo las chanclas'],
+          ['Revisar solo el libro', 'Guardar solo el estuche'],
+          ['Llevar solo la gorra', 'Dejar el agua en casa'],
+          ['Empezar sin el papel', 'Guardar el pincel'],
+          ['Empezar sin recoger', 'Dejar los juguetes en el suelo'],
+          ['Poner un solo plato', 'Guardar todos los platos'],
+        ][index];
+        return choice(index < 3 ? '¿Qué puedes hacer para no olvidar nada?' : '¿Qué debes hacer primero?', [text(s)], a, wrong);
+      }],
+      ['inhibition', 'playground', (o, n, v) => {
+        const situations = [
+          [`${n} quiere subir al tobogán. Hay una niña delante.`, 'Esperar su turno', ['Empujar a la niña', 'Colarse delante']],
+          [`La maestra está hablando. ${n} quiere contar algo.`, 'Levantar la mano y esperar', ['Gritar por encima de la maestra', 'Salir corriendo']],
+          [`Estáis jugando a las cartas. Ahora le toca a otra persona.`, 'Esperar a que termine su turno', ['Quitarle las cartas', 'Jugar antes de que termine']],
+        ];
+        const [scenario, answer, wrong] = situations[v % situations.length];
+        return choice('¿Qué puede hacer ahora?', [text(scenario)], answer, wrong);
+      }],
       ['sequencing', 'family', (o, n, v) => { const routines = [
-        ['Quieres lavarte las manos.', ['Abre el grifo', 'Lávate con jabón', 'Sécate las manos']],
+        ['El grifo ya está abierto. Quieres lavarte las manos.', ['Lávate con jabón', 'Cierra el grifo', 'Sécate las manos']],
         ['Quieres sembrar una semilla.', ['Pon tierra en la maceta', 'Pon la semilla', 'Riega con agua']],
         ['Quieres hacer un dibujo.', ['Busca el papel', 'Dibuja con el lápiz', 'Guarda el dibujo']],
-      ]; const [s, steps] = routines[v % 3]; return order('Ordena los pasos.', steps, s); }],
-      ['organisation', 'bedroom', (o, n) => choice(`¿Dónde puede guardar ${o.name}?`, [text(`En la caja van los juguetes. En la cesta van las otras cosas. ${n} tiene ${o.some}.`)], /pelota|muñeca|juguete|peluche/.test(o.name) ? 'En la caja' : 'En la cesta', ['En el suelo', /pelota|muñeca|juguete|peluche/.test(o.name) ? 'En la cesta' : 'En la caja'])],
+        ['Quieres hacer una figura de plastilina y guardarla.', ['Saca la plastilina', 'Haz una figura', 'Guarda la figura en la caja']],
+        ['En este juego tiras el dado y avanzas tantas casillas como puntos.', ['Tira el dado', 'Cuenta los puntos', 'Mueve la ficha']],
+        ['Quieres envolver un regalo dentro de una caja.', ['Pon el regalo en la caja', 'Cierra la caja', 'Pon el lazo']],
+      ]; const [s, steps] = routines[v % routines.length]; return order('Ordena los pasos.', steps, s); }],
+      ['organisation', 'bedroom', (o, n, v) => {
+        const toys = [objects[1], objects[3], objects[7], objects[8]];
+        const school = [objects[0], objects[2], objects[5]];
+        const item = [...toys, ...school][v % 7];
+        const isToy = toys.includes(item);
+        return choice(`¿Dónde puede guardar ${item.name}?`, [text(`En la caja van los juguetes. En el estante van las cosas del colegio. ${n} tiene ${item.some}.`)], isToy ? 'En la caja' : 'En el estante', ['En el suelo', isToy ? 'En el estante' : 'En la caja']);
+      }],
     ],
     speedReasoning: [
       ['analogy', 'animals', (o, n, v) => { const pairs = [
-        ['El pájaro vuela. El pez...', 'nada', ['salta', 'lee']],
+        ['El pájaro vuela. El pez...', 'nada', ['camina', 'lee']],
         ['El perro ladra. El gato...', 'maúlla', ['canta', 'habla']],
         ['Con los ojos vemos. Con los oídos...', 'oímos', ['corremos', 'comemos']],
-        ['El pájaro vive en un nido. El conejo vive en...', 'una madriguera', ['una mochila', 'un plato']],
+        ['Con las piernas caminamos. Con las manos...', 'aplaudimos', ['oímos', 'miramos']],
       ]; const [s, a, w] = pairs[v % 4]; return choice('¿Cómo termina la frase?', [text(s)], a, w); }],
       ['pattern', 'school', (o, n, v) => { const a = colors[v % 4], b = colors[(v + 1) % 4]; return choice('¿Qué color viene después?', [list([a, b, a, b])], a, [b, colors[(v + 2) % 4]]); }],
-      ['classification', 'animals', (o, n, v) => { const groups = [['gato', 'perro', 'conejo', 'silla', 'mesa'], ['manzana', 'pera', 'plátano', 'zapato', 'gorra'], ['pelota', 'muñeca', 'peonza', 'pan', 'leche']]; const g = groups[v % 3]; return choice('¿Qué palabra va con estas dos?', [list(g.slice(0, 2))], g[2], g.slice(3)); }],
+      ['classification', 'animals', (o, n, v) => { const groups = [['gato', 'perro', 'conejo', 'silla', 'mesa'], ['manzana', 'pera', 'plátano', 'zapato', 'gorra'], ['pelota', 'muñeca', 'coche de juguete', 'pan', 'leche']]; const g = groups[v % 3]; return choice('¿Qué palabra va con estas dos?', [list(g.slice(0, 2))], g[2], g.slice(3)); }],
       ['relationship', 'family', (o, n, v) => { const pairs = [['Llueve.', 'Un paraguas', 'Un bañador'], ['Hace frío.', 'Un abrigo', 'Un abanico'], ['Tienes sed.', 'Un vaso de agua', 'Un lápiz']]; const [s, a, w] = pairs[v % 3]; return choice('¿Qué necesitas?', [text(s)], a, [w, 'Una pelota']); }],
-      ['pattern', 'school', (o, n, v) => { const start = 1 + v % 5, step = 1 + Math.floor(v / 5) % 2; const answer = start + step * 3; return choice('Mira los números. ¿Cuál viene después?', [list([start, start + step, start + step * 2].map(String))], answer, [answer - 1, answer + 1]); }],
-      ['relationship', 'toys', (o, n, v) => { const next = objects[(v + 1) % objects.length]; return choice(`¿Qué cosa está debajo ${of(o.name)}?`, [text(`${o.name[0].toUpperCase() + o.name.slice(1)} está encima ${of(next.name)}.`)], next.name, [objects[(v + 2) % objects.length].name, objects[(v + 3) % objects.length].name]); }],
+      ['pattern', 'school', (o, n, v, level) => { const step = level === 1 ? 1 : 1 + Math.floor(v / 5) % 2; const start = 1 + v % (step === 1 ? 5 : 3); const answer = start + step * 3; return choice('Mira los números. ¿Cuál viene después?', [list([start, start + step, start + step * 2].map(String))], answer, [answer - 1, answer + 1]); }],
+      ['relationship', 'bedroom', (o, n, v) => {
+        const pairs = [['el libro','el cuaderno'],['el cuaderno','el libro'],['la caja','la mesa'],['el lápiz','el cuaderno'],['el coche de juguete','la caja'],['el regalo','la mesa']];
+        const [top,bottom] = pairs[v % pairs.length];
+        return choice(`¿Qué está debajo ${of(top)}?`, [table([['Arriba',top],['Abajo',bottom]])], bottom, ['la gorra','la muñeca']);
+      }],
       ['classification', 'school', (o, n, v) => { const a = shapes[v % 4], b = shapes[(v + 1) % 4], count = 2 + Math.floor(v / 4) % 3; return choice('¿Qué figura aparece más veces?', [list([...Array(count).fill(a), b])], a, [b, shapes[(v + 2) % 4]]); }],
     ],
     applied: [
       ['chooseObject', 'excursion', (o, n) => choice('¿Qué debe llevar para beber?', [text(`${n} va de excursión. En el camino tendrá sed.`)], 'Una botella de agua', ['Un libro', 'Una pelota'])],
-      ['solveProblem', 'school', (o, n) => choice('¿Qué puede hacer?', [text(`${n} quiere dibujar. Su lápiz no tiene punta.`)], 'Sacar punta al lápiz', ['Guardar el papel', 'Cerrar la mochila'])],
+      ['solveProblem', 'school', (o, n, v) => {
+        const problems = [
+          [`${n} quiere dibujar. Su lápiz no tiene punta.`, 'Sacar punta al lápiz', ['Guardar el papel', 'Cerrar la mochila']],
+          [`${n} no encuentra su cuaderno. Lo necesita para escribir.`, 'Buscar el cuaderno en la mochila', ['Escribir sobre la mesa', 'Tirar el lápiz']],
+          [`${n} quiere pegar un dibujo. El bote de pegamento está vacío.`, 'Pedir otro bote de pegamento', ['Romper el dibujo', 'Guardar todos los dibujos']],
+        ]; const [s,a,w] = problems[v % problems.length]; return choice('¿Qué puede hacer?', [text(s)], a, w);
+      }],
       ['followRule', 'playground', (o, n, v) => choice('¿Qué pelota puedes usar?', [text(`En este juego usamos la pelota de color ${colors[v % 4]}.`)], `La de color ${colors[v % 4]}`, colors.filter(x => x !== colors[v % 4]).map(x => `La de color ${x}`))],
       ['findPlace', 'bedroom', (o, n) => choice(`¿Dónde debe buscar ${o.name}?`, [text(`${n} dejó ${o.name} en ${o.place}. Ahora quiere ${o.gender === 'f' ? 'usarla' : 'usarlo'}.`)], o.place, ['el jardín', 'el baño'])],
       ['solveProblem', 'snacks', (o, n) => choice('¿Qué puede hacer antes de comer?', [text(`${n} vuelve del patio. Tiene las manos sucias y quiere merendar.`)], 'Lavarse las manos', ['Ensuciar el plato', 'Guardar el jabón'])],
@@ -133,9 +191,13 @@
         for (const char of signature) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
         item.id = `early-v1-${domain}-${family}-${(hash >>> 0).toString(16)}`;
         item.contentKey = item.id;
+        const semanticSignature = signature.replace(/\b(?:Ana|Leo|Mar|Pau|Lola|Hugo|Nora|Dani|Sol)\b/g, 'PERSONA');
+        let semanticHash = 2166136261;
+        for (const char of semanticSignature) semanticHash = Math.imul(semanticHash ^ char.charCodeAt(0), 16777619);
+        item.semanticKey = `early-sem-v1-${domain}-${family}-${(semanticHash >>> 0).toString(16)}`;
         item.domain = domain;
         item.level = bandLevel;
-        item.ageProfile = { id: 'early', revision: 1, context, mechanic };
+        item.ageProfile = { id: 'early', revision: 1, context, mechanic, family: `${domain}-${family}` };
         policy.validateEarly(item);
         result.push(item);
       }
@@ -150,23 +212,31 @@
   function select(profile, domains, count, level = 1, random = Math.random) {
     const history = profile.progress?._earlyDelivery || { ids: [], mechanics: [] };
     const used = new Set(history.ids);
+    const usedKeys = new Set(history.keys || []);
     const recent = [...history.mechanics];
+    const recentFamilies = [...(history.families || [])];
     const chosen = [];
     const pools = new Map(domains.map(d => [d, pool(d, level)]));
+    // Upgrade existing delivery histories without treating name-only variants
+    // as new activities after the gate is introduced.
+    for (const items of pools.values()) for (const item of items) {
+      if (used.has(item.id)) usedKeys.add(item.semanticKey);
+    }
     for (let i = 0; i < count; i++) {
       const candidates = pools.get(domains[i % domains.length]);
-      let available = candidates.filter(it => !used.has(it.id));
+      let available = candidates.filter(it => !usedKeys.has(it.semanticKey) && !chosen.some(c => c.semanticKey === it.semanticKey));
       if (!available.length) {
-        candidates.forEach(it => used.delete(it.id));
-        available = candidates.filter(it => !chosen.some(c => c.id === it.id));
+        candidates.forEach(it => { used.delete(it.id); usedKeys.delete(it.semanticKey); });
+        available = candidates.filter(it => !chosen.some(c => c.semanticKey === it.semanticKey));
       }
-      const varied = available.filter(it => !recent.slice(-2).includes(it.ageProfile.mechanic));
-      const options = varied.length ? varied : available;
+      const freshFamilies = available.filter(it => !recentFamilies.slice(-2).includes(it.ageProfile.family));
+      const varied = (freshFamilies.length ? freshFamilies : available).filter(it => !recent.slice(-2).includes(it.ageProfile.mechanic));
+      const options = varied.length ? varied : freshFamilies.length ? freshFamilies : available;
       if (!options.length) throw new Error('No quedan actividades distintas para esta ficha.');
       const item = options[Math.floor(random() * options.length)];
-      chosen.push(item); used.add(item.id); recent.push(item.ageProfile.mechanic);
+      chosen.push(item); used.add(item.id); usedKeys.add(item.semanticKey); recent.push(item.ageProfile.mechanic); recentFamilies.push(item.ageProfile.family);
     }
-    profile.progress = { ...profile.progress, _earlyDelivery: { ids: [...used].slice(-600), mechanics: recent.slice(-8) } };
+    profile.progress = { ...profile.progress, _earlyDelivery: { ids: [...used].slice(-600), keys: [...usedKeys].slice(-600), mechanics: recent.slice(-8), families: recentFamilies.slice(-8) } };
     return chosen;
   }
   // Call only after an authorized server response. Never retry a rejected request

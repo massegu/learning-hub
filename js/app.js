@@ -220,7 +220,9 @@
   function renderMemoryExercise(it) {
     const visual = $("#exerciseVisual"),
       area = $("#exerciseOptions");
-    const cards = (it.memoryContent || [])
+    const cards = window.ContentPolicy.forProfile(profile)
+      ? `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus)}</div>`
+      : (it.memoryContent || [])
       .map((x) =>
         x.person
           ? `<div class="memory-card"><strong>${escapeHtml(x.person)}</strong><span>${escapeHtml(x.detail)}</span></div>`
@@ -611,9 +613,15 @@
       ...payload,
       profile_id: targetProfile.id,
     });
+    if (res?.error) throw new Error(typeof res.error === 'string' ? res.error : res.error.message || 'No se pudo cargar el contenido.');
     // Server authentication, subscription checks and usage accounting happen
     // first. The browser never supplies local content after a rejected call.
     const selected = window.EarlyContent.adaptResponse(res, payload, targetProfile);
+    if (window.ContentPolicy.forProfile(targetProfile)) {
+      selected.items.forEach((item, i) => window.ActivityModel.forDelivery(
+        item, targetProfile, payload.domains ? payload.domains[i % payload.domains.length] : payload.domain,
+      ));
+    }
     if (window.ContentPolicy.forProfile(targetProfile)) {
       await API.saveProgress(targetProfile.id, targetProfile.progress);
     }
@@ -641,6 +649,15 @@
     currentItem = null;
     $("#exerciseOptions").innerHTML = "";
     $("#exerciseVisual").innerHTML = "";
+    $("#exerciseTopic").textContent = "";
+    $("#exerciseTopic").classList.add("hidden");
+    $("#exerciseFeedback").textContent = "";
+    $("#exerciseExplanation").textContent = "";
+    $("#exerciseExplanation").classList.add("hidden");
+    $("#textAnswerArea").classList.add("hidden");
+    $("#selfAssessment").classList.add("hidden");
+    $("#textAnswerInput").value = "";
+    $("#modelAnswer").textContent = "";
     $("#exerciseNext").classList.add("hidden");
     setLoading(true);
     try {
@@ -680,7 +697,7 @@
       $("#exercisePrompt").textContent = "No hay contenido disponible.";
       return;
     }
-    if (window.ContentPolicy.forProfile(profile)) window.ContentPolicy.validateEarly(it);
+    window.ActivityModel.forDelivery(it, profile, subject);
     $("#exerciseCounter").textContent = `Ejercicio ${counter}`;
     $("#exerciseFeedback").textContent = "";
     $("#exerciseFeedback").className = "feedback";

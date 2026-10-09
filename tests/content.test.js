@@ -156,5 +156,50 @@ test('invalid responses and incomplete order tasks are rejected before export', 
   const ordered=early.pool('executive').find(it=>it.type==='order');
   assert.throws(()=>model.printable({...ordered,tokens:[]},profile()));
   assert.throws(()=>model.printable({...ordered,answer:['Invented step']},profile()));
+  assert.throws(()=>model.forDelivery({...ordered,answer:[ordered.tokens[0],ordered.tokens[0],ordered.tokens[2]]},profile()));
   assert.throws(()=>model.validateBatch([[it],[{...it,stimulus:[]}]],profile()));
+});
+
+test('source-independent delivery gate validates hidden and visible presentation plus response integrity', () => {
+  const p=profile(), good=early.pool('memory')[0];
+  assert.equal(model.forDelivery(good,p,'memory'),good);
+  for(const change of [
+    {stimulus:[]}, {a:'not an option'}, {domain:'reading'},
+    {topic:'El vuelo de mañana'}, {scenario:'Un horario de vuelos'},
+    {memoryContent:[{detail:'El vuelo F15-P7'}]}, {revealMs:Infinity},
+    {stimulus:[{type:'list',items:['el libro','el lápiz','la pelota']}]},
+    {stimulus:[...good.stimulus,{type:'text',text:'Mira también la pelota.'}]},
+  ]) assert.throws(()=>model.forDelivery({...good,...change},p,'memory'));
+  assert.equal(model.forDelivery({q:'unchanged remote content'},{age_band:'teen'}).q,'unchanged remote content');
+});
+
+test('consecutive restored sessions suppress name-only repeats and rotate stimulus families', () => {
+  for(const domain of policy.early.subjects) {
+    const p=profile(), random=seed();
+    const a=early.select(p,[domain],5,1,random);
+    const restored=structuredClone(p);
+    const b=early.select(restored,[domain],5,1,random);
+    const chosen=[...a,...b];
+    assert.equal(new Set(chosen.map(it=>it.semanticKey)).size,10,domain);
+    for(let i=1;i<chosen.length;i++) assert.notEqual(chosen[i].ageProfile.family,chosen[i-1].ageProfile.family,domain);
+  }
+});
+
+test('worksheets remain semantically distinct when selection crosses a finite pool boundary', () => {
+  for(const domain of policy.early.subjects) {
+    const p=profile(), random=seed();
+    const size=new Set(early.pool(domain).map(it=>it.semanticKey)).size;
+    early.select(p,[domain],size-1,1,random);
+    const worksheet=early.select(p,[domain],20,1,random);
+    assert.equal(new Set(worksheet.map(it=>it.semanticKey)).size,20,domain);
+  }
+});
+
+test('recall evidence must bind the actual printable stimulus to the answer and named subject', () => {
+  for(const it of early.pool('memory')) {
+    assert.throws(()=>model.forDelivery({...it,answerEvidence:undefined},profile(),'memory'));
+    const wrong=it.opts.find(a=>a!==it.a);
+    assert.throws(()=>model.forDelivery({...it,a:wrong},profile(),'memory'));
+    if(it.answerEvidence.type==='tableCell') assert.throws(()=>model.forDelivery({...it,memoryQuestion:'¿Qué correspondía a otra persona?'},profile(),'memory'));
+  }
 });

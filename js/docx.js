@@ -89,6 +89,7 @@
         ]})]})]}));
         block.push(new Paragraph({spacing:{after:75},children:[]}));
       }
+      if(early&&it.type==='memoryReveal') block.push(paragraph('Mira bien. Tapa las cosas y responde.'));
       block.push(new Paragraph({spacing:{after:90,line:early?360:300},children:[new TextRun({text:prompt,bold:true,size:early?28:21,color:ink,font:'Aptos'})]}));
       if(model.tokens.length){
         block.push(paragraph('Palabras o pasos disponibles:'));

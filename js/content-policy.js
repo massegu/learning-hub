@@ -1,6 +1,14 @@
 (function (root) {
   'use strict';
   const domains = ['language', 'division', 'reading', 'attention', 'executive', 'memory', 'speedReasoning', 'applied'];
+  const domainMechanics = {
+    language:['literal','vocabulary','sentence'], division:['count','addition','subtraction','compare'],
+    reading:['literal','inference','sequencing'], attention:['matching','search','oddOne','findPlace'],
+    memory:['rememberObjects','rememberPlace','rememberPair','rememberOrder'],
+    executive:['planning','inhibition','sequencing','organisation'],
+    speedReasoning:['analogy','pattern','classification','relationship'],
+    applied:['chooseObject','solveProblem','followRule','findPlace'],
+  };
   const early = Object.freeze({
     id: 'early', revision: 1, label: '6-7 años', subjects: Object.freeze(domains),
     contexts: Object.freeze(['school', 'playground', 'animals', 'toys', 'sports', 'snacks', 'birthday', 'family', 'bedroom', 'backpack', 'excursion']),
@@ -24,12 +32,20 @@
       throw new Error('La actividad no declara el perfil 6-7 vigente.');
     if (!domains.includes(item.domain) || !early.contexts.includes(meta.context) || !early.mechanics.includes(meta.mechanic))
       throw new Error('El contexto o la mecánica no están aprobados para 6-7.');
+    if (!domainMechanics[item.domain].includes(meta.mechanic)) throw new Error('La mecánica no pertenece al área solicitada.');
     if (!early.responseTypes.includes(item.responseType) || !Array.isArray(item.stimulus) || !item.stimulus.length)
       throw new Error('La actividad 6-7 necesita un estímulo y una respuesta compatibles.');
     const expectedType = item.responseType === 'order' ? 'order' : meta.mechanic.startsWith('remember') ? 'memoryReveal' : 'standard';
     if (item.type !== expectedType || item.image || item.visual || item.rounds)
       throw new Error('Mecánica o complejidad visual no compatible con 6-7.');
-    const pieces = [item.q, item.memoryQuestion, item.why, ...(item.opts || []), ...(item.tokens || [])].filter(Boolean);
+    // Canonical stimuli are the only factual presentation path for early items.
+    // Otherwise a second, unchecked legacy field could appear on screen.
+    for (const field of ['scenario', 'text', 'title', 'model', 'modelSequence', 'rows', 'visualItems', 'angle', 'sample']) {
+      if (item[field] !== undefined) throw new Error('Presentación adicional no compatible con el perfil 6-7.');
+    }
+    const pieces = [item.q, item.memoryQuestion, item.why, item.topic, item.theme,
+      ...(item.opts || []), ...(item.tokens || []), ...(item.answer || []),
+      ...(item.memoryContent || []).flatMap(x => [x?.person, x?.detail])].filter(Boolean);
     let elements = 0;
     const stimulusText = [];
     for (const block of item.stimulus) {
@@ -57,7 +73,7 @@
         throw new Error('La lectura supera los límites del perfil 6-7.');
     }
     const level = Math.max(1, Math.min(3, Number(item.level) || 1));
-    if (item.type === 'memoryReveal' && (!Array.isArray(item.memoryContent) || !item.memoryContent.length || !item.memoryContent.every(x => x && typeof x.detail === 'string' && x.detail.trim()) || item.memoryContent.length > early.memoryElements[level - 1] || item.revealMs < 6000))
+    if (item.type === 'memoryReveal' && (!Array.isArray(item.memoryContent) || !item.memoryContent.length || !item.memoryContent.every(x => x && typeof x.detail === 'string' && x.detail.trim()) || item.memoryContent.length > early.memoryElements[level - 1] || elements !== item.memoryContent.length || item.stimulus.some(block => block.type === 'text') || !Number.isFinite(item.revealMs) || item.revealMs < 6000))
       throw new Error('Carga de memoria no compatible con 6-7.');
     return item;
   }

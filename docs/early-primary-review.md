@@ -1,160 +1,259 @@
-# Adaptación 6–7 e integridad de fichas
+# Early-primary final integration review
 
-Rama: `fix/early-primary-stimulus-integrity`, creada desde `origin/main`
-`b2768be0264f2012e2718aa86e47bc3f3f0419a7`. No se fusiona ni despliega.
+Reviewed on 2026-10-09, on `fix/early-primary-stimulus-integrity`.
+Base and current remote main: `b2768be0264f2012e2718aa86e47bc3f3f0419a7`,
+confirmed by a read-only Git operation. No merge, deployment or production
+Supabase data change was performed.
 
-## Arquitectura y causas
+## Production content path
 
-- `js/app.js` define los grupos originales `primary`, `middle` y `teen`.
-  `js/v16_7.js` añade `early` y `junior` a la interfaz, conserva
-  `age_band: primary` para la base de datos y guarda la ruta en
-  `progress.ageRoute`. El núcleo seguía consultando `AGE[age_band]`:
-  cambiar el rótulo no cambiaba sus áreas ni imponía restricciones al contenido.
-- Cada área y sesión guiada pide contenido mediante `requestOne` y
-  `LearningAPI.requestContent`. Las fichas llaman a la misma función con
-  `kind: worksheet`, `domains`, `questions` y `profile_id`. No existía un
-  banco imprimible explícito para `early` en el cliente.
-- El generador es la función Supabase `request-learning-content`. Su código
-  **no está en este checkout**. El README describe la versión remota V32;
-  no permite verificar qué restricciones aplica actualmente ese despliegue.
-- El modelo anterior mezcla `q`, `a`, `opts`, `memoryQuestion`,
-  `memoryContent`, `scenario`, `text`, `visual`, `rows`, `model`, etc.
-  No declaraba de forma uniforme qué estímulo necesitaba cada pregunta.
-- `js/docx.js`, V16.3 y V16.4 implementaban exportadores distintos.
-  Los parches podían sustituir el exportador vigente varias veces al arrancar.
-  V16.4 omitía material de memoria y lectura. V16.17 añadía la respuesta a
-  una lista cuando faltaba: fabricaba información en vez de validar el estímulo.
-- No había manifiesto de pruebas ni suites automatizadas en `main`.
+The production entry point checked into the repository is `index.html`.
+It loads the Supabase SDK, configuration, API, exporter and app. This branch
+additionally loads the content policy, early bank and activity model before the
+app. Config loads the V16 presentation/profile compatibility patches. Backup
+files and unloaded V16.9–V16.11/V16.17 files are not active content paths.
 
-## Perfil, selección y variedad
+The SDK session comes from `LearningAPI.getSession()`. The app then reads the
+account and learner profiles. The existing DB representation is preserved:
+6–7 uses `age_band: primary` and `progress.ageRoute: early`. V16.7 creates and
+preserves the route. Age is taken from profile data, not the DOM label.
 
-`js/content-policy.js` define `early` como un contrato versionado, basado en
-los metadatos del perfil y nunca en el texto mostrado. Limita las ocho áreas,
-contextos, mecánicas, tipos de respuesta, cantidad de lectura, longitud de frases,
-opciones, elementos, columnas de tablas y carga de memoria. El control de palabras
-abstractas y contextos adultos es una defensa adicional; no sirve para transformar
-actividades adultas por sustitución de palabras.
+Exercises, navigation and guided sessions follow:
 
-`js/early-content.js` contiene familias redactadas específicamente para esta edad.
-Los sustantivos llevan artículo, género, plural y frase de lugar; los generadores
-conservan concordancia, cuantificadores y contracciones. Atención incluye figuras
-simples y pequeñas secuencias; memoria usa objetos, lugares, orden y asociaciones
-de personas con globos. Lectura usa textos breves, comprensión literal, inferencia
-simple y orden de acontecimientos. Planificación, inhibición, organización,
-analogías, patrones y problemas cotidianos conservan sus constructos.
+```text
+setupExercise / newExercise → requestOne → requestForProfile
+  → LearningAPI.requestContent
+  → client.functions.invoke('request-learning-content')
+  → POST {LH_CONFIG.supabaseUrl}/functions/v1/request-learning-content
+  → response or error
+```
 
-Hay 455 actividades distintas por nivel: lenguaje 60, matemáticas 61, lectura 96,
-atención 56, funciones ejecutivas 38, memoria 44, velocidad/razonamiento 48 y
-cognición aplicada 52. Esto son **1.365 actividades validadas al recorrer los tres
-niveles, no 1.365 estímulos completamente distintos**: muchos se conservan entre
-niveles para no aumentar artificialmente la dificultad. Las identidades se basan
-en el contenido visible; cambiar de nivel no hace que una misma actividad parezca
-nueva. Se eliminan duplicados, se evitan mecánicas recientes y se guarda el historial
-en `progress._earlyDelivery`. La memoria progresa entre dos, tres y cuatro elementos.
+The Supabase SDK supplies the project key and available user-session authentication.
+Exercise payloads contain profile ID, kind, domain/subdomain, level and count.
+Worksheet payloads contain profile ID, kind, domains, level and question count.
+They do not transmit the full early-policy contract or require a policy revision
+in the returned envelope. The function may read the stored route itself, but its
+implementation is not available here.
 
-La selección compartida se aplica tanto a ejercicios como a fichas **después** de
-una respuesta satisfactoria del servidor. Se conserva su contabilidad `usage` y
-su identificador de origen. Nunca se sirven actividades tras un error de cuota,
-autorización o suscripción; tampoco se generan más actividades de las que entregó
-el servidor ni se hacen reintentos automáticos que consuman cuota.
+The current remote-main source directly renders remote exercises and passes remote
+worksheet items to its exporter. It has the age-label patch, but not the new policy.
+**This branch's gates are not proven to be deployed on the public site.**
+No deployed-site commit was supplied or verified.
 
-No se han cambiado `js/api.js`, tablas, credenciales, pagos, autenticación ni
-límites. El alias de base de datos de los perfiles 6–7 sigue siendo `primary`.
-La persistencia conserva `ageRoute`, `_delivery` y demás metadatos del perfil.
-La selección interactiva de las otras edades conserva la respuesta original.
+On this branch, the successful response follows:
 
-## Estímulo → pregunta → respuesta
+```text
+EarlyContent.adaptResponse
+  early: replace every returned item with an early-bank selection
+  other ages: retain remote response
+ActivityModel.forDelivery(item, profile, requestedDomain)
+  age/domain/mechanics + stimulus/response integrity
+persist delivery history
+renderExercise → repeat forDelivery before changing the view
+```
 
-`js/activity-model.js` valida un modelo común:
+Searches of all active JavaScript identified exactly one API request call site,
+inside `requestForProfile`, and one SDK function invocation, in `js/api.js`.
+No separate fetch/render path bypasses this flow. Supabase returns content
+**before** the branch's early selection and validation.
 
-- `stimulus`: bloques explícitos de texto, lista o tabla;
-- `requiresStimulus`: dependencia declarada; las actividades heredadas se tratan
-  como dependientes por defecto;
-- pregunta, opciones y respuesta, o pasos disponibles y secuencia esperada.
+Early worksheets use **local activity content with remote authorization**:
+the function is still called for authentication/subscription/quota checks, but its
+texts are replaced after success. Usage and source IDs are preserved. Other-age
+worksheets retain remote content. The exporter also accepts explicitly supplied
+compatible activities from other sources through the same contract.
 
-El adaptador de actividades heredadas conserva **todos** sus campos de material,
-no solo el primero encontrado. Las asociaciones de memoria incluyen persona y
-detalle. Las filas se conservan como tablas. Las cuadrículas necesitan declarar
-`gridColumns` para conservar su disposición; no se aplana una tarea espacial.
-Una actividad independiente puede declarar explícitamente
-`requiresStimulus: false`; los tipos dependientes no pueden usarlo para saltarse
-la comprobación. También se aceptan operaciones numéricas de división autónomas.
+Each worksheet response is validated before requesting another version. The
+exporter validates the whole batch before any download. It does not fabricate
+stimuli or retry a rejected activity with another quota-consuming request.
 
-`js/docx.js` valida todo el lote antes de crear o descargar archivos. Renderiza
-los bloques antes de la pregunta, conserva opciones y pasos, aumenta el tamaño
-de letra para 6–7 y mantiene los nombres de DOCX/ZIP. Si falta material, la
-respuesta no está entre las opciones, una secuencia es irresoluble o el componente
-no es imprimible, se rechaza la actividad y no se descarga ninguna versión.
-La solicitud de fichas valida cada respuesta antes de pedir la siguiente versión.
-No se hace una nueva petición para reemplazar contenido rechazado, pues podría
-consumir otra cuota sin entregar una ficha válida.
+### What is unknown about the deployed Edge Function
 
-V16.3 y V16.4 reconocen el exportador canónico y ya no lo sustituyen.
-V16.17 deja de cargarse. Los parches de nombres y presentación se mantienen;
-V16.8 ya no sobrescribe las descripciones infantiles del perfil explícito.
+No function source/deployment revision or authenticated production session is
+available. The README's V32 assertion does not verify the live implementation.
+No production content invocation was made: it can update usage and delivery
+history, contrary to the requested read-only review.
 
-## Archivos y componentes
+Incompatible returns are **possible under the observed client/server contract**.
+This is not a claim that the live function was observed producing them, nor that
+it implements early safeguards. Tests deliberately return flight codes, schedules,
+abstract questions, and adult topic/explanation fields at this service boundary.
+They cannot reach the early screen/export on this branch. External consumers
+and the unchanged main bundle do not acquire this client protection.
 
-- Nuevos: `js/content-policy.js`, `js/early-content.js`, `js/activity-model.js`.
-- Integración: `js/app.js`, `index.html`, `js/docx.js`.
-- Compatibilidad de parches: `js/config.js`, `js/v16_3.js`, `js/v16_4.js`,
-  `js/v16_8.js`.
-- Presentación del estímulo: `css/styles.css`, solo tablas/listas dentro del
-  componente existente; sin rediseño general.
-- Validación: `package.json`, `package-lock.json`, `.gitignore`,
-  `tests/content.test.js`, `tests/worksheet.test.js`, `tests/browser-smoke.py`.
+## Safety gaps closed
 
-## Pruebas reproducibles
+- Added source-independent `ActivityModel.forDelivery` at delivery and immediately
+  before rendering. It applies the same age and structural contract used by printing.
+  Requested domain and allowed domain mechanics must match; a server age label alone
+  is insufficient.
+- Age checks now include topics, themes, explanations, answer tokens and memory
+  details. Parallel legacy presentation fields are rejected on canonical early items.
+- Early memory displays the **same canonical stimulus** as printing instead of a
+  second factual representation. Recall requires an `answerEvidence` pointer to
+  the actual list entry/table cell, matching both the answer and the named subject.
+- Duplicate expected order tokens and non-finite reveal timers are rejected.
+  Memory load is measured from the displayed canonical rows/items, not just metadata;
+  extra undeclared memory facts are rejected.
+  Transport-success/application-error envelopes cannot trigger a local fallback.
+- Loading clears old topics, explanations, feedback and written-answer panels.
+  A denied early request cannot leave adult material from an older profile visible.
+- V16.3/V16.4 still recognize the canonical exporter; V16.17's answer-insertion repair
+  remains unloaded. Profile DB aliases and document names are preserved.
+  Production authentication/billing APIs are unchanged.
 
-Desde la raíz del repositorio, con Node ≥18:
+These are explicit structural/linguistic checks, not a general Spanish grammar
+checker or clinical proof that arbitrary future content is appropriate.
+
+## Generated-content editorial audit
+
+`node tests/editorial-audit.js` enumerates every generated item at all levels,
+validates delivery/printing, and reports name-independent variants and examples
+by family. The audit reviews generated stimuli, questions, distractors and
+answers/sequences across all 39 scaffolds, rather than inspecting templates alone.
+
+| Domain | Representative generated stimulus → question → response | Editorial finding |
+| --- | --- | --- |
+| Reading | “Lola guarda el libro en la mesa.” → “¿Dónde está el libro?” → “la mesa”; puddles and boots → why wear boots → avoid wet feet | Short literal and simple inference tasks are answerable. The two inference families each contain only one underlying scenario; name changes add no inference variety. |
+| Attention | Model ○ with ○ / □ / △; ○, ○, □ → different figure; two-number model with three rows | Familiar glyphs and small sequences replace codes/timetables. Fixed-A row answers were corrected to rotate A/B/C with a unique exact match. |
+| Memory | School bag: el libro, el lápiz; el libro / la mesa → where was the book; Mar / azul, Sol / verde → Mar's balloon colour | Generic unrelated backpack items were replaced by coherent school, excursion and toy-bag sets. Canonical reveal/print facts and explicit recall evidence prevent missing associations. |
+| Executive functions | Swimming items → checking all three; already-open tap → wash, close tap, dry; toy box versus school-material shelf | Rewrote vague “other things” sorting, restricted its objects to the named categories, and corrected the running-tap sequence. Expanded planning, waiting and routine situations; distractors now belong to the situation. |
+| Speed/reasoning | Bird flies, fish… → swims; red/blue alternation; 1,2,3 → 4; visible book above notebook | Removed unfamiliar madriguera/peonza examples and implausible object stacks. Spatial relationships use a visible arrangement. “Salta” was removed as an ambiguous fish distractor. Step-two counting is excluded at level 1 and bounded at levels 2–3. |
+| Applied cognition | Excursion/thirst → water bottle; blunt pencil → sharpen; red-ball rule → red ball | Everyday child contexts are retained. Added missing-notebook and empty-glue problems; no discounts or administrative importance-ranking tasks are selected. Thirst and snack-hygiene remain single-scenario families. |
+
+The corrected clay sequence explicitly asks to make **and** store a figure;
+it no longer implies that a figure already exists before asking the child to make it.
+Executive planning now has six concrete scenarios, inhibition three, sequencing
+six, and sorting seven objects in two explicit categories.
+
+Every generated family was checked against vocabulary, reading/element limits,
+allowed contexts, grammar patterns, determiners and response integrity. No obvious
+adult context, banned abstract instruction, missing reference or detected
+determiner/contraction error remains in the generated pool.
+
+### Families requiring further editorial/usability work
+
+- **Reading inference:** puddle/boots and bedtime remain single scenarios with
+  comparatively obvious distractors. Expand coherent stories and review distractors.
+- **Memory:** the 6.5–7.5 second timers and up to four elements need child usability
+  testing, especially for emerging readers. Printed recall adds “Mira bien. Tapa las
+  cosas y responde.” Without covering the stimulus it assesses lookup, not recall.
+- **Executive routines:** card/dice games may require adult demonstration. The sorting
+  rule depends on recognizing toys versus school materials. Keep adult support rather
+  than assuming every child already knows these routines/categories.
+- **Speed/reasoning:** retain step-two continuation only at levels 2–3 pending review.
+  The concrete analogies are teaching examples, not a standardized reasoning/speed test.
+- **Applied cognition:** excursion/thirst and snack-hygiene need real scenario expansion,
+  not additional names. School problems now have three scenarios.
+- Review regional vocabulary such as coge, grifo, bañador and chanclas against the
+  configured Spanish locale. Text-only stimuli still need stronger illustration/audio
+  support for children who cannot read independently.
+
+Unsuitable families were rewritten or excluded from the relevant level. These
+remaining follow-ups concern breadth/accessibility and pedagogical evidence;
+automated checks do not substitute for review with children/specialists.
+
+## Variety sanity check
+
+The previous **455** at `bae9207` is reproducible as exact rendered combinations.
+Removing person-name changes yields **274**, not 455 independently different
+problems. Those still include shape, colour, object and number permutations within
+**39 authored task/stimulus scaffolds**. The 455 figure overstated pedagogical variety.
+
+Current counts after corrections:
+
+| Domain | Distinct mechanics | Broad stimulus/context families | Rendered L1 / L2 / L3 | Name-independent L1 / L2 / L3 |
+| --- | ---: | ---: | --- | --- |
+| Language | 3 | 4 | 60 / 60 / 60 | 29 / 29 / 29 |
+| Mathematics (division) | 4 | 4 | 61 / 61 / 61 | 33 / 33 / 33 |
+| Reading | 3 | 6 | 96 / 96 / 96 | 30 / 30 / 30 |
+| Attention | 4 | 5 | 56 / 56 / 56 | 56 / 56 / 56 |
+| Memory | 4 | 4 | 44 / 44 / 44 | 40 / 40 / 40 |
+| Executive functions | 4 | 4 | 53 / 53 / 53 | 22 / 22 / 22 |
+| Speed/reasoning | 4 | 7 | 37 / 40 / 40 | 37 / 40 / 40 |
+| Applied cognition | 4 | 5 | 68 / 68 / 68 | 21 / 21 / 21 |
+| **Total** | | **39** | **475 / 478 / 478** | **268 / 271 / 271** |
+
+Family means a substantially different authored task/stimulus scaffold, not a context
+metadata label, name or colour. Thus six planning scenarios belong to one broad
+planning family. Name-independent counts remove names **only** and remain upper
+bounds on meaningful variation. Many activities are intentionally shared across
+levels; adding levels does not create more stories.
+
+Selection now stores name-normalized semantic keys, recent families and mechanics
+in `progress._earlyDelivery`, upgrades known older ID histories, and rotates
+available families. A semantic item cannot repeat until that domain's pool is
+exhausted; then a new finite cycle starts. No worksheet repeats a semantic item
+within its own batch. Consecutive/restored sessions share history. Atomic
+coordination across simultaneous devices has not been established.
+
+## Realistic browser and automated validation
+
+From the repository root:
 
 ```sh
 npm ci
 npm test
+node tests/editorial-audit.js > /tmp/early-primary-generated-audit.json
+python3 -u tests/browser-smoke.py
 ```
 
-Las dependencias fijadas `docx@8.5.0` y `jszip@3.10.1` son solo de desarrollo;
-la aplicación estática sigue sin requerir compilación. Las pruebas recorren los
-tres niveles y todas las áreas, rechazan contextos/mecánicas/lenguaje incompatibles,
-comprueban gramática estructurada, memoria, antirrepetición, límites del sobre
-del servidor y conservación del estímulo. También generan DOCX y ZIP reales y
-examinan `word/document.xml`, incluyendo estímulos antes de preguntas, tablas,
-opciones, pasos y rechazo atómico de lotes inválidos.
+Node ≥18 is required; the browser test requires Playwright for Python and Chromium
+at `/usr/bin/chromium`. DOCX/JSZip are pinned test dependencies. The static app
+still requires no build. The generated audit checks **1,431 level-specific entries**,
+including intentional cross-level repeats.
 
-Prueba adicional con Playwright para Python y Chromium en `/usr/bin/chromium`:
+The browser loads the actual entry point, patches, API, app, selection, gates and
+exporter, simulating only the Supabase SDK service boundary. The activities under
+test are generated through ordinary app requests, not direct calls to
+`EarlyContent.select`.
 
-```sh
-python3 tests/browser-smoke.py
-```
+- **80 early activities:** ten consecutive activities per available domain (all eight),
+  using next buttons, correct choices/order handling and actual memory hiding timers.
+  Reload after activity five in each domain tests progress/history restoration.
+  No semantic duplicate or consecutive same-family item appeared in any ten-item run.
+- Displayed material/instructions are checked for adult/abstract terms, missing
+  location determiners and uncontracted de el/a el. Memory stimuli disappear on
+  the real timer. Static enumeration covers all families and levels even when a
+  random ten-item browser sequence does not sample every family.
+- **Three early worksheets:** two 20-activity DOCX files in a downloaded ZIP, plus
+  a standalone 20-activity DOCX. Their Word XML is compared against captured
+  activities: every stimulus precedes its question; every option/step survives;
+  the adult remote material is absent. No orphaned question was found.
+- Invalid alternate-source stimuli are rejected after selection. A test deliberately
+  skips the first gate and confirms that the final renderer still rejects an invalid
+  answer. The real patched browser exporter rejects invalid recall evidence.
+- Quota failures and transport-success/business-error envelopes produce no local
+  fallback. Switching older-to-early with a denied request leaves no stale adult topic,
+  explanation, feedback or written-answer panel.
+- **Other age bands:** representative remote Attention and a real ten-question DOCX
+  for each of junior, primary, middle and teen retain remote source content. New
+  early-profile creation preserves the existing DB alias and explicit age route.
 
-Arranca su propio servidor efímero. Usa las librerías fijadas y simula únicamente
-la frontera de Supabase: sesión, perfiles, persistencia, banco y errores de cuota.
-Comprueba las ocho áreas, memoria con ocultación, respuestas, dos DOCX de veinte
-actividades en un ZIP real, creación de perfil 6–7, preservación de metadatos,
-errores de cuota sin contenido local y contenido interactivo de un grupo mayor.
-No realiza escrituras en cuentas reales ni valida el despliegue de Supabase.
+`npm test`: **22 passed, zero failed/skipped**. Includes real DOCX/ZIP extraction,
+source-independent gates, bound recall evidence, semantic/family history across
+restored sessions, worksheet uniqueness across pool exhaustion, and all generated
+domain/level contracts. Browser captures are
+written to `/tmp/early-primary-browser-audit.json`. Browser and syntax/diff results
+validate this branch, not a live Supabase deployment.
 
-Resultado en este entorno: `npm ci` correcto; `npm test`, 18 pruebas pasadas,
-ninguna fallida ni omitida; las seis comprobaciones del navegador pasadas;
-comprobación de sintaxis JavaScript y `git diff --check` correctas.
+## Remaining integration limitations
 
-## Revisión pendiente y límites
+- Actual Edge Function source/deployment still needs a read-only audit in its source
+  repository. Live auth, billing, database constraints and quota/delivery persistence
+  were not exercised against a real account.
+- Gates protect the reviewed branch once deployed, not the unchanged main bundle
+  or external consumers of the Edge Function.
+- Local early selections replace server content after authorization. This does not
+  correct the remote bank; the server still generates/charges content the browser
+  replaces. Retained source IDs do not imply semantic equivalence to local activities.
+- Unknown images/SVG/components, missing dependency declarations and unsupported
+  mechanics remain rejected by printing for any age. Four representative other-age
+  fixtures passed; compatibility of the entire remote bank remains unverified.
+- Variety is bounded as reported. The editorial/accessibility follow-ups require
+  genuine content/usability work rather than increasing variant IDs.
 
-- El banco remoto de Supabase y sus familias de vuelos, horarios, códigos,
-  descuentos y documentos adultos siguen necesitando revisión en el repositorio
-  del backend. No se seleccionan para 6–7 en este cliente. Otros consumidores
-  del backend no reciben esta protección del navegador.
-- Las imágenes, SVG, componentes visuales desconocidos y mecánicas complejas
-  sin representación imprimible se rechazan. Las fichas heredadas de cualquier
-  edad que dependan de ellos necesitan un adaptador o un equivalente explícito;
-  las preguntas autónomas heredadas sin contrato también requieren etiquetado.
-- Solo se admite una conversión HTML de documentos textuales conocidos
-  (`.lh-doc`). No se intenta convertir cualquier imagen en texto.
-- Lectura/inferencias, analogías y relaciones espaciales, y planificación de
-  rutinas merecen revisión editorial con especialistas para ajustar familiaridad
-  cultural y autonomía lectora. Las pruebas estructurales no certifican calidad
-  pedagógica ni sustituyen esa revisión. Las futuras familias deben redactarse
-  para el perfil, declarar su mecánica/contexto y pasar estas pruebas.
-- No se ha probado autenticación, facturación ni cuotas contra una cuenta real.
-  Sus funciones de producción permanecen intactas; se comprueba la integración
-  y el comportamiento ante rechazo mediante simulación.
+Changed components: `js/content-policy.js`, `js/activity-model.js`,
+`js/early-content.js`, `js/app.js`, `js/docx.js`,
+`tests/content.test.js`, `tests/browser-smoke.py`, new
+`tests/editorial-audit.js`, and this report.

@@ -104,17 +104,39 @@
     if (new Set(options.map(String)).size !== options.length) fail('hay opciones duplicadas.');
     const tokens = item.tokens || [];
     if (item.type === 'order') {
-      if (!tokens.length || !tokens.every(hasText) || !Array.isArray(item.answer) || item.answer.length !== tokens.length || new Set(tokens).size !== tokens.length || !item.answer.every(x => tokens.includes(x))) fail('la secuencia no puede resolverse.');
+      if (!tokens.length || !tokens.every(hasText) || !Array.isArray(item.answer) || item.answer.length !== tokens.length || new Set(tokens).size !== tokens.length || new Set(item.answer).size !== tokens.length || !item.answer.every(x => tokens.includes(x))) fail('la secuencia no puede resolverse.');
     } else if (options.length) {
       const answers = item.answers || [item.a];
       if (!answers.length || !answers.every(a => a !== undefined && options.map(String).includes(String(a)))) fail('la respuesta no está en las opciones.');
     } else if (!item.sample && item.dividend === undefined) fail('la mecánica no tiene una respuesta compatible.');
     if (/memory/i.test(item.type || '') && !item.memoryContent?.length) fail('falta el material de memoria.');
+    if (policy.forProfile(profile) && item.type === 'memoryReveal') {
+      const evidence = item.answerEvidence;
+      const block = stimulus[evidence?.block];
+      let value;
+      if (evidence?.type === 'listItem' && block?.type === 'list' && Number.isInteger(evidence.index)) value = block.items[evidence.index];
+      else if (evidence?.type === 'tableCell' && block?.type === 'table' && Number.isInteger(evidence.row) && Number.isInteger(evidence.column)) {
+        const row = block.rows[evidence.row];
+        value = row?.[evidence.column];
+        const subject = row?.[evidence.subjectColumn];
+        const escaped = subject?.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        if (!Number.isInteger(evidence.subjectColumn) || !subject || !new RegExp(`(^|\\P{L})${escaped}(?=\\P{L}|$)`, 'u').test(question)) fail('la pregunta de memoria no identifica su referencia.');
+      }
+      if (value === undefined || value !== item.a) fail('la respuesta de memoria no se deriva del estímulo.');
+    }
     return { question, stimulus, options:options.map(String), tokens, responseType:item.type === 'order' ? 'order' : options.length ? 'choice' : 'written' };
   }
   function validateBatch(versions, profile) {
     if (!Array.isArray(versions) || !versions.length || versions.some(v => !Array.isArray(v) || !v.length)) fail('el lote está vacío.');
     return versions.map(items => items.map(item => printable(item, profile)));
+  }
+  function forDelivery(item, profile, domain) {
+    if (!policy.forProfile(profile)) return item;
+    if (domain && item?.domain !== domain) fail('el área recibida no coincide con la solicitada.');
+    // Identical contract at the domain boundary, on screen and in the exporter.
+    // This applies to local, remote and future cache sources alike.
+    printable(item, profile);
+    return item;
   }
   function escape(text) { return String(text).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
   function interactiveStimulus(blocks) {
@@ -125,7 +147,7 @@
       return `<table>${block.rows.map(row => `<tr>${row.map(x => `<td>${escape(x)}</td>`).join('')}</tr>`).join('')}</table>`;
     }).join('');
   }
-  const api = { printable, validateBatch, interactiveStimulus };
+  const api = { printable, validateBatch, forDelivery, interactiveStimulus };
   root.ActivityModel = api;
   if (typeof module !== 'undefined') module.exports = api;
 })(typeof window === 'undefined' ? globalThis : window);
