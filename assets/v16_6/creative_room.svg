@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760">
+  <defs><style>.o{stroke:#173c2a;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.t{font-family:Arial,sans-serif;font-weight:800;fill:#173c2a}.z{font-size:22px}.s{font-size:18px}</style></defs>
+  <rect width="1200" height="760" rx="28" fill="#f8f2e7"/>
+  <rect x="45" y="34" width="380" height="58" rx="18" fill="#173c2a"/><text x="70" y="71" font-size="27" fill="#fff" font-family="Arial" font-weight="900">HABITACIÓN CREATIVA</text>
+  <rect x="60" y="130" width="1080" height="540" rx="24" fill="#fffdf8" class="o"/>
+  <!-- wall posters -->
+  <rect x="110" y="165" width="180" height="110" rx="10" fill="#dbe9d4" class="o"/><path d="M135 240l35-44 34 32 30-28 32 40" fill="none" class="o"/><text x="145" y="190" class="t s">CREATE</text>
+  <rect x="850" y="165" width="220" height="110" rx="10" fill="#ffe0d0" class="o"/><circle cx="910" cy="220" r="24" fill="#ffd166" class="o"/><path d="M945 245q45-65 90 0" fill="#6aa6ff" class="o"/>
+  <!-- desk -->
+  <rect x="360" y="310" width="500" height="40" rx="12" fill="#b9855c" class="o"/><path d="M400 350v230M820 350v230" class="o"/>
+  <rect x="500" y="225" width="210" height="120" rx="12" fill="#dfeaf3" class="o"/><rect x="525" y="248" width="160" height="72" rx="8" fill="#6aa6ff"/><rect x="572" y="345" width="70" height="14" rx="7" fill="#173c2a"/>
+  <!-- lamp over open book target B1 -->
+  <path d="M410 265v55M410 265q0-30 34-30M444 235l24 18" class="o" fill="none"/><path d="M454 252l35 16-20 34-35-16z" fill="#ffd166" class="o"/>
+  <path d="M402 380q42-22 84 0v58q-42-22-84 0z" fill="#fff" class="o"/><path d="M444 372v66" class="o"/>
+  <text x="370" y="390" class="t s">B1</text>
+  <!-- notebook and object below poster B2 -->
+  <rect x="720" y="385" width="90" height="58" rx="8" fill="#e8d8ff" class="o"/><path d="M735 402h60M735 417h45" class="o"/>
+  <circle cx="766" cy="358" r="17" fill="#ff9f66" class="o"/>
+  <text x="710" y="370" class="t s">B2</text>
+  <!-- shelves -->
+  <rect x="930" y="330" width="150" height="250" rx="12" fill="#e7dfcf" class="o"/><path d="M930 400h150M930 470h150" class="o"/>
+  <rect x="950" y="350" width="25" height="42" fill="#ff6b6b" class="o"/><rect x="980" y="345" width="25" height="47" fill="#6aa6ff" class="o"/><rect x="1010" y="352" width="25" height="40" fill="#79c69e" class="o"/>
+  <rect x="955" y="425" width="72" height="30" rx="6" fill="#ffd166" class="o"/><circle cx="1048" cy="440" r="18" fill="#79c69e" class="o"/>
+  <!-- beanbag -->
+  <path d="M120 520q90-130 180 0q20 60-90 80q-110-20-90-80z" fill="#9b7ede" class="o"/>
+  <circle cx="210" cy="540" r="24" fill="#ffd166" class="o"/>
+  <!-- backpack yellow with headphones A4 -->
+  <text x="292" y="310" class="t s">A4</text><rect x="284" y="328" width="70" height="88" rx="18" fill="#ffd166" class="o"/><path d="M296 350q23-36 46 0" fill="none" class="o"/><path d="M260 330q10-40 32-10M378 330q-10-40-32-10" fill="none" class="o"/><circle cx="266" cy="342" r="18" fill="none" class="o"/><circle cx="372" cy="342" r="18" fill="none" class="o"/><path d="M284 342h70" class="o"/>
+  <!-- window -->
+  <rect x="105" y="305" width="150" height="150" rx="10" fill="#d9eef7" class="o"/><path d="M180 305v150M105 380h150" class="o"/>
+  <!-- floor clutter -->
+  <text x="520" y="620" class="t s">C3</text><rect x="548" y="590" width="80" height="48" rx="8" fill="#79c69e" class="o"/><path d="M560 605h55M560 620h40" class="o"/>
+  <text x="690" y="620" class="t s">C4</text><circle cx="736" cy="612" r="26" fill="#ff6b6b" class="o"/><path d="M723 612h26M736 599v26" class="o"/>
+  <rect x="845" y="590" width="96" height="70" rx="10" fill="#6aa6ff" class="o"/><path d="M863 612h60M863 630h46" class="o"/>
+  <!-- labels -->
+  <text x="140" y="300" class="t s">A1</text><text x="510" y="205" class="t s">A2</text><text x="880" y="300" class="t s">A3</text>
+  <text x="930" y="610" class="t s">B4</text>
+</svg>

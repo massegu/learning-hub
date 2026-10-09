@@ -1,0 +1,21 @@
+(function(){
+  const cfg=window.LH_CONFIG;
+  if(!window.supabase||!cfg) throw new Error('Supabase config missing');
+  const client=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey);
+  const API={client,session:null,user:null};
+  API.getSession=async()=>{const {data}=await client.auth.getSession();API.session=data.session||null;API.user=API.session?.user||null;return API.session};
+  API.signIn=async(email,password)=>{const {data,error}=await client.auth.signInWithPassword({email,password});if(error)throw error;API.session=data.session;API.user=data.user;return data};
+  API.signUp=async(email,password)=>{const {data,error}=await client.auth.signUp({email,password});if(error)throw error;API.session=data.session;API.user=data.user;return data};
+  API.signOut=async()=>{await client.auth.signOut();API.session=null;API.user=null};
+  API.listProfiles=async()=>{const {data,error}=await client.from('learner_profiles').select('id,name,age_band,locale,progress,created_at').order('created_at');if(error)throw error;return data||[]};
+  API.createProfile=async(name,age_band,initial_level=1,locale='es_intl')=>{const {data,error}=await client.from('learner_profiles').insert({account_id:API.user.id,name,age_band,locale,progress:{initialLevel:Number(initial_level)||1}}).select('id,name,age_band,locale,progress,created_at').single();if(error)throw error;return data};
+  API.updateProfileLocale=async(id,locale)=>{const {data,error}=await client.from('learner_profiles').update({locale}).eq('id',id).select('id,name,age_band,locale,progress,created_at').single();if(error)throw error;return data};
+  API.deleteProfile=async(id)=>{const {error}=await client.from('learner_profiles').delete().eq('id',id);if(error)throw error};
+  API.saveProgress=async(id,progress)=>{const {data:row}=await client.from('learner_profiles').select('progress').eq('id',id).single();const merged={...progress};if(row?.progress?._delivery)merged._delivery=row.progress._delivery;const {error}=await client.from('learner_profiles').update({progress:merged}).eq('id',id);if(error)throw error};
+  API.saveResult=async(profile_id,row)=>{const {error}=await client.from('exercise_results').insert({profile_id,occurred_at:row.ts,session_id:row.sessionId,session_started_at:row.sessionStartedAt,subject:row.subject,level:row.level,correct:row.correct,points:row.points,item_id:row.itemId,detail:row.detail});if(error)console.warn('Result insert failed',error)};
+  API.getAccount=async()=>{const {data,error}=await client.from('accounts').select('subscription_status,trial_started_at,trial_ends_at,current_period_end').single();if(error)throw error;return data};
+  API.openStripeCheckout=()=>{if(!cfg.stripePaymentLink||!API.user)return;const q=new URLSearchParams({client_reference_id:API.user.id,locked_prefilled_email:API.user.email||''});window.location.href=cfg.stripePaymentLink+'?'+q.toString()};
+  API.openBillingPortal=()=>{if(!cfg.stripePortalLink)return;const q=new URLSearchParams();if(API.user?.email)q.set('prefilled_email',API.user.email);window.location.href=cfg.stripePortalLink+(q.toString()?'?'+q.toString():'')};
+  API.requestContent=async(payload)=>{const {data,error}=await client.functions.invoke('request-learning-content',{body:payload});if(error){let msg=error.message||'No se pudo cargar el contenido.';try{const ctx=error.context;if(ctx&&typeof ctx.clone==='function'){const body=await ctx.clone().json();if(body?.error)msg=body.error;}else if(ctx?.body?.error)msg=ctx.body.error;}catch(_){}const e=new Error(msg);e.original=error;throw e;}return data};
+  window.LearningAPI=API;
+})();
