@@ -517,6 +517,7 @@
     const p = profiles.find((x) => x.id === id);
     if (!p) return;
     profile = p;
+    API.profileLocale = p.locale;
     currentItem = null;
     requestGeneration++;
     localStorage.setItem("lh_current_profile", id);
@@ -609,14 +610,21 @@
     newExercise();
   }
   async function requestForProfile(payload, targetProfile = profile) {
+    const locale = API.effectiveLocale(targetProfile);
+    const localeRevision = API.localeRevision;
     const res = await API.requestContent({
       ...payload,
       profile_id: targetProfile.id,
+      locale,
     });
+    if (localeRevision !== API.localeRevision) throw new Error('La variante de español ha cambiado. Solicita contenido nuevo.');
     if (res?.error) throw new Error(typeof res.error === 'string' ? res.error : res.error.message || 'No se pudo cargar el contenido.');
     // Server authentication, subscription checks and usage accounting happen
     // first. The browser never supplies local content after a rejected call.
     const selected = window.EarlyContent.adaptResponse(res, payload, targetProfile);
+    selected.items = selected.items.map((item, i) => window.LocaleContent.localizeItem(
+      item, locale, payload.domains ? payload.domains[i % payload.domains.length] : payload.domain,
+    ));
     if (window.ContentPolicy.forProfile(targetProfile)) {
       selected.items.forEach((item, i) => window.ActivityModel.forDelivery(
         item, targetProfile, payload.domains ? payload.domains[i % payload.domains.length] : payload.domain,
@@ -697,6 +705,8 @@
       $("#exercisePrompt").textContent = "No hay contenido disponible.";
       return;
     }
+    it = window.LocaleContent.localizeItem(it, API.effectiveLocale(profile), subject);
+    currentItem = it;
     window.ActivityModel.forDelivery(it, profile, subject);
     $("#exerciseCounter").textContent = `Ejercicio ${counter}`;
     $("#exerciseFeedback").textContent = "";
@@ -967,7 +977,7 @@
     $("#sessionAttempts").textContent = state.session.attempts;
     $("#activeProfileLabel").textContent = profile.name;
     $("#ageEyebrow").textContent =
-      `${AGE[profile.age_band].label} · Español internacional`;
+      `${AGE[profile.age_band].label} · ${window.LocaleContent.labels[API.effectiveLocale(profile)]}`;
     renderHomeLevels();
   }
   function renderHomeLevels() {
@@ -1104,6 +1114,8 @@
   }
   $("#generateWorksheetsBtn").onclick = async () => {
     const worksheetProfile = profile;
+    const worksheetExportProfile = {...profile, contentLocale:API.effectiveLocale(profile)};
+    const worksheetLocaleRevision = API.localeRevision;
     const selected = $$("#homeworkOptions input:checked").map((x) => x.value);
     if (!selected.length)
       return ($("#docxStatus").textContent =
@@ -1114,6 +1126,7 @@
     try {
       const all = [];
       for (let i = 0; i < count; i++) {
+        if (worksheetLocaleRevision !== API.localeRevision) throw new Error('La variante de español ha cambiado. Solicita una ficha nueva.');
         const res = await requestForProfile({
           kind: "worksheet",
           domains: selected,
@@ -1125,7 +1138,8 @@
         window.ActivityModel.validateBatch([res.items], worksheetProfile);
         all.push(res.items || []);
       }
-      await window.WorksheetGenerator.generate(all, worksheetProfile);
+      if (worksheetLocaleRevision !== API.localeRevision) throw new Error('La variante de español ha cambiado. Solicita una ficha nueva.');
+      await window.WorksheetGenerator.generate(all, worksheetExportProfile);
       $("#docxStatus").textContent =
         `${count} ficha${count > 1 ? "s" : ""} creada${count > 1 ? "s" : ""}.`;
     } catch (e) {
@@ -1287,6 +1301,17 @@
   };
   window.addEventListener("beforeunload", () => {
     persist();
+  });
+  window.addEventListener('lh:locale-change', () => {
+    if (!profile) return;
+    ++requestGeneration;
+    currentItem = null;
+    for (const id of ['exerciseVisual','exerciseOptions','exerciseTopic','exerciseExplanation','exerciseFeedback','modelAnswer']) $("#"+id).textContent = '';
+    $("#textAnswerArea").classList.add('hidden');
+    $("#selfAssessment").classList.add('hidden');
+    $("#exercisePrompt").textContent = 'La variante de español ha cambiado. Pulsa Siguiente para continuar.';
+    $("#exerciseNext").classList.remove('hidden');
+    setLoading(false);
   });
   boot();
 })();

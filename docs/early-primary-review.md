@@ -1,5 +1,10 @@
 # Early-primary final integration review
 
+Follow-up on 2026-10-13: [Spanish locale integration review](spanish-locale-review.md)
+documents country adaptation and its validation. The age/stimulus gates described
+below remain intact; the former regional-vocabulary follow-up is now addressed
+by controlled rules and explicit remaining editorial cases in that report.
+
 Reviewed on 2026-10-09, on `fix/early-primary-stimulus-integrity`.
 Base and current remote main: `b2768be0264f2012e2718aa86e47bc3f3f0419a7`,
 confirmed by a read-only Git operation. No merge, deployment or production

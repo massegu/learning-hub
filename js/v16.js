@@ -1,8 +1,5 @@
 (function(){
-  const LOCALES={
-    es_intl:'Español internacional',es_es:'España',es_mx:'México',es_co:'Colombia',
-    es_ar:'Argentina',es_cl:'Chile',es_pa:'Panamá',es_cr:'Costa Rica'
-  };
+  const LOCALES=window.LocaleContent.labels;
   const SUBJECT_LABELS={
     geometry:'Geometría',language:'Lenguaje',division:'Divisiones',reading:'Lectura',
     middleLanguage:'Lenguaje 12-13',middleMath:'Matemáticas 12-13',middleReading:'Lectura 12-13',
@@ -86,6 +83,8 @@
   }
 
   function setEyebrow(){
+    currentLocale=window.LearningAPI?.effectiveLocale() || 'es_intl';
+    const selector=$('#v16ContentLocale'); if(selector && !selector.disabled)selector.value=currentLocale;
     const e=$('#ageEyebrow'); if(!e) return;
     const age=$('#profileSelect')?.selectedOptions?.[0]?.textContent?.split('·').slice(1).join('·').trim()||'';
     setText(e,`${age}${age?' · ':''}${LOCALES[currentLocale]||LOCALES.es_intl}`);
@@ -94,8 +93,8 @@
   async function loadLocale(){
     try{
       const api=window.LearningAPI; if(!api?.client||!api.user) return;
-      const {data,error}=await api.client.from('accounts').select('content_locale').single(); if(error) throw error;
-      currentLocale=data?.content_locale||'es_intl';
+      await api.loadContentLocale();
+      currentLocale=api.effectiveLocale();
       const sel=$('#v16ContentLocale'); if(sel && sel.value!==currentLocale) sel.value=currentLocale;
       setEyebrow();
     }catch(e){console.warn('V16 locale load',e);}
@@ -105,8 +104,7 @@
     const sel=$('#v16ContentLocale'); if(sel) sel.disabled=true;
     try{
       const api=window.LearningAPI; if(!api?.client||!api.user) throw new Error('Sesión no disponible');
-      const {error}=await api.client.from('accounts').update({content_locale:locale}).eq('user_id',api.user.id); if(error) throw error;
-      currentLocale=locale; setEyebrow(); toast(`Contenido adaptado a: ${LOCALES[locale]}`);
+      currentLocale=await api.saveContentLocale(locale); setEyebrow(); toast(`Contenido adaptado a: ${LOCALES[currentLocale]}`);
     }catch(e){console.warn('V16 locale save',e);toast('No se pudo guardar la preferencia regional.');await loadLocale();}
     finally{if(sel) sel.disabled=false;}
   }

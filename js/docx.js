@@ -119,9 +119,13 @@
     return Packer.toBlob(doc);
   }
   async function generate(itemsByVersion,profile){
+    if(!window.LocaleContent)throw new Error('No se ha cargado el adaptador regional.');
+    const locale=window.LocaleContent.effective(profile,profile?.contentLocale ?? window.LearningAPI?.contentLocale);
+    itemsByVersion=itemsByVersion.map(items=>items.map(item=>window.LocaleContent.localizeItem(item,locale)));
     // Validate every version before creating any file: no partial download and
     // no guessing a missing stimulus from the supplied correct answer.
-    const models=window.ActivityModel.validateBatch(itemsByVersion,profile);
+    let models=window.ActivityModel.validateBatch(itemsByVersion,profile);
+    models=models.map((version,v)=>version.map((model,i)=>window.LocaleContent.localizeModel(model,locale,itemsByVersion[v][i].localization?.domain || itemsByVersion[v][i].domain,itemsByVersion[v][i])));
     if(!window.docx) throw new Error('No se ha cargado el generador DOCX. Comprueba la conexión.');
     if(itemsByVersion.length>1&&!window.JSZip) throw new Error('No se ha cargado el generador ZIP. Comprueba la conexión.');
     const p=prefix(profile);

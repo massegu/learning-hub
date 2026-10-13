@@ -7,6 +7,7 @@ const JSZip = require('jszip');
 const policy = require('../js/content-policy');
 const early = require('../js/early-content');
 const model = require('../js/activity-model');
+const locale = require('../js/locale-content');
 const child = {id:'child',name:'Sol',age_band:'primary',progress:{ageRoute:'early'}};
 function harness() {
   // JSZip uses FileReader for browser Blobs. Node has Blob but no FileReader;
@@ -18,7 +19,7 @@ function harness() {
   }
   const blobs=new Map(), downloads=[];
   const document={body:{appendChild(){}},createElement:()=>({remove(){},click(){downloads.push({name:this.download,blob:blobs.get(this.href)});}})};
-  const context={window:{docx,JSZip:NodeZip,ContentPolicy:policy,ActivityModel:model},document,URL:{createObjectURL:b=>{const id=String(blobs.size);blobs.set(id,b);return id;},revokeObjectURL(){}},setTimeout(){},Date,console};
+  const context={window:{docx,JSZip:NodeZip,ContentPolicy:policy,ActivityModel:model,LocaleContent:locale},document,URL:{createObjectURL:b=>{const id=String(blobs.size);blobs.set(id,b);return id;},revokeObjectURL(){}},setTimeout(){},Date,console};
   vm.runInNewContext(fs.readFileSync(require.resolve('../js/docx.js'),'utf8'),context);
   return {generator:context.window.WorksheetGenerator,downloads,context};
 }
@@ -33,7 +34,7 @@ function assertAnswerable(nodes, items, profile) {
   for (let i=0;i<items.length;i++) {
     const begin=nodes.indexOf(`ACTIVIDAD ${i+1}`), end=i+1<items.length?nodes.indexOf(`ACTIVIDAD ${i+2}`):nodes.length;
     const block=nodes.slice(begin,end);
-    const projection=model.printable(items[i],profile);
+    const projection=model.printable(locale.localizeItem(items[i],locale.effective(profile)),profile);
     const q=block.indexOf(projection.question);
     assert.ok(q>0,'question must follow stimulus');
     for(const stimulus of projection.stimulus) {
@@ -69,6 +70,41 @@ test('legacy memory associations and reading passages remain answerable in real 
   const profile={name:'Older',age_band:'teen'};
   await generator.generate([items],profile);
   assertAnswerable(textNodes(await xml(downloads[0].blob)),items,profile);
+});
+
+test('direct local and remote DOCX exports inherit all seven account locales despite a stale profile locale', async () => {
+  for(const key of ['es_es','es_mx','es_co','es_ar','es_cl','es_pa','es_cr'])for(const band of ['early','teen']) {
+    const {generator,downloads,context}=harness();
+    context.window.LearningAPI={contentLocale:key};
+    const profile={...child,locale:'es_es',...(band==='teen'?{age_band:'teen',progress:{}}:{})};
+    const items=band==='early'?policy.early.subjects.flatMap(domain=>{
+      const bank=early.pool(domain);
+      return [...new Set(bank.map(it=>it.ageProfile.family))].map(f=>bank.find(it=>it.ageProfile.family===f));
+    }):require('./locale-fixtures')();
+    await generator.generate([items],profile);
+    const nodes=textNodes(await xml(downloads[0].blob));
+    assertAnswerable(nodes,items,{...profile,contentLocale:key});
+    if(key!=='es_es')assert.ok(!/\b(?:coge|grifo|bañador|ordenador|zumo|estáis)\b/iu.test(nodes.join(' ')),key);
+  }
+});
+
+test('exporter rejects a missing locale gate or a batch from a different country before downloading',async()=>{
+  const {generator,downloads,context}=harness();
+  const item=locale.localizeItem(early.pool('reading')[0],'es_mx');
+  await assert.rejects(generator.generate([[item]],{...child,contentLocale:'es_ar'}),/otra variante/);
+  delete context.window.LocaleContent;
+  await assert.rejects(generator.generate([[early.pool('reading')[0]]],child),/adaptador regional/);
+  assert.equal(downloads.length,0);
+});
+
+test('foreign-currency lessons preserve amounts and explicit context through real DOCX projection',async()=>{
+  const {generator,downloads}=harness();
+  const raw={domain:'applied',currencyContext:'foreign',scenario:'En un viaje a España, el pan cuesta 2 euros.',q:'¿Cuánto cuesta el pan?',opts:['2 euros','3 euros'],a:'2 euros'};
+  const profile={name:'Viaje',age_band:'teen',locale:'es_mx'};
+  await generator.generate([[raw]],profile);
+  const nodes=textNodes(await xml(downloads[0].blob));
+  assertAnswerable(nodes,[raw],profile);
+  assert.ok(nodes.some(s=>s.includes('2 euros')));
 });
 
 test('ZIP versions contain complete documents with distinct names and complete stimuli', async () => {
