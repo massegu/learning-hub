@@ -51,17 +51,27 @@
     }));
   }
   async function makeDoc(items,version,profile,models){
-    const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,WidthType,AlignmentType,BorderStyle,Footer,PageBreak}=window.docx;
+    const {Document,Packer,Paragraph,TextRun,ImageRun,Table,TableRow,TableCell,WidthType,AlignmentType,BorderStyle,Footer,PageBreak}=window.docx;
     const green='1F633B',green2='2F7D4A',light='EDF5E9',sand='F6F1E5',ink='173326',muted='607064',white='FFFFFF',line='D6DED6';
     const noBorders={top:{style:BorderStyle.NONE,size:0,color:white},bottom:{style:BorderStyle.NONE,size:0,color:white},left:{style:BorderStyle.NONE,size:0,color:white},right:{style:BorderStyle.NONE,size:0,color:white},insideHorizontal:{style:BorderStyle.NONE,size:0,color:white},insideVertical:{style:BorderStyle.NONE,size:0,color:white}};
     const softBorders={top:{style:BorderStyle.SINGLE,size:6,color:line},bottom:{style:BorderStyle.SINGLE,size:6,color:line},left:{style:BorderStyle.SINGLE,size:6,color:line},right:{style:BorderStyle.SINGLE,size:6,color:line},insideHorizontal:{style:BorderStyle.NONE,size:0,color:white},insideVertical:{style:BorderStyle.NONE,size:0,color:white}};
     const early=Boolean(window.ContentPolicy.forProfile(profile));
     const textSize=early?28:19;
     const paragraph=value=>new Paragraph({spacing:{line:early?360:285,after:70},children:[new TextRun({text:value,size:textSize,color:ink,font:'Aptos'})]});
-    function renderMaterial(material){
-      if(material.type==='text') return [paragraph(material.text)];
-      if(material.type==='list') return material.items.map((value,i)=>paragraph(`${i+1}. ${value}`));
-      return [new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:softBorders,rows:material.rows.map(row=>new TableRow({children:row.map(value=>new TableCell({margins:{top:100,bottom:100,left:120,right:120},children:[paragraph(value)]}))}))})];
+    function pictureParagraph(value,item,material,position){
+      if(!early)return paragraph(value);
+      const key=early?window.StimulusArt?.forLabel(value,{...item.lexicalSenses,subject:material.label}):null;
+      // Glyphs are the units themselves: never add a second pictogram/dot.
+      const prefix=position===undefined?[]:[new TextRun({text:`${position}. `,size:textSize})];
+      const picture=key&&!/^[●○□△☆]$/.test(value)?[new ImageRun({data:window.StimulusArt.png(key),transformation:{width:32,height:32},altText:{title:value,description:value}}),new TextRun({text:' '})]:[];
+      return new Paragraph({spacing:{line:360,after:90},children:[...prefix,...picture,new TextRun({text:value,size:textSize,color:ink,font:'Aptos'})]});
+    }
+    function renderMaterial(material,item){
+      const heading=material.label?[paragraph(material.label)]:[];
+      if(material.type==='text') return [...heading,paragraph(material.text)];
+      if(early && material.presentation==='count' && material.items.every(x=>x==='●'))return [...heading,new Paragraph({spacing:{after:130},children:material.items.flatMap(value=>[new TextRun({text:value,size:40,color:ink}),new TextRun({text:'    '})])})];
+      if(material.type==='list')return [...heading,...material.items.map((value,i)=>early && ['count','cards','sequence'].includes(material.presentation)?pictureParagraph(value,item,material,material.presentation==='sequence'?i+1:undefined):paragraph(`${i+1}. ${value}`))];
+      return [...heading,new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:softBorders,rows:material.rows.map(row=>new TableRow({children:row.map(value=>new TableCell({margins:{top:100,bottom:100,left:120,right:120},children:[pictureParagraph(value,item,material)]}))}))})];
     }
     const header=new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:noBorders,rows:[new TableRow({children:[
       new TableCell({width:{size:70,type:WidthType.PERCENTAGE},shading:{fill:light},margins:{top:170,bottom:170,left:220,right:160},children:[
@@ -85,7 +95,7 @@
       if(model.stimulus.length){
         block.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:softBorders,rows:[new TableRow({children:[new TableCell({shading:{fill:light},margins:{top:140,bottom:140,left:170,right:170},children:[
           new Paragraph({spacing:{after:55},children:[new TextRun({text:early?'MIRA':'INFORMACIÓN',bold:true,size:early?20:13,color:green,font:'Aptos'})]}),
-          ...model.stimulus.flatMap(renderMaterial)
+          ...model.stimulus.flatMap(material=>renderMaterial(material,it))
         ]})]})]}));
         block.push(new Paragraph({spacing:{after:75},children:[]}));
       }
@@ -125,6 +135,7 @@
     // Validate every version before creating any file: no partial download and
     // no guessing a missing stimulus from the supplied correct answer.
     let models=window.ActivityModel.validateBatch(itemsByVersion,profile);
+    if(window.ContentPolicy.forProfile(profile)&&!window.StimulusArt)throw new Error('No se ha cargado el adaptador de ilustraciones.');
     models=models.map((version,v)=>version.map((model,i)=>window.LocaleContent.localizeModel(model,locale,itemsByVersion[v][i].localization?.domain || itemsByVersion[v][i].domain,itemsByVersion[v][i])));
     if(!window.docx) throw new Error('No se ha cargado el generador DOCX. Comprueba la conexión.');
     if(itemsByVersion.length>1&&!window.JSZip) throw new Error('No se ha cargado el generador ZIP. Comprueba la conexión.');

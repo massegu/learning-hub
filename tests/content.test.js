@@ -17,7 +17,7 @@ test('every 6-7 domain and level has distinct, printable activities across sever
   let count=0;
   for (const domain of policy.early.subjects) for (const level of [1,2,3]) {
     const items=early.pool(domain,level);
-    assert.ok(items.length>=35, `${domain}: ${items.length}`);
+    assert.ok(new Set(items.map(it=>it.semanticKey)).size>=20, `${domain}: not enough distinct problems for a worksheet`);
     assert.ok(new Set(items.map(it=>it.ageProfile.mechanic)).size>=3, domain);
     const signatures=items.map(it=>JSON.stringify([it.q,it.stimulus,it.opts,it.tokens,it.memoryQuestion]));
     assert.equal(new Set(signatures).size,items.length);
@@ -55,8 +55,8 @@ test('reading and location questions preserve authored determiners for every nou
   for (const it of early.pool('division')) {
     if (it.q.startsWith('¿Cuánt')) {
       const o=early.objects.find(o=>it.q.includes(o.plural));
-      assert.ok(o);
-      assert.ok(it.q.startsWith(o.gender==='f'?'¿Cuántas ':'¿Cuántos '));
+      if(o)assert.ok(it.q.startsWith(o.gender==='f'?'¿Cuántas ':'¿Cuántos '));
+      else assert.match(it.q,/^¿Cuántas (?:cosas|faltan)/);
     }
     assert.ok(!it.stimulus.some(s=>s.text&&/Hay 1 \w+s\b/.test(s.text)));
   }

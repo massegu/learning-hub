@@ -221,7 +221,7 @@
     const visual = $("#exerciseVisual"),
       area = $("#exerciseOptions");
     const cards = window.ContentPolicy.forProfile(profile)
-      ? `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus)}</div>`
+      ? `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus,{illustrated:true,senses:it.lexicalSenses})}</div>`
       : (it.memoryContent || [])
       .map((x) =>
         x.person
@@ -247,6 +247,7 @@
     );
   }
   function renderMultiSelect(it) {
+    $('#exerciseOptions').classList.add('structured-options');
     const selected = new Set();
     const opts = shuffle(it.opts || []);
     $("#exerciseOptions").innerHTML =
@@ -517,6 +518,7 @@
     const p = profiles.find((x) => x.id === id);
     if (!p) return;
     profile = p;
+    $('#exercise').classList.toggle('early-primary',Boolean(window.ContentPolicy.forProfile(p)));
     API.profileLocale = p.locale;
     currentItem = null;
     requestGeneration++;
@@ -656,6 +658,7 @@
     const generation = ++requestGeneration;
     currentItem = null;
     $("#exerciseOptions").innerHTML = "";
+    $("#exerciseOptions").classList.remove('structured-options');
     $("#exerciseVisual").innerHTML = "";
     $("#exerciseTopic").textContent = "";
     $("#exerciseTopic").classList.add("hidden");
@@ -697,6 +700,7 @@
     const msg = friendlyContentError(e);
     $("#exercisePrompt").textContent = msg;
     $("#exerciseOptions").innerHTML = "";
+    $("#exerciseOptions").classList.remove('structured-options');
     $("#exerciseVisual").innerHTML = "";
     $("#exerciseNext").classList.add("hidden");
   }
@@ -755,7 +759,7 @@
         `<div class="scenario-card"><span class="scenario-label">SITUACIÓN</span><p>${escapeHtml(it.scenario)}</p></div>`;
     if (it.stimulus)
       $("#exerciseVisual").innerHTML =
-        `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus)}</div>`;
+        `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus,{illustrated:Boolean(window.ContentPolicy.forProfile(profile)),senses:it.lexicalSenses})}</div>`;
     $("#exercisePrompt").textContent = it.q || "Actividad";
     if (it.type === "memoryReveal" || it.type === "memoryMulti") {
       renderMemoryExercise(it);
@@ -777,19 +781,20 @@
     renderOptions(it);
   }
   function renderOptions(it) {
+    $('#exerciseOptions').classList.remove('structured-options');
     const opts = shuffle(it.opts || []);
     $("#exerciseOptions").innerHTML = opts
-      .map((o) => `<button class="option-btn">${escapeHtml(o)}</button>`)
+      .map((o) => `<button class="option-btn" data-answer="${escapeHtml(o)}" aria-label="${escapeHtml(o)}">${window.ContentPolicy.forProfile(profile)?window.ActivityModel.visualLabel(o,it.lexicalSenses):escapeHtml(o)}</button>`)
       .join("");
     $$("#exerciseOptions .option-btn").forEach(
-      (b) => (b.onclick = () => checkOption(b, b.textContent)),
+      (b) => (b.onclick = () => checkOption(b, b.dataset.answer)),
     );
   }
   function checkOption(btn, value) {
     const correct = value === String(currentItem.a);
     $$("#exerciseOptions .option-btn").forEach((b) => {
       b.disabled = true;
-      if (b.textContent === String(currentItem.a)) b.classList.add("correct");
+      if (b.dataset.answer === String(currentItem.a)) b.classList.add("correct");
     });
     if (!correct) btn.classList.add("wrong");
     const pts = saveResult(
@@ -807,6 +812,7 @@
         : [String(it.answer || "")];
     const picked = [];
     const area = $("#exerciseOptions");
+    area.classList.add('structured-options');
     const render = () => {
       const slots = expected
         .map(
@@ -864,6 +870,7 @@
   }
   function renderCognitiveExercise(it) {
     const area = $("#exerciseOptions");
+    area.classList.add('structured-options');
     if (it.type === "sequence") {
       area.innerHTML = `<button class="primary-btn" id="showSeq">Mostrar secuencia</button><div id="seqButtons" class="game-quick-grid"></div>`;
       $("#showSeq").onclick = () => {

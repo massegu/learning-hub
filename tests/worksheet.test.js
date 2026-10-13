@@ -8,6 +8,7 @@ const policy = require('../js/content-policy');
 const early = require('../js/early-content');
 const model = require('../js/activity-model');
 const locale = require('../js/locale-content');
+const art = require('../js/stimulus-art');
 const child = {id:'child',name:'Sol',age_band:'primary',progress:{ageRoute:'early'}};
 function harness() {
   // JSZip uses FileReader for browser Blobs. Node has Blob but no FileReader;
@@ -19,7 +20,7 @@ function harness() {
   }
   const blobs=new Map(), downloads=[];
   const document={body:{appendChild(){}},createElement:()=>({remove(){},click(){downloads.push({name:this.download,blob:blobs.get(this.href)});}})};
-  const context={window:{docx,JSZip:NodeZip,ContentPolicy:policy,ActivityModel:model,LocaleContent:locale},document,URL:{createObjectURL:b=>{const id=String(blobs.size);blobs.set(id,b);return id;},revokeObjectURL(){}},setTimeout(){},Date,console};
+  const context={window:{docx,JSZip:NodeZip,ContentPolicy:policy,ActivityModel:model,LocaleContent:locale,StimulusArt:art},document,URL:{createObjectURL:b=>{const id=String(blobs.size);blobs.set(id,b);return id;},revokeObjectURL(){}},setTimeout(){},Date,console};
   vm.runInNewContext(fs.readFileSync(require.resolve('../js/docx.js'),'utf8'),context);
   return {generator:context.window.WorksheetGenerator,downloads,context};
 }
@@ -58,6 +59,30 @@ test('real DOCX export includes every 6-7 stimulus before its question and all r
   assertAnswerable(textNodes(document),items,child);
   assert.ok(document.includes('<w:tbl>'), 'tables must remain tables');
   assert.ok(document.includes('w:val="28"'), '6-7 needs larger readable text');
+});
+
+test('counting DOCX has exactly the required points without numbering, bullets or duplicate pictures',async()=>{
+  for(const level of [1,2,3]){
+    const {generator,downloads}=harness();const it=early.pool('division',level).find(it=>it.ageProfile.family==='division-0');
+    await generator.generate([[it]],child);
+    const document=await xml(downloads[0].blob),nodes=textNodes(document),before=nodes.slice(0,nodes.indexOf(it.q));
+    assert.equal(before.filter(x=>x==='●').length,Number(it.a));
+    assert.ok(!document.includes('w:numPr'));
+    assert.ok(!before.some(x=>/^\d+\.\s*●/.test(x)));
+    assert.ok(document.includes('w:val="40"'));
+  }
+});
+
+test('local pictorial stimuli embed matching PNGs and retain every label before the question',async()=>{
+  const {generator,downloads}=harness();
+  const it=early.pool('memory',1).find(it=>it.ageProfile.mechanic==='rememberObjects');
+  await generator.generate([[it]],child);
+  const zip=await JSZip.loadAsync(await downloads[0].blob.arrayBuffer());
+  const media=Object.values(zip.files).filter(f=>f.name.startsWith('word/media/')&&!f.dir);
+  assert.ok(media.length>=1);
+  const bytes=await Promise.all(media.map(f=>f.async('uint8array')));
+  for(const value of it.stimulus[0].items){const key=art.forLabel(value);assert.ok(bytes.some(data=>Buffer.from(data).equals(Buffer.from(art.png(key)))));}
+  assertAnswerable(textNodes(await zip.file('word/document.xml').async('string')),[it],child);
 });
 
 test('legacy memory associations and reading passages remain answerable in real DOCX XML', async () => {

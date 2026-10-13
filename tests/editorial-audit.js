@@ -26,7 +26,7 @@ function audit() {
       };
     }
   }
-  return {criteria:'Family = an authored task/stimulus scaffold; nameIndependentVariants remove person-name changes only. Neither count claims independent pedagogical scenarios.',levels};
+  return {criteria:'Family = an authored task/stimulus scaffold; nameIndependentVariants remove person-name changes, and arithmetic also removes noun-only and distractor-only variation. Neither count claims independent pedagogical scenarios.',levels};
 }
 if(require.main===module) process.stdout.write(JSON.stringify(audit(),null,2)+'\n');
 module.exports=audit;

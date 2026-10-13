@@ -262,3 +262,23 @@ Changed components: `js/content-policy.js`, `js/activity-model.js`,
 `js/early-content.js`, `js/app.js`, `js/docx.js`,
 `tests/content.test.js`, `tests/browser-smoke.py`, new
 `tests/editorial-audit.js`, and this report.
+
+## Follow-up: layout, correctness, variety and level calibration (2026-10-13)
+
+The subsequent refinement on the same branch is documented in
+[early-primary-refinement.md](early-primary-refinement.md). It fixes compressed
+sequence workspaces and point-list markers, binds quantity/comparison answers to
+their stimuli, rejects case/article-only duplicate options, adds small local
+illustrations with Word equivalents, and expands meaningful early task families.
+The original age, stimulus, locale and worksheet architecture remains in place.
+
+Current counts are **56 broad families**, with **436 / 455 / 465 rendered variants**
+at levels 1/2/3, and **266 / 294 / 313 semantic variants** (still upper bounds on
+pedagogical variety). Maths noun-only/distractor-only substitutions no longer count
+as semantic novelty. The linked report supersedes the earlier counts and editorial
+follow-ups where explicitly addressed, and retains unresolved cases.
+
+Validation: **42 Node tests**, **648 browser layout cases** at normal zoom, ordinary
+consecutive-session selection, real illustrated DOCX export, and the seven-country
+browser regression matrix. Validation uses a simulated Supabase boundary, not the
+production bank. Changes are committed locally; no merge or deployment.

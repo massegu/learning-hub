@@ -177,6 +177,8 @@
       ['solveProblem', 'snacks', (o, n) => choice('¿Qué puede hacer antes de comer?', [text(`${n} vuelve del patio. Tiene las manos sucias y quiere merendar.`)], 'Lavarse las manos', ['Ensuciar el plato', 'Guardar el jabón'])],
     ],
   };
+  const refinements=root.EarlyRefinements || (typeof require==='function'&&require('./early-refinements.js'));
+  refinements.apply(families,{choice,order,text,list,table,objects,shapes,colors});
   function pool(domain, level = 1) {
     const bandLevel = Math.max(1, Math.min(3, Number(level) || 1));
     if (!families[domain]) throw new Error('Área no permitida para 6-7.');
@@ -184,6 +186,8 @@
     families[domain].forEach(([mechanic, context, build], family) => {
       for (let variant = 0; variant < 24; variant++) {
         const item = build(objects[variant % objects.length], names[variant % names.length], variant, bandLevel);
+        for(const block of item.stimulus)if(block.type==='list'&&!block.presentation)block.presentation='cards';
+        if(bandLevel===1 && item.opts)item.opts=item.opts.slice(0,2);
         // A visible activity keeps its identity across levels unless its
         // stimulus changes (e.g. the memory load). This avoids repeat-by-level.
         const signature = JSON.stringify([item.type, item.q, item.stimulus, item.opts, item.tokens, item.memoryQuestion]);
@@ -191,13 +195,19 @@
         for (const char of signature) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
         item.id = `early-v1-${domain}-${family}-${(hash >>> 0).toString(16)}`;
         item.contentKey = item.id;
-        const semanticSignature = signature.replace(/\b(?:Ana|Leo|Mar|Pau|Lola|Hugo|Nora|Dani|Sol)\b/g, 'PERSONA');
+        let semanticSignature = (domain==='division'?JSON.stringify([item.type,item.q,item.stimulus,item.quantityEvidence]):signature).replace(/\b(?:Ana|Leo|Mar|Pau|Lola|Hugo|Nora|Dani|Sol)\b/g, 'PERSONA');
+        // Object swaps do not constitute new arithmetic problems.
+        if(domain==='division' && ['addition','subtraction'].includes(mechanic)) {
+          for(const noun of objects.flatMap(x=>[x.name,x.some,x.plural]).sort((a,b)=>b.length-a.length))semanticSignature=semanticSignature.split(noun).join('OBJETO');
+          semanticSignature=semanticSignature.replace(/Cuánt[oa]s/g,'Cuántos');
+        }
         let semanticHash = 2166136261;
         for (const char of semanticSignature) semanticHash = Math.imul(semanticHash ^ char.charCodeAt(0), 16777619);
         item.semanticKey = `early-sem-v1-${domain}-${family}-${(semanticHash >>> 0).toString(16)}`;
         item.domain = domain;
         item.level = bandLevel;
         item.ageProfile = { id: 'early', revision: 1, context, mechanic, family: `${domain}-${family}` };
+        item.selectionWeight=({language:{1:.55,3:.55},reading:{0:.55,4:.55},division:{1:.65,2:.65}})[domain]?.[family] || 1;
         policy.validateEarly(item);
         result.push(item);
       }
@@ -229,14 +239,23 @@
         candidates.forEach(it => { used.delete(it.id); usedKeys.delete(it.semanticKey); });
         available = candidates.filter(it => !chosen.some(c => c.semanticKey === it.semanticKey));
       }
-      const freshFamilies = available.filter(it => !recentFamilies.slice(-2).includes(it.ageProfile.family));
+      let freshFamilies = available.filter(it => !recentFamilies.slice(-2).includes(it.ageProfile.family));
+      if(!freshFamilies.length)freshFamilies=available.filter(it=>it.ageProfile.family!==recentFamilies.at(-1));
       const varied = (freshFamilies.length ? freshFamilies : available).filter(it => !recent.slice(-2).includes(it.ageProfile.mechanic));
       const options = varied.length ? varied : freshFamilies.length ? freshFamilies : available;
       if (!options.length) throw new Error('No quedan actividades distintas para esta ficha.');
-      const item = options[Math.floor(random() * options.length)];
+      // Balance task families instead of sampling from their unequal numbers of
+      // name/object permutations. Delivery history survives reloads and sessions.
+      const groups=[...new Set(options.map(it=>it.ageProfile.family))];
+      const frequency=f=>recentFamilies.slice(-12).filter(x=>x===f).length/(options.find(it=>it.ageProfile.family===f).selectionWeight || 1);
+      const minimum=Math.min(...groups.map(frequency));
+      const balanced=groups.filter(f=>frequency(f)===minimum);
+      const selectedFamily=balanced[Math.floor(random()*balanced.length)];
+      const familyOptions=options.filter(it=>it.ageProfile.family===selectedFamily);
+      const item = familyOptions[Math.floor(random() * familyOptions.length)];
       chosen.push(item); used.add(item.id); usedKeys.add(item.semanticKey); recent.push(item.ageProfile.mechanic); recentFamilies.push(item.ageProfile.family);
     }
-    profile.progress = { ...profile.progress, _earlyDelivery: { ids: [...used].slice(-600), keys: [...usedKeys].slice(-600), mechanics: recent.slice(-8), families: recentFamilies.slice(-8) } };
+    profile.progress = { ...profile.progress, _earlyDelivery: { ids: [...used].slice(-600), keys: [...usedKeys].slice(-600), mechanics: recent.slice(-12), families: recentFamilies.slice(-12) } };
     return chosen;
   }
   // Call only after an authorized server response. Never retry a rejected request

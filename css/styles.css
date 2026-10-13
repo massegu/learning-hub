@@ -2538,3 +2538,45 @@ body {
 .reading-passage table { width:100%; border-collapse:collapse; margin:12px 0; }
 .reading-passage td { padding:10px 14px; border:1px solid var(--line); text-align:left; }
 .reading-passage li { margin:8px 0; }
+
+/* Structured tasks must occupy the whole options region, not one grid cell. */
+.options-grid.structured-options { display:block; }
+.main-content { min-width:0; }
+#exercise.early-primary .exercise-layout { grid-template-columns:minmax(0,1fr); }
+#exercise.early-primary .exercise-card { container-type:inline-size; min-width:0; padding:clamp(16px,3vw,30px); }
+#exercise.early-primary .exercise-meta { gap:12px; flex-wrap:wrap; line-height:1.6; }
+#exercise.early-primary .prompt { font-size:clamp(1.15rem,2vw,1.4rem); line-height:1.5; overflow-wrap:anywhere; }
+#exercise.early-primary .reading-passage { padding:18px; min-width:0; border-left-width:4px; }
+#exercise.early-primary .reading-passage p { font-size:1.12rem; line-height:1.6; }
+#exercise.early-primary .options-grid:not(.structured-options) { grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr)); gap:16px; }
+#exercise.early-primary .option-btn { display:flex; align-items:center; gap:12px; min-height:76px; padding:16px; font-size:1.12rem; line-height:1.5; overflow-wrap:anywhere; }
+#exercise.early-primary .option-btn svg { width:44px; height:44px; flex:none; }
+#exercise.early-primary .sequence-workspace { grid-template-columns:minmax(0,1fr); gap:18px; }
+#exercise.early-primary .sequence-slot,#exercise.early-primary .word-token { font-size:1.06rem; line-height:1.5; min-height:56px; overflow-wrap:anywhere; }
+#exercise.early-primary .sequence-slot.filled:after { grid-column:2; }
+#exercise.early-primary .sequence-actions { justify-content:flex-start; }
+#exercise.early-primary .sequence-actions button { min-height:48px; }
+.stimulus-only-text { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+.stimulus-cards { display:flex; flex-wrap:wrap; align-items:stretch; gap:14px; margin:12px 0; padding:0; }
+.stimulus-unit { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; min-width:72px; max-width:180px; padding:12px; border:1px solid #c5d6c8; border-radius:12px; background:white; text-align:center; line-height:1.45; }
+.stimulus-unit svg { width:60px; height:60px; }
+.count-units .stimulus-unit { min-width:64px; padding:6px; }
+.ordered-cards .unit-position { font-size:.8rem; font-weight:800; color:#486250; }
+.picture-icon { display:inline-flex; vertical-align:middle; }
+.picture-glyphs { display:inline-flex; flex-wrap:wrap; align-items:center; gap:12px; vertical-align:middle; }
+.picture-glyphs svg { width:42px; height:42px; flex:none; }
+.early-model { padding:16px; border:2px solid #56866d; border-radius:12px; background:#fff; margin:12px 0 22px; }
+.stimulus-caption { display:block; font-size:1rem; font-weight:800; margin:8px 0 12px; }
+.early-model .picture-glyphs svg { width:52px; height:52px; }
+#exercise.early-primary .early-comparison { table-layout:fixed; }
+#exercise.early-primary .early-comparison td { padding:14px 12px; font-size:1.08rem; line-height:1.6; overflow-wrap:anywhere; }
+#exercise.early-primary .early-comparison td:first-child { width:34%; font-weight:800; }
+#exercise.early-primary .early-comparison .picture-icon svg { width:44px; height:44px; }
+@container (min-width:760px) { #exercise.early-primary .sequence-workspace { grid-template-columns:minmax(0,1fr) minmax(0,1fr); } }
+@media(max-width:600px) {
+  #exercise.early-primary .section-intro { flex-wrap:wrap; gap:14px; }
+  #exercise.early-primary .reading-passage { padding:12px; }
+  #exercise.early-primary .picture-glyphs { gap:6px; }
+  #exercise.early-primary .picture-glyphs svg { width:32px; height:32px; }
+  #exercise.early-primary .early-comparison td { padding:10px 8px; }
+}
