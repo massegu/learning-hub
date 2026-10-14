@@ -8,8 +8,10 @@ function loadEdge(filename=require.resolve('../supabase/functions/request-learni
     LEARNING_DATA:{},Deno:{serve(handler){context.handler=handler;},env:{get(){throw new Error('Live environment access is prohibited in the offline harness.');}}}};
   vm.createContext(context);
   if(source.includes('await import("./junior.js")')) vm.runInContext(fs.readFileSync(require.resolve('../supabase/functions/request-learning-content/junior.js'),'utf8'),context);
+  if(source.includes('await import("./primary-content.js")')) vm.runInContext(fs.readFileSync(require.resolve('../supabase/functions/request-learning-content/primary-content.js'),'utf8'),context);
+  source=source.replace(/^await import\("\.\/primary-content\.js"\);\r?\n/gm,'');
   source=source.replace(/^await import\("\.\/junior\.js"\);\r?\n/gm,'');
-  vm.runInContext(stripTypeScriptTypes(source,{mode:'strip'})+'\n globalThis.edgeAPI={junior:globalThis.JuniorContent||null,variantExercise,variantMath,variantReading,variantEnglish,geometry:typeof variantGeometry==="function"?variantGeometry:null,matrixLanguage18,matrixAttention18,matrixMemory18,matrixExecutive20,matrixApplied20,matrixReasoning18,matrixLiteracy18,normalizeItem,validateItem,generatedItems,contentSignature,worksheetTask,localizeValue,ensureWorksheetMemoryCoherence,SUBJECTS};',context);
+  vm.runInContext(stripTypeScriptTypes(source,{mode:'strip'})+'\n globalThis.edgeAPI={junior:globalThis.JuniorContent||null,primary:globalThis.PrimaryContent||null,variantExercise,variantMath,variantReading,variantEnglish,geometry:typeof variantGeometry==="function"?variantGeometry:null,matrixLanguage18,matrixAttention18,matrixMemory18,matrixExecutive20,matrixApplied20,matrixReasoning18,matrixLiteracy18,normalizeItem,validateItem,generatedItems,contentSignature,worksheetTask,localizeValue,ensureWorksheetMemoryCoherence,SUBJECTS};',context);
   return {api:context.edgeAPI,context};
 }
 module.exports=loadEdge;

@@ -65,6 +65,8 @@ test('real handler enforces saved age-route domains, ownership and quota without
 test('real worksheet handler reports exhaustion instead of committing a within-sheet duplicate',async()=>{
   const h=authorized();
   h.profile.progress.ageRoute='primary';
+  const pool=require('../supabase/functions/request-learning-content/primary-content').pool('reading',1).slice(0,2);let index=0;
+  h.context.PrimaryContent.generate=()=>structuredClone(pool[(index++)%pool.length]);
   const response=await h.request({kind:'worksheet',domains:['reading'],questions:20});
   assert.equal(response.status,422);assert.match((await response.json()).error,/suficientes actividades distintas/);
   assert.equal(h.writes.length,0);
@@ -93,4 +95,19 @@ test('worksheet exhaustion of recent history still uses distinct valid candidate
   const response=await h.request({kind:'worksheet',domains:['reading'],questions:6});
   assert.equal(response.status,200);const data=await response.json();
   assert.equal(new Set(data.items.map(it=>api.contentSignature('reading',it))).size,6);
+});
+test('authenticated primary requests route all Language skills and all eleven worksheet domains',async()=>{
+  const h=authorized(),model=require('../js/activity-model');h.profile.progress.ageRoute='primary';
+  for(const level of [1,2,3])for(const subdomain of ['grammar','spelling','writing']){
+    const response=await h.request({domain:'language',subdomain,level,count:5});assert.equal(response.status,200);
+    const data=await response.json();assert.equal(data.items.length,5);
+    for(const it of data.items){assert.equal(it.languageFocus,subdomain);assert.equal(it.schoolProfile.level,level);assert.doesNotThrow(()=>model.printable(it,h.profile));}
+  }
+  const before=h.writes.length;let response=await h.request({domain:'language',subdomain:'unknown'});assert.equal(response.status,400);assert.equal(h.writes.length,before);
+  for(const level of [1,2,3]){
+    response=await h.request({kind:'worksheet',domains:['geometry','language','division','reading','english','literacy','attention','executive','memory','speedReasoning','applied'],level,questions:20});
+    assert.equal(response.status,200);const data=await response.json();assert.equal(data.items.length,20);
+    assert.equal(new Set(data.items.map(it=>it.sourceDomain)).size,11);
+    for(const it of data.items){assert.equal(it.sourceDomain,it.domain);assert.equal(it.schoolProfile.route,'primary');assert.doesNotThrow(()=>model.printable(it,h.profile));}
+  }
 });

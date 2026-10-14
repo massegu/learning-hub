@@ -7,7 +7,9 @@ Branch: `fix/early-primary-stimulus-integrity`, following `a922231`.
 30,420 generated activities, concrete corrections and remaining calibration gaps.
 The source-unavailable statements below describe the earlier client-only review.
 The subsequent [8–10 content pass](junior-content-review.md) now routes junior
-exercises/worksheets through an authored backend bank; it is not deployed.
+exercises/worksheets through an authored backend bank. The
+[10–12 follow-up](primary-content-review.md) now does the same for primary. Neither
+has been deployed.
 
 The reviewed early dashboard, seven other early areas, calibrated activity families
 and worksheet replacement/export path are preserved. This pass addresses the

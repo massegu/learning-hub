@@ -2,7 +2,9 @@
 
 Branch: `fix/early-primary-stimulus-integrity`. This is the first authored 8–10
 content pass, following the supplied-source audit. It does not complete 10–12 or
-13–15 calibration, and it has **not been deployed to Supabase**.
+13–15 calibration, and it has **not been deployed to Supabase**. The subsequent
+[10–12 review](primary-content-review.md) now supplies a separate primary bank;
+the junior content and architecture documented here are preserved.
 
 ## Scope and actual integration
 

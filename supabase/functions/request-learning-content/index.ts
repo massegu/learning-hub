@@ -3,6 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 (globalThis as any).window = globalThis as any;
 await import("./junior.js");
+await import("./primary-content.js");
 await import("./data/primary.js");
 await import("./data/middle.js");
 await import("./data/teen.js");
@@ -2210,6 +2211,7 @@ function matrixApplied20(age:string,level:number,v:number){
 
 function variantExercise(age:string,domain:string,level:number,subdomain:string|null=null){
   if(age==="junior")return {...(globalThis as any).JuniorContent.generate(domain,level,subdomain),id:"junior-"+crypto.randomUUID()};
+  if(age==="primary")return {...(globalThis as any).PrimaryContent.generate(domain,level,subdomain),id:"primary-"+crypto.randomUUID()};
   let max=300;
   if(domain==="social") max=360;
   else if(["language","middleLanguage","teenLanguage"].includes(domain)) max=age==="early"?400:360;
@@ -2281,7 +2283,7 @@ Deno.serve(async (req:Request)=>{
   const requestedDomains=kind==="worksheet" ? (Array.isArray(body.domains)&&body.domains.length?body.domains:SUBJECTS[age]) : [body.domain];
   if(!SUBJECTS[age] || !Number.isInteger(level) || (kind!=="game" && (!Array.isArray(requestedDomains)||!requestedDomains.length||requestedDomains.some((d:any)=>!SUBJECTS[age].includes(d)))))
     return new Response(JSON.stringify({error:"Área o nivel no permitido para este perfil."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
-  if(age==="junior"&&kind==="exercise"&&body.domain==="language"&&body.subdomain&&!["grammar","spelling","writing"].includes(body.subdomain))
+  if((age==="junior"||age==="primary")&&kind==="exercise"&&body.domain==="language"&&body.subdomain&&!["grammar","spelling","writing"].includes(body.subdomain))
     return new Response(JSON.stringify({error:"Habilidad de Lenguaje no válida."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
   let items:any[]=[];
   if(kind==="game"){

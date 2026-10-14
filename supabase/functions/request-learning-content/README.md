@@ -35,3 +35,9 @@ route. It is loaded by the real handler and offline harness. Its browser bridge
 See [the junior content review](../../../docs/junior-content-review.md). The original
 five legacy imports remain unresolved; the whole package is still not deployable
 from this checkout alone.
+
+The primary follow-up adds `primary-content.js` for the 10–12 route, sharing the
+ordinary handler and worksheet path. Validate its full app flow with
+`python3 tests/browser-junior.py primary`; the default remains junior. See the
+[primary content review](../../../docs/primary-content-review.md). Neither authored
+bank has been deployed; all five legacy modules are still needed for the full package.
