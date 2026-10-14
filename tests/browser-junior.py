@@ -1,4 +1,4 @@
-"""Real school-age Edge handler → client → DOCX. Default junior; pass primary for 10–12.
+"""Real school-age Edge handler → client → DOCX. Default junior; pass primary for 10–12 or middle for 13–15.
 Only a local fake SDK/account/database is used; external services are blocked.
 """
 import functools,http.server,json,re,subprocess,tempfile,threading,sys
@@ -7,7 +7,7 @@ from playwright.sync_api import sync_playwright
 from browser_support import ROOT,SDK,QuietHandler,doc_text
 
 ROUTE=sys.argv[1] if len(sys.argv)>1 else 'junior'
-assert ROUTE in ['junior','primary']
+assert ROUTE in ['junior','primary','middle']
 PROFILE_KEY='juniorProfile' if ROUTE=='junior' else 'schoolProfile'
 worker=subprocess.Popen(['node','tests/edge-worker.js',ROUTE],cwd=ROOT,stdin=subprocess.PIPE,stdout=subprocess.PIPE,text=True)
 lock=threading.Lock()
@@ -44,9 +44,9 @@ try:
             elif '/jszip@3.10.1/' in url:route.fulfill(body=(ROOT/'node_modules/jszip/dist/jszip.min.js').read_bytes(),content_type='application/javascript')
             else:route.abort()
         page.route(re.compile('^https://'),external)
-        page.add_init_script("localStorage.setItem('__mock_profiles',"+json.dumps(json.dumps([dict(id=ROUTE,name='Alex',age_band='primary',progress=dict(ageRoute=ROUTE,initialLevel=1))]))+");")
+        page.add_init_script("localStorage.setItem('__mock_profiles',"+json.dumps(json.dumps([dict(id=ROUTE,name='Alex',age_band='middle' if ROUTE=='middle' else 'primary',progress=dict(ageRoute=ROUTE,initialLevel=1))]))+");")
         page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle')
-        page.wait_for_selector('#schoolHub');page.wait_for_timeout(1500);page.clock.install()
+        page.wait_for_selector('#home' if ROUTE=='middle' else '#schoolHub');page.wait_for_timeout(1500);page.clock.install()
         page.evaluate('''()=>{window.__delivered=[];window.__exports=[];const gate=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=JSON.parse(JSON.stringify(it));window.__delivered.push(__current);return gate(it,...args)};
           const generate=WorksheetGenerator.generate;WorksheetGenerator.generate=async(items,profile)=>{__exports.push({items,profile});return generate(items,profile);};}''')
         def wait_item():
@@ -56,16 +56,37 @@ try:
             if item['type']=='memoryReveal' and page.locator('.memory-card').count():
                 assert page.locator('.memory-card').count()==len(item['memoryContent'])
                 page.clock.fast_forward(item['revealMs']+10)
-            page.wait_for_function('document.querySelectorAll("#exerciseOptions button:not(:disabled)").length>0')
+            if item['type']=='self':
+                visual=page.locator('#exerciseVisual').inner_text()
+                assert all(criterion in visual for criterion in item['writingRubric'])
+            page.wait_for_function('(document.querySelectorAll("#exerciseOptions button:not(:disabled)").length>0)||(__current?.type==="self"&&!document.querySelector("#textAnswerArea").classList.contains("hidden"))')
             return item
+        writing_capture=[]
+        assessment_counts={'automatic':0,'self':0}
         def answer(item):
+            assessment_counts['self' if item['type']=='self' else 'automatic']+=1
             if item['type']=='order':
                 for token in item['answer']:page.locator('#exerciseOptions').get_by_role('button',name=token,exact=True).click()
                 page.locator('#orderCheck').click()
+            elif item['type']=='self':
+                if ROUTE=='middle' and not writing_capture:
+                    for width in [1280,390]:
+                        page.set_viewport_size({'width':width,'height':900})
+                        assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
+                        page.locator('#exercise').screenshot(path=f'/tmp/middle-writing-{width}.png')
+                    page.set_viewport_size({'width':1280,'height':900})
+                    writing_capture.append(True)
+                page.locator('#textAnswerInput').fill(item['sample'])
+                page.locator('#textAnswerCheck').click()
+                page.locator('.self-buttons [data-self="true"]').click()
             else:page.locator('#exerciseOptions').get_by_role('button',name=item['a'],exact=True).click()
             page.wait_for_function('document.querySelector("#exerciseFeedback").classList.contains("ok")')
         domains=['language','reading','division','attention','memory','executive','speedReasoning','applied']
         if ROUTE=='primary':domains+=['geometry','english','literacy']
+        if ROUTE=='middle':domains=['middleLanguage','middleReading','middleMath','attention','memory','executive','speedReasoning','applied','english','literacy']
+        language_domain='middleLanguage' if ROUTE=='middle' else 'language'
+        reading_domain='middleReading' if ROUTE=='middle' else 'reading'
+        if ROUTE=='middle':assert page.locator('#schoolHub').count()==0 or not page.locator('#schoolHub').is_visible()
         for level in [1,2,3]:
             for domain in domains:
                 page.evaluate('window.__current=null')
@@ -82,7 +103,7 @@ try:
                 assert all(a!=b for a,b in zip(keys,keys[1:])),(domain,level)
                 print(f'PASS: {domain}, start L{level}: ten consecutive real-handler activities',flush=True)
         for focus in ['grammar','spelling','writing']:
-            page.locator('#navMenu [data-subject="language"]').click();wait_item()
+            page.locator(f'#navMenu [data-subject="{language_domain}"]').click();wait_item()
             page.evaluate('window.__current=null');page.locator(f'[data-mode="{focus}"]').click()
             for n in range(10):
                 item=wait_item();assert item['languageFocus']==focus;answer(item)
@@ -102,12 +123,15 @@ try:
             assert len(items)==20;assert all(it['localization']['locale']==key for it in items)
             document_integrity(page,doc_text(path.read_bytes()),items,key)
             print(f'PASS: {key}, {len(domains)} domains and real 20-question DOCX',flush=True)
-        page.locator('#navMenu [data-subject="reading"]').click();wait_item()
+        page.locator(f'#navMenu [data-subject="{reading_domain}"]').click();wait_item()
         for width in [1280,390]:
             page.set_viewport_size({'width':width,'height':900});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
             page.locator('#exercise').screenshot(path=f'/tmp/{ROUTE}-reading-{width}.png')
         assert not errors,errors
-        print(f'PASS: {len(domains)*37+30} scored interactive activities, seven complete DOCX files; no page errors',flush=True)
+        assert sum(assessment_counts.values())==len(domains)*37+30
+        if ROUTE=='middle':assert assessment_counts['self']>0
+        print('ASSESSMENT:',assessment_counts,flush=True)
+        print(f'PASS: {len(domains)*37+30} answered/self-assessed interactive activities, seven complete DOCX files; no page errors',flush=True)
         browser.close()
 finally:
     server.shutdown();worker.terminate();worker.wait(timeout=10)

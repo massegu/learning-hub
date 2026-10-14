@@ -1,7 +1,7 @@
 // Local browser test server bridge: real handler, fake owned account/DB, no SDK/network.
 const readline=require('node:readline'),{context}=require('./edge-harness')();
-const route=process.argv[2]||'junior';if(!['junior','primary'].includes(route))throw new Error('Unknown offline test route');
-const profile={id:route,account_id:'account',age_band:'primary',progress:{ageRoute:route}};
+const route=process.argv[2]||'junior';if(!['junior','primary','middle'].includes(route))throw new Error('Unknown offline test route');
+const profile={id:route,account_id:'account',age_band:route==='middle'?'middle':'primary',progress:{ageRoute:route}};
 const account={subscription_status:'active',content_locale:'es_es'},seen=[],usage={};
 context.Deno.env.get=()=> 'offline-test-placeholder';
 context.createClient=()=>({auth:{getUser:async()=>({data:{user:{id:'account'}}})},from(table){

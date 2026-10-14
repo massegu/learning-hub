@@ -111,3 +111,18 @@ test('authenticated primary requests route all Language skills and all eleven wo
     for(const it of data.items){assert.equal(it.sourceDomain,it.domain);assert.equal(it.schoolProfile.route,'primary');assert.doesNotThrow(()=>model.printable(it,h.profile));}
   }
 });
+test('authenticated middle route honors Language skills and produces complete ten-domain worksheets',async()=>{
+  const h=authorized(),model=require('../js/activity-model');h.profile.age_band='middle';h.profile.progress.ageRoute='middle';
+  for(const level of [1,2,3])for(const subdomain of ['grammar','spelling','writing']){
+    const response=await h.request({domain:'middleLanguage',subdomain,level,count:5});assert.equal(response.status,200);
+    const data=await response.json();assert.equal(data.items.length,5);
+    for(const it of data.items){assert.equal(it.schoolProfile.route,'middle');assert.equal(it.languageFocus,subdomain);assert.equal(it.schoolProfile.level,level);assert.doesNotThrow(()=>model.printable(it,h.profile));}
+  }
+  const before=h.writes.length;let response=await h.request({domain:'middleLanguage',subdomain:'unknown'});assert.equal(response.status,400);assert.equal(h.writes.length,before);
+  response=await h.request({domain:'language'});assert.equal(response.status,400);assert.equal(h.writes.length,before);
+  for(const level of [1,2,3]){
+    response=await h.request({kind:'worksheet',domains:['middleLanguage','middleMath','middleReading','english','literacy','attention','memory','executive','speedReasoning','applied'],level,questions:20});assert.equal(response.status,200);
+    const data=await response.json();assert.equal(data.items.length,20);assert.equal(new Set(data.items.map(it=>it.sourceDomain)).size,10);
+    for(const it of data.items){assert.equal(it.sourceDomain,it.domain);assert.equal(it.schoolProfile.route,'middle');assert.doesNotThrow(()=>model.printable(it,h.profile));}
+  }
+});

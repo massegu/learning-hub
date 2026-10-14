@@ -1,5 +1,9 @@
 # Supplied bank recovery and package integration — 2026-10-14
 
+**13–15 follow-up:** the [middle content review](middle-content-review.md) now
+documents a separate adolescent bank and Language skill routing. Earlier references
+to pending middle calibration describe the previous state; no deployment occurred.
+
 Branch: `fix/early-primary-stimulus-integrity`. All five requested source files have
 now been supplied. Commit `3a8498e` captures their contents without editorial changes
 (Git normalizes CRLF to LF). No production request, data mutation, merge or manual

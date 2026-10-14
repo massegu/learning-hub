@@ -1,5 +1,9 @@
 # Supplied Edge Function: school-age integration review — 2026-10-14
 
+**13–15 follow-up:** the [middle content review](middle-content-review.md) now
+documents a separate adolescent bank and Language skill routing. Earlier references
+to pending middle calibration describe the previous state; no deployment occurred.
+
 **Import recovery update:** the owner has now supplied all five legacy modules.
 See [the package integration review](edge-import-recovery.md). Statements about
 missing imports below describe the earlier review; no deployment has occurred.

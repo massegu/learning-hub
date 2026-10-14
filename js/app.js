@@ -634,7 +634,7 @@
     }
     $("#exerciseLevelSelect").value = String(state.levels[subject] || 1);
     $("#subjectScore").textContent = state.scores[subject] || 0;
-    const isLang = subject === "language";
+    const isLang = ["language","middleLanguage"].includes(subject);
     $$('.language-mode-btn').forEach(b=>{
       b.textContent=window.ContentPolicy.forProfile(profile)?({grammar:'Palabras y gramática',spelling:'Ortografía',writing:'Formar frases'})[b.dataset.mode]:({grammar:'Gramática',spelling:'Ortografía',writing:'Escritura'})[b.dataset.mode];
       b.classList.toggle('active',b.dataset.mode===mode);
@@ -682,7 +682,7 @@
     const res = await requestForProfile({
       kind,
       domain,
-      subdomain: domain === "language" ? mode : null,
+      subdomain: ["language","middleLanguage"].includes(domain) ? mode : null,
       level: state.levels[domain] || 1,
       count: 1,
       ...extra,

@@ -7,11 +7,11 @@ for(const age of ['junior','primary','middle']){
   report[age]={};
   for(const domain of ['language','reading','division','geometry','attention','memory','executive','applied','speedReasoning','literacy','english']){
     if(!api.SUBJECTS[age].includes(domain)&& !(age==='middle'&&['language','reading','division'].includes(domain)))continue;
-    const bank=age==='junior'?api.junior:age==='primary'?api.primary:null;
+    const bank=age==='junior'?api.junior:age==='primary'?api.primary:age==='middle'?api.middle:null;
     const actual=age==='middle'?({language:'middleLanguage',reading:'middleReading',division:'middleMath'}[domain]||domain):domain;
-    const levels=[1,2,3].map(level=>Array.from({length:bank?bank.pool(domain,level).length:['executive','applied'].includes(domain)?400:['reading','division','geometry','english'].includes(domain)?300:360},(_,v)=>{
+    const levels=[1,2,3].map(level=>Array.from({length:bank?bank.pool(actual,level).length:['executive','applied'].includes(domain)?400:['reading','division','geometry','english'].includes(domain)?300:360},(_,v)=>{
       let it;
-      if(bank)it=bank.pool(domain,level)[v];
+      if(bank)it=bank.pool(actual,level)[v];
       else if(factories[domain])it=domain==='language'?factories[domain](age,actual,level,v):factories[domain](age,level,v);
       else it=domain==='reading'?api.variantReading(age,actual,level,v):domain==='english'?api.variantEnglish(age,actual,level,v):domain==='geometry'&&api.geometry?api.geometry(level,v):api.variantMath(age,actual,level,v);
       return {it,signature:visible(it)};

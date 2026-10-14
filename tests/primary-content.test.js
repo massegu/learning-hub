@@ -57,7 +57,7 @@ test('active primary Edge factory/worksheets use the reviewed bank and route Lan
   }
   for(const skill of ['grammar','spelling','writing'])for(let n=0;n<20;n++)assert.equal(api.variantExercise('primary','language',2,skill).languageFocus,skill);
   assert.throws(()=>bank.generate('language',2,'unknown'));
-  for(const age of ['early','junior','middle','teen'])assert.equal(api.variantExercise(age,'attention',1).schoolProfile,undefined);
+  for(const age of ['early','junior','middle','teen'])assert.notEqual(api.variantExercise(age,'attention',1).schoolProfile?.route,'primary');
 });
 test('primary history excludes repeats through three consecutive seven-item sessions',()=>{
   const {api}=load();
