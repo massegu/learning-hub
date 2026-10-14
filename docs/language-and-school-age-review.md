@@ -1,5 +1,9 @@
 # Language and school-age follow-up — 2026-10-14
 
+**Import recovery update:** the owner has now supplied all five legacy modules.
+See [the package integration review](edge-import-recovery.md). Statements about
+missing imports below describe the earlier review; no deployment has occurred.
+
 Branch: `fix/early-primary-stimulus-integrity`, following `a922231`.
 
 **Source follow-up:** the owner has now supplied the Edge Function. See the

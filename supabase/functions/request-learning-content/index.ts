@@ -43,8 +43,8 @@ const THEMES:any = {
 };
 
 function todayUTC(){ return new Date().toISOString().slice(0,10); }
-function pick<T>(arr:T[]):T { return arr[Math.floor(Math.random()*arr.length)]; }
-function shuffle<T>(arr:T[]):T[]{ return [...arr].sort(()=>Math.random()-.5); }
+function pick<T=any>(arr:T[]):T { return arr[Math.floor(Math.random()*arr.length)]; }
+function shuffle<T=any>(arr:T[]):T[]{ return [...arr].sort(()=>Math.random()-.5); }
 function keyOf(domain:string, sub:string|null, item:any){ return [domain,sub||"",item.id||JSON.stringify(item)].join(":"); }
 
 
@@ -1108,7 +1108,7 @@ for(const ageKey of ["primary","middle","teen"]){
 // ---------- END V16 CONTENT EXPANSION ----------
 
 function contentSignature(domain:string,item:any){
-  const norm=(v:any)=>{
+  const norm=(v:any):any=>{
     if(Array.isArray(v)) return v.map(norm);
     if(v&&typeof v==="object"){
       const out:any={};
@@ -1648,7 +1648,7 @@ function variantApplied(age:string,domain:string,level:number,v:number){
       {topic:"Rutina",scenario:"Después de lavarte las manos, las tienes mojadas.",q:"¿Qué haces después?",opts:["Secarlas","Ponerte los zapatos","Comer","Salir"],a:"Secarlas",mechanic:"early_applied_routine"},
       {topic:"Solución sencilla",scenario:"No encuentras tu lápiz y tienes que escribir.",q:"¿Qué puedes hacer?",opts:["Pedir otro lápiz","Romper el cuaderno","Irte","No escribir nunca"],a:"Pedir otro lápiz",mechanic:"early_applied_problem"}
     ];
-    return answerItem({type:"appliedDecision",topic:"Cognición aplicada · "+items[v%items.length].topic,...items[v%items.length]},age,domain,level,v);
+    return answerItem({type:"appliedDecision",...items[v%items.length]},age,domain,level,v);
   }
 
   if(band==="8-10"){
@@ -1660,7 +1660,7 @@ function variantApplied(age:string,domain:string,level:number,v:number){
       {topic:"Comprobación",scenario:name+" ha preparado la mochila para mañana.",q:"¿Qué ayuda más antes de terminar?",opts:["Revisar una lista","Vaciarla","Cambiar todo","No mirar"],a:"Revisar una lista"},
       {topic:"Prioridad",scenario:"Hay una tarea para mañana y otra opcional sin fecha.",q:"¿Cuál conviene hacer primero?",opts:["La de mañana","La opcional","Las dos a la vez","Ninguna"],a:"La de mañana"}
     ];
-    return answerItem({type:"appliedDecision",topic:"Cognición aplicada · "+items[v%items.length].topic,...items[v%items.length]},age,domain,level,v);
+    return answerItem({type:"appliedDecision",...items[v%items.length]},age,domain,level,v);
   }
 
   if(band==="10-12"){
@@ -1672,7 +1672,7 @@ function variantApplied(age:string,domain:string,level:number,v:number){
       {topic:"Comprobación",scenario:"Has terminado un trabajo con 8 minutos de margen.",q:"¿Qué uso del tiempo es más útil?",opts:["Revisar puntos clave","Empezar otro largo","No hacer nada","Borrar y repetir"],a:"Revisar puntos clave"},
       {topic:"Flexibilidad",scenario:"El plan A ya no es posible.",q:"¿Qué habilidad conviene usar?",opts:["Buscar un plan alternativo","Mantener A aunque no funcione","Esperar sin decidir","Cancelar siempre"],a:"Buscar un plan alternativo"}
     ];
-    return answerItem({type:"appliedDecision",topic:"Cognición aplicada · "+items[v%items.length].topic,...items[v%items.length]},age,domain,level,v);
+    return answerItem({type:"appliedDecision",...items[v%items.length]},age,domain,level,v);
   }
 
   const older=band==="13-15"?[
@@ -1690,7 +1690,7 @@ function variantApplied(age:string,domain:string,level:number,v:number){
     {topic:"Control de errores",scenario:"Un documento importante está listo, pero contiene datos copiados de varias fuentes.",q:"¿Qué revisión aporta más valor?",opts:["Verificar cifras y fuentes críticas","Cambiar el tipo de letra","Añadir más texto","Reordenar colores"],a:"Verificar cifras y fuentes críticas"},
     {topic:"Flexibilidad estratégica",scenario:"Tu plan depende de una respuesta externa que se retrasa.",q:"¿Qué opción mantiene mejor el progreso?",opts:["Avanzar tareas independientes y fijar un punto de revisión","Esperar sin hacer nada","Abandonar el proyecto","Repetir lo ya hecho"],a:"Avanzar tareas independientes y fijar un punto de revisión"}
   ];
-  return answerItem({type:"appliedDecision",topic:"Cognición aplicada · "+older[v%older.length].topic,...older[v%older.length]},age,domain,level,v);
+  return answerItem({type:"appliedDecision",...older[v%older.length]},age,domain,level,v);
 }
 
 function variantSocial(age:string,domain:string,level:number,v:number){
@@ -1703,7 +1703,7 @@ function variantSocial(age:string,domain:string,level:number,v:number){
     {topic:"Reparación",scenario:"Notas que la otra persona ha entendido mal lo que dijiste.",q:"¿Qué respuesta suele ayudar más?",opts:["Aclarar la intención y comprobar comprensión","Repetir más fuerte","Ignorarlo","Cambiar de tema"],a:"Aclarar la intención y comprobar comprensión"},
     {topic:"Inferencia social",scenario:"Una persona cancela un plan por cansancio y después aparece en una foto familiar.",q:"¿Qué conclusión es más prudente?",opts:["La foto no demuestra por sí sola que mintiera","Mintió seguro","No estaba cansada","No quería verte"],a:"La foto no demuestra por sí sola que mintiera"}
   ];
-  return answerItem({type:"socialScenario",topic:"Social Lab · "+items[mode].topic,...items[mode]},age,domain,level,v);
+  return answerItem({type:"socialScenario",...items[mode]},age,domain,level,v);
 }
 
 function variantEnglish(age:string,domain:string,level:number,v:number){

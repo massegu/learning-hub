@@ -1,5 +1,9 @@
 # 8–10 content follow-up — 2026-10-14
 
+**Import recovery update:** the owner has now supplied all five legacy modules.
+See [the package integration review](edge-import-recovery.md). Statements about
+missing imports below describe the earlier review; no deployment has occurred.
+
 Branch: `fix/early-primary-stimulus-integrity`. This is the first authored 8–10
 content pass, following the supplied-source audit. It does not complete 10–12 or
 13–15 calibration, and it has **not been deployed to Supabase**. The subsequent

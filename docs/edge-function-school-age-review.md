@@ -1,5 +1,9 @@
 # Supplied Edge Function: school-age integration review — 2026-10-14
 
+**Import recovery update:** the owner has now supplied all five legacy modules.
+See [the package integration review](edge-import-recovery.md). Statements about
+missing imports below describe the earlier review; no deployment has occurred.
+
 **Later junior follow-up:** [8–10 authored content review](junior-content-review.md)
 replaces the junior dispatch described below. The [10–12 follow-up](primary-content-review.md) also replaces the primary dispatch.
 Baseline counts/findings remain a record of the supplied source; 13–15 is still pending.

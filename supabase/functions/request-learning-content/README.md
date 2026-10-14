@@ -1,43 +1,51 @@
-# Supplied Edge Function snapshot
+# Recovered Edge Function package
 
-`index.ts` was supplied by the repository owner during the school-age review.
-Commit `fa71e09` records that supplied baseline; subsequent corrections have **not
-been deployed**. This is not an independently verified copy of the running service.
+`index.ts` was supplied by the owner; commit `fa71e09` records that baseline.
+All five original `data/{primary,middle,teen,english,literacy}.js` modules have now
+been recovered from the owner's uploads in commit `3a8498e`, without editorial
+changes (Git normalizes line endings). Junior/primary authored banks and integration
+corrections follow on the review branch. **Nothing here has been deployed.**
 
-The five imported `data/{primary,middle,teen,english,literacy}.js` modules were not
-included in the supplied file and are absent from this checkout. The current
-self-contained exercise/worksheet variant factories can be audited offline. Legacy
-academic paths still need the actual imported modules. Do not treat this directory
-as a complete, deployable package or substitute historical banks without checking
-that they match the deployed function.
+The original imports build 1,080 items. They load before requests, but active
+supported domains still use the function's generators; junior and primary use the
+reviewed 8–10/10–12 banks. Imported legacy content is not automatically worksheet
+compatible or newly calibrated. See [the recovery review](../../../docs/edge-import-recovery.md).
 
 From the repository root, with Node >=22.13 (verified with Node 24):
 
 ```sh
 npm test
-EDGE_AUDIT_SAMPLES=/tmp/edge-samples.json node tests/edge-audit.js > /tmp/edge-audit.json
-python3 tests/browser-edge-audit.py /tmp/edge-samples.json
+python3 tests/browser-junior.py
+python3 tests/browser-junior.py primary
+EDGE_AUDIT_SAMPLES=/tmp/legacy-samples.json node tests/legacy-bank-audit.js > /tmp/legacy-audit.json
+python3 tests/browser-edge-audit.py /tmp/legacy-samples.json
 ```
 
-The last command uses Python Playwright and `/usr/bin/chromium`, as do the existing
-browser tests. The harness removes the SDK/type imports and five data imports,
-uses an empty legacy bank, captures `Deno.serve`, and forbids real environment
-access. Handler tests supply a fake SDK and fake environment values. These checks
-exercise real generator/handler code, but do not establish Deno bundling, live
-credentials, database policies, remote deployment parity or full editorial quality.
-Browser sample rejections are reported as findings, not as a passing curriculum.
+Browser checks use Python Playwright and `/usr/bin/chromium`. The Node harness
+executes every real local module in declared order, while mocking the SDK/server/
+environment/database. Browser tests use the real handler with a fake owned account
+and persistent fake history/usage. External requests are blocked.
 
-See [the detailed review](../../../docs/edge-function-school-age-review.md).
+Standard native checking is:
 
-The junior follow-up adds a self-contained `junior.js` bank for the saved 8–10
-route. It is loaded by the real handler and offline harness. Its browser bridge
-(`python3 tests/browser-junior.py`) runs only against a local fake account/database.
-See [the junior content review](../../../docs/junior-content-review.md). The original
-five legacy imports remain unresolved; the whole package is still not deployable
-from this checkout alone.
+```sh
+deno check --node-modules-dir=none --no-lock supabase/functions/request-learning-content/index.ts
+```
 
-The primary follow-up adds `primary-content.js` for the 10–12 route, sharing the
-ordinary handler and worksheet path. Validate its full app flow with
-`python3 tests/browser-junior.py primary`; the default remains junior. See the
-[primary content review](../../../docs/primary-content-review.md). Neither authored
-bank has been deployed; all five legacy modules are still needed for the full package.
+This environment blocks `jsr.io`, so that standard check remains **blocked**. For
+explicitly limited diagnostics, `tests/deno-package-smoke.py` substitutes only the
+ambient JSR declaration with an empty local declaration; it retains the real cached
+SDK and all local modules, checks types and tests native local startup/CORS/auth
+rejection. With Deno on PATH and SDK cached:
+
+```sh
+deno cache --node-modules-dir=none --no-lock npm:@supabase/supabase-js@2
+python3 tests/deno-package-smoke.py
+```
+
+Do not describe this ambient substitution as official-JSR validation, a production
+integration test or permission to deploy. No runtime credentials/outbound access
+are granted. The [junior](../../../docs/junior-content-review.md) and
+[primary](../../../docs/primary-content-review.md) reviews retain their editorial
+limits; [the earlier source audit](../../../docs/edge-function-school-age-review.md)
+records the original findings. A Cloudflare branch preview does not deploy Supabase.
