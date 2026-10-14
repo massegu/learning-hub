@@ -39,7 +39,7 @@ def check_text(text):
     for match in re.finditer(r'¿Dónde (?:está|estaba|debe buscar) ([^?]+)\?',text):
         assert match[1].startswith(('el ','la ')),text
 
-def assert_doc_integrity(nodes,items):
+def assert_doc_integrity(nodes,items,early=True):
     for i,item in enumerate(items):
         start=nodes.index(f'ACTIVIDAD {i+1}')
         stop=nodes.index(f'ACTIVIDAD {i+2}') if i+1<len(items) else len(nodes)
@@ -52,7 +52,7 @@ def assert_doc_integrity(nodes,items):
                 assert any(s==value or re.match(r'^\d+\. ',s) and s.endswith(value) for s in block[:q]),(question,value)
         for value in item.get('opts',[]) + item.get('tokens',[]):
             assert any(s.endswith('. '+value) for s in block),(question,value)
-        check_text(' '.join(block))
+        if early:check_text(' '.join(block))
 
 server = http.server.ThreadingHTTPServer(('127.0.0.1', 0), functools.partial(QuietHandler, directory=str(ROOT)))
 threading.Thread(target=server.serve_forever, daemon=True).start()
@@ -218,8 +218,10 @@ try:
             with page.expect_download(timeout=30000) as download:
                 page.locator('#generateWorksheetsBtn').click()
             older=Path(tmp)/f'{band}.docx';download.value.save_as(older)
-            assert doc_text(older.read_bytes()).count('¿Qué criterio ayuda más?')==10
-            print(f'PASS: {band}: remote interactive content and 10-question remote DOCX unchanged')
+            assert doc_text(older.read_bytes()).count('¿Qué número tiene la tarjeta?')==10
+            older_items=page.evaluate('(band)=>__lastWorksheets[0].map(it=>({...it,stimulus:ActivityModel.printable(it,__profiles.find(p=>p.id===band)).stimulus}))',band)
+            assert_doc_integrity(doc_text(older.read_bytes()),older_items,early=False)
+            print(f'PASS: {band}: remote interactive content and complete 10-question remote DOCX')
         page.locator('#newProfileBtn').click()
         page.locator('#newProfileName').fill('Test child')
         page.locator('#newProfileAge').select_option('early')

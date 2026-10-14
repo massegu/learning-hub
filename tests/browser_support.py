@@ -25,6 +25,13 @@ window.supabase={createClient(){
    const count=body.questions||body.count||1;
    const items=Array.from({length:count},(_,i)=>({id:'remote-'+__requests.length+'-'+i,type:'standard',theme:'Horarios de vuelos',why:'El vuelo sale a las 15:40.',scenario:'El vuelo F15-P7 sale a las 15:40.',q:'¿Qué criterio ayuda más?',opts:['Azul','Verde'],a:'Azul'}));
    if(window.__localeMode){const local=window.localeFixtures(Array.from({length:count},(_,i)=>body.domains?body.domains[i%body.domains.length]:body.domain));items.splice(0,items.length,...local.map((it,i)=>({...it,id:'remote-'+__requests.length+'-'+i})));}
+   if(body.kind==='worksheet')items.forEach((it,i)=>{
+     // Real variation for the semantic uniqueness gate: each question depends
+     // on a different displayed card number, rather than a changed remote ID.
+     const n=__requests.length*count+i+1;
+     it.scenario+=' Tarjeta número '+n+'.';it.q='¿Qué número tiene la tarjeta?';
+     it.opts=[String(n),String(n+1),String(n+2)];it.a=String(n);it.requiresStimulus=true;
+   });
    if(__bodyError)return {data:{items,error:'Trial expired'},error:null};
    return {data:{items,usage:{used:__requests.length,limit:50}},error:null};
  }},from(table){

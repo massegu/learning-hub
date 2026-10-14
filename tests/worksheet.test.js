@@ -9,6 +9,7 @@ const early = require('../js/early-content');
 const model = require('../js/activity-model');
 const locale = require('../js/locale-content');
 const art = require('../js/stimulus-art');
+const selection = require('../js/worksheet-selection');
 const child = {id:'child',name:'Sol',age_band:'primary',progress:{ageRoute:'early'}};
 function harness() {
   // JSZip uses FileReader for browser Blobs. Node has Blob but no FileReader;
@@ -144,6 +145,29 @@ test('ZIP versions contain complete documents with distinct names and complete s
   for(let i=0;i<2;i++) {
     const nested=await JSZip.loadAsync(await zip.file(names[i]).async('uint8array'));
     assertAnswerable(textNodes(await nested.file('word/document.xml').async('string')),versions[i],p);
+  }
+});
+
+test('replaced mixed-domain candidates export complete single DOCX and ZIP versions in every country',async()=>{
+  for(const country of ['es_es','es_mx','es_co','es_ar','es_cl','es_pa','es_cr']){
+    const p={...structuredClone(child),contentLocale:country},versions=[];
+    for(let v=0;v<2;v++){
+      const bank=early.select(p,['reading','memory','executive','attention','applied'],10,2);
+      const invalid={...bank[0],stimulus:[]};
+      const result=await selection.collect({initial:{items:[invalid,...bank.slice(1)]},profile:p,country,domains:['reading','memory','executive','attention','applied'],count:10,
+        fetchMore:async()=>({items:[bank[0],bank[1]]})});
+      assert.equal(result.rejected,1);assert.equal(new Set(result.items.map(it=>it.semanticKey)).size,10);
+      versions.push(result.items);
+    }
+    const single=harness();await single.generator.generate([versions[0]],p);
+    assertAnswerable(textNodes(await xml(single.downloads[0].blob)),versions[0],p);
+    const batch=harness();await batch.generator.generate(versions,p);
+    const zip=await JSZip.loadAsync(await batch.downloads[0].blob.arrayBuffer());
+    const names=Object.keys(zip.files);assert.equal(names.length,2);
+    for(let v=0;v<2;v++){
+      const document=await JSZip.loadAsync(await zip.file(names[v]).async('uint8array'));
+      assertAnswerable(textNodes(await document.file('word/document.xml').async('string')),versions[v],p);
+    }
   }
 });
 

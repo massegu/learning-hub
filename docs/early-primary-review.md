@@ -282,3 +282,18 @@ Validation: **42 Node tests**, **648 browser layout cases** at normal zoom, ordi
 consecutive-session selection, real illustrated DOCX export, and the seven-country
 browser regression matrix. Validation uses a simulated Supabase boundary, not the
 production bank. Changes are committed locally; no merge or deployment.
+
+## Follow-up: worksheet replacement and exploration hub (2026-10-14)
+
+[early-primary-journey.md](early-primary-journey.md) records the next focused pass:
+individual localized/printable candidate selection and replacement before worksheet
+commitment, bounded authorized remote recovery, a dedicated eight-area early hub,
+four short persisted missions, stronger stimulus/answer separation and 32 local
+illustrations with Word equivalents. Existing age, locale, difficulty, semantic
+history and final export safeguards remain in place.
+
+Validation now includes **53 Node tests**, hub/mission/replacement browser checks,
+**648 layout cases**, ordinary consecutive selection and seven-country interactive/
+DOCX regression. The report documents remote-search bounds and remaining editorial
+limitations. This follow-up is committed and pushed to the same preview branch,
+without merge, manual deployment or production Supabase changes.

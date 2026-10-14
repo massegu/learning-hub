@@ -25,6 +25,10 @@
     spoon:'<ellipse cx="32" cy="18" rx="11" ry="15" fill="#c6dce5" stroke="#173326" stroke-width="3"/><path d="M29 32h6v26h-6Z" fill="#c6dce5" stroke="#173326" stroke-width="3"/>',
     banana:'<path d="M9 17q2 27 38 31l10-10Q24 45 17 12Z" fill="#ffe07b" stroke="#173326" stroke-width="3"/><path d="M17 24q9 20 31 19" fill="none" stroke="#c79a24" stroke-width="2"/>',
   };
+  drawings.tree='<path d="M28 37h8v24h-8Z" fill="#b48b61" stroke="#173326" stroke-width="2"/><path d="M12 39Q2 27 15 19Q13 3 30 6Q43 1 48 16Q63 21 54 36Q38 49 12 39Z" fill="#94c881" stroke="#173326" stroke-width="3"/>';
+  drawings.umbrella='<path d="M5 30a27 27 0 0 1 54 0Q50 23 41 30Q32 23 23 30Q14 23 5 30Z" fill="#f1ba76" stroke="#173326" stroke-width="3"/><path d="M32 4v48q0 10-9 7" fill="none" stroke="#173326" stroke-width="3" stroke-linecap="round"/>';
+  drawings.pot='<path d="m14 37 5 22h26l5-22Z" fill="#dda17c" stroke="#173326" stroke-width="3"/><path d="M11 32h42v7H11Z" fill="#ebbb97" stroke="#173326" stroke-width="3"/><path d="M32 32V12q-18-16-18 2 2 14 18 10Q45 2 51 12q3 16-19 17" fill="#9dd18e" stroke="#173326" stroke-width="3"/>';
+  drawings.glass='<path d="m14 7 5 50h26l5-50Z" fill="white" stroke="#173326" stroke-width="3"/><path d="m18 29 3 25h22l3-25Z" fill="#a1d9ec"/>';
   drawings['bottle-full-closed']=drawings.bottle;
   drawings['bottle-empty-closed']=drawings.bottle.replace('fill="#9ad6ed"','fill="white"');
   drawings['bottle-full-open']=drawings.bottle.replace('<rect x="22" y="6" width="20" height="9" rx="2" fill="#568ecb" stroke="#173326" stroke-width="3"/>','<rect x="48" y="49" width="12" height="8" rx="2" fill="#568ecb" stroke="#173326" stroke-width="2"/>');
@@ -37,7 +41,8 @@
     if(senses.subject==='Botellas')return {'llena · cerrada':'bottle-full-closed','vacía · cerrada':'bottle-empty-closed','llena · abierta':'bottle-full-open'}[label] || null;
     if(senses.subject==='Globos')return {rojo:'balloon-red',azul:'balloon-blue',verde:'balloon-green',amarillo:'balloon-yellow'}[label]||null;
     if(senses.banana && ['banana','plátano','banano','guineo'].includes(label))return 'banana';
-    return Object.keys(aliases).find(key=>aliases[key].includes(label)) || null;
+    const contextObjects={árbol:'tree',paraguas:'umbrella',maceta:'pot',vaso:'glass'};
+    return contextObjects[label] || Object.keys(aliases).find(key=>aliases[key].includes(label)) || null;
   }
   function svg(key){if(!drawings[key])throw new Error('Ilustración desconocida.');return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true" focusable="false">${drawings[key]}</svg>`;}
   function png(key){const images=root.StimulusArtPNG || (typeof require==='function'&&require('./stimulus-art-png.js'));if(!images?.[key])throw new Error('Falta la ilustración imprimible.');return Uint8Array.from(atob(images[key]),c=>c.charCodeAt(0));}

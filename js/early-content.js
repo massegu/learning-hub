@@ -219,25 +219,32 @@
       seen.add(signature); return true;
     });
   }
-  function select(profile, domains, count, level = 1, random = Math.random) {
+  function select(profile, domains, count, level = 1, random = Math.random, accept = null) {
     const history = profile.progress?._earlyDelivery || { ids: [], mechanics: [] };
     const used = new Set(history.ids);
     const usedKeys = new Set(history.keys || []);
     const recent = [...history.mechanics];
     const recentFamilies = [...(history.families || [])];
     const chosen = [];
-    const pools = new Map(domains.map(d => [d, pool(d, level)]));
+    const pools = new Map(domains.map(d => [d, pool(d, level).filter(it=>!accept || accept(it,d))]));
+    if(accept && new Set([...pools.values()].flat().map(it=>it.semanticKey)).size<count)
+      throw new Error('No hay suficientes actividades imprimibles distintas para las áreas y el nivel seleccionados. Prueba con menos ejercicios o añade otra área.');
     // Upgrade existing delivery histories without treating name-only variants
     // as new activities after the gate is introduced.
     for (const items of pools.values()) for (const item of items) {
       if (used.has(item.id)) usedKeys.add(item.semanticKey);
     }
     for (let i = 0; i < count; i++) {
-      const candidates = pools.get(domains[i % domains.length]);
+      let candidates = pools.get(domains[i % domains.length]);
       let available = candidates.filter(it => !usedKeys.has(it.semanticKey) && !chosen.some(c => c.semanticKey === it.semanticKey));
       if (!available.length) {
         candidates.forEach(it => { used.delete(it.id); usedKeys.delete(it.semanticKey); });
         available = candidates.filter(it => !chosen.some(c => c.semanticKey === it.semanticKey));
+      }
+      if(!available.length && accept){
+        candidates=[...pools.values()].flat();
+        available=candidates.filter(it=>!usedKeys.has(it.semanticKey)&&!chosen.some(c=>c.semanticKey===it.semanticKey));
+        if(!available.length)available=candidates.filter(it=>!chosen.some(c=>c.semanticKey===it.semanticKey));
       }
       let freshFamilies = available.filter(it => !recentFamilies.slice(-2).includes(it.ageProfile.family));
       if(!freshFamilies.length)freshFamilies=available.filter(it=>it.ageProfile.family!==recentFamilies.at(-1));
@@ -260,14 +267,14 @@
   }
   // Call only after an authorized server response. Never retry a rejected request
   // locally or generate more activities than the server has delivered/charged.
-  function adaptResponse(response, payload, profile) {
+  function adaptResponse(response, payload, profile, options = {}) {
     if (!policy.forProfile(profile)) return response;
     const domains = payload.domains || [payload.domain];
     if (!domains.length || domains.some(d => !policy.early.subjects.includes(d))) throw new Error('Área no permitida para 6-7.');
     const count = payload.kind === 'worksheet' ? payload.questions : (payload.count || 1);
     if (!Array.isArray(response?.items) || response.items.length !== count)
       throw new Error('El servidor no ha entregado todas las actividades solicitadas.');
-    const items = select(profile, domains, count, payload.level);
+    const items = select(profile, domains, count, payload.level, Math.random, options.accept || null);
     return { ...response, items: items.map((it, i) => ({ ...it, sourceItemId: response.items[i].id })) };
   }
   const api = { objects, pool, select, adaptResponse };

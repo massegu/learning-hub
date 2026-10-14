@@ -377,6 +377,15 @@
     }
   }
   function saveResult(s, correct, itemId, detail = "standard") {
+    const earlyAnswer=window.ContentPolicy.forProfile(profile) && currentItem?.id===itemId && s===subject;
+    if(earlyAnswer && currentItem._earlyAnswered)return 0;
+    if(earlyAnswer){
+      currentItem._earlyAnswered=true;
+      if(guidedSession?.mission){
+        profile.progress={...profile.progress,_earlyJourney:window.EarlyJourney.record(profile.progress?._earlyJourney,s,itemId)};
+        guidedSession.answered=true;
+      }
+    }
     state.totalAttempts++;
     state.session.attempts++;
     if (correct) {
@@ -518,6 +527,9 @@
     const p = profiles.find((x) => x.id === id);
     if (!p) return;
     profile = p;
+    guidedSession=null;
+    hideGuidedBar();
+    $('#appShell').classList.toggle('early-experience',Boolean(window.ContentPolicy.forProfile(p)));
     $('#exercise').classList.toggle('early-primary',Boolean(window.ContentPolicy.forProfile(p)));
     API.profileLocale = p.locale;
     currentItem = null;
@@ -548,7 +560,7 @@
     nav.innerHTML = items
       .map(
         (x, i) =>
-          `<button class="nav-item ${i === 0 ? "active" : ""}" data-section="${x[0]}" ${x[3] ? `data-subject="${x[3]}"` : ""}>${x[1]} ${x[2]}</button>`,
+          `<button class="nav-item ${i === 0 ? "active" : ""}" data-section="${x[0]}" ${x[3] ? `data-subject="${x[3]}"` : ""}>${x[1]} ${window.ContentPolicy.forProfile(profile)&&x[3]?window.EarlyJourney.areas[x[3]].title:x[2]}</button>`,
       )
       .join("");
     $$(".nav-item").forEach(
@@ -585,6 +597,7 @@
     $("#sectionTitle").textContent =
       id === "exercise" ? SUBJECT_META[subject].name : titles[id];
     if (id === "progress") renderProgress();
+    if(id==='home')renderEarlyHub();
   }
   function setupExercise() {
     const m = SUBJECT_META[subject];
@@ -592,6 +605,7 @@
     $("#exerciseHeading").textContent = m.name;
     $("#exerciseDescription").textContent = m.desc;
     if (window.ContentPolicy.forProfile(profile)) {
+      $('#exerciseHeading').textContent=window.EarlyJourney.areas[subject].title;
       const descriptions = {
         language: "Lee, escucha y juega con las palabras.",
         division: "Cuenta y resuelve problemas con cosas que conoces.",
@@ -609,6 +623,7 @@
     const isLang = subject === "language" && !window.ContentPolicy.forProfile(profile);
     $("#languageModeSwitch").classList.toggle("hidden", !isLang);
     counter = 0;
+    renderEarlyTaskGuide();
     newExercise();
   }
   async function requestForProfile(payload, targetProfile = profile) {
@@ -623,14 +638,21 @@
     if (res?.error) throw new Error(typeof res.error === 'string' ? res.error : res.error.message || 'No se pudo cargar el contenido.');
     // Server authentication, subscription checks and usage accounting happen
     // first. The browser never supplies local content after a rejected call.
-    const selected = window.EarlyContent.adaptResponse(res, payload, targetProfile);
-    selected.items = selected.items.map((item, i) => window.LocaleContent.localizeItem(
-      item, locale, payload.domains ? payload.domains[i % payload.domains.length] : payload.domain,
-    ));
-    if (window.ContentPolicy.forProfile(targetProfile)) {
-      selected.items.forEach((item, i) => window.ActivityModel.forDelivery(
-        item, targetProfile, payload.domains ? payload.domains[i % payload.domains.length] : payload.domain,
+    const worksheet=payload.kind==='worksheet';
+    const selected = window.EarlyContent.adaptResponse(res, payload, targetProfile, worksheet?{
+      accept:(item,domain)=>window.WorksheetSelection.compatible(item,targetProfile,locale,domain),
+    }:{});
+    // Worksheet candidates are localized/validated individually by the selector.
+    // One unprintable or unlocalizable remote item must not abort the whole batch.
+    if(!worksheet){
+      selected.items = selected.items.map((item, i) => window.LocaleContent.localizeItem(
+        item, locale, payload.domains ? payload.domains[i % payload.domains.length] : payload.domain,
       ));
+      if (window.ContentPolicy.forProfile(targetProfile)) {
+        selected.items.forEach((item, i) => window.ActivityModel.forDelivery(
+          item, targetProfile, payload.domains ? payload.domains[i % payload.domains.length] : payload.domain,
+        ));
+      }
     }
     if (window.ContentPolicy.forProfile(targetProfile)) {
       await API.saveProgress(targetProfile.id, targetProfile.progress);
@@ -670,6 +692,7 @@
     $("#textAnswerInput").value = "";
     $("#modelAnswer").textContent = "";
     $("#exerciseNext").classList.add("hidden");
+    if(window.ContentPolicy.forProfile(profile))$('#exerciseNext').textContent='Siguiente →';
     setLoading(true);
     try {
       const item = await requestOne("exercise");
@@ -932,6 +955,11 @@
         : `No esta vez. Respuesta: ${currentItem.a || "revisa el modelo"}`);
     f.className = "feedback " + (correct ? "ok" : "bad");
     $("#exerciseNext").classList.remove("hidden");
+    if(window.ContentPolicy.forProfile(profile)){
+      $$('#exerciseOptions button').forEach(b=>b.disabled=true);
+      $('#exerciseNext').textContent=guidedSession?.mission && guidedSession.index===guidedSession.plan.length-1?'Terminar misión →':'Siguiente →';
+      renderEarlyTaskGuide(true);
+    }
   }
   $("#exerciseNext").onclick = () => {
     if (guidedSession) {
@@ -986,6 +1014,45 @@
     $("#ageEyebrow").textContent =
       `${AGE[profile.age_band].label} · ${window.LocaleContent.labels[API.effectiveLocale(profile)]}`;
     renderHomeLevels();
+    renderEarlyHub();
+    renderEarlyTaskGuide();
+  }
+  function journeyState(){return window.EarlyJourney.normalize(profile?.progress?._earlyJourney);}
+  function openEarlyArea(domain){
+    if(!window.ContentPolicy.forProfile(profile)||!ageData().subjects.includes(domain))return;
+    guidedSession=null;hideGuidedBar();subject=domain;switchSection('exercise');setupExercise();
+  }
+  function startEarlyMission(id){
+    if(!window.ContentPolicy.forProfile(profile))return;
+    profile.progress={...profile.progress,_earlyJourney:window.EarlyJourney.start(profile.progress?._earlyJourney,id)};
+    const active=journeyState().active,mission=window.EarlyJourney.definition(active.id);
+    guidedSession={mission:active.id,plan:mission.plan,index:active.index,answered:false};
+    subject=mission.plan[active.index];persist();switchSection('exercise');updateGuidedBar();setupExercise();
+  }
+  function renderEarlyHub(){
+    const hub=$('#earlyHub'),early=Boolean(window.ContentPolicy.forProfile(profile));
+    hub.classList.toggle('hidden',!early);if(!early||!state)return;
+    const journey=window.EarlyJourney,stats=journey.stats(state.history),saved=journeyState(),active=saved.active;
+    const suggested=$('#recommendedBtn').dataset.subject;
+    const next=active?journey.definition(active.id).plan[active.index]:journey.areas[suggested]?suggested:'language';
+    const explored=Object.values(stats).filter(x=>x.attempts>=3).length;
+    hub.innerHTML=`<div class="explore-welcome card"><div><p class="eyebrow">LEARNING LAB · MIS DESCUBRIMIENTOS</p><h3>Un lugar para explorar</h3><p>Elige un área o prueba una misión corta. Vamos paso a paso.</p><button id="earlyContinue" class="primary-btn">${active?'Continuar misión':'Explorar '+journey.areas[next].title} →</button></div><div class="explore-summary"><span class="hub-illustration" aria-hidden="true">${window.StimulusArt.svg('backpack')}</span><strong>${explored} de 8 áreas exploradas</strong><span>${state.totalAttempts} actividades realizadas</span><small>Tres actividades para explorar un área.</small></div></div>
+      <div class="hub-heading"><div><p class="eyebrow">ELIGE TU CAMINO</p><h3>Mis áreas</h3></div><span>También puedes entrar desde el menú.</span></div>
+      <div class="early-area-grid">${Object.entries(journey.areas).map(([domain,area])=>`<button class="early-area-card card" data-early-area="${domain}"><span class="area-illustration" aria-hidden="true">${window.StimulusArt.svg(area.icon)}</span><span class="area-copy"><small>${area.theme}</small><strong>${area.title}</strong><span>${area.description}</span><span class="area-progress" aria-label="Primera exploración: ${stats[domain].firstExploration} de 3 actividades">${[1,2,3].map(i=>`<i class="${stats[domain].firstExploration>=i?'done':''}" aria-hidden="true"></i>`).join('')}<small>${stats[domain].attempts} actividades · nivel ${state.levels[domain]||1}</small></span></span><span aria-hidden="true">→</span></button>`).join('')}</div>
+      <div class="hub-heading"><div><p class="eyebrow">PASO A PASO</p><h3>Misiones cortas</h3></div><span>${saved.completed.length} misiones terminadas</span></div>
+      ${active?`<p class="mission-resume" role="status">${journey.definition(active.id).title}: ${active.index} de ${journey.definition(active.id).plan.length} actividades realizadas. Puedes continuar cuando quieras.</p>`:''}
+      <div class="early-mission-grid">${journey.missions.map(m=>`<div class="mission-card card"><span aria-hidden="true">${window.StimulusArt.svg(m.icon)}</span><div><h4>${m.title}</h4><p>${m.description}</p><button class="secondary-btn" data-early-mission="${m.id}" ${active&&active.id!==m.id?'disabled':''}>${active?.id===m.id?'Continuar':'Empezar'} →</button></div></div>`).join('')}</div>`;
+    $('#earlyContinue').onclick=()=>active?startEarlyMission(active.id):openEarlyArea(next);
+    $$('[data-early-area]').forEach(b=>b.onclick=()=>openEarlyArea(b.dataset.earlyArea));
+    $$('[data-early-mission]').forEach(b=>b.onclick=()=>startEarlyMission(b.dataset.earlyMission));
+  }
+  function renderEarlyTaskGuide(answered=false){
+    let guide=$('#earlyTaskGuide');
+    if(!guide){guide=document.createElement('div');guide.id='earlyTaskGuide';guide.className='early-task-guide';$('.exercise-card').prepend(guide);}
+    const early=Boolean(window.ContentPolicy.forProfile(profile));guide.classList.toggle('hidden',!early);if(!early)return;
+    const attempts=window.EarlyJourney.stats(state.history)[subject]?.attempts||0;
+    guide.innerHTML=`<button class="mini-btn" id="earlyHomeBtn">← Mis áreas</button><span class="task-steps" aria-label="Mira, responde y sigue"><span>1 · Mira</span><span>2 · Responde</span><span class="${answered?'ready':''}">3 · Sigue</span></span><small>${attempts} actividades en esta área</small>`;
+    $('#earlyHomeBtn').onclick=()=>{guidedSession=null;hideGuidedBar();switchSection('home');};
   }
   function renderHomeLevels() {
     $("#homeLevels").innerHTML = ageData()
@@ -1120,6 +1187,8 @@
       $$("#homeworkOptions input").forEach((x) => (x.checked = false));
   }
   $("#generateWorksheetsBtn").onclick = async () => {
+    const generateButton=$('#generateWorksheetsBtn');
+    if(generateButton.disabled)return;
     const worksheetProfile = profile;
     const worksheetExportProfile = {...profile, contentLocale:API.effectiveLocale(profile)};
     const worksheetLocaleRevision = API.localeRevision;
@@ -1130,29 +1199,38 @@
     const count = Number($("#worksheetCount").value),
       questions = Number($("#worksheetQuestions").value);
     $("#docxStatus").textContent = "Preparando fichas desde el banco seguro…";
+    generateButton.disabled=true;
     try {
       const all = [];
       for (let i = 0; i < count; i++) {
         if (worksheetLocaleRevision !== API.localeRevision) throw new Error('La variante de español ha cambiado. Solicita una ficha nueva.');
-        const res = await requestForProfile({
+        const payload={
           kind: "worksheet",
           domains: selected,
           questions,
           level: Math.max(...selected.map((s) => state.levels[s] || 1)),
-        }, worksheetProfile);
-        if (!Array.isArray(res.items) || res.items.length !== questions)
-          throw new Error('El banco no ha entregado una ficha completa.');
-        window.ActivityModel.validateBatch([res.items], worksheetProfile);
-        all.push(res.items || []);
+        };
+        const request=async()=>{
+          if(worksheetLocaleRevision!==API.localeRevision || worksheetProfile!==profile)throw new Error('El perfil o la variante de español ha cambiado. Solicita una ficha nueva.');
+          return requestForProfile(payload,worksheetProfile);
+        };
+        const res=await request();
+        const valid=await window.WorksheetSelection.collect({initial:res,profile:worksheetProfile,
+          country:worksheetExportProfile.contentLocale,domains:selected,count:questions,
+          fetchMore:async()=>{
+            $('#docxStatus').textContent=`Completando la ficha ${i+1}: buscamos actividades compatibles…`;
+            return request();
+          }});
+        all.push(valid.items);
       }
-      if (worksheetLocaleRevision !== API.localeRevision) throw new Error('La variante de español ha cambiado. Solicita una ficha nueva.');
+      if (worksheetLocaleRevision !== API.localeRevision || worksheetProfile!==profile) throw new Error('El perfil o la variante de español ha cambiado. Solicita una ficha nueva.');
       await window.WorksheetGenerator.generate(all, worksheetExportProfile);
       $("#docxStatus").textContent =
         `${count} ficha${count > 1 ? "s" : ""} creada${count > 1 ? "s" : ""}.`;
     } catch (e) {
       $("#docxStatus").textContent =
         e?.message || "No se pudieron generar las fichas.";
-    }
+    } finally {generateButton.disabled=false;}
   };
   function hideGuidedBar() {
     if ($("#guidedSessionBar")) $("#guidedSessionBar").classList.add("hidden");
@@ -1165,6 +1243,8 @@
     const bar = $("#guidedSessionBar");
     bar.classList.remove("hidden");
     $("#guidedSessionTitle").textContent = "Sesión guiada";
+    if(guidedSession.mission)$('#guidedSessionTitle').textContent=window.EarlyJourney.definition(guidedSession.mission).title;
+    $('#cancelGuidedSession').textContent=guidedSession.mission?'Guardar y volver al inicio':'Salir de la sesión';
     $("#guidedSessionProgress").textContent =
       `Actividad ${guidedSession.index + 1} de ${guidedSession.plan.length} · ${SUBJECT_META[guidedSession.plan[guidedSession.index]].name}`;
   }
@@ -1218,17 +1298,21 @@
   }
   function advanceGuidedSession() {
     if (!guidedSession) return newExercise();
+    if(guidedSession.mission && !guidedSession.answered)return;
+    const mission=guidedSession.mission;
     guidedSession.index++;
     if (guidedSession.index >= guidedSession.plan.length) {
       const completed = guidedSession.plan.length;
       guidedSession = null;
       hideGuidedBar();
+      if(mission){switchSection('home');renderEarlyHub();return;}
       switchSection("sessionBuilder");
       $("#sessionPlanPreview").innerHTML =
         `<div class="session-complete"><strong>Sesión completada</strong><span>${completed} actividades realizadas. Los resultados ya están guardados en Progreso.</span></div>`;
       return;
     }
     subject = guidedSession.plan[guidedSession.index];
+    guidedSession.answered=false;
     updateGuidedBar();
     setupExercise();
   }
@@ -1236,9 +1320,10 @@
     $("#startGuidedSession").onclick = startGuidedSession;
   if ($("#cancelGuidedSession"))
     $("#cancelGuidedSession").onclick = () => {
+      const mission=guidedSession?.mission;
       guidedSession = null;
       hideGuidedBar();
-      switchSection("sessionBuilder");
+      switchSection(mission?'home':'sessionBuilder');
     };
   $("#createProfileBtn").onclick = createProfile;
   $("#newProfileBtn").onclick = openProfileGate;
@@ -1257,6 +1342,8 @@
   $("#resetProgressBtn").onclick = () => {
     if (confirm("¿Reiniciar el progreso de este perfil?")) {
       state = blankState();
+      if(profile.progress)delete profile.progress._earlyJourney;
+      guidedSession=null;hideGuidedBar();
       persist();
       updateGlobalUI();
     }
@@ -1301,6 +1388,7 @@
     }),
   );
   $("#exerciseLevelSelect").onchange = async (e) => {
+    if(guidedSession?.mission){guidedSession=null;hideGuidedBar();}
     state.levels[subject] = Number(e.target.value);
     await persist();
     counter = 0;
@@ -1311,6 +1399,7 @@
   });
   window.addEventListener('lh:locale-change', () => {
     if (!profile) return;
+    if(guidedSession?.mission){guidedSession=null;hideGuidedBar();}
     ++requestGeneration;
     currentItem = null;
     for (const id of ['exerciseVisual','exerciseOptions','exerciseTopic','exerciseExplanation','exerciseFeedback','modelAnswer']) $("#"+id).textContent = '';

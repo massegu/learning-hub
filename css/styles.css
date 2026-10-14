@@ -2580,3 +2580,64 @@ body {
   #exercise.early-primary .picture-glyphs svg { width:32px; height:32px; }
   #exercise.early-primary .early-comparison td { padding:10px 8px; }
 }
+
+/* Adventure framing is an early-primary layer; older dashboards stay mature. */
+.early-experience #home > .hero,
+.early-experience #home > .dashboard-grid,
+.early-experience #home > .section-grid { display:none; }
+.early-hub { display:grid; gap:24px; }
+.explore-welcome { display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,.55fr); gap:24px; padding:30px; background:linear-gradient(120deg,#f4f8ed,#fff9e8); border-top:5px solid #79a86b; }
+.explore-welcome h3 { font-size:clamp(1.7rem,3vw,2.4rem); line-height:1.2; margin:10px 0; }
+.explore-welcome p { max-width:42ch; line-height:1.7; }
+.explore-welcome .primary-btn { margin-top:14px; min-height:52px; white-space:normal; }
+.explore-summary { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; text-align:center; }
+.hub-illustration svg { width:100px; height:100px; }
+.explore-summary small { color:var(--muted); line-height:1.5; }
+.hub-heading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+.hub-heading h3 { margin:4px 0; font-size:1.5rem; }
+.hub-heading > span { color:var(--muted); font-size:.9rem; }
+.early-area-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr)); gap:16px; }
+.early-area-card { display:flex; gap:16px; align-items:flex-start; text-align:left; padding:22px; min-width:0; color:var(--ink); background:var(--card); cursor:pointer; border:1px solid var(--line); border-top:4px solid #92b57f; font:inherit; }
+.early-area-card:hover { background:#f2f7ed; border-color:#75a174; }
+.early-area-card:focus-visible,.mission-card button:focus-visible { outline:3px solid #2f7d4a; outline-offset:3px; }
+.early-area-card:nth-child(4n+2) { border-top-color:#8bafc4; }
+.early-area-card:nth-child(4n+3) { border-top-color:#d3b36a; }
+.early-area-card:nth-child(4n) { border-top-color:#c69dba; }
+.area-illustration { flex:none; padding:8px; border-radius:16px; background:#f2f5eb; }
+.area-illustration svg { display:block; width:54px; height:54px; }
+.area-copy { display:flex; flex:1; min-width:0; flex-direction:column; gap:6px; line-height:1.5; }
+.area-copy strong { font-size:1.13rem; overflow-wrap:anywhere; }
+.area-copy > small { color:#567249; font-weight:700; }
+.area-copy > span:not(.area-progress) { color:var(--muted); font-size:.92rem; }
+.area-progress { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:6px; }
+.area-progress i { width:12px; height:12px; border-radius:50%; border:1px solid #79a174; background:white; }
+.area-progress i.done { background:#52814c; }
+.area-progress small { flex-basis:100%; color:var(--muted); font-size:.8rem; }
+.early-mission-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr)); gap:16px; }
+.mission-card { display:flex; align-items:flex-start; gap:16px; padding:22px; min-width:0; }
+.mission-card > span svg { width:42px; height:42px; }
+.mission-card h4 { font-size:1.05rem; margin:0; line-height:1.5; }
+.mission-card p { color:var(--muted); font-size:.9rem; line-height:1.6; margin:8px 0 14px; }
+.mission-card button { min-height:48px; }
+.mission-resume { padding:16px 20px; margin:0; line-height:1.7; border-radius:12px; background:#edf4e8; }
+.early-task-guide { display:flex; align-items:center; flex-wrap:wrap; gap:16px; padding-bottom:18px; margin-bottom:22px; border-bottom:1px solid var(--line); }
+.early-task-guide button { min-height:44px; }
+.early-task-guide .mini-btn,.early-experience .guided-session-bar .mini-btn { color:var(--ink); background:#eef3e8; border:1px solid #c5d5bb; font-weight:700; }
+.task-steps { display:flex; flex-wrap:wrap; gap:8px; font-size:.85rem; }
+.task-steps span { padding:7px 10px; border-radius:8px; background:#f2f4ec; }
+.task-steps .ready { background:#d9ead4; font-weight:700; }
+.early-task-guide small { color:var(--muted); margin-left:auto; }
+#exercise.early-primary #exerciseVisual { margin:24px 0 30px; }
+#exercise.early-primary #exerciseVisual .reading-passage { border:1px solid #bfd1b8; border-left:5px solid #79a46c; background:#f4f6eb; padding:24px; border-radius:16px; }
+#exercise.early-primary #exerciseOptions { padding-top:22px; border-top:2px dashed #d4dfcf; }
+#exercise.early-primary #exerciseOptions .option-btn { background:#fff; border-width:2px; }
+#exercise.early-primary #exerciseNext { min-height:52px; margin-top:18px; }
+.early-experience .streak-card { display:none; }
+@media(max-width:760px) {
+  .explore-welcome { grid-template-columns:minmax(0,1fr); padding:22px; }
+  .explore-summary { align-items:flex-start; text-align:left; }
+  .hub-illustration { display:none; }
+  .early-task-guide small { margin-left:0; flex-basis:100%; }
+  .early-area-card { padding:18px; gap:12px; }
+  #exercise.early-primary #exerciseVisual .reading-passage { padding:16px; }
+}
