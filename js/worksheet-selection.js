@@ -6,6 +6,7 @@
   const message='No hay suficientes actividades imprimibles distintas para las áreas y el nivel seleccionados. Prueba con menos ejercicios o añade otra área.';
   function checked(item,profile,country,domain){
     if(item?.domain && domain && item.domain!==domain)throw new Error('El área recibida no coincide con la solicitada.');
+    if(item?.sourceDomain && domain && item.sourceDomain!==domain)throw new Error('El área de origen no coincide con la solicitada.');
     const localized=locale.localizeItem(item,country,domain);
     if(policy.forProfile(profile))model.forDelivery(localized,profile,domain);
     const projection=model.printable(localized,profile);
@@ -29,7 +30,7 @@
       const previousCount=items.length;
       if(!Array.isArray(batch?.items))throw new Error('El banco no ha entregado una lista de actividades.');
       for(let i=0;i<batch.items.length && items.length<count;i++){
-        const candidate=batch.items[i],domain=candidate?.domain || candidate?.localization?.domain || domains[i%domains.length];
+        const candidate=batch.items[i],domain=candidate?.domain || candidate?.sourceDomain || candidate?.localization?.domain || domains[i%domains.length];
         let accepted;
         try{
           if(!domains.includes(domain))throw new Error('Área no seleccionada.');

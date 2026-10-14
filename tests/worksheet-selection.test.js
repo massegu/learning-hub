@@ -36,6 +36,15 @@ test('replacement keeps going while genuinely new compatible activities are arri
     fetchMore:async()=>{calls++;return {items:[invalid(),remote(calls+1)]};}});
   assert.equal(calls,6);assert.equal(result.items.length,7);assert.equal(result.replacementBatches,6);
 });
+test('shuffled real server worksheet domains retain their identity and English protection',async()=>{
+  const english={id:'english',sourceDomain:'english',requiresStimulus:true,scenario:'The computer is on the table.',q:'Choose the correct word.',opts:['computer','pencil'],a:'computer'};
+  const spanish={...remote(5),domain:undefined,sourceDomain:'attention'};
+  const result=await selector.collect({initial:{items:[english,spanish]},profile:{age_band:'primary'},country:'es_mx',domains:['attention','english'],count:2});
+  assert.equal(result.items[0].localization.domain,'english');
+  assert.equal(result.items[0].scenario,english.scenario);
+  assert.equal(result.items[1].localization.domain,'attention');
+  assert.equal(selector.compatible({...english,domain:'attention'},{age_band:'primary'},'es_mx','attention'),false);
+});
 test('early printable filtering precedes history commitment, redistributes empty domains and handles cycle exhaustion',()=>{
   for(const country of Object.keys(locale.labels)){
     const profile=child(),accept=(it,domain)=>domain!=='memory' && selector.compatible(it,profile,country,domain);

@@ -1,6 +1,12 @@
 # Language and school-age follow-up — 2026-10-14
 
 Branch: `fix/early-primary-stimulus-integrity`, following `a922231`.
+
+**Source follow-up:** the owner has now supplied the Edge Function. See the
+[actual source audit](edge-function-school-age-review.md) for confirmed data flow,
+30,420 generated activities, concrete corrections and remaining calibration gaps.
+The source-unavailable statements below describe the earlier client-only review.
+
 The reviewed early dashboard, seven other early areas, calibrated activity families
 and worksheet replacement/export path are preserved. This pass addresses the
 screenshots, restores Language skills and adds separate school-age presentation.

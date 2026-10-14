@@ -954,6 +954,7 @@ function socialExercise(level:number){
 
 function validateItem(item:any):boolean{
   if(!item||typeof item!=="object") return false;
+  if(String(item.type||"").startsWith("memory") && (!Array.isArray(item.memoryContent)||!item.memoryContent.length)) return false;
   if(Array.isArray(item.opts)){
     const opts=item.opts.map((x:any)=>String(x));
     if(opts.length<2 || new Set(opts).size!==opts.length) return false;
@@ -1116,6 +1117,7 @@ function contentSignature(domain:string,item:any){
   };
   const visible={
     type:item.type||"",
+    stimulus:item.stimulus||[],
     topic:item.topic||"",
     q:item.q||item.prompt||"",
     scenario:item.scenario||"",
@@ -1295,7 +1297,19 @@ function routeBand(age:string){
 function variantIndex(){ return Math.floor(Math.random()*360); }
 function pickBy<T>(arr:T[],i:number,offset=0){ return arr[(i+offset)%arr.length]; }
 function answerItem(base:any,age:string,domain:string,level:number,v:number){
-  return {...base,id:"v240-"+domain+"-"+age+"-"+level+"-"+v+"-"+crypto.randomUUID(),level,contentKey:"v240:"+age+":"+domain+":"+level+":"+v,mechanic:base.mechanic||("variant_"+domain+"_"+(v%6))};
+  const numericQuestion=["division","middleMath","teenMath"].includes(domain)&&!base.scenario&&!base.text&&!base.stimulus;
+  return {...base,...(numericQuestion?{requiresStimulus:false}:{}),id:"v240-"+domain+"-"+age+"-"+level+"-"+v+"-"+crypto.randomUUID(),level,contentKey:"v240:"+age+":"+domain+":"+level+":"+v,mechanic:base.mechanic||("variant_"+domain+"_"+(v%6))};
+}
+
+function variantGeometry(level:number,v:number){
+  const base=3+v%18,height=2+Math.floor(v/18)%12;
+  const triangle=level===3,width=triangle?base*2:base;
+  const result=level===1?2*(width+height):triangle?width*height/2:width*height;
+  const unit=level===1?"cm":"cm²",answer=String(result)+" "+unit;
+  return answerItem({type:"standard",mechanic:level===1?"geometry_perimeter":level===2?"geometry_rectangle_area":"geometry_triangle_area",
+    q:level===1?"¿Cuál es el perímetro del rectángulo?":triangle?"¿Cuál es el área del triángulo?":"¿Cuál es el área del rectángulo?",
+    stimulus:[{type:"text",text:triangle?"Triángulo: la altura es perpendicular a la base.":"Rectángulo: los lados opuestos tienen la misma longitud."},{type:"table",rows:[["Base",String(width)+" cm"],["Altura",String(height)+" cm"]]}],
+    requiresStimulus:true,opts:[answer,String(result+1)+" "+unit,String(result+2)+" "+unit,String(Math.max(0,result-1))+" "+unit],a:answer},"primary","geometry",level,v);
 }
 
 function variantMath(age:string,domain:string,level:number,v:number){
@@ -1729,15 +1743,15 @@ function matrixAttention(age:string,level:number,v:number){
   const price=(1.25+(k%9)*0.35).toFixed(2).replace(".",",")+" €";
   const items:any[]=[
     {mechanic:"att_exact_code",topic:"Atención · comparación",q:"¿Cuál coincide exactamente con "+code+"?",opts:opt4(code,code.replace("-",""),code.slice(0,-1)+String(3+(k%6)),String.fromCharCode(66+(k%20))+code.slice(1)),a:code},
-    {mechanic:"att_odd_one",topic:"Atención · elemento diferente",q:"¿Cuál es diferente?",scenario:easy?"A: ⭐    B: ⭐    C: 🌙    D: ⭐":"A: "+code+"    B: "+code+"    C: "+code.slice(0,-1)+"9    D: "+code,opts:["A","B","C","D"],a:"C"},
+    {mechanic:"att_odd_one",topic:"Atención · elemento diferente",q:"¿Cuál es diferente?",scenario:easy?"A: ⭐    B: ⭐    C: 🌙    D: ⭐":"A: "+code+"    B: "+code+"    C: "+code.slice(0,-1)+String((3+k%7)%10)+"    D: "+code,opts:["A","B","C","D"],a:"C"},
     {mechanic:"att_target_count",topic:"Atención · conteo",q:"¿Cuántas veces aparece "+(easy?"🍎":"A")+"?",scenario:easy?"🍎 🍐 🍎 🍌 🍎 🍐":"A B A C A D "+(k%2?"A":"B")+" C",opts:easy?["2","3","4","5"]:[String(3+(k%2)),String(2+(k%2)),String(4+(k%2)),String(5+(k%2))],a:easy?"3":String(3+(k%2))},
-    {mechanic:"att_double_rule",topic:"Atención · doble criterio",q:easy?"Elige el círculo azul.":"Elige la opción que es azul y tiene número par.",scenario:easy?"🔵  🟦  🔴  🟢":"A) azul-"+String(3+n)+" · B) rojo-"+String(4+n)+" · C) azul-"+String(4+n)+" · D) verde-"+String(5+n),opts:easy?["🔵","🟦","🔴","🟢"]:["A","B","C","D"],a:easy?"🔵":"C"},
+    {mechanic:"att_double_rule",topic:"Atención · doble criterio",q:easy?"Elige el círculo azul.":"Elige la opción que es azul y tiene número par.",scenario:easy?"🔵  🟦  🔴  🟢":"A) azul-"+String(3+n)+" · B) rojo-"+String(4+n)+" · C) azul-"+String(4+n)+" · D) verde-"+String(5+n),opts:easy?["🔵","🟦","🔴","🟢"]:["A","B","C","D"],a:easy?"🔵":((3+n)%2===0?"A":"C")},
     {mechanic:"att_schedule",topic:"Atención · horario",q:easy?"¿Qué actividad es a las 17:00?":"¿Qué actividad empieza a las "+times[2]+"?",scenario:easy?"16:30 merienda\n17:00 lectura\n17:30 juego":times[0]+"  Estudio\n"+times[1]+"  Descanso\n"+times[2]+"  Deporte\n"+times[3]+"  Lectura",opts:easy?["Lectura","Merienda","Juego","Deporte"]:["Estudio","Descanso","Deporte","Lectura"],a:easy?"Lectura":"Deporte"},
     {mechanic:"att_ticket_lookup",topic:"Atención funcional · billete",q:easy?"¿A qué hora sale el tren?":"¿Cuál es el asiento indicado?",scenario:easy?"TREN\nSalida: 16:20\nLlegada: 17:05":"BILLETE\nMadrid → Valencia\nSalida: "+times[k%times.length]+"\nAsiento: "+String(10+k)+"B\nCoche: "+String(2+k%5),opts:easy?["16:20","17:05","16:40","17:20"]:[String(10+k)+"B",String(11+k)+"A",String(8+k)+"C",String(10+k)+"D"],a:easy?"16:20":String(10+k)+"B"},
     {mechanic:"att_offer_lookup",topic:"Atención funcional · oferta",q:easy?"¿Qué producto cuesta "+price+"?":"¿Qué producto tiene un descuento del 20 %?",scenario:easy?"Pan: "+price+"\nLeche: 2,10 €\nFruta: 3,20 €":"OFERTAS\nPan: 1,40 €\nYogur: -20 %\nPasta: 2x1\nFruta: 3,20 €",opts:easy?["Pan","Leche","Fruta","Yogur"]:["Yogur","Pan","Pasta","Fruta"],a:easy?"Pan":"Yogur"},
     {mechanic:"att_line_departure",topic:"Atención · tabla de salidas",q:"¿Cuál es la segunda salida de la línea A?",scenario:"LÍNEA   HORA\nA       16:20\nB       16:35\nA       16:50\nC       17:05",opts:["16:50","16:20","16:35","17:05"],a:"16:50"},
     {mechanic:"att_position",topic:"Atención · posición",q:easy?"¿Qué está justo después del libro?":"¿Qué elemento ocupa la cuarta posición?",scenario:easy?"🍎     📘     🚲     ⭐":"mapa     botella     llaves     cuaderno     auriculares",opts:easy?["🚲","🍎","⭐","📘"]:["cuaderno","mapa","llaves","auriculares"],a:easy?"🚲":"cuaderno"},
-    {mechanic:"att_compare_rows",topic:"Atención · comparación",q:"¿Qué fila es exactamente igual al modelo?",scenario:"MODELO: "+code+"\nA: "+code+"\nB: "+code.replace("-","")+"\nC: "+code.slice(0,-1)+"8\nD: "+String.fromCharCode(66+k%20)+code.slice(1),opts:["A","B","C","D"],a:"A"},
+    {mechanic:"att_compare_rows",topic:"Atención · comparación",q:"¿Qué fila es exactamente igual al modelo?",scenario:"MODELO: "+code+"\nA: "+code+"\nB: "+code.replace("-","")+"\nC: "+code.slice(0,-1)+String((3+k%7)%10)+"\nD: "+String.fromCharCode(66+k%20)+code.slice(1),opts:["A","B","C","D"],a:"A"},
     {mechanic:"att_instruction",topic:"Atención · seguimiento de consigna",q:easy?"Elige solo el medio de transporte.":"Sigue la regla actual: selecciona un número impar.",scenario:easy?"📘     🚲     🍎     🎧":"4       8       7       2",opts:easy?["📘","🚲","🍎","🎧"]:["4","8","7","2"],a:easy?"🚲":"7"},
     {mechanic:"att_relevant_info",topic:"Atención · información relevante",q:easy?"Necesitas lápiz y cuaderno. ¿Qué puedes dejar?":"¿Qué dato NO necesitas para llegar puntual?",scenario:easy?"lápiz · cuaderno · pelota":"Hora de salida · duración del trayecto · posibles retrasos · color de la camiseta",opts:easy?["Pelota","Lápiz","Cuaderno","Nada"]:["Color de la camiseta","Hora de salida","Duración","Retrasos"],a:easy?"Pelota":"Color de la camiseta"}
   ];
@@ -1842,13 +1856,13 @@ function matrixReasoning(age:string,level:number,v:number){
   const a=2+(k%7), b=3+((k*2)%8);
   const mc=(topic:string,q:string,a1:string,b1:string,c1:string,d1:string,mech:string,scenario="")=>answerItem({topic:"Razonamiento · "+topic,q,scenario,opts:opt4(a1,b1,c1,d1),a:a1,mechanic:mech},age,"speedReasoning",level,v);
   const items=[
-    ()=>mc("serie","¿Qué número sigue?",easy?"8":junior?String(10+a):String(a+12),easy?"7":String(a+9),easy?"9":String(a+11),easy?"10":String(a+13),"rea_series",easy?"2 · 4 · 6 · __":junior?String(a)+" · "+String(a+2)+" · "+String(a+4)+" · "+String(a+6)+" · __":String(a)+" · "+String(a+3)+" · "+String(a+6)+" · "+String(a+9)+" · __"),
-    ()=>mc("comparación","¿Qué número es mayor?",easy?"7":String(Math.max(a,b)),easy?"4":String(Math.min(a,b)),"Son iguales","No se sabe","rea_compare",easy?"4       7":String(a)+"       "+String(b)),
+    ()=>mc("serie","¿Qué número sigue?",easy?"8":junior?String(a+8):String(a+12),easy?"7":String(a+9),easy?"9":String(a+11),easy?"10":String(a+13),"rea_series",easy?"2 · 4 · 6 · __":junior?String(a)+" · "+String(a+2)+" · "+String(a+4)+" · "+String(a+6)+" · __":String(a)+" · "+String(a+3)+" · "+String(a+6)+" · "+String(a+9)+" · __"),
+    ()=>mc("comparación","¿Qué número es mayor?",easy?"7":(a===b?"Son iguales":String(Math.max(a,b))),easy?"4":String(Math.min(a,b)),a===b?String(a+1):"Son iguales","No se sabe","rea_compare",easy?"4       7":String(a)+"       "+String(b)),
     ()=>mc("cálculo","¿Cuál es el resultado?",String(a+b),String(a+b+1),String(a+b-1),String(a+b+2),"rea_calc",String(a)+" + "+String(b)),
-    ()=>mc("clasificación","¿Cuál NO pertenece al grupo?",easy?"🚲":"triángulo",easy?"🍎":"cuadrado",easy?"🍐":"círculo",easy?"🍌":"rectángulo","rea_classify"),
-    ()=>mc("patrón","¿Qué elemento sigue?",easy?"🔴":junior?"▲":"B",easy?"🔵":junior?"●":"A",easy?"🟢":junior?"■":"C",easy?"⭐":junior?"◆":"D","rea_pattern",easy?"🔴 🔵 🔴 🔵 __":junior?"▲ ● ▲ ● ▲ __":"A B A B A __"),
+    ()=>mc("clasificación",easy?"¿Cuál no es una fruta?":"¿Cuál tiene tres lados?",easy?"🚲":"triángulo",easy?"🍎":"cuadrado",easy?"🍐":"círculo",easy?"🍌":"rectángulo","rea_classify"),
+    ()=>mc("patrón","¿Qué elemento sigue?",easy?"🔴":junior?"●":"B",easy?"🔵":junior?"▲":"A",easy?"🟢":junior?"■":"C",easy?"⭐":junior?"◆":"D","rea_pattern",easy?"🔴 🔵 🔴 🔵 __":junior?"▲ ● ▲ ● ▲ __":"A B A B A __"),
     ()=>mc("orden","¿Qué opción completa correctamente?",easy?"4":String(a+1),easy?"2":String(a),easy?"6":String(a+2),easy?"7":String(a+3),"rea_order",easy?"3 · __ · 5":String(a)+" · __ · "+String(a+2)),
-    ()=>mc("cantidad","¿Dónde hay más?",easy?"B":String(Math.max(a,b)),easy?"A":String(Math.min(a,b)),"Hay lo mismo","No se sabe","rea_quantity",easy?"A: ⭐⭐    B: ⭐⭐⭐⭐":String(a)+" frente a "+String(b)),
+    ()=>mc("cantidad","¿Dónde hay más?",easy?"B":(a===b?"Hay lo mismo":String(Math.max(a,b))),easy?"A":String(Math.min(a,b)),a===b?String(a+1):"Hay lo mismo","No se sabe","rea_quantity",easy?"A: ⭐⭐    B: ⭐⭐⭐⭐":String(a)+" frente a "+String(b)),
     ()=>mc("analogía",easy?"Pájaro es a volar como pez es a…":"Libro es a leer como música es a…",easy?"nadar":"escuchar",easy?"correr":"dibujar",easy?"leer":"correr",easy?"saltar":"cocinar","rea_analogy"),
     ()=>mc("tiempo",easy?"Si son las 5 y pasa una hora, ¿qué hora será?":"Empiezas a las 17:00 y pasan 35 minutos. ¿Qué hora es?",easy?"6":"17:35",easy?"5":"17:25",easy?"7":"17:45",easy?"4":"18:00","rea_time"),
     ()=>mc("reparto",easy?"Hay 6 pegatinas para 2 niños. ¿Cuántas recibe cada uno?":"Repartes 24 cartas entre 6 personas. ¿Cuántas recibe cada una?",easy?"3":"4",easy?"2":"3",easy?"4":"5",easy?"6":"6","rea_share"),
@@ -2201,6 +2215,8 @@ function variantExercise(age:string,domain:string,level:number){
   else if(["attention","memory","speedReasoning","literacy"].includes(domain)) max=360;
   const v=Math.floor(Math.random()*max);
 
+  if(domain==="geometry"&&age==="primary")return variantGeometry(level,v);
+
   if(["division","geometry","middleMath","teenMath"].includes(domain)) return variantMath(age,domain,level,v);
   if(["language","middleLanguage","teenLanguage"].includes(domain)) return age==="early"?matrixLanguage20Early(age,domain,level,v):matrixLanguage18(age,domain,level,v);
   if(["reading","middleReading"].includes(domain)) return variantReading(age,domain,level,v);
@@ -2217,20 +2233,8 @@ function variantExercise(age:string,domain:string,level:number){
 
 
 function ensureWorksheetMemoryCoherence(item:any){
-  if(!item || !String(item.type||"").startsWith("memory")) return item;
-  const q=String(item.memoryQuestion||item.q||"").toLowerCase();
-  const isRecognition=q.includes("sí estaba")||q.includes("estaba en la lista")||q.includes("qué elemento estaba")||q.includes("qué objeto estaba");
-  if(!isRecognition || item.a===undefined) return item;
-  const answer=String(item.a);
-  item.memoryContent=Array.isArray(item.memoryContent)?structuredClone(item.memoryContent):[];
-  const hay=item.memoryContent.some((x:any)=>{
-    const text=typeof x==="string"?x:[x?.person,x?.detail,x?.label,x?.value].filter(Boolean).join(" ");
-    return String(text).toLowerCase().includes(answer.toLowerCase());
-  });
-  if(!hay){
-    const icon=MATRIX_OBJ_ICONS[answer.toLowerCase()]||"book";
-    item.memoryContent.unshift({icon,detail:answer});
-  }
+  // Never manufacture a fact from the supplied answer. Invalid memory is
+  // rejected by validateItem and the client printable gate.
   return item;
 }
 
@@ -2272,6 +2276,9 @@ Deno.serve(async (req:Request)=>{
   const route=profile.progress?.ageRoute;
   const age=(route==="early"||route==="junior")?route:profile.age_band;
   const level=Math.max(1,Math.min(3,Number(body.level||1)));
+  const requestedDomains=kind==="worksheet" ? (Array.isArray(body.domains)&&body.domains.length?body.domains:SUBJECTS[age]) : [body.domain];
+  if(!SUBJECTS[age] || !Number.isFinite(level) || (kind!=="game" && (!Array.isArray(requestedDomains)||!requestedDomains.length||requestedDomains.some((d:any)=>!SUBJECTS[age].includes(d)))))
+    return new Response(JSON.stringify({error:"Área o nivel no permitido para este perfil."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
   let items:any[]=[];
   if(kind==="game"){
     const excludeTypes=Array.isArray(body.exclude_types)?body.exclude_types.slice(-2):[];
@@ -2309,8 +2316,8 @@ Deno.serve(async (req:Request)=>{
         if(!fallback) fallback=cand;
         if(!recent.has(sig)&&!localSeen.has(sig)){ chosen=cand; break; }
       }
-      const item=chosen||fallback||normalizeItem(ensureWorksheetMemoryCoherence(worksheetTask(age,domain,level)));
-      if(!item) continue;
+      const item=chosen || (fallback&&!localSeen.has(contentSignature(domain,fallback))?fallback:null);
+      if(!item) return new Response(JSON.stringify({error:"No hay suficientes actividades distintas para esta ficha. Reduce el número de ejercicios o añade otra área."}),{status:422,headers:{...corsHeaders,"Content-Type":"application/json"}});
       const sig=contentSignature(domain,item);
       localSeen.add(sig);
       items.push(item);
