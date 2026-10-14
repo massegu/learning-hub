@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 (globalThis as any).window = globalThis as any;
+await import("./junior.js");
 await import("./data/primary.js");
 await import("./data/middle.js");
 await import("./data/teen.js");
@@ -2207,7 +2208,8 @@ function matrixApplied20(age:string,level:number,v:number){
     opts:easy?opt4("El parque","La estación","La tienda","No se sabe"):opt4("La presencia de escaleras además de la distancia","Solo el color del mapa","Solo el nombre de la calle","Nada"),a:easy?"El parque":"La presencia de escaleras además de la distancia"},age,"applied",level,v);
 }
 
-function variantExercise(age:string,domain:string,level:number){
+function variantExercise(age:string,domain:string,level:number,subdomain:string|null=null){
+  if(age==="junior")return {...(globalThis as any).JuniorContent.generate(domain,level,subdomain),id:"junior-"+crypto.randomUUID()};
   let max=300;
   if(domain==="social") max=360;
   else if(["language","middleLanguage","teenLanguage"].includes(domain)) max=age==="early"?400:360;
@@ -2277,8 +2279,10 @@ Deno.serve(async (req:Request)=>{
   const age=(route==="early"||route==="junior")?route:profile.age_band;
   const level=Math.max(1,Math.min(3,Number(body.level||1)));
   const requestedDomains=kind==="worksheet" ? (Array.isArray(body.domains)&&body.domains.length?body.domains:SUBJECTS[age]) : [body.domain];
-  if(!SUBJECTS[age] || !Number.isFinite(level) || (kind!=="game" && (!Array.isArray(requestedDomains)||!requestedDomains.length||requestedDomains.some((d:any)=>!SUBJECTS[age].includes(d)))))
+  if(!SUBJECTS[age] || !Number.isInteger(level) || (kind!=="game" && (!Array.isArray(requestedDomains)||!requestedDomains.length||requestedDomains.some((d:any)=>!SUBJECTS[age].includes(d)))))
     return new Response(JSON.stringify({error:"Área o nivel no permitido para este perfil."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
+  if(age==="junior"&&kind==="exercise"&&body.domain==="language"&&body.subdomain&&!["grammar","spelling","writing"].includes(body.subdomain))
+    return new Response(JSON.stringify({error:"Habilidad de Lenguaje no válida."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
   let items:any[]=[];
   if(kind==="game"){
     const excludeTypes=Array.isArray(body.exclude_types)?body.exclude_types.slice(-2):[];
@@ -2313,7 +2317,7 @@ Deno.serve(async (req:Request)=>{
         const cand=normalizeItem(ensureWorksheetMemoryCoherence(worksheetTask(age,domain,level)));
         if(!validateItem(cand)) continue;
         const sig=contentSignature(domain,cand);
-        if(!fallback) fallback=cand;
+        if(!fallback&&!localSeen.has(sig)) fallback=cand;
         if(!recent.has(sig)&&!localSeen.has(sig)){ chosen=cand; break; }
       }
       const item=chosen || (fallback&&!localSeen.has(contentSignature(domain,fallback))?fallback:null);
@@ -2347,9 +2351,9 @@ Deno.serve(async (req:Request)=>{
       if(row.mechanic_signature) recentEntries.push(row.mechanic_signature);
     }
     if(domain==="attention"){
-      items=generatedItems(domain,n,recentEntries,()=>variantExercise(age,domain,level));
+      items=generatedItems(domain,n,recentEntries,()=>variantExercise(age,domain,level,subdomain));
     } else if(["executive","memory","speedReasoning","applied","social","language","middleLanguage","teenLanguage","division","geometry","middleMath","teenMath","reading","middleReading","english","literacy"].includes(domain)){
-      items=generatedItems(domain,n,recentEntries,()=>variantExercise(age,domain,level));
+      items=generatedItems(domain,n,recentEntries,()=>variantExercise(age,domain,level,subdomain));
     } else {
       const seen=new Set(recentEntries);
       const pool=academicPool(age,domain,subdomain,level);

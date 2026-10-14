@@ -28,3 +28,10 @@ credentials, database policies, remote deployment parity or full editorial quali
 Browser sample rejections are reported as findings, not as a passing curriculum.
 
 See [the detailed review](../../../docs/edge-function-school-age-review.md).
+
+The junior follow-up adds a self-contained `junior.js` bank for the saved 8–10
+route. It is loaded by the real handler and offline harness. Its browser bridge
+(`python3 tests/browser-junior.py`) runs only against a local fake account/database.
+See [the junior content review](../../../docs/junior-content-review.md). The original
+five legacy imports remain unresolved; the whole package is still not deployable
+from this checkout alone.

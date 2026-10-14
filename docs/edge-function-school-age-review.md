@@ -1,5 +1,9 @@
 # Supplied Edge Function: school-age integration review — 2026-10-14
 
+**Later junior follow-up:** [8–10 authored content review](junior-content-review.md)
+replaces the junior dispatch described below. Baseline counts/findings remain a
+record of the supplied source; 10–12/13–15 limitations still apply.
+
 Branch: `fix/early-primary-stimulus-integrity`. The owner supplied the complete
 single TypeScript file for `request-learning-content`; baseline commit `fa71e09`
 records it. This review replaces the earlier assumption that the implementation

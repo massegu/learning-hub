@@ -37,7 +37,7 @@ test('geometry is geometry with real level-dependent calculations, and standalon
   assert.doesNotThrow(()=>model.printable(api.variantMath('junior','division',1,0),{age_band:'primary',progress:{ageRoute:'junior'}}));
 });
 function authorized(){
-  const {context}=load(),writes=[];
+  const {context}=load(),writes=[],seenRows=[];
   const profile={id:'p',account_id:'u',age_band:'primary',progress:{ageRoute:'junior'}};
   const account={subscription_status:'active',content_locale:'es_es'},usage={used:0};
   const admin={auth:{getUser:async()=>({data:{user:{id:'u'}}})},from(table){
@@ -46,12 +46,12 @@ function authorized(){
       insert(v){operation='insert';values=v;return q},update(v){operation='update';values=v;return q},upsert(v){operation='upsert';values=v;return q},
       single(){return Promise.resolve(result())},maybeSingle(){return Promise.resolve(result())},then(a,b){return Promise.resolve(result()).then(a,b)}};
     function result(){if(operation){writes.push({table,operation,values});return {data:null,error:null};}
-      return {data:table==='learner_profiles'?profile:table==='accounts'?account:table==='content_usage'?usage:[],error:null};}
+      return {data:table==='learner_profiles'?profile:table==='accounts'?account:table==='content_usage'?usage:table==='content_seen'?seenRows:[],error:null};}
     return q;
   }};
   context.createClient=()=>admin;context.Deno.env.get=()=> 'offline-test-placeholder';
   const request=body=>context.handler(new Request('https://offline.invalid/function',{method:'POST',headers:{Authorization:'Bearer mock','Content-Type':'application/json'},body:JSON.stringify({profile_id:'p',kind:'exercise',level:1,...body})}));
-  return {context,profile,account,usage,writes,request};
+  return {context,profile,account,usage,writes,seenRows,request};
 }
 test('real handler enforces saved age-route domains, ownership and quota without any production calls',async()=>{
   const h=authorized();
@@ -64,7 +64,33 @@ test('real handler enforces saved age-route domains, ownership and quota without
 });
 test('real worksheet handler reports exhaustion instead of committing a within-sheet duplicate',async()=>{
   const h=authorized();
+  h.profile.progress.ageRoute='primary';
   const response=await h.request({kind:'worksheet',domains:['reading'],questions:20});
   assert.equal(response.status,422);assert.match((await response.json()).error,/suficientes actividades distintas/);
   assert.equal(h.writes.length,0);
+});
+test('actual authenticated junior handler routes skills and produces complete mixed worksheets',async()=>{
+  const h=authorized(),model=require('../js/activity-model');
+  for(const level of [1,2,3])for(const subdomain of ['grammar','spelling','writing']){
+    const response=await h.request({domain:'language',subdomain,level,count:5});assert.equal(response.status,200);
+    const data=await response.json();assert.equal(data.items.length,5);
+    assert.ok(data.items.every(it=>it.languageFocus===subdomain&&it.juniorProfile.level===level));
+    for(const it of data.items)assert.doesNotThrow(()=>model.printable(it,h.profile));
+  }
+  let response=await h.request({domain:'language',subdomain:'unknown'});assert.equal(response.status,400);
+  response=await h.request({domain:'language',level:1.5});assert.equal(response.status,400);
+  for(const level of [1,2,3]){
+    response=await h.request({kind:'worksheet',domains:['language','reading','division','attention','memory','executive','speedReasoning','applied'],level,questions:20});
+    assert.equal(response.status,200);const data=await response.json();assert.equal(data.items.length,20);
+    for(const it of data.items){assert.equal(it.sourceDomain,it.domain);assert.doesNotThrow(()=>model.printable(it,h.profile));}
+  }
+});
+test('worksheet exhaustion of recent history still uses distinct valid candidates within a sheet',async()=>{
+  const h=authorized(),bank=require('../supabase/functions/request-learning-content/junior'),{api}=load();
+  const pool=bank.pool('reading',1).slice(0,6);let i=0;
+  h.context.JuniorContent.generate=()=>structuredClone(pool[(i++)%pool.length]);
+  h.seenRows.push(...pool.map(it=>({domain:'worksheet:reading',item_signature:api.contentSignature('reading',it)})));
+  const response=await h.request({kind:'worksheet',domains:['reading'],questions:6});
+  assert.equal(response.status,200);const data=await response.json();
+  assert.equal(new Set(data.items.map(it=>api.contentSignature('reading',it))).size,6);
 });

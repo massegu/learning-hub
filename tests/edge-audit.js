@@ -8,9 +8,10 @@ for(const age of ['junior','primary','middle']){
   for(const domain of ['language','reading','division','geometry','attention','memory','executive','applied','speedReasoning','literacy','english']){
     if(!api.SUBJECTS[age].includes(domain)&& !(age==='middle'&&['language','reading','division'].includes(domain)))continue;
     const actual=age==='middle'?({language:'middleLanguage',reading:'middleReading',division:'middleMath'}[domain]||domain):domain;
-    const levels=[1,2,3].map(level=>Array.from({length:['executive','applied'].includes(domain)?400:['reading','division','geometry','english'].includes(domain)?300:360},(_,v)=>{
+    const levels=[1,2,3].map(level=>Array.from({length:age==='junior'&&api.junior?api.junior.pool(domain,level).length:['executive','applied'].includes(domain)?400:['reading','division','geometry','english'].includes(domain)?300:360},(_,v)=>{
       let it;
-      if(factories[domain])it=domain==='language'?factories[domain](age,actual,level,v):factories[domain](age,level,v);
+      if(age==='junior'&&api.junior)it=api.junior.pool(domain,level)[v];
+      else if(factories[domain])it=domain==='language'?factories[domain](age,actual,level,v):factories[domain](age,level,v);
       else it=domain==='reading'?api.variantReading(age,actual,level,v):domain==='english'?api.variantEnglish(age,actual,level,v):domain==='geometry'&&api.geometry?api.geometry(level,v):api.variantMath(age,actual,level,v);
       return {it,signature:visible(it)};
     }));
