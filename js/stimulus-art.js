@@ -29,6 +29,15 @@
   drawings.umbrella='<path d="M5 30a27 27 0 0 1 54 0Q50 23 41 30Q32 23 23 30Q14 23 5 30Z" fill="#f1ba76" stroke="#173326" stroke-width="3"/><path d="M32 4v48q0 10-9 7" fill="none" stroke="#173326" stroke-width="3" stroke-linecap="round"/>';
   drawings.pot='<path d="m14 37 5 22h26l5-22Z" fill="#dda17c" stroke="#173326" stroke-width="3"/><path d="M11 32h42v7H11Z" fill="#ebbb97" stroke="#173326" stroke-width="3"/><path d="M32 32V12q-18-16-18 2 2 14 18 10Q45 2 51 12q3 16-19 17" fill="#9dd18e" stroke="#173326" stroke-width="3"/>';
   drawings.glass='<path d="m14 7 5 50h26l5-50Z" fill="white" stroke="#173326" stroke-width="3"/><path d="m18 29 3 25h22l3-25Z" fill="#a1d9ec"/>';
+  drawings.flower='<path d="M32 30v31m0-14q-19-16-18-2 5 11 18 7m0-5q19-16 18-2-5 11-18 7" fill="#91c680" stroke="#173326" stroke-width="3"/><g fill="#efb2ce" stroke="#173326" stroke-width="2"><ellipse cx="32" cy="12" rx="8" ry="10"/><ellipse cx="18" cy="23" rx="10" ry="8"/><ellipse cx="46" cy="23" rx="10" ry="8"/><ellipse cx="24" cy="34" rx="8" ry="10"/><ellipse cx="40" cy="34" rx="8" ry="10"/></g><circle cx="32" cy="24" r="9" fill="#f4d36c" stroke="#173326" stroke-width="2"/>';
+  drawings.shoe='<path d="M8 20h16q3 16 25 15l8 10v9H7V31Z" fill="#e9b47e" stroke="#173326" stroke-width="3"/><path d="M8 46h47m-27-16 8-6m0 12 8-6" fill="none" stroke="#173326" stroke-width="3"/>';
+  drawings.cat='<path d="m12 23 1-18 16 11h7L51 5l1 18q11 27-20 33Q2 49 12 23Z" fill="#eab889" stroke="#173326" stroke-width="3"/><path d="m27 37 5 5 5-5M18 37 4 33m14 11L4 46m42-9 14-4m-14 11 14 2" fill="none" stroke="#173326" stroke-width="2"/><circle cx="23" cy="28" r="3"/><circle cx="42" cy="28" r="3"/>';
+  drawings.dog='<ellipse cx="32" cy="32" rx="21" ry="24" fill="#deb185" stroke="#173326" stroke-width="3"/><path d="M15 10Q0 10 7 39l11-10m29-19q15 0 10 29l-11-10" fill="#a37651" stroke="#173326" stroke-width="3"/><circle cx="23" cy="29" r="3"/><circle cx="41" cy="29" r="3"/><path d="m26 40 6 6 6-6M32 46v5" fill="#173326" stroke="#173326" stroke-width="2"/>';
+  drawings.rabbit='<ellipse cx="22" cy="17" rx="6" ry="15" fill="#dfd3cf" stroke="#173326" stroke-width="2"/><ellipse cx="42" cy="17" rx="6" ry="15" fill="#dfd3cf" stroke="#173326" stroke-width="2"/><ellipse cx="32" cy="42" rx="22" ry="19" fill="#dfd3cf" stroke="#173326" stroke-width="3"/><circle cx="22" cy="39" r="3"/><circle cx="42" cy="39" r="3"/><path d="m28 48 4 4 4-4" fill="#e7a5b9" stroke="#173326" stroke-width="2"/>';
+  drawings.bird='<path d="M12 34q-1-22 21-24 23 2 16 28-4 21-23 14L8 59l6-15Z" fill="#96c9e1" stroke="#173326" stroke-width="3"/><path d="m48 20 13 8-13 4M22 25q22-5 15 18-18 4-15-18Z" fill="#f4d36c" stroke="#173326" stroke-width="2"/><circle cx="40" cy="19" r="3"/>';
+  drawings.fish='<path d="M14 32 3 19v26l11-13q20-32 44 0-24 32-44 0Z" fill="#edbd7f" stroke="#173326" stroke-width="3"/><circle cx="46" cy="29" r="3"/><path d="M37 21q-7 11 0 23m-12-12 8-6v12Z" fill="#e89a73" stroke="#173326" stroke-width="2"/>';
+  drawings.drawing=drawings.paper+'<path d="m23 33 9-8 9 8v12H23Zm9-8v20" fill="#f0c883" stroke="#173326" stroke-width="2"/>';
+  drawings.person='<circle cx="32" cy="19" r="12" fill="#f4d6ae" stroke="#173326" stroke-width="3"/><path d="M14 57V43q0-14 18-14t18 14v14Z" fill="#a6cbb6" stroke="#173326" stroke-width="3"/>';
   drawings['bottle-full-closed']=drawings.bottle;
   drawings['bottle-empty-closed']=drawings.bottle.replace('fill="#9ad6ed"','fill="white"');
   drawings['bottle-full-open']=drawings.bottle.replace('<rect x="22" y="6" width="20" height="9" rx="2" fill="#568ecb" stroke="#173326" stroke-width="3"/>','<rect x="48" y="49" width="12" height="8" rx="2" fill="#568ecb" stroke="#173326" stroke-width="2"/>');
@@ -38,10 +47,11 @@
   function forLabel(value,senses={}) {
     const label=String(value).normalize('NFC').trim().toLocaleLowerCase('es').replace(/^(?:el|la|un|una)\s+/,'');
     if(glyphs[label])return glyphs[label];
+    if(senses.subject==='Personas'&&['ana','leo','mar','sol'].includes(label))return 'person';
     if(senses.subject==='Botellas')return {'llena · cerrada':'bottle-full-closed','vacía · cerrada':'bottle-empty-closed','llena · abierta':'bottle-full-open'}[label] || null;
     if(senses.subject==='Globos')return {rojo:'balloon-red',azul:'balloon-blue',verde:'balloon-green',amarillo:'balloon-yellow'}[label]||null;
     if(senses.banana && ['banana','plátano','banano','guineo'].includes(label))return 'banana';
-    const contextObjects={árbol:'tree',paraguas:'umbrella',maceta:'pot',vaso:'glass'};
+    const contextObjects={árbol:'tree',paraguas:'umbrella',maceta:'pot',vaso:'glass',flor:'flower',zapato:'shoe',gato:'cat',perro:'dog',conejo:'rabbit',pájaro:'bird',pez:'fish',dibujo:'drawing'};
     return contextObjects[label] || Object.keys(aliases).find(key=>aliases[key].includes(label)) || null;
   }
   function svg(key){if(!drawings[key])throw new Error('Ilustración desconocida.');return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true" focusable="false">${drawings[key]}</svg>`;}

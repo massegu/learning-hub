@@ -179,7 +179,9 @@
   };
   const refinements=root.EarlyRefinements || (typeof require==='function'&&require('./early-refinements.js'));
   refinements.apply(families,{choice,order,text,list,table,objects,shapes,colors});
-  function pool(domain, level = 1) {
+  const language=root.EarlyLanguage || (typeof require==='function'&&require('./early-language.js'));
+  language.apply(families,{choice,order,text});
+  function pool(domain, level = 1, subdomain = null) {
     const bandLevel = Math.max(1, Math.min(3, Number(level) || 1));
     if (!families[domain]) throw new Error('Área no permitida para 6-7.');
     const result = [];
@@ -206,6 +208,7 @@
         item.semanticKey = `early-sem-v1-${domain}-${family}-${(semanticHash >>> 0).toString(16)}`;
         item.domain = domain;
         item.level = bandLevel;
+        if(domain==='language'&&!item.languageFocus)item.languageFocus=family===1?'writing':'grammar';
         item.ageProfile = { id: 'early', revision: 1, context, mechanic, family: `${domain}-${family}` };
         item.selectionWeight=({language:{1:.55,3:.55},reading:{0:.55,4:.55},division:{1:.65,2:.65}})[domain]?.[family] || 1;
         policy.validateEarly(item);
@@ -214,19 +217,20 @@
     });
     const seen = new Set();
     return result.filter(item => {
+      if(domain==='language'&&subdomain && item.languageFocus!==subdomain)return false;
       const signature = JSON.stringify([item.type, item.q, item.stimulus, item.opts, item.tokens, item.memoryQuestion]);
       if (seen.has(signature)) return false;
       seen.add(signature); return true;
     });
   }
-  function select(profile, domains, count, level = 1, random = Math.random, accept = null) {
+  function select(profile, domains, count, level = 1, random = Math.random, accept = null, subdomain = null) {
     const history = profile.progress?._earlyDelivery || { ids: [], mechanics: [] };
     const used = new Set(history.ids);
     const usedKeys = new Set(history.keys || []);
     const recent = [...history.mechanics];
     const recentFamilies = [...(history.families || [])];
     const chosen = [];
-    const pools = new Map(domains.map(d => [d, pool(d, level).filter(it=>!accept || accept(it,d))]));
+    const pools = new Map(domains.map(d => [d, pool(d, level,subdomain).filter(it=>!accept || accept(it,d))]));
     if(accept && new Set([...pools.values()].flat().map(it=>it.semanticKey)).size<count)
       throw new Error('No hay suficientes actividades imprimibles distintas para las áreas y el nivel seleccionados. Prueba con menos ejercicios o añade otra área.');
     // Upgrade existing delivery histories without treating name-only variants
@@ -274,7 +278,7 @@
     const count = payload.kind === 'worksheet' ? payload.questions : (payload.count || 1);
     if (!Array.isArray(response?.items) || response.items.length !== count)
       throw new Error('El servidor no ha entregado todas las actividades solicitadas.');
-    const items = select(profile, domains, count, payload.level, Math.random, options.accept || null);
+    const items = select(profile, domains, count, payload.level, Math.random, options.accept || null, payload.subdomain || null);
     return { ...response, items: items.map((it, i) => ({ ...it, sourceItemId: response.items[i].id })) };
   }
   const api = { objects, pool, select, adaptResponse };

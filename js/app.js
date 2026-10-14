@@ -343,12 +343,21 @@
     );
   }
   function ageData() {
+    if(window.AgeStages.route(profile)==='junior')return {...AGE.primary,label:'8-10 años',subjects:window.ContentPolicy.early.subjects};
     return window.ContentPolicy.forProfile(profile) || AGE[profile.age_band];
   }
   function recent(s, n = 10) {
     return state.history.filter((x) => x.subject === s).slice(-n);
   }
   function recalcLevel(s) {
+    if(window.AgeStages.forProfile(profile)){
+      const checkpoints=profile.progress?._levelCheckpoints || {};
+      const checkpoint=checkpoints[s] || {attempt:state.totalAttempts-1};
+      const results=state.history.filter(x=>x.subject===s && x.attemptNumber>checkpoint.attempt);
+      const level=state.levels[s]||1,next=window.AgeStages.next(level,results,profile);
+      checkpoints[s]=next!==level?{attempt:state.totalAttempts}:checkpoint;
+      profile.progress={...profile.progress,_levelCheckpoints:checkpoints};state.levels[s]=next;return;
+    }
     const r = recent(s, 10);
     if (r.length < 6) return;
     const acc = r.filter((x) => x.correct).length / r.length;
@@ -377,12 +386,13 @@
     }
   }
   function saveResult(s, correct, itemId, detail = "standard") {
-    const earlyAnswer=window.ContentPolicy.forProfile(profile) && currentItem?.id===itemId && s===subject;
+    const earlyAnswer=(window.ContentPolicy.forProfile(profile)||window.AgeStages.forProfile(profile)) && currentItem?.id===itemId && s===subject;
     if(earlyAnswer && currentItem._earlyAnswered)return 0;
     if(earlyAnswer){
       currentItem._earlyAnswered=true;
       if(guidedSession?.mission){
-        profile.progress={...profile.progress,_earlyJourney:window.EarlyJourney.record(profile.progress?._earlyJourney,s,itemId)};
+        if(guidedSession.school)profile.progress={...profile.progress,_schoolJourney:window.SchoolJourney.record(profile.progress?._schoolJourney,s,itemId)};
+        else profile.progress={...profile.progress,_earlyJourney:window.EarlyJourney.record(profile.progress?._earlyJourney,s,itemId)};
         guidedSession.answered=true;
       }
     }
@@ -398,6 +408,7 @@
       : 0;
     state.scores[s] = (state.scores[s] || 0) + pts;
     const row = {
+      attemptNumber:state.totalAttempts,
       ts: new Date().toISOString(),
       sessionId: state.session.id,
       sessionStartedAt: state.session.startedAt,
@@ -530,6 +541,8 @@
     guidedSession=null;
     hideGuidedBar();
     $('#appShell').classList.toggle('early-experience',Boolean(window.ContentPolicy.forProfile(p)));
+    $('#appShell').classList.toggle('school-experience',Boolean(window.SchoolJourney.forProfile(p)));
+    $('#appShell').dataset.ageTheme=window.SchoolJourney.forProfile(p)?.theme || '';
     $('#exercise').classList.toggle('early-primary',Boolean(window.ContentPolicy.forProfile(p)));
     API.profileLocale = p.locale;
     currentItem = null;
@@ -598,6 +611,7 @@
       id === "exercise" ? SUBJECT_META[subject].name : titles[id];
     if (id === "progress") renderProgress();
     if(id==='home')renderEarlyHub();
+    if(id==='home')renderSchoolHub();
   }
   function setupExercise() {
     const m = SUBJECT_META[subject];
@@ -607,7 +621,7 @@
     if (window.ContentPolicy.forProfile(profile)) {
       $('#exerciseHeading').textContent=window.EarlyJourney.areas[subject].title;
       const descriptions = {
-        language: "Lee, escucha y juega con las palabras.",
+        language: "Juega con las palabras, las letras y las frases.",
         division: "Cuenta y resuelve problemas con cosas que conoces.",
         reading: "Lee una historia corta y responde.",
         attention: "Mira con calma y busca lo que te pedimos.",
@@ -620,10 +634,15 @@
     }
     $("#exerciseLevelSelect").value = String(state.levels[subject] || 1);
     $("#subjectScore").textContent = state.scores[subject] || 0;
-    const isLang = subject === "language" && !window.ContentPolicy.forProfile(profile);
+    const isLang = subject === "language";
+    $$('.language-mode-btn').forEach(b=>{
+      b.textContent=window.ContentPolicy.forProfile(profile)?({grammar:'Palabras y gramática',spelling:'Ortografía',writing:'Formar frases'})[b.dataset.mode]:({grammar:'Gramática',spelling:'Ortografía',writing:'Escritura'})[b.dataset.mode];
+      b.classList.toggle('active',b.dataset.mode===mode);
+    });
     $("#languageModeSwitch").classList.toggle("hidden", !isLang);
     counter = 0;
     renderEarlyTaskGuide();
+    renderSchoolTaskGuide();
     newExercise();
   }
   async function requestForProfile(payload, targetProfile = profile) {
@@ -675,6 +694,7 @@
     return res?.items?.[0] || null;
   }
   async function newExercise() {
+    $('#exerciseLevelSelect').value=String(state.levels[subject]||1);
     const requestedProfile = profile;
     const requestedSubject = subject;
     const generation = ++requestGeneration;
@@ -733,6 +753,7 @@
       return;
     }
     it = window.LocaleContent.localizeItem(it, API.effectiveLocale(profile), subject);
+    window.lastDifficultyAudit=window.AgeStages.audit(it,profile,state.levels[subject]||1);
     currentItem = it;
     window.ActivityModel.forDelivery(it, profile, subject);
     $("#exerciseCounter").textContent = `Ejercicio ${counter}`;
@@ -806,8 +827,9 @@
   function renderOptions(it) {
     $('#exerciseOptions').classList.remove('structured-options');
     const opts = shuffle(it.opts || []);
+    const illustrated=Boolean(window.ContentPolicy.forProfile(profile)) && opts.every(o=>window.StimulusArt.forLabel(o,it.lexicalSenses)||/^[●○□△☆\s·]+$/.test(o));
     $("#exerciseOptions").innerHTML = opts
-      .map((o) => `<button class="option-btn" data-answer="${escapeHtml(o)}" aria-label="${escapeHtml(o)}">${window.ContentPolicy.forProfile(profile)?window.ActivityModel.visualLabel(o,it.lexicalSenses):escapeHtml(o)}</button>`)
+      .map((o) => `<button class="option-btn" data-answer="${escapeHtml(o)}" aria-label="${escapeHtml(o)}">${illustrated?window.ActivityModel.visualLabel(o,it.lexicalSenses):escapeHtml(o)}</button>`)
       .join("");
     $$("#exerciseOptions .option-btn").forEach(
       (b) => (b.onclick = () => checkOption(b, b.dataset.answer)),
@@ -955,7 +977,7 @@
         : `No esta vez. Respuesta: ${currentItem.a || "revisa el modelo"}`);
     f.className = "feedback " + (correct ? "ok" : "bad");
     $("#exerciseNext").classList.remove("hidden");
-    if(window.ContentPolicy.forProfile(profile)){
+    if(window.ContentPolicy.forProfile(profile)||window.AgeStages.forProfile(profile)){
       $$('#exerciseOptions button').forEach(b=>b.disabled=true);
       $('#exerciseNext').textContent=guidedSession?.mission && guidedSession.index===guidedSession.plan.length-1?'Terminar misión →':'Siguiente →';
       renderEarlyTaskGuide(true);
@@ -1016,6 +1038,39 @@
     renderHomeLevels();
     renderEarlyHub();
     renderEarlyTaskGuide();
+    renderSchoolHub();
+    renderSchoolTaskGuide();
+  }
+  function missionDefinition(){return (guidedSession?.school?window.SchoolJourney:window.EarlyJourney).definition(guidedSession?.mission);}
+  function startSchoolMission(id){
+    if(!window.SchoolJourney.forProfile(profile))return;
+    const saved=window.SchoolJourney.start(profile.progress?._schoolJourney,id);
+    profile.progress={...profile.progress,_schoolJourney:saved};
+    const mission=window.SchoolJourney.definition(saved.active.id);
+    guidedSession={school:true,mission:mission.id,plan:mission.plan,index:saved.active.index,answered:false};
+    subject=mission.plan[saved.active.index];persist();switchSection('exercise');updateGuidedBar();setupExercise();
+  }
+  function renderSchoolHub(){
+    const hub=$('#schoolHub'),stage=window.SchoolJourney.forProfile(profile);
+    hub.classList.toggle('hidden',!stage);if(!stage||!state)return;
+    const journey=window.SchoolJourney,saved=journey.normalize(profile.progress?._schoolJourney),active=saved.active;
+    const domains=ageData().subjects,suggested=$('#recommendedBtn').dataset.subject;
+    const next=active?journey.definition(active.id).plan[active.index]:domains.includes(suggested)?suggested:domains[0];
+    hub.innerHTML=`<div class="school-hero card"><div><p class="eyebrow">LEARNING LAB · ${stage.label}</p><h3>${stage.title}</h3><p>${stage.description}</p><button id="schoolContinue" class="primary-btn">${active?'Continuar misión':'Explorar '+journey.all[next].title} →</button></div><div class="school-summary"><strong>${state.totalAttempts}</strong><span>actividades realizadas</span><small>${saved.completed.length} misiones completadas</small></div></div><div class="hub-heading"><h3>Áreas de entrenamiento</h3><span>Acceso directo o misiones de 3 a 5 actividades</span></div><div class="school-area-grid">${domains.map(domain=>{
+      const area=journey.all[domain],results=state.history.filter(x=>x.subject===domain);
+      return `<button class="school-area-card card" data-school-area="${domain}"><span class="school-icon" aria-hidden="true">${window.StimulusArt.svg(area.icon)}</span><span><strong>${area.title}</strong><small>${results.length} actividades · nivel ${state.levels[domain]||1}</small></span><span aria-hidden="true">→</span></button>`;
+    }).join('')}</div><div class="hub-heading"><h3>Misiones</h3><span>El progreso se guarda con tu perfil.</span></div>${active?`<p class="mission-resume">${journey.definition(active.id).title}: ${active.index} actividades realizadas.</p>`:''}<div class="school-mission-grid">${journey.missions.map(m=>`<div class="school-mission-card card"><h4>${m.title}</h4><p>${m.plan.length} actividades · ${[...new Set(m.plan)].map(d=>journey.all[d].title).join(', ')}</p><button class="secondary-btn" data-school-mission="${m.id}" ${active&&active.id!==m.id?'disabled':''}>${active?.id===m.id?'Continuar':'Empezar'} →</button></div>`).join('')}</div>`;
+    function open(domain){guidedSession=null;hideGuidedBar();subject=domain;switchSection('exercise');setupExercise();}
+    $('#schoolContinue').onclick=()=>active?startSchoolMission(active.id):open(next);
+    $$('[data-school-area]').forEach(b=>b.onclick=()=>open(b.dataset.schoolArea));
+    $$('[data-school-mission]').forEach(b=>b.onclick=()=>startSchoolMission(b.dataset.schoolMission));
+  }
+  function renderSchoolTaskGuide(){
+    let guide=$('#schoolTaskGuide');
+    if(!guide){guide=document.createElement('div');guide.id='schoolTaskGuide';guide.className='school-task-guide';$('.exercise-card').prepend(guide);}
+    const stage=window.SchoolJourney.forProfile(profile);guide.classList.toggle('hidden',!stage);if(!stage)return;
+    guide.innerHTML=`<button id="schoolHomeBtn" class="secondary-btn">← Mis áreas</button><span>${window.SchoolJourney.all[subject]?.title||'Actividad'} · ${state.history.filter(x=>x.subject===subject).length} actividades realizadas</span>`;
+    $('#schoolHomeBtn').onclick=()=>{guidedSession=null;hideGuidedBar();switchSection('home');};
   }
   function journeyState(){return window.EarlyJourney.normalize(profile?.progress?._earlyJourney);}
   function openEarlyArea(domain){
@@ -1243,7 +1298,7 @@
     const bar = $("#guidedSessionBar");
     bar.classList.remove("hidden");
     $("#guidedSessionTitle").textContent = "Sesión guiada";
-    if(guidedSession.mission)$('#guidedSessionTitle').textContent=window.EarlyJourney.definition(guidedSession.mission).title;
+    if(guidedSession.mission)$('#guidedSessionTitle').textContent=missionDefinition().title;
     $('#cancelGuidedSession').textContent=guidedSession.mission?'Guardar y volver al inicio':'Salir de la sesión';
     $("#guidedSessionProgress").textContent =
       `Actividad ${guidedSession.index + 1} de ${guidedSession.plan.length} · ${SUBJECT_META[guidedSession.plan[guidedSession.index]].name}`;
@@ -1343,6 +1398,7 @@
     if (confirm("¿Reiniciar el progreso de este perfil?")) {
       state = blankState();
       if(profile.progress)delete profile.progress._earlyJourney;
+      if(profile.progress){delete profile.progress._schoolJourney;delete profile.progress._levelCheckpoints;}
       guidedSession=null;hideGuidedBar();
       persist();
       updateGlobalUI();
@@ -1390,6 +1446,7 @@
   $("#exerciseLevelSelect").onchange = async (e) => {
     if(guidedSession?.mission){guidedSession=null;hideGuidedBar();}
     state.levels[subject] = Number(e.target.value);
+    if(window.AgeStages.forProfile(profile))profile.progress={...profile.progress,_levelCheckpoints:{...profile.progress?._levelCheckpoints,[subject]:{attempt:state.totalAttempts}}};
     await persist();
     counter = 0;
     newExercise();

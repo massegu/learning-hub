@@ -117,7 +117,9 @@ try:
                     assert page.evaluate("JSON.stringify(__lastEarly.stimulus)===JSON.stringify(ActivityModel.printable(__lastEarly,__profiles[0]).stimulus)")
                     page.wait_for_function("document.querySelectorAll('#exerciseOptions .option-btn').length>0",timeout=12000)
                     assert page.locator('#exerciseVisual').inner_text()==''
-                if domain=='language': assert not page.locator('#languageModeSwitch').is_visible()
+                if domain=='language':
+                    assert page.locator('#languageModeSwitch').is_visible()
+                    assert page.locator('#languageModeSwitch button').count()==3
                 if item['type']=='order':
                     for token in item['answer']:
                         page.locator('#exerciseOptions').get_by_role('button',name=token,exact=True).click()

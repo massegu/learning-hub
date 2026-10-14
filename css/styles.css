@@ -2641,3 +2641,48 @@ body {
   .early-area-card { padding:18px; gap:12px; }
   #exercise.early-primary #exerciseVisual .reading-passage { padding:16px; }
 }
+
+/* Separate original visual languages for 8–10 and 10–12; early stays intact. */
+.school-experience #home > .hero,.school-experience #home > .dashboard-grid,.school-experience #home > .section-grid { display:none; }
+.school-hub { display:grid; gap:24px; }
+.school-hero { padding:30px; display:grid; grid-template-columns:minmax(0,1fr) 220px; gap:24px; }
+.school-hero h3 { font-size:clamp(1.7rem,3vw,2.4rem); margin:8px 0; line-height:1.2; }
+.school-hero p { line-height:1.7; max-width:48ch; }
+.school-hero button { min-height:52px; margin-top:10px; }
+.school-summary { display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; gap:8px; }
+.school-summary strong { font-size:2.6rem; }
+.school-summary small { opacity:.85; }
+.school-area-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr)); gap:16px; }
+.school-area-card { display:flex; align-items:center; text-align:left; gap:16px; padding:20px; min-width:0; color:var(--ink); font:inherit; cursor:pointer; }
+.school-area-card > span:nth-child(2) { flex:1; min-width:0; display:grid; gap:8px; }
+.school-area-card strong { overflow-wrap:anywhere; line-height:1.4; }
+.school-area-card small { font-size:.82rem; color:var(--muted); }
+.school-icon svg { width:46px; height:46px; display:block; }
+.school-mission-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr)); gap:16px; }
+.school-mission-card { padding:22px; }
+.school-mission-card h4 { margin:0 0 10px; font-size:1.1rem; }
+.school-mission-card p { color:var(--muted); line-height:1.6; min-height:3em; }
+.school-mission-card button { min-height:48px; }
+.school-task-guide { display:flex; align-items:center; flex-wrap:wrap; gap:18px; padding-bottom:18px; border-bottom:1px solid var(--line); margin-bottom:22px; }
+.school-task-guide button { min-height:44px; }
+.school-task-guide > span { color:var(--muted); font-size:.9rem; }
+.school-experience[data-age-theme="workshop"] .school-hero { border:3px solid #657f53; border-radius:8px; background:repeating-linear-gradient(0deg,transparent,transparent 31px,#74965a0a 32px),repeating-linear-gradient(90deg,#f5f6e9,#f5f6e9 31px,#74965a22 32px); }
+.school-experience[data-age-theme="workshop"] .school-area-card { border:2px solid #859872; border-radius:8px; box-shadow:4px 4px 0 #dce5ce; }
+.school-experience[data-age-theme="workshop"] .school-mission-card { border-radius:8px; border-top:5px solid #bba573; }
+.school-experience[data-age-theme="base"] .school-hero { color:#fff; border:1px solid #545688; background:linear-gradient(125deg,#202b49,#414477 65%,#225967); border-radius:18px; position:relative; }
+.school-experience[data-age-theme="base"] .school-hero .eyebrow { color:#b8e9f0!important; }
+.school-experience[data-age-theme="base"] .school-hero p { color:#ecedf6; }
+.school-experience[data-age-theme="base"] .school-hero .primary-btn { background:#dbf1f0!important; color:#202b49!important; border-color:#a6c9d0!important; }
+.school-experience[data-age-theme="base"] .school-area-card { border-left:5px solid #6873a0; border-radius:12px; box-shadow:0 5px 14px #2533550c; }
+.school-experience[data-age-theme="base"] .school-mission-card { border-top:4px solid #738cae; }
+.school-experience #exerciseOptions .option-btn { min-height:68px; font-size:1.07rem; padding:18px; }
+.school-experience #exerciseVisual .reading-passage { padding:22px; line-height:1.7; }
+.school-experience .guided-session-bar .mini-btn { color:var(--ink); background:#eef1f6; border:1px solid #bdcad6; }
+.school-area-card:focus-visible { outline:3px solid #476674; outline-offset:3px; }
+#exercise.early-primary #languageModeSwitch { display:flex; flex-wrap:wrap; width:fit-content; max-width:100%; gap:6px; }
+#exercise.early-primary #languageModeSwitch .language-mode-btn { min-height:48px; flex:1 1 140px; white-space:normal; }
+@media(max-width:760px) {
+  .school-hero { grid-template-columns:minmax(0,1fr); padding:22px; }
+  .school-summary { align-items:flex-start; text-align:left; }
+  .school-hero button { white-space:normal; }
+}

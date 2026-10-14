@@ -74,10 +74,12 @@ try:
   page.locator('#cancelGuidedSession').click()
   print('PASS: direct access in all eight domains; missions pause/reload/resume, persist completion and advance across areas',flush=True)
   # Older profiles keep their ordinary dashboard and no playful exercise layer.
-  page.locator('#profileSelect').select_option('junior')
+  page.locator('#profileSelect').select_option('middle')
   assert page.locator('#earlyHub').is_hidden()
   assert page.locator('#home > .hero').is_visible()
   assert not page.locator('#appShell').evaluate('(e)=>e.classList.contains("early-experience")')
+  assert page.locator('#schoolHub').is_hidden()
+  page.locator('#profileSelect').select_option('junior')
   page.locator('#navMenu [data-section="homework"]').click()
   page.locator('#worksheetNone').click()
   for domain in ['attention','memory']:page.locator(f'#homeworkOptions input[value="{domain}"]').check()

@@ -133,6 +133,15 @@
     return { question, stimulus, options:options.map(String), tokens, responseType:item.type === 'order' ? 'order' : options.length ? 'choice' : 'written' };
   }
   function validateEvidence(item,stimulus){
+    if(item.languageFocus==='spelling'){
+      const e=item.languageEvidence,block=stimulus[e?.block];
+      if(block?.type!=='text'||typeof e.word!=='string')fail('la actividad de ortografía no declara su palabra.');
+      if(e.op==='complete'){
+        if(!/_+/.test(block.text)||block.text.replace(/_+/,item.a)!==e.word)fail('las letras no completan la palabra.');
+      }else if(e.op==='syllables'){
+        if(block.text!==e.word || !Array.isArray(e.segments)||e.segments.join('')!==e.word || e.segments.join('-')!==item.a)fail('las sílabas no corresponden a la palabra.');
+      }else fail('la mecánica de ortografía no es compatible.');
+    }
     const e=item.quantityEvidence;
     if(['count','search','addition','subtraction','compare'].includes(item.ageProfile.mechanic) && !e)fail('el conteo o cálculo no declara sus unidades.');
     const counts=block=>{
@@ -222,7 +231,7 @@
       if(options.illustrated){
         const label=block.label?`<p class="stimulus-caption">${escape(block.label)}</p>`:'';
         if(block.type==='text')return block.presentation==='model'?`${label}<div class="early-model"><span class="stimulus-caption">Modelo</span><div>${visualLabel(block.text.slice(8),options.senses)}</div></div>`:`${label}<p>${escape(block.text)}</p>`;
-        if(block.type==='list')return `${label}<div class="stimulus-cards ${block.presentation==='count'?'count-units':''} ${block.presentation==='sequence'?'ordered-cards':''}" role="list">${block.items.map((x,i)=>`<div class="stimulus-unit" role="listitem">${block.presentation==='sequence'?`<span class="unit-position" aria-hidden="true">${i+1}</span>`:''}${visualLabel(x,options.senses)}</div>`).join('')}</div>`;
+        if(block.type==='list')return `${label}<div class="stimulus-cards ${block.presentation==='count'?'count-units':''} ${block.presentation==='sequence'?'ordered-cards':''}" role="list">${block.items.map((x,i)=>`<div class="stimulus-unit" role="listitem">${block.presentation==='sequence'?`<span class="unit-position" aria-hidden="true">${i+1}</span>`:''}${visualLabel(x,{...options.senses,subject:block.label})}</div>`).join('')}</div>`;
         return `${label}<table class="early-comparison">${block.rows.map(row=>`<tr>${row.map(x=>`<td>${visualLabel(x,{...options.senses,subject:block.label})}</td>`).join('')}</tr>`).join('')}</table>`;
       }
       if (block.type === 'text') return `<p>${escape(block.text)}</p>`;

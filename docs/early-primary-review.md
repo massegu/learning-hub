@@ -297,3 +297,19 @@ Validation now includes **53 Node tests**, hub/mission/replacement browser check
 DOCX regression. The report documents remote-search bounds and remaining editorial
 limitations. This follow-up is committed and pushed to the same preview branch,
 without merge, manual deployment or production Supabase changes.
+
+## Follow-up: Language skills, missing icons and older-age progression (2026-10-14)
+
+[language-and-school-age-review.md](language-and-school-age-review.md) documents
+the screenshot-driven pass. The accepted early hub, other seven areas and worksheet
+generator are preserved. Early Language now exposes grammar, spelling and phrase
+construction; missing noun illustrations are completed and choices use uniform
+pictorial coverage. There are 41 local icons with printable equivalents.
+
+Separate original school hubs are added for 8–10 and 10–12; 13–15 retains mature
+presentation. Automatic progression now requires fresh 8/10/12-answer windows for
+those older routes. Their remote bank remains authoritative; full editorial content
+calibration requires the missing Edge Function source and is explicitly pending.
+59 Node tests, dedicated mode/stage browser checks and existing layout/country/DOCX
+regressions pass. The linked report separates tested client changes from unverified
+production content and provides the next review criteria.
