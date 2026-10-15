@@ -3,7 +3,7 @@
 `index.ts` was supplied by the owner; commit `fa71e09` records that baseline.
 All five original `data/{primary,middle,teen,english,literacy}.js` modules have now
 been recovered from the owner's uploads in commit `3a8498e`, without editorial
-changes (Git normalizes line endings). Junior/primary/middle authored banks and integration
+changes (Git normalizes line endings). Junior/primary/middle authored banks, a focused teen module and integration
 corrections follow on the review branch. **Nothing here has been deployed.**
 
 The original imports build 1,080 items. They load before requests, but active
@@ -52,3 +52,16 @@ limits; [the earlier source audit](../../../docs/edge-function-school-age-review
 records the original findings. The [middle review](../../../docs/middle-content-review.md) documents adolescent
 progression and the explicit self-assessment limit for written production.
 A Cloudflare branch preview does not deploy Supabase.
+
+For the actual user-facing isolated review (Python 3 + Node >=22.13):
+
+```sh
+python3 tools/review-preview.py
+```
+
+See [Windows instructions](../../../docs/prueba-local.md) and
+[the latest manual-feedback findings](../../../docs/manual-feedback-review.md).
+The review server binds only to loopback, uses fake accounts/database with the real
+Edge handler, and never connects to production. It is not a deployable auth bypass.
+The focused teen module covers only Language, reasoning and reading/writing;
+other teen domains retain historical generators.

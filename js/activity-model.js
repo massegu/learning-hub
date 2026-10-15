@@ -234,6 +234,12 @@
         if(block.type==='list')return `${label}<div class="stimulus-cards ${block.presentation==='count'?'count-units':''} ${block.presentation==='sequence'?'ordered-cards':''}" role="list">${block.items.map((x,i)=>`<div class="stimulus-unit" role="listitem">${block.presentation==='sequence'?`<span class="unit-position" aria-hidden="true">${i+1}</span>`:''}${visualLabel(x,{...options.senses,subject:block.label})}</div>`).join('')}</div>`;
         return `${label}<table class="early-comparison">${block.rows.map(row=>`<tr>${row.map(x=>`<td>${visualLabel(x,{...options.senses,subject:block.label})}</td>`).join('')}</tr>`).join('')}</table>`;
       }
+      if(options.structured){
+        const label=block.label?`<p class="stimulus-caption">${escape(block.label)}</p>`:'';
+        if(block.type==='text')return `${label}<p class="stimulus-paragraph">${escape(block.text)}</p>`;
+        if(block.type==='list')return `${label}<ul class="structured-stimulus-list">${block.items.map(x=>`<li>${escape(x)}</li>`).join('')}</ul>`;
+        return `${label}<div class="stimulus-table-scroll" tabindex="0" role="region" aria-label="Tabla de datos"><table class="structured-stimulus-table">${block.rows.map((row,i)=>`<tr>${row.map(x=>i===0&&block.header===true?`<th scope="col">${escape(x)}</th>`:`<td>${escape(x)}</td>`).join('')}</tr>`).join('')}</table></div>`;
+      }
       if (block.type === 'text') return `<p>${escape(block.text)}</p>`;
       if (block.type === 'list') return `<ul>${block.items.map(x => `<li>${escape(x)}</li>`).join('')}</ul>`;
       return `<table>${block.rows.map(row => `<tr>${row.map(x => `<td>${escape(x)}</td>`).join('')}</tr>`).join('')}</table>`;

@@ -5,6 +5,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 await import("./junior.js");
 await import("./primary-content.js");
 await import("./middle-content.js");
+await import("./teen-review.js");
 await import("./data/primary.js");
 await import("./data/middle.js");
 await import("./data/teen.js");
@@ -2211,6 +2212,7 @@ function matrixApplied20(age:string,level:number,v:number){
 }
 
 function variantExercise(age:string,domain:string,level:number,subdomain:string|null=null){
+  if(age==="teen"&&["teenLanguage","speedReasoning","literacy"].includes(domain))return {...(globalThis as any).TeenReview.generate(domain,level,subdomain),id:"teen-review-"+crypto.randomUUID()};
   if(age==="junior")return {...(globalThis as any).JuniorContent.generate(domain,level,subdomain),id:"junior-"+crypto.randomUUID()};
   if(age==="primary")return {...(globalThis as any).PrimaryContent.generate(domain,level,subdomain),id:"primary-"+crypto.randomUUID()};
   if(age==="middle")return {...(globalThis as any).MiddleContent.generate(domain,level,subdomain),id:"middle-"+crypto.randomUUID()};
@@ -2285,7 +2287,7 @@ Deno.serve(async (req:Request)=>{
   const requestedDomains=kind==="worksheet" ? (Array.isArray(body.domains)&&body.domains.length?body.domains:SUBJECTS[age]) : [body.domain];
   if(!SUBJECTS[age] || !Number.isInteger(level) || (kind!=="game" && (!Array.isArray(requestedDomains)||!requestedDomains.length||requestedDomains.some((d:any)=>!SUBJECTS[age].includes(d)))))
     return new Response(JSON.stringify({error:"Área o nivel no permitido para este perfil."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
-  if((age==="junior"||age==="primary"||age==="middle")&&kind==="exercise"&&["language","middleLanguage"].includes(body.domain)&&body.subdomain&&!["grammar","spelling","writing"].includes(body.subdomain))
+  if((age==="junior"||age==="primary"||age==="middle"||age==="teen")&&kind==="exercise"&&["language","middleLanguage","teenLanguage"].includes(body.domain)&&body.subdomain&&!["grammar","spelling","writing"].includes(body.subdomain))
     return new Response(JSON.stringify({error:"Habilidad de Lenguaje no válida."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
   let items:any[]=[];
   if(kind==="game"){

@@ -1,5 +1,10 @@
 # 13–15 content review — 2026-10-14
 
+**2026-10-15:** [Revisión tras las capturas](manual-feedback-review.md) documenta
+la lectura y Memoria de 8–10, integración de Lectura/escritura en 10–12, presentación
+y tema de 13–15, corrección acotada de 16–18 y [prueba local aislada](prueba-local.md).
+Los recuentos y observaciones anteriores se conservan como registro de cada fase.
+
 Branch: `fix/early-primary-stimulus-integrity`, following `6788553`.
 This is the first authored 13–15 pass. It preserves the mature interface, validated
 6–12 banks and original imported files. No merge, production calls or manual

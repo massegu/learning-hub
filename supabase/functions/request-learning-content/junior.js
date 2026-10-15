@@ -35,7 +35,7 @@
   const names=['Ana','Leo','Mara','Sol','Hugo'];
   const text=value=>({type:'text',text:value});
   const list=items=>({type:'list',items});
-  const table=rows=>({type:'table',rows});
+  const table=rows=>({type:'table',rows,header:true});
   function choice(q,a,wrong,stimulus,why,level){
     const opts=[String(a),...wrong.map(String)].slice(0,level===3?4:3);
     return {type:'standard',q,opts,a:String(a),stimulus,requiresStimulus:true,why};
@@ -90,7 +90,15 @@
   const details3=[['¿Qué condición cambiará el grupo?','La luz','La cantidad de agua','El árbol','El nombre de la planta'],['¿Cómo llevarán el mural cuando se seque?','Entre dos personas','Arrastrándolo','Doblado','Bajo la lluvia'],['¿Qué dibujo tiene el estante de cuentos?','Una torre','Una huella','Una hoja','Un cono'],['¿Qué lugar está libre y tiene suelo seco?','La sala','El patio','El jardín','El parque'],['¿Cómo empieza la canción?','Despacio','Más rápido','Sin letra','Sin tambor'],['¿Qué hoja pueden observar sin arrancarla?','La de la rama','La del cuaderno','Una hoja de papel','La de la caja']];
   const inferences3=[['Si crece más la planta de la ventana, ¿qué podría influir?','La diferencia de luz','El nombre de Leo','El color de las etiquetas','La hora de escribir'],['¿Qué riesgo evitan al llevar el mural entre dos?','Que se doble','Que llueva','Que cambie el color','Que se seque'],['¿Por qué no basta con mirar el color verde?','Porque dos estantes tienen ese color','Porque no hay etiquetas','Porque el libro no tiene título','Porque todos los libros son iguales'],['¿Por qué proponen caminar en la sala?','Porque hay menos espacio','Porque el suelo está mojado','Porque faltan conos','Porque no hay pelota'],['¿Por qué practican las partes por separado?','Porque tienen ritmos diferentes','Porque no hay letra','Porque falta el tambor','Porque no quieren cantar juntos'],['¿Para qué dibujan la hoja sin arrancarla?','Para compararla sin dañar el árbol','Para cambiar el árbol de lugar','Para evitar usar el cuaderno','Para borrar todas las hojas']];
   function reading(c,i,level,m){
-    const s=stories[i],simpleMain=['Plantar semillas y poner etiquetas','Dibujar y colorear un mural','Elegir y anotar un libro','Preparar un circuito','Cantar con un tambor','Observar y dibujar una hoja'][i],passage=s.short+(level>=2?' '+s.more:'')+(level===3?' '+s.end:'');
+    const openings=[
+      'La clase prepara un pequeño jardín. Han reunido tierra, semillas y varias macetas sobre una mesa. Antes de empezar, reparten el trabajo para que cada persona pueda ayudar a preparar el jardín.',
+      'La clase quiere decorar una pared con un mural del mar. Sobre la mesa hay papel grande, colores y pegamento. Cada persona elige una tarea y deja espacio para el trabajo de las demás.',
+      'Hoy el grupo visita la biblioteca de clase. Los libros están ordenados por temas para encontrarlos con facilidad. Antes de llevarse uno, cada persona debe apuntarlo en una lista junto a la puerta.',
+      'El grupo prepara un circuito para jugar en el patio. Quieren que todas las personas puedan participar sin empujarse. Antes de salir, reúnen los materiales y deciden quién llevará cada cosa.',
+      'El grupo ensaya una canción para compartirla con otra clase. Han colocado las sillas en círculo y preparado los instrumentos. Primero escuchan la melodía y después prueban a cantar juntos.',
+      'La clase sale al parque para conocer los árboles. El grupo lleva un cuaderno, lápices y una lupa. Se detienen junto a un árbol y miran con cuidado las formas de sus hojas.',
+    ];
+    const s=stories[i],simpleMain=['Plantar semillas y poner etiquetas','Dibujar y colorear un mural','Elegir y anotar un libro','Preparar un circuito','Cantar con un tambor','Observar y dibujar una hoja'][i],passage=openings[i]+'\n\n'+s.short+(level>=2?' '+s.more:'')+(level===3?' '+s.end:'');
     const data=m===0?(level===1?s.literal:level===2?details2[i]:details3[i]):m===1?(level===1?seconds[i]:level===2?s.infer:inferences3[i]):m===2?(level===3?s.reason:firsts[i]):[level===3?'¿Qué título recoge lo más importante?':'¿De qué trata la historia?',level===3?s.main:simpleMain,...s.wrongMain];
     return choice(data[0],data[1],data.slice(2),[text(passage)],level===3&&m===2?'La opción usa las condiciones que da la historia.':'La respuesta se apoya en lo que cuenta la historia.',level);
   }
@@ -121,6 +129,11 @@
   }
   function memory(c,i,level,m){
     const xs=c.things.slice(0,level+2),content=m===2?xs.map((detail,j)=>({person:names[j],detail})):xs.map(detail=>({detail}));
+    if(level===3){
+      const positions=[[0,3],[1,4],[2,4],[1,3]][m],pair=positions.map(j=>xs[j]).join(' → ');
+      const wrong=[[positions[1],positions[0]],[positions[0],(positions[1]+1)%xs.length],[(positions[0]+1)%xs.length,positions[1]]].map(indices=>indices.map(j=>xs[j]).join(' → '));
+      return {type:'memoryReveal',q:m===2?'Recuerda qué tiene cada persona. Después se ocultarán las tarjetas.':'Recuerda los objetos y su orden. Después se ocultarán las tarjetas.',memoryContent:content,memoryQuestion:m===2?`¿Qué tenían ${names[positions[0]]} y ${names[positions[1]]}, en ese orden?`:`¿Qué objetos estaban en los lugares ${positions[0]+1} y ${positions[1]+1}, en ese orden?`,revealMs:10500,opts:[pair,...wrong],a:pair,requiresStimulus:true,why:'Recupera las dos relaciones y conserva el orden pedido.'};
+    }
     const target=m===0?xs[level]:m===1?xs[1]:m===2?xs[level]:xs.at(-1);
     const question=m===0?'¿Qué objeto estaba en la lista?':m===1?'¿Qué aparecía en segundo lugar?':m===2?`¿Qué tenía ${names[level]}?`:'¿Qué aparecía al final?';
     const wrong=m===0?['el paraguas','el reloj','la bicicleta']:xs.filter(x=>x!==target);

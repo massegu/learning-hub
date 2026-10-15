@@ -11,7 +11,7 @@
     language: {
       name: "Lenguaje",
       icon: "Aa",
-      desc: "Comprensión, cohesión, inferencias, vocabulario y uso funcional del lenguaje.",
+      desc: "Gramática, ortografía y escritura con ejemplos y textos.",
     },
     division: {
       name: "Divisiones",
@@ -21,12 +21,12 @@
     reading: {
       name: "Lectura",
       icon: "▤",
-      desc: "Comprensión literal e inferencial.",
+      desc: "Lee el texto y usa sus pistas para responder.",
     },
     middleLanguage: {
       name: "Lenguaje 12-13",
       icon: "Aa",
-      desc: "Comprensión, inferencias, cohesión, pragmática y precisión lingüística.",
+      desc: "Gramática, ortografía y escritura para comunicar ideas con claridad.",
     },
     middleMath: {
       name: "Matemáticas 12-13",
@@ -36,12 +36,12 @@
     middleReading: {
       name: "Lectura 12-13",
       icon: "▤",
-      desc: "Comprensión literal, inferencias y uso de evidencias.",
+      desc: "Comprende el texto y deduce ideas a partir de sus pistas.",
     },
     teenLanguage: {
       name: "Lenguaje 14-17",
       icon: "Aa",
-      desc: "Argumentación, inferencias, ambigüedad, pensamiento crítico y precisión lingüística.",
+      desc: "Gramática, ortografía y escritura con argumentos y pruebas.",
     },
     teenMath: {
       name: "Matemáticas 14-17",
@@ -344,6 +344,7 @@
   }
   function ageData() {
     if(window.AgeStages.route(profile)==='junior')return {...AGE.primary,label:'8-10 años',subjects:window.ContentPolicy.early.subjects};
+    if(window.AgeStages.route(profile)==='primary')return {...AGE.primary,subjects:AGE.primary.subjects.filter(s=>s!=='reading')};
     return window.ContentPolicy.forProfile(profile) || AGE[profile.age_band];
   }
   function recent(s, n = 10) {
@@ -391,7 +392,7 @@
     if(earlyAnswer){
       currentItem._earlyAnswered=true;
       if(guidedSession?.mission){
-        if(guidedSession.school)profile.progress={...profile.progress,_schoolJourney:window.SchoolJourney.record(profile.progress?._schoolJourney,s,itemId)};
+        if(guidedSession.school)profile.progress={...profile.progress,_schoolJourney:window.SchoolJourney.record(profile.progress?._schoolJourney,s,itemId,profile)};
         else profile.progress={...profile.progress,_earlyJourney:window.EarlyJourney.record(profile.progress?._earlyJourney,s,itemId)};
         guidedSession.answered=true;
       }
@@ -542,7 +543,7 @@
     hideGuidedBar();
     $('#appShell').classList.toggle('early-experience',Boolean(window.ContentPolicy.forProfile(p)));
     $('#appShell').classList.toggle('school-experience',Boolean(window.SchoolJourney.forProfile(p)));
-    $('#appShell').dataset.ageTheme=window.SchoolJourney.forProfile(p)?.theme || '';
+    $('#appShell').dataset.ageTheme=window.AgeStages.forProfile(p)?.theme || '';
     $('#exercise').classList.toggle('early-primary',Boolean(window.ContentPolicy.forProfile(p)));
     API.profileLocale = p.locale;
     currentItem = null;
@@ -634,7 +635,7 @@
     }
     $("#exerciseLevelSelect").value = String(state.levels[subject] || 1);
     $("#subjectScore").textContent = state.scores[subject] || 0;
-    const isLang = ["language","middleLanguage"].includes(subject);
+    const isLang = ["language","middleLanguage","teenLanguage"].includes(subject);
     $$('.language-mode-btn').forEach(b=>{
       b.textContent=window.ContentPolicy.forProfile(profile)?({grammar:'Palabras y gramática',spelling:'Ortografía',writing:'Formar frases'})[b.dataset.mode]:({grammar:'Gramática',spelling:'Ortografía',writing:'Escritura'})[b.dataset.mode];
       b.classList.toggle('active',b.dataset.mode===mode);
@@ -682,7 +683,7 @@
     const res = await requestForProfile({
       kind,
       domain,
-      subdomain: ["language","middleLanguage"].includes(domain) ? mode : null,
+      subdomain: ["language","middleLanguage","teenLanguage"].includes(domain) ? mode : null,
       level: state.levels[domain] || 1,
       count: 1,
       ...extra,
@@ -803,7 +804,7 @@
         `<div class="scenario-card"><span class="scenario-label">SITUACIÓN</span><p>${escapeHtml(it.scenario)}</p></div>`;
     if (it.stimulus)
       $("#exerciseVisual").innerHTML =
-        `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus,{illustrated:Boolean(window.ContentPolicy.forProfile(profile)),senses:it.lexicalSenses})}</div>`;
+        `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus,{illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:!window.ContentPolicy.forProfile(profile),senses:it.lexicalSenses})}</div>`;
     $("#exercisePrompt").textContent = it.q || "Actividad";
     if (it.type === "memoryReveal" || it.type === "memoryMulti") {
       renderMemoryExercise(it);
@@ -1041,12 +1042,12 @@
     renderSchoolHub();
     renderSchoolTaskGuide();
   }
-  function missionDefinition(){return (guidedSession?.school?window.SchoolJourney:window.EarlyJourney).definition(guidedSession?.mission);}
+  function missionDefinition(){return (guidedSession?.school?window.SchoolJourney:window.EarlyJourney).definition(guidedSession?.mission,profile);}
   function startSchoolMission(id){
     if(!window.SchoolJourney.forProfile(profile))return;
     const saved=window.SchoolJourney.start(profile.progress?._schoolJourney,id);
     profile.progress={...profile.progress,_schoolJourney:saved};
-    const mission=window.SchoolJourney.definition(saved.active.id);
+    const mission=window.SchoolJourney.definition(saved.active.id,profile);
     guidedSession={school:true,mission:mission.id,plan:mission.plan,index:saved.active.index,answered:false};
     subject=mission.plan[saved.active.index];persist();switchSection('exercise');updateGuidedBar();setupExercise();
   }
@@ -1055,11 +1056,11 @@
     hub.classList.toggle('hidden',!stage);if(!stage||!state)return;
     const journey=window.SchoolJourney,saved=journey.normalize(profile.progress?._schoolJourney),active=saved.active;
     const domains=ageData().subjects,suggested=$('#recommendedBtn').dataset.subject;
-    const next=active?journey.definition(active.id).plan[active.index]:domains.includes(suggested)?suggested:domains[0];
+    const next=active?journey.definition(active.id,profile).plan[active.index]:domains.includes(suggested)?suggested:domains[0];
     hub.innerHTML=`<div class="school-hero card"><div><p class="eyebrow">LEARNING LAB · ${stage.label}</p><h3>${stage.title}</h3><p>${stage.description}</p><button id="schoolContinue" class="primary-btn">${active?'Continuar misión':'Explorar '+journey.all[next].title} →</button></div><div class="school-summary"><strong>${state.totalAttempts}</strong><span>actividades realizadas</span><small>${saved.completed.length} misiones completadas</small></div></div><div class="hub-heading"><h3>Áreas de entrenamiento</h3><span>Acceso directo o misiones de 3 a 5 actividades</span></div><div class="school-area-grid">${domains.map(domain=>{
       const area=journey.all[domain],results=state.history.filter(x=>x.subject===domain);
       return `<button class="school-area-card card" data-school-area="${domain}"><span class="school-icon" aria-hidden="true">${window.StimulusArt.svg(area.icon)}</span><span><strong>${area.title}</strong><small>${results.length} actividades · nivel ${state.levels[domain]||1}</small></span><span aria-hidden="true">→</span></button>`;
-    }).join('')}</div><div class="hub-heading"><h3>Misiones</h3><span>El progreso se guarda con tu perfil.</span></div>${active?`<p class="mission-resume">${journey.definition(active.id).title}: ${active.index} actividades realizadas.</p>`:''}<div class="school-mission-grid">${journey.missions.map(m=>`<div class="school-mission-card card"><h4>${m.title}</h4><p>${m.plan.length} actividades · ${[...new Set(m.plan)].map(d=>journey.all[d].title).join(', ')}</p><button class="secondary-btn" data-school-mission="${m.id}" ${active&&active.id!==m.id?'disabled':''}>${active?.id===m.id?'Continuar':'Empezar'} →</button></div>`).join('')}</div>`;
+    }).join('')}</div><div class="hub-heading"><h3>Misiones</h3><span>El progreso se guarda con tu perfil.</span></div>${active?`<p class="mission-resume">${journey.definition(active.id).title}: ${active.index} actividades realizadas.</p>`:''}<div class="school-mission-grid">${journey.forMissions(profile).map(m=>`<div class="school-mission-card card"><h4>${m.title}</h4><p>${m.plan.length} actividades · ${[...new Set(m.plan)].map(d=>journey.all[d].title).join(', ')}</p><button class="secondary-btn" data-school-mission="${m.id}" ${active&&active.id!==m.id?'disabled':''}>${active?.id===m.id?'Continuar':'Empezar'} →</button></div>`).join('')}</div>`;
     function open(domain){guidedSession=null;hideGuidedBar();subject=domain;switchSection('exercise');setupExercise();}
     $('#schoolContinue').onclick=()=>active?startSchoolMission(active.id):open(next);
     $$('[data-school-area]').forEach(b=>b.onclick=()=>open(b.dataset.schoolArea));

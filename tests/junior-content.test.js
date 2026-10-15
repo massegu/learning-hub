@@ -20,7 +20,7 @@ test('all authored junior domains/levels project in every locale and bind comple
         assert.throws(()=>model.printable({...localized,stimulus:[]},profile));
       }
       if(it.type==='order')assert.deepEqual([...it.tokens].sort(),[...it.answer].sort());
-      if(it.memoryContent)assert.ok(it.memoryContent.some(x=>x.detail===it.a));
+      if(it.memoryContent)for(const part of it.a.split(' → '))assert.ok(it.memoryContent.some(x=>x.detail===part));
       assert.doesNotMatch(JSON.stringify(it),/\b(?:hipoteca|factura|administrativo|embarque|euros|vosotros)\b/iu);
       assert.doesNotMatch(JSON.stringify(it),/\b(?:de|a) el\b/u);
     }

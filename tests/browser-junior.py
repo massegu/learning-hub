@@ -82,10 +82,10 @@ try:
             else:page.locator('#exerciseOptions').get_by_role('button',name=item['a'],exact=True).click()
             page.wait_for_function('document.querySelector("#exerciseFeedback").classList.contains("ok")')
         domains=['language','reading','division','attention','memory','executive','speedReasoning','applied']
-        if ROUTE=='primary':domains+=['geometry','english','literacy']
+        if ROUTE=='primary':domains=[d for d in domains if d!='reading']+['geometry','english','literacy']
         if ROUTE=='middle':domains=['middleLanguage','middleReading','middleMath','attention','memory','executive','speedReasoning','applied','english','literacy']
         language_domain='middleLanguage' if ROUTE=='middle' else 'language'
-        reading_domain='middleReading' if ROUTE=='middle' else 'reading'
+        reading_domain='middleReading' if ROUTE=='middle' else 'literacy' if ROUTE=='primary' else 'reading'
         if ROUTE=='middle':assert page.locator('#schoolHub').count()==0 or not page.locator('#schoolHub').is_visible()
         for level in [1,2,3]:
             for domain in domains:

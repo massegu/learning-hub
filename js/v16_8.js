@@ -77,8 +77,8 @@
       if(!desc) return;
       const d={
         division:"Cálculo, problemas cotidianos, series, tiempo y dinero ajustados a la edad.",
-        language:"Comprensión, vocabulario, inferencias y uso funcional del lenguaje.",
-        reading:"Comprensión literal e inferencial con textos breves adecuados a la edad.",
+        language:"Gramática, ortografía y escritura con ejemplos y textos.",
+        reading:"Lee el texto y usa sus pistas para comprender lo que ocurre.",
         attention:"Búsqueda, comparación, consignas y selección de información relevante.",
         executive:"Secuenciación, planificación, control de impulsos y organización.",
         memory:"Memoria visual y funcional con dificultad progresiva.",

@@ -1,5 +1,10 @@
 # Early-primary final integration review
 
+**2026-10-15:** [Revisión tras las capturas](manual-feedback-review.md) documenta
+la lectura y Memoria de 8–10, integración de Lectura/escritura en 10–12, presentación
+y tema de 13–15, corrección acotada de 16–18 y [prueba local aislada](prueba-local.md).
+Los recuentos y observaciones anteriores se conservan como registro de cada fase.
+
 Follow-up on 2026-10-13: [Spanish locale integration review](spanish-locale-review.md)
 documents country adaptation and its validation. The age/stimulus gates described
 below remain intact; the former regional-vocabulary follow-up is now addressed

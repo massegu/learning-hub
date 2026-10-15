@@ -63,7 +63,7 @@ try:
   page.wait_for_function('__current?.ageProfile.family==="reading-4"&&document.querySelectorAll("#exerciseOptions .option-btn").length===3')
   assert page.locator('#exerciseOptions .option-btn svg').count()==0
   page.evaluate('window.__iconFixture=false')
-  for band,theme,n,domains in [('junior','workshop',8,8),('primary','base',10,11),('middle',None,12,10)]:
+  for band,theme,n,domains in [('junior','workshop',8,8),('primary','base',10,10),('middle',None,12,10)]:
    page.locator('#profileSelect').select_option(band)
    if theme:
     assert page.locator('#schoolHub').is_visible()
