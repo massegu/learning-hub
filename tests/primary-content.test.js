@@ -18,7 +18,7 @@ test('all primary domains/levels retain evidence, unique choices and locale pari
       }
       if(it.type==='order')assert.deepEqual([...it.tokens].sort(),[...it.answer].sort());
       if(it.memoryContent)assert.ok(it.memoryContent.some(x=>x.detail===it.a));
-      assert.doesNotMatch(JSON.stringify(it),/\b(?:de|a) el\b/u);
+      assert.doesNotMatch(JSON.stringify(it),/(?<!\p{L})(?:de|a) el(?!\p{L})/u);
       assert.doesNotMatch(JSON.stringify(it),/\b(?:hipoteca|factura|embarque|euros|vosotros)\b/iu);
     }
   }

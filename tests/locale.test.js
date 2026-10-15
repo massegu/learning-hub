@@ -44,7 +44,7 @@ test('controlled terminology resolves each country with article, adjective and c
 
 test('neutral and ambiguous senses, numbers, money, names and protected English retain their meaning',()=>{
   const neutral='Ana lleva su mochila al colegio. El autobús cuesta 2 euros. Un camión lleva plátanos. La pluma del pájaro cae junto al coche de bebé. Un buzo nada. Cumpleaños: dieciséis y veintiséis.';
-  for(const key of locales)assert.equal(locale.text(neutral,key),neutral);
+  for(const key of locales){const bus={es_co:'bus',es_ar:'colectivo',es_cl:'bus',es_pa:'bus',es_cr:'bus'}[key]||'autobús';assert.equal(locale.text(neutral,key),neutral.replace('autobús',bus));}
   const it={domain:'english',id:'en',q:'Mira el ordenador. Elige la palabra en inglés.',opts:['ordenador','computer'],a:'computer'};
   assert.deepEqual(locale.localizeItem(it,'es_mx').opts,it.opts);
   assert.equal(locale.localizeItem(it,'es_mx').q,'Mira la computadora. Elige la palabra en inglés.');

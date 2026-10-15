@@ -46,7 +46,15 @@
     if(focus==='grammar'){
       if(m===0){const sentence=l===1?'Las tarjetas ___ listas.':l===2?'Ayer el grupo ___ el trabajo.':'Si mañana tenemos tiempo, ___ el trabajo.';return mc('Elige el verbo que concuerda con la frase.',l===1?'están':l===2?'revisó':'revisaremos',l===1?['está','estamos']:l===2?['revisarán','revisan','revisamos']:['revisamos ayer','revisó','revisaban'],[T(c.title),T(sentence)],l===1?'El sujeto es plural.':l===2?'«Ayer» sitúa la acción en el pasado.':'La condición se refiere a mañana.',l);}
       if(m===1){const obj=c.objects[0],pronoun=obj.startsWith('las ')?'las':obj.startsWith('los ')?'los':obj.startsWith('la ')?'la':'lo',other=c.objects.slice(1).find(x=>(x.startsWith('las ')?'las':x.startsWith('los ')?'los':x.startsWith('la ')?'la':'lo')!==pronoun);return mc(l===1?'¿Qué objeto se revisó?':l===2?`¿A qué se refiere «${pronoun}»?`:'¿Qué frase nombra claramente el objeto revisado?',l===3?`Después revisó ${obj}.`:obj,l===3?[`Después revisó ${other}.`,'Después revisó eso.','No se sabe qué revisó.']:c.objects.slice(1),[T(`El grupo preparó ${obj} y ${other}. ${l===2?`Después ${pronoun} revisó.`:`Después revisó ${obj}.`}`)],'La referencia mantiene el objeto nombrado en la frase.',l);}
-      const word=l===1?'porque':l===2?'aunque':'por eso',sentence=l===1?'Repetimos la prueba ___ faltaba un dato.':l===2?'___ queda poco tiempo, comprobamos el resultado.':'Faltaba un dato; ___ repetimos la prueba.';
+      const situations=[
+        ['Volvimos a grabar la entrevista ___ no se oía bien.','___ había ruido en el pasillo, pudimos grabar la entrevista.','No se oía bien la entrevista; ___ volvimos a grabarla.'],
+        ['Repetimos la medida de la sombra ___ olvidamos anotarla.','___ quedaba poco tiempo, medimos la sombra otra vez.','Olvidamos anotar la medida de la sombra; ___ la medimos otra vez.'],
+        ['Regamos las plantas del huerto ___ la tierra estaba seca.','___ hacía calor, pudimos regar todas las plantas del huerto.','La tierra del huerto estaba seca; ___ regamos las plantas.'],
+        ['Consultamos las reglas del juego ___ no sabíamos cómo resolver un empate.','___ el juego era nuevo, pudimos terminar la primera partida.','No sabíamos cómo resolver un empate; ___ consultamos las reglas del juego.'],
+        ['Consultamos el mapa ___ no sabíamos qué camino seguir.','___ el camino era largo, llegamos a la fuente antes de comer.','No sabíamos qué camino seguir; ___ consultamos el mapa.'],
+        ['Reescribimos el final del cuento ___ no explicaba cómo volvía el robot a casa.','___ quedaba poco tiempo, terminamos el cuento del robot.','El final no explicaba cómo volvía el robot a casa; ___ lo reescribimos.'],
+      ];
+      const word=l===1?'porque':l===2?'aunque':'por eso',sentence=situations[i][l-1];
       return mc(l===1?'Elige el conector que presenta la razón.':l===2?'Elige el conector que expresa una dificultad que no impide actuar.':'Elige el conector que presenta la consecuencia.',word,['mientras','pero','además'],[T(c.title),T(sentence)],'El conector expresa la relación indicada entre las ideas.',l);
     }
     if(focus==='spelling'){

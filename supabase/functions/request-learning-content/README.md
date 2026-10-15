@@ -65,3 +65,18 @@ The review server binds only to loopback, uses fake accounts/database with the r
 Edge handler, and never connects to production. It is not a deployable auth bypass.
 The focused teen module covers only Language, reasoning and reading/writing;
 other teen domains retain historical generators.
+
+Regional selection now uses a deployable mirror of the canonical browser rules:
+`js/locale-content.js` → `supabase/functions/request-learning-content/locale-content.js`.
+Edit the canonical file and copy it to the function package before testing.
+A regression test requires byte-for-byte equality. This replaces the old recursive
+string maps; incompatible currency/word-form candidates are excluded before
+selection/history/usage. Early 6–7 selection remains client-owned and unchanged.
+
+```sh
+node tests/locale-production-audit.js
+python3 tests/browser-locale-content.py
+```
+
+See [the October 16 country audit](../../../docs/locale-content-followup.md) for
+results and editorial limits. This package now has ten local imports.

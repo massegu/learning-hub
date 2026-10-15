@@ -53,6 +53,22 @@ function authorized(){
   const request=body=>context.handler(new Request('https://offline.invalid/function',{method:'POST',headers:{Authorization:'Bearer mock','Content-Type':'application/json'},body:JSON.stringify({profile_id:'p',kind:'exercise',level:1,...body})}));
   return {context,profile,account,usage,writes,seenRows,request};
 }
+test('saved account country controls selection before history or usage writes, including all-rejected pools',async()=>{
+  const h=authorized();h.profile.age_band='teen';h.profile.progress={};h.account.content_locale='es_co';
+  let response=await h.request({domain:'executive',count:10,locale:'es_es'});
+  assert.equal(response.status,200);const result=await response.json();
+  assert.equal(result.items.length,10);
+  const locale=require('../js/locale-content');
+  for(const it of result.items){assert.equal(it.localization.locale,'es_co');assert.doesNotThrow(()=>locale.localizeItem(it,'es_co','executive'));assert.doesNotMatch(JSON.stringify(it),/€|\beuros?\b/u);}
+  const phone=require('../supabase/functions/request-learning-content/teen-review').pool('literacy',1).find(it=>it.teenReview.context==='interview');
+  h.context.TeenReview.generate=()=>structuredClone(phone);
+  response=await h.request({domain:'literacy',locale:'es_es'});assert.equal(response.status,200);
+  const phoneResult=(await response.json()).items[0];assert.match(JSON.stringify(phoneResult.stimulus),/teléfonos celulares/);assert.doesNotMatch(JSON.stringify(phoneResult.stimulus),/teléfonos móviles/);
+  const blocked=authorized();blocked.account.content_locale='es_co';
+  blocked.context.JuniorContent.generate=()=>({id:'bad',q:'¿Cuánto queda?',scenario:'Tienes 20 euros y gastas 5.',opts:['15 euros','20 euros'],a:'15 euros'});
+  response=await blocked.request({domain:'executive'});assert.equal(response.status,422);assert.equal(blocked.writes.length,0);
+  response=await blocked.request({kind:'worksheet',domains:['executive'],questions:6});assert.equal(response.status,422);assert.equal(blocked.writes.length,0);
+});
 test('real handler enforces saved age-route domains, ownership and quota without any production calls',async()=>{
   const h=authorized();
   let response=await h.request({domain:'social'});assert.equal(response.status,400);assert.equal(h.writes.length,0);

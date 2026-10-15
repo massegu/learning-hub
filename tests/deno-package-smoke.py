@@ -40,7 +40,7 @@ await import('''+json.dumps((ROOT/'supabase/functions/request-learning-content/i
                     assert response.headers['Access-Control-Allow-Origin']=='*'
                     body=response.read().decode()
                     if method=='POST':assert json.loads(body)['error']=='Authentication required'
-            print('PASS: diagnostic Deno type check passes; native Deno loads the real SDK, nine local modules and 1080 legacy items; OPTIONS 200, GET 405, unauthenticated POST 401.')
+            print('PASS: diagnostic Deno type check passes; native Deno loads the real SDK, ten local modules and 1080 legacy items; OPTIONS 200, GET 405, unauthenticated POST 401.')
             print('LIMIT: JSR ambient types substituted locally; no credentials, production calls or full deployment validation.')
         finally:
             process.terminate()

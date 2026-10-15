@@ -16,7 +16,7 @@ function loadEdge(filename=require.resolve('../supabase/functions/request-learni
     loadedImports.push(match[1]);
   }
   source=source.replace(/^await import\("\.\/[^"]+"\);\r?\n/gm,'');
-  vm.runInContext(stripTypeScriptTypes(source,{mode:'strip'})+'\n globalThis.edgeAPI={junior:globalThis.JuniorContent||null,primary:globalThis.PrimaryContent||null,middle:globalThis.MiddleContent||null,variantExercise,variantMath,variantReading,variantEnglish,geometry:typeof variantGeometry==="function"?variantGeometry:null,matrixLanguage18,matrixAttention18,matrixMemory18,matrixExecutive20,matrixApplied20,matrixReasoning18,matrixLiteracy18,normalizeItem,validateItem,generatedItems,contentSignature,worksheetTask,localizeValue,ensureWorksheetMemoryCoherence,SUBJECTS,academicPool};',context);
+  vm.runInContext(stripTypeScriptTypes(source,{mode:'strip'})+'\n globalThis.edgeAPI={junior:globalThis.JuniorContent||null,primary:globalThis.PrimaryContent||null,middle:globalThis.MiddleContent||null,variantExercise,variantMath,variantReading,variantEnglish,geometry:typeof variantGeometry==="function"?variantGeometry:null,matrixLanguage18,matrixAttention18,matrixMemory18,matrixExecutive20,matrixApplied20,matrixReasoning18,matrixLiteracy18,normalizeItem,validateItem,generatedItems,contentSignature,worksheetTask,localizeValue,regionalCandidate,matrixSocial18,ensureWorksheetMemoryCoherence,SUBJECTS,academicPool};',context);
   return {api:context.edgeAPI,context,loadedImports};
 }
 module.exports=loadEdge;

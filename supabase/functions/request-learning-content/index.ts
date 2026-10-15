@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 (globalThis as any).window = globalThis as any;
+await import("./locale-content.js");
 await import("./junior.js");
 await import("./primary-content.js");
 await import("./middle-content.js");
@@ -267,11 +268,11 @@ const EXEC_SCENARIOS:any = {
     {theme:"Preparar una merienda",steps:["Preparar los ingredientes","Preparar el pan","Añadir el relleno","Servir la merienda","Recoger lo utilizado"],distractor:"Guardar los zapatos"}
   ],
   middle:[
-    {theme:"Organizar una tarde de deberes",steps:["Anotar todo lo que hay que hacer","Ordenar las tareas por prioridad","Preparar el material","Empezar por la tarea prioritaria","Revisar lo terminado"],distractor:"Cambiar el fondo del móvil"},
+    {theme:"Organizar una tarde de deberes",steps:["Anotar todo lo que hay que hacer","Ordenar las tareas por prioridad","Preparar el material","Empezar por la tarea prioritaria","Revisar lo terminado"],distractor:"Cambiar el fondo del teléfono móvil"},
     {theme:"Preparar la mochila",steps:["Revisar el horario","Elegir el material necesario","Guardar cuadernos y estuche","Añadir agua o merienda","Comprobar que no falta nada"],distractor:"Buscar una serie para ver"}
   ],
   teen:[
-    {theme:"Salir de casa con varios compromisos",steps:["Revisar agenda y horarios","Priorizar lo que hay que preparar","Reunir lo necesario para cada actividad","Comprobar llaves, móvil y cartera","Revisar la ruta y hora de salida","Hacer una comprobación final"],distractor:"Ordenar las fotos del móvil"},
+    {theme:"Salir de casa con varios compromisos",steps:["Revisar agenda y horarios","Priorizar lo que hay que preparar","Reunir lo necesario para cada actividad","Comprobar las llaves, el teléfono móvil y la cartera","Revisar la ruta y hora de salida","Hacer una comprobación final"],distractor:"Ordenar las fotos del teléfono móvil"},
     {theme:"Organizar una tarde de estudio",steps:["Anotar tareas y plazos","Estimar cuánto tiempo necesita cada tarea","Ordenar las tareas por prioridad","Preparar el material","Trabajar según el plan","Revisar lo terminado y reajustar"],distractor:"Cambiar la foto de perfil"}
   ]
 };
@@ -292,7 +293,7 @@ const EXEC_CONSTRAINTS:any = {
 
 const MEMORY_BANKS:any = {
   primary:[
-    {theme:"Merienda",items:[["apple","manzana"],["sandwich","bocadillo"],["bottle","agua"],["yogurt","yogur"],["banana","plátano"],["cookie","galleta"],["book","libro"],["pencil","lápiz"]]},
+    {theme:"Merienda",items:[["apple","manzana"],["sandwich","sándwich"],["bottle","agua"],["yogurt","yogur"],["banana","plátano"],["cookie","galleta"],["book","libro"],["pencil","lápiz"]]},
     {theme:"Recados",items:[["bread","comprar pan"],["book","llevar un libro"],["phone","llamar a Ana"],["medicine","pasar por la farmacia"],["keys","coger las llaves"],["map","mirar la ruta"],["bottle","llevar agua"],["notebook","llevar el cuaderno"]]}
   ],
   middle:[
@@ -307,7 +308,7 @@ const MEMORY_BANKS:any = {
 
 const MEMORY_CONVERSATIONS:any = {
   teen:[
-    {theme:"Cafetería",pairs:[["Álex","café"],["Marta","té"],["Lucía","bocadillo"],["Diego","zumo"]]},
+    {theme:"Cafetería",pairs:[["Álex","café"],["Marta","té"],["Lucía","sándwich"],["Diego","zumo"]]},
     {theme:"Trabajo en grupo",pairs:[["Noa","busca las imágenes"],["Hugo","prepara la introducción"],["Sara","revisa las fuentes"],["Leo","hace las diapositivas"]]},
     {theme:"Plan para el sábado",pairs:[["Irene","lleva las entradas"],["Pablo","mira la ruta"],["Clara","reserva la mesa"],["Nico","avisa al grupo"]]}
   ],
@@ -1199,34 +1200,35 @@ function languageExercise(age:string,level:number){
   return {...x,id:"lang-"+crypto.randomUUID(),level,type:"languageReasoning",contentKey:x.key,mechanic:x.mechanic||"language"};
 }
 
-function localizeString(s:string,locale:string){
-  const maps:any={
-    es_intl:[["zumo","jugo"],["móvil","teléfono"],["celular","teléfono"],["ordenador","computadora"],["bocadillo","sándwich"],["instituto","escuela secundaria"],["autobús","bus"]],
-    es_es:[["jugo","zumo"],["celular","móvil"],["computadora","ordenador"],["computador","ordenador"],["sándwich","bocadillo"],["escuela secundaria","instituto"],["bus","autobús"]],
-    es_mx:[["zumo","jugo"],["móvil","celular"],["ordenador","computadora"],["computador","computadora"],["bocadillo","sándwich"],["instituto","secundaria"],["autobús","camión"]],
-    es_co:[["zumo","jugo"],["móvil","celular"],["ordenador","computador"],["computadora","computador"],["bocadillo","sándwich"],["instituto","colegio"],["autobús","bus"]],
-    es_ar:[["zumo","jugo"],["móvil","celular"],["ordenador","computadora"],["computador","computadora"],["bocadillo","sándwich"],["instituto","secundaria"],["autobús","colectivo"]],
-    es_cl:[["zumo","jugo"],["móvil","celular"],["ordenador","computador"],["computadora","computador"],["bocadillo","sándwich"],["instituto","colegio"],["autobús","micro"]],
-    es_pa:[["zumo","jugo"],["móvil","celular"],["ordenador","computadora"],["computador","computadora"],["bocadillo","sándwich"],["instituto","colegio"],["autobús","bus"]],
-    es_cr:[["zumo","jugo"],["móvil","celular"],["ordenador","computadora"],["computador","computadora"],["bocadillo","sándwich"],["instituto","colegio"],["autobús","bus"]]
-  };
-  const esc=(x:string)=>x.replace(/[.*+?^$()|[\]\\]/g,"\\$&");
-  const whole=(input:string,from:string,to:string)=>{
-    const re=new RegExp("(^|[^\\p{L}\\p{N}_])("+esc(from)+")(?=$|[^\\p{L}\\p{N}_])","giu");
-    return input.replace(re,(full,prefix,word)=>{
-      const rep=word.charAt(0)===word.charAt(0).toUpperCase()?to.charAt(0).toUpperCase()+to.slice(1):to;
-      return prefix+rep;
-    });
-  };
-  let out=String(s).replace(/autobúscará/gi,"buscará").replace(/autobúscar/gi,"buscar").replace(/autobuscara/gi,"buscará").replace(/autobuscar/gi,"buscar");
-  for(const [from,to] of (maps[locale]||maps.es_intl)) out=whole(out,from,to);
-  return out;
-}
+// Canonical rules are mirrored from js/locale-content.js for the deployable package.
+// A regression check requires byte-for-byte parity. Do not recursively replace IDs,
+// metadata, English specimens or word-form evidence with ad-hoc string maps.
 function localizeValue(value:any,locale:string):any{
-  if(typeof value==="string") return localizeString(value,locale);
-  if(Array.isArray(value)) return value.map(v=>localizeValue(v,locale));
-  if(value&&typeof value==="object"){ const out:any={}; for(const [k,v] of Object.entries(value)) out[k]=localizeValue(v,locale); return out; }
-  return value;
+  const rules=(globalThis as any).LocaleContent;
+  if(Array.isArray(value))return value.map(item=>localizeValue(item,locale));
+  if(value&&typeof value==="object")return rules.localizeItem(value,locale);
+  return rules.text(value,locale);
+}
+const regionalCache=new Map<string,any>();
+function regionalCandidate(item:any,locale:string,domain:string,age:string){
+  if(!item||age==="early")return item;
+  const rules=(globalThis as any).LocaleContent,key=rules.normalize(locale);
+  const {id,...source}=item,signature=key+":"+domain+":"+JSON.stringify(source);
+  if(regionalCache.has(signature)){
+    const stored=regionalCache.get(signature);
+    return stored?{...structuredClone(stored),id}:null;
+  }
+  try{
+    const localized=rules.localizeItem(item,key,domain);
+    if(regionalCache.size>=5000)regionalCache.clear();
+    regionalCache.set(signature,localized);
+    return localized;
+  }catch(error){
+    if((error as any)?.name!=="LocaleAdaptationError")throw error;
+    if(regionalCache.size>=5000)regionalCache.clear();
+    regionalCache.set(signature,null);
+    return null;
+  }
 }
 function sanitizeGeneratedLanguage(value:any):any{
   if(typeof value==="string"){
@@ -1820,7 +1822,7 @@ function matrixApplied(age:string,level:number,v:number){
     ()=>mk("prioridad",easy?"Mañana debes llevar una ficha y también quieres ordenar juguetes.":"Tienes una tarea para mañana y otra opcional.","¿Qué conviene hacer primero?",easy?"Preparar la ficha":"La tarea de mañana","La otra","Las dos a la vez","Ninguna","app_priority"),
     ()=>mk("elección útil",easy?"Hace frío y vas a salir.":"Vas a pasar varias horas fuera y puede llover.","¿Qué es más útil llevar?",easy?"Abrigo":"Paraguas","Bañador","Almohada","Mando","app_choice"),
     ()=>mk("recado",easy?"Te piden llevar un libro a la biblioteca.":"Debes entregar "+obj+" en "+place+".","¿Qué debes coger antes de salir?",easy?"El libro":obj,"Una pelota","Un plato","Nada","app_errand"),
-    ()=>mk("seguridad cotidiana",easy?"Vas a cruzar una calle.":"Vas a cruzar una calle con tráfico.","¿Qué haces antes?",easy?"Mirar a ambos lados":"Comprobar antes de cruzar","Correr sin mirar","Usar el móvil","Dar la espalda","app_safety"),
+    ()=>mk("seguridad cotidiana",easy?"Vas a cruzar una calle.":"Vas a cruzar una calle con tráfico.","¿Qué haces antes?",easy?"Mirar a ambos lados":"Comprobar antes de cruzar","Correr sin mirar","Usar el teléfono móvil","Dar la espalda","app_safety"),
     ()=>mk("rutina",easy?"Después de lavarte las manos están mojadas.":"Después de terminar una actividad debes dejar el espacio preparado.","¿Qué haces?",easy?"Secarlas":"Recoger lo utilizado","Irte sin mirar","Dejar todo","Empezar otra cosa","app_routine"),
     ()=>mk("problema cotidiano",easy?"No encuentras tu lápiz y tienes que escribir.":"No tienes el material que necesitas y la tarea empieza ya.","¿Qué solución es razonable?",easy?"Pedir otro lápiz":"Pedir o buscar una alternativa","Abandonar","Romper la tarea","Esperar sin decir nada","app_problem"),
     ()=>mk("información relevante",easy?"Para saber si puedes salir necesitas saber si llueve.":"Para llegar puntual importan hora, trayecto y retrasos.","¿Qué dato es menos importante?",easy?"El color de tu camiseta":"El color de tu camiseta","La hora","El trayecto","Los retrasos","app_relevance")
@@ -2283,6 +2285,7 @@ Deno.serve(async (req:Request)=>{
   if(usedNow+cost>limit) return new Response(JSON.stringify({error:"Daily content limit reached"}),{status:403,headers:{...corsHeaders,"Content-Type":"application/json"}});
   const route=profile.progress?.ageRoute;
   const age=(route==="early"||route==="junior")?route:profile.age_band;
+  const locale=(globalThis as any).LocaleContent.normalize(account.content_locale??profile.locale);
   const level=Math.max(1,Math.min(3,Number(body.level||1)));
   const requestedDomains=kind==="worksheet" ? (Array.isArray(body.domains)&&body.domains.length?body.domains:SUBJECTS[age]) : [body.domain];
   if(!SUBJECTS[age] || !Number.isInteger(level) || (kind!=="game" && (!Array.isArray(requestedDomains)||!requestedDomains.length||requestedDomains.some((d:any)=>!SUBJECTS[age].includes(d)))))
@@ -2320,7 +2323,7 @@ Deno.serve(async (req:Request)=>{
       let chosen:any=null, fallback:any=null;
       const recent=recentByDomain.get(domain)||new Set<string>();
       for(let tries=0;tries<220;tries++){
-        const cand=normalizeItem(ensureWorksheetMemoryCoherence(worksheetTask(age,domain,level)));
+        const cand=regionalCandidate(normalizeItem(ensureWorksheetMemoryCoherence(worksheetTask(age,domain,level))),locale,domain,age);
         if(!validateItem(cand)) continue;
         const sig=contentSignature(domain,cand);
         if(!fallback&&!localSeen.has(sig)) fallback=cand;
@@ -2357,9 +2360,9 @@ Deno.serve(async (req:Request)=>{
       if(row.mechanic_signature) recentEntries.push(row.mechanic_signature);
     }
     if(domain==="attention"){
-      items=generatedItems(domain,n,recentEntries,()=>variantExercise(age,domain,level,subdomain));
+      items=generatedItems(domain,n,recentEntries,()=>regionalCandidate(variantExercise(age,domain,level,subdomain),locale,domain,age));
     } else if(["executive","memory","speedReasoning","applied","social","language","middleLanguage","teenLanguage","division","geometry","middleMath","teenMath","reading","middleReading","english","literacy"].includes(domain)){
-      items=generatedItems(domain,n,recentEntries,()=>variantExercise(age,domain,level,subdomain));
+      items=generatedItems(domain,n,recentEntries,()=>regionalCandidate(variantExercise(age,domain,level,subdomain),locale,domain,age));
     } else {
       const seen=new Set(recentEntries);
       const pool=academicPool(age,domain,subdomain,level);
@@ -2367,6 +2370,7 @@ Deno.serve(async (req:Request)=>{
       if(!available.length) available=pool;
       items=shuffle(available).slice(0,n);
     }
+    if(items.length!==n)return new Response(JSON.stringify({error:"No hay actividades disponibles para esta área y variante de español. Prueba otra área."}),{status:422,headers:{...corsHeaders,"Content-Type":"application/json"}});
     delivery.seen ||= {};
     delivery.seen[domain] ||= [];
     for(const it of items){
@@ -2390,7 +2394,7 @@ Deno.serve(async (req:Request)=>{
     if(seenInsert.length) await admin.from("content_seen").insert(seenInsert);
   }
   items=items.map(normalizeItem).filter(validateItem);
-  items=localizeValue(items,account.content_locale||profile.locale||"es_intl");
+  if(age!=="early")items=localizeValue(items,locale);
   items=sanitizeGeneratedLanguage(items);
   const nextUsed=usedNow+cost;
   await admin.from("content_usage").upsert({user_id:user.id,usage_date:date,kind,used:nextUsed,updated_at:new Date().toISOString()},{onConflict:"user_id,usage_date,kind"});

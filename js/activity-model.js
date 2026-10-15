@@ -226,7 +226,10 @@
     return `${key?`<span class="picture-icon" aria-hidden="true">${art.svg(key)}</span>`:''}<span>${escape(raw)}</span>`;
   }
   function interactiveStimulus(blocks,options={}) {
-    return blocks.map(block => {
+    // The topic is already visible above the question. Keep it in the canonical
+    // stimulus for standalone worksheets, but do not print it twice on screen.
+    const visibleBlocks=blocks.length>1&&options.heading?blocks.filter(b=>b.type!=='text'||b.text!==options.heading):blocks;
+    return visibleBlocks.map(block => {
       blockValid(block);
       if(options.illustrated){
         const label=block.label?`<p class="stimulus-caption">${escape(block.label)}</p>`:'';

@@ -1,5 +1,10 @@
 # Spanish locale integration review
 
+**Actualización 2026-10-16:** [Revisión editorial y regional](locale-content-followup.md)
+unifica el lexicón servidor/cliente, filtra candidatos incompatibles antes del uso
+y verifica la aplicación real en siete países, cinco edades y fichas. Las
+observaciones siguientes conservan el estado histórico de la primera revisión.
+
 Reviewed 2026-10-13 on `fix/early-primary-stimulus-integrity`, following
 `bae9207` and `08b196d`. No merge, deployment, production function invocation,
 or production Supabase data change was performed.

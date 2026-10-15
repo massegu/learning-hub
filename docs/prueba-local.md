@@ -25,6 +25,10 @@ Cuando la terminal diga **Prueba local lista**, escribe `http://localhost:8001`
 en tu navegador. Debe aparecer una franja amarilla que diga **PRUEBA LOCAL**.
 Mantén la terminal abierta. Para terminar, pulsa **Ctrl+C** en la terminal.
 
+Después de cada actualización del repositorio, detén la prueba con **Ctrl+C**,
+vuelve a ejecutar el comando y recarga la página. Los generadores se cargan al
+iniciar el servidor; actualizar archivos sin reiniciarlo puede dejar contenido viejo.
+
 En macOS/Linux, utiliza `python3 tools/review-preview.py`.
 
 ## Qué revisar

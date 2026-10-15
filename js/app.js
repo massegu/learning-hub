@@ -24,27 +24,27 @@
       desc: "Lee el texto y usa sus pistas para responder.",
     },
     middleLanguage: {
-      name: "Lenguaje 12-13",
+      name: "Lenguaje 13-15",
       icon: "Aa",
       desc: "Gramática, ortografía y escritura para comunicar ideas con claridad.",
     },
     middleMath: {
-      name: "Matemáticas 12-13",
+      name: "Matemáticas 13-15",
       icon: "∑",
       desc: "Porcentajes, fracciones, ecuaciones, proporcionalidad y geometría.",
     },
     middleReading: {
-      name: "Lectura 12-13",
+      name: "Lectura 13-15",
       icon: "▤",
       desc: "Comprende el texto y deduce ideas a partir de sus pistas.",
     },
     teenLanguage: {
-      name: "Lenguaje 14-17",
+      name: "Lenguaje 16-18",
       icon: "Aa",
       desc: "Gramática, ortografía y escritura con argumentos y pruebas.",
     },
     teenMath: {
-      name: "Matemáticas 14-17",
+      name: "Matemáticas 16-18",
       icon: "∑",
       desc: "Porcentajes, ecuaciones y proporcionalidad.",
     },
@@ -107,7 +107,7 @@
       ],
     },
     middle: {
-      label: "12-13 años",
+      label: "13-15 años",
       subjects: [
         "middleLanguage",
         "middleMath",
@@ -122,7 +122,7 @@
       ],
     },
     teen: {
-      label: "14-17 años",
+      label: "16-18 años",
       subjects: [
         "teenLanguage",
         "teenMath",
@@ -731,6 +731,7 @@
     if (v) $("#exercisePrompt").textContent = "Cargando reto…";
   }
   function friendlyContentError(e) {
+    if(e?.name==='LocaleAdaptationError')return 'No se ha podido preparar una actividad para esta variante de español. Prueba otra área.';
     const raw = String(e?.message || "");
     if (/Daily content limit reached/i.test(raw))
       return "Has alcanzado el límite de contenido de hoy para esta modalidad. Podrás continuar cuando se renueve la cuota diaria.";
@@ -804,7 +805,7 @@
         `<div class="scenario-card"><span class="scenario-label">SITUACIÓN</span><p>${escapeHtml(it.scenario)}</p></div>`;
     if (it.stimulus)
       $("#exerciseVisual").innerHTML =
-        `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus,{illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:!window.ContentPolicy.forProfile(profile),senses:it.lexicalSenses})}</div>`;
+        `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus,{heading:it.topic||it.theme,illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:!window.ContentPolicy.forProfile(profile),senses:it.lexicalSenses})}</div>`;
     $("#exercisePrompt").textContent = it.q || "Actividad";
     if (it.type === "memoryReveal" || it.type === "memoryMulti") {
       renderMemoryExercise(it);

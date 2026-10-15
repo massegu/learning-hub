@@ -5,6 +5,9 @@
   const currencies=Object.freeze({es_es:['EUR'],es_mx:['MXN'],es_co:['COP'],es_ar:['ARS'],es_cl:['CLP'],es_pa:['USD','PAB'],es_cr:['CRC']});
   const currencyPatterns={EUR:/€|(?<!\p{L})(?:euros?|EUR)(?!\p{L})/iu,USD:/(?<!\p{L})(?:dólares?|USD)(?!\p{L})/iu,MXN:/(?<!\p{L})(?:MXN|pesos? mexicanos?)(?!\p{L})/iu,COP:/(?<!\p{L})(?:COP|pesos? colombianos?)(?!\p{L})/iu,ARS:/(?<!\p{L})(?:ARS|pesos? argentinos?)(?!\p{L})/iu,CLP:/(?<!\p{L})(?:CLP|pesos? chilenos?)(?!\p{L})/iu,PAB:/(?<!\p{L})(?:PAB|balboas?)(?!\p{L})/iu,CRC:/(?<!\p{L})(?:CRC|colones|colón)(?!\p{L})/iu};
   const aliases = Object.fromEntries(countries.map(k=>[k.replace('_','-').toLowerCase(),k]));
+  class LocaleAdaptationError extends Error {
+    constructor(message){super(message);this.name='LocaleAdaptationError';}
+  }
   function normalize(value) {
     const key=String(value || 'es_intl').trim().toLowerCase();
     return Object.hasOwn(labels,key) ? key : aliases[key] || 'es_intl';
@@ -25,6 +28,7 @@
     {id:'swimwear',category:'clothing',sources:[term('bañador'),term('traje de baño','m','trajes de baño')],common:term('traje de baño','m','trajes de baño'),preferred:{es_es:term('bañador')}},
     {id:'flipflops',category:'clothing',sources:[term('chancla','f'),term('chancleta','f'),term('ojota','f'),term('chala','f')],common:term('sandalia','f'),preferred:{es_es:term('chancla','f'),es_mx:term('chancla','f'),es_ar:term('ojota','f'),es_cl:term('chala','f'),es_pa:term('chancleta','f'),es_cr:term('chancleta','f')}},
     {id:'toycar',category:'transport',sources:[term('coche de juguete','m','coches de juguete'),term('carro de juguete','m','carros de juguete'),term('auto de juguete','m','autos de juguete')],common:term('auto de juguete','m','autos de juguete'),preferred:{es_es:term('coche de juguete','m','coches de juguete'),es_mx:term('carro de juguete','m','carros de juguete'),es_co:term('carro de juguete','m','carros de juguete'),es_pa:term('carro de juguete','m','carros de juguete'),es_cr:term('carro de juguete','m','carros de juguete')}},
+    {id:'publicbus',category:'transport',sources:[term('autobús','m','autobuses')],common:term('autobús','m','autobuses'),preferred:{es_co:term('bus','m','buses'),es_ar:term('colectivo'),es_cl:term('bus','m','buses'),es_pa:term('bus','m','buses'),es_cr:term('bus','m','buses')}},
     {id:'car',category:'transport',sources:[term('automóvil','m','automóviles')],common:term('automóvil','m','automóviles'),preferred:{es_es:term('coche'),es_mx:term('auto'),es_co:term('carro'),es_ar:term('auto'),es_cl:term('auto'),es_pa:term('carro'),es_cr:term('carro')}},
     {id:'potato',category:'food',sources:[term('patata','f'),term('papa','f')],common:term('papa','f'),preferred:{es_es:term('patata','f')}},
     {id:'juice',category:'food',sources:[term('zumo'),term('jugo')],common:term('jugo'),preferred:{es_es:term('zumo')}},
@@ -80,7 +84,7 @@
       agreementPatterns.set(key,patterns);
     }
     const lower=value.toLowerCase();
-    if(agreementPatterns.get(key).some(({word,pattern})=>lower.includes(word)&&pattern.test(value)))throw new Error('La concordancia regional necesita revisión.');
+    if(agreementPatterns.get(key).some(({word,pattern})=>lower.includes(word)&&pattern.test(value)))throw new LocaleAdaptationError('La concordancia regional necesita revisión.');
     return value;
   }
   function text(value,locale,senses={}) {
@@ -100,16 +104,16 @@
       for(const [from,to] of Object.entries({...verbs,...plurals})) result=result.replace(new RegExp(`(?<!\\p{L})${escape(from)}(?!\\p{L})`,'giu'),s=>casing(to,s));
       result=result.replace(/(?<!\p{L})os laváis(?!\p{L})/giu,s=>casing('se lavan',s));
       // Do not silently emit an unhandled Spain-only plural/reflexive form.
-      if(/(?<!\p{L})(?:os|cogéis|coged)(?!\p{L})|(?<!\p{L})(?!(?:dieciséis|veintiséis)(?!\p{L}))\p{L}+(?:áis|éis)(?!\p{L})/iu.test(result)) throw new Error('La frase necesita revisión regional de pronombres y verbos.');
+      if(/(?<!\p{L})(?:os|cogéis|coged)(?!\p{L})|(?<!\p{L})(?!(?:dieciséis|veintiséis)(?!\p{L}))\p{L}+(?:áis|éis)(?!\p{L})/iu.test(result)) throw new LocaleAdaptationError('La frase necesita revisión regional de pronombres y verbos.');
     }
     return checkAgreement(result,key);
   }
   const scalarFields=['q','prompt','memoryQuestion','why','topic','theme','text','title','scenario','sample','model','a','detail','label','instruction','question','rule','n'];
-  const arrayFields=['opts','answers','tokens','answer','modelSequence','rows','visualItems','grid','stimuli','sequence'];
+  const arrayFields=['opts','answers','tokens','answer','modelSequence','rows','visualItems','grid','stimuli','sequence','writingRubric'];
   function html(value,locale,senses) {
     if(!value || !/[<>]/.test(value))return text(value,locale,senses);
     const Parser=root.DOMParser;
-    if(!Parser)throw new Error('El contenido HTML necesita el adaptador regional del navegador.');
+    if(!Parser)throw new LocaleAdaptationError('El contenido HTML necesita el adaptador regional del navegador.');
     const doc=new Parser().parseFromString(value,'text/html');
     function visit(node) {
       if(node.nodeType===3)node.textContent=text(node.textContent,locale,senses);
@@ -127,10 +131,10 @@
     return doc.body.innerHTML;
   }
   function localizeItem(item,locale,domain=item?.localization?.domain || item?.domain) {
-    if(!item || typeof item!=='object')throw new Error('Falta la actividad que se debe adaptar.');
+    if(!item || typeof item!=='object')throw new LocaleAdaptationError('Falta la actividad que se debe adaptar.');
     const key=normalize(locale);
-    if(item.localization && item.localization.locale!==key)throw new Error('La actividad pertenece a otra variante de español. Solicita una nueva.');
-    if(item.localization?.domain && domain && item.localization.domain!==domain)throw new Error('El contexto regional del área ha cambiado. Solicita contenido nuevo.');
+    if(item.localization && item.localization.locale!==key)throw new LocaleAdaptationError('La actividad pertenece a otra variante de español. Solicita una nueva.');
+    if(item.localization?.domain && domain && item.localization.domain!==domain)throw new LocaleAdaptationError('El contexto regional del área ha cambiado. Solicita contenido nuevo.');
     // Localize Spanish instructions/explanations in English Lab, while retaining
     // the English specimen, options and scoring keys verbatim.
     const english=domain==='english';
@@ -150,15 +154,15 @@
     const visible=x=>JSON.stringify(Object.fromEntries([...scalarFields,...arrayFields,'stimulus','memoryContent','visual'].filter(f=>x[f]!==undefined).map(f=>[f,x[f]])));
     const originalText=visible(item), adaptedText=visible(result);
     const moneyContext=/(?:cuesta|precio|paga|compra|moneda|ahorra|cambio|presupuesto|\d+\s*(?:€|euros?|dólares?|balboas?|colones|colón|EUR|USD|MXN|COP|ARS|CLP|PAB|CRC))/iu.test(originalText);
-    if(key!=='es_intl' && moneyContext && item.currencyContext!=='foreign' && Object.entries(currencyPatterns).some(([code,pattern])=>!currencies[key].includes(code)&&pattern.test(originalText)))throw new Error('La moneda necesita una actividad regional revisada o un contexto extranjero explícito.');
-    if(originalText!==adaptedText && /letras|sílabas|rima|conjug|sinónimo|antónimo|tradu(?:ce|cir|cción)|palabra[^?]*(?:empieza|termina)/iu.test(item.q || item.prompt || ''))throw new Error('La actividad sobre la forma de las palabras necesita una versión regional revisada.');
+    if(key!=='es_intl' && moneyContext && item.currencyContext!=='foreign' && Object.entries(currencyPatterns).some(([code,pattern])=>!currencies[key].includes(code)&&pattern.test(originalText)))throw new LocaleAdaptationError('La moneda necesita una actividad regional revisada o un contexto extranjero explícito.');
+    if(originalText!==adaptedText && /letras|sílabas|rima|conjug|sinónimo|antónimo|tradu(?:ce|cir|cción)|palabra[^?]*(?:empieza|termina)/iu.test(item.q || item.prompt || ''))throw new LocaleAdaptationError('La actividad sobre la forma de las palabras necesita una versión regional revisada.');
     const genderChange=(senses.banana===true?[...rules,bananaRule]:rules).some(rule=>{
       const target=rule.preferred[key]||rule.common;
       return rule.sources.some(source=>source.gender!==target.gender && new RegExp(`(?<!\\p{L})(?:${escape(source.word)}|${escape(source.plural)})(?!\\p{L})`,'iu').test(originalText));
     });
-    if(genderChange && /(?:usar|guardar|encender|apagar|comprar|buscar|cerrar|abrir)(?:lo|la|los|las)\b/iu.test(originalText))throw new Error('La referencia pronominal necesita una versión regional revisada.');
+    if(genderChange && /(?:usar|guardar|encender|apagar|comprar|buscar|cerrar|abrir)(?:lo|la|los|las)\b/iu.test(originalText))throw new LocaleAdaptationError('La referencia pronominal necesita una versión regional revisada.');
     for(const field of ['opts','tokens','answers','answer']) {
-      if(Array.isArray(item[field]) && Array.isArray(result[field]) && new Set(item[field]).size!==new Set(result[field]).size)throw new Error('La adaptación regional hace indistinguibles dos respuestas.');
+      if(Array.isArray(item[field]) && Array.isArray(result[field]) && new Set(item[field]).size!==new Set(result[field]).size)throw new LocaleAdaptationError('La adaptación regional hace indistinguibles dos respuestas.');
     }
     result.localization={locale:key,revision:1,domain};
     return result;
