@@ -2761,3 +2761,12 @@ body {
 #documentModeSwitch button{border:0;background:transparent;border-radius:7px;padding:.75rem 1rem;min-height:44px;font:inherit;font-weight:750;color:var(--muted,#52675b);cursor:pointer;flex:1 1 auto}
 #documentModeSwitch button[aria-pressed="true"]{background:#1e4d33;color:#fff;box-shadow:0 2px 0 #133523}
 #documentModeSwitch button:focus-visible{outline:3px solid #d9b74c;outline-offset:2px}
+
+.auth-link{display:block;margin:1rem auto 0;border:0;background:transparent;color:#215a3a;text-decoration:underline;font:inherit;cursor:pointer;padding:.5rem}
+.password-dialog{border:1px solid #dce5df;border-radius:16px;padding:1.8rem;max-width:30rem;width:calc(100% - 2rem);color:#173326;background:#fffdf8;box-shadow:0 20px 60px #17332633}
+.password-dialog::backdrop{background:#102a20a8}
+.password-dialog h2{margin-top:0}
+.password-dialog label{display:grid;gap:.4rem;margin:1rem 0;font-weight:650}
+.password-dialog input{width:100%;padding:.8rem;border:1px solid #c4d5c9;border-radius:7px;font:inherit}
+.password-dialog [role=status]{min-height:1.5rem;overflow-wrap:anywhere}
+.password-dialog .auth-actions{display:flex;flex-wrap:wrap;gap:.6rem}

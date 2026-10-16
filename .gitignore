@@ -1,2 +1,6 @@
 node_modules/
 __pycache__/
+.release-backup/
+.env
+.env.*
+!.env.example

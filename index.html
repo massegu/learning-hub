@@ -16,11 +16,22 @@
       <h2>Accede a tu espacio de entrenamiento</h2>
       <p>Tu progreso, perfiles y contenido se guardan de forma segura en la nube.</p>
       <label>Email<input id="authEmail" type="email" autocomplete="email" placeholder="tu@email.com" /></label>
-      <label>Contraseña<input id="authPassword" type="password" autocomplete="current-password" placeholder="Mínimo 6 caracteres" /></label>
+      <label>Contraseña<input id="authPassword" type="password" autocomplete="current-password" placeholder="Tu contraseña" /></label>
       <div class="auth-actions"><button id="authSignIn" class="primary-btn">Entrar</button><button id="authSignUp" class="secondary-btn">Crear cuenta</button></div>
-      <p id="authMessage" class="muted"></p>
+      <button id="authForgotPassword" class="auth-link" type="button">He olvidado mi contraseña</button>
+      <p id="authMessage" class="muted" role="status" aria-live="polite"></p>
     </div>
   </div>
+  <dialog id="passwordDialog" class="password-dialog" aria-labelledby="passwordTitle">
+    <form id="passwordForm">
+      <h2 id="passwordTitle">Cambiar contraseña</h2>
+      <p>Elige una contraseña nueva de al menos 8 caracteres.</p>
+      <label>Nueva contraseña<input id="newPassword" type="password" autocomplete="new-password" minlength="8" required /></label>
+      <label>Repite la nueva contraseña<input id="repeatPassword" type="password" autocomplete="new-password" minlength="8" required /></label>
+      <p id="passwordMessage" role="status" aria-live="polite"></p>
+      <div class="auth-actions"><button id="savePassword" type="submit" class="primary-btn">Guardar contraseña</button><button id="closePassword" type="button" class="secondary-btn">Cancelar</button></div>
+    </form>
+  </dialog>
   <div id="profileGate" class="profile-gate hidden" role="dialog" aria-modal="true">
     <div class="profile-modal card">
       <span class="pill">PERFIL</span>
@@ -51,7 +62,7 @@
     <main class="main-content">
       <header class="topbar">
         <div><p class="eyebrow" id="ageEyebrow">ENTRENAMIENTO PERSONALIZADO</p><h2 id="sectionTitle">Panel</h2></div>
-        <div class="topbar-actions"><div class="session-chip" id="accountStatus">—</div><button id="subscribeBtn" class="mini-btn billing-btn hidden">Suscribirme · 25 €/mes</button><button id="billingPortalBtn" class="mini-btn billing-btn hidden">Gestionar suscripción</button><div class="session-chip"><span id="activeProfileLabel">—</span></div><div class="session-chip">Sesión <strong id="sessionAttempts">0</strong></div><div class="streak-card">Racha <strong id="streakCount">0</strong> 🔥</div><button id="signOutBtn" class="mini-btn">Salir</button></div>
+        <div class="topbar-actions"><div class="session-chip" id="accountStatus">—</div><button id="subscribeBtn" class="mini-btn billing-btn hidden">Suscribirme · 25 €/mes</button><button id="billingPortalBtn" class="mini-btn billing-btn hidden">Gestionar suscripción</button><div class="session-chip"><span id="activeProfileLabel">—</span></div><div class="session-chip">Sesión <strong id="sessionAttempts">0</strong></div><div class="streak-card">Racha <strong id="streakCount">0</strong> 🔥</div><button id="changePasswordBtn" class="mini-btn">Cambiar contraseña</button><button id="signOutBtn" class="mini-btn">Salir</button></div>
       </header>
 
       <section id="home" class="section active-section">
@@ -104,6 +115,6 @@
     </main>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/stimulus-art.js"></script><script src="js/stimulus-art-png.js"></script><script src="js/early-refinements.js"></script><script src="js/content-policy.js"></script><script src="js/early-language.js"></script><script src="js/document-library.js"></script><script src="js/reading-library.js"></script><script src="js/curriculum.js"></script><script src="js/early-content.js"></script><script src="js/activity-model.js"></script><script src="js/locale-content.js"></script><script src="js/worksheet-selection.js"></script><script src="js/early-journey.js"></script><script src="js/config.js"></script><script src="js/api.js"></script><script src="js/docx.js"></script><script src="js/age-stages.js"></script><script src="js/school-journey.js"></script><script src="js/app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/stimulus-art.js"></script><script src="js/stimulus-art-png.js"></script><script src="js/early-refinements.js"></script><script src="js/content-policy.js"></script><script src="js/early-language.js"></script><script src="js/document-library.js"></script><script src="js/reading-library.js"></script><script src="js/curriculum.js"></script><script src="js/early-content.js"></script><script src="js/activity-model.js"></script><script src="js/locale-content.js"></script><script src="js/worksheet-selection.js"></script><script src="js/early-journey.js"></script><script src="js/config.js"></script><script src="js/api.js"></script><script src="js/auth-account.js"></script><script src="js/docx.js"></script><script src="js/age-stages.js"></script><script src="js/school-journey.js"></script><script src="js/app.js"></script>
 </body>
 </html>

@@ -15,6 +15,13 @@
   API.getSession=async()=>{const {data}=await client.auth.getSession();API.session=data.session||null;API.user=API.session?.user||null;return API.session};
   API.signIn=async(email,password)=>{const {data,error}=await client.auth.signInWithPassword({email,password});if(error)throw error;API.session=data.session;API.user=data.user;return data};
   API.signUp=async(email,password)=>{const {data,error}=await client.auth.signUp({email,password});if(error)throw error;API.session=data.session;API.user=data.user;return data};
+  API.resetPassword=async(email)=>{
+    const redirect=new URL(window.location.pathname,window.location.origin);
+    redirect.searchParams.set('recuperar','1');
+    const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:redirect.href});
+    if(error)throw error;
+  };
+  API.changePassword=async(password)=>{const {error}=await client.auth.updateUser({password});if(error)throw error;};
   API.signOut=async()=>{await client.auth.signOut();API.session=null;API.user=null;API.profileLocale=null;API.setContentLocale(null)};
   API.listProfiles=async()=>{const {data,error}=await client.from('learner_profiles').select('id,name,age_band,locale,progress,created_at').order('created_at');if(error)throw error;return data||[]};
   API.createProfile=async(name,age_band,initial_level=1,locale='es_intl')=>{const {data,error}=await client.from('learner_profiles').insert({account_id:API.user.id,name,age_band,locale,progress:{initialLevel:Number(initial_level)||1}}).select('id,name,age_band,locale,progress,created_at').single();if(error)throw error;return data};

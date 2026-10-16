@@ -1,0 +1,74 @@
+name: Comprobar y publicar beta
+on:
+  push:
+    branches: [desarrollo]
+  pull_request:
+    branches: [desarrollo, main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: learning-hub-beta
+  cancel-in-progress: false
+jobs:
+  comprobar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - run: python3 -m unittest discover -s tests -p 'test_*.py'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install playwright==1.62.0
+      - run: python -m playwright install --with-deps chromium
+      - run: python tests/browser-auth-account.py
+  publicar:
+    needs: comprobar
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/desarrollo'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    environment: beta
+    env:
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF_BETA }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Comprobar configuración
+        run: |
+          test -n "$SUPABASE_PROJECT_REF" || { echo 'Falta la variable SUPABASE_PROJECT_REF_BETA en GitHub.'; exit 1; }
+          test -n "$SUPABASE_ACCESS_TOKEN" || { echo 'Falta el secreto SUPABASE_ACCESS_TOKEN en GitHub.'; exit 1; }
+      - name: Evitar publicar una revisión anterior o una rama divergente
+        run: |
+          if git show-ref --verify --quiet refs/remotes/origin/pruebas; then
+            git merge-base --is-ancestor origin/pruebas HEAD || { echo 'Esta revisión es anterior o divergente respecto a pruebas. Actualiza desarrollo antes de publicar.'; exit 1; }
+          fi
+      - name: Guardar copia y publicar la función
+        run: python3 scripts/deploy-supabase.py --deploy --backup-dir "$RUNNER_TEMP/learning-hub-backup"
+      - name: Conservar copia de la función anterior
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: copia-funcion-${{ github.run_number }}
+          path: ${{ runner.temp }}/learning-hub-backup/
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Promover la web después de publicar la función
+        run: git push origin HEAD:refs/heads/pruebas
+      - name: Confirmar el enlace de Cloudflare
+        run: python3 scripts/verify-beta-web.py --url https://pruebas.learning-hub-5n9.pages.dev --attempts 20
+      - name: Resumen
+        if: always()
+        run: |
+          echo '### Versión de prueba' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Web: https://pruebas.learning-hub-5n9.pages.dev' >> "$GITHUB_STEP_SUMMARY"
+          echo "Código: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo 'Comprueba el resultado de cada paso; un enlace por sí solo no acredita una publicación correcta.' >> "$GITHUB_STEP_SUMMARY"

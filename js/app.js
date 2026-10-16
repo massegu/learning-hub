@@ -495,6 +495,9 @@
   async function boot() {
     try {
       const session = await API.getSession();
+      if(window.PasswordAccount?.recoveryPending()){
+        showAuth();window.PasswordAccount.resumeRecovery(session);return;
+      }
       if (!session) {
         showAuth();
         return;
@@ -1551,5 +1554,6 @@
     $("#exerciseNext").classList.remove('hidden');
     setLoading(false);
   });
+  window.addEventListener('lh:account-access-ready',()=>boot());
   boot();
 })();

@@ -1,0 +1,58 @@
+"""Password/account UI against real frontend code; Auth calls are mocked, no emails sent."""
+import importlib.util,http.server,threading,tempfile,os
+from pathlib import Path
+from playwright.sync_api import sync_playwright
+from browser_support import ROOT,SDK
+spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');preview=importlib.util.module_from_spec(spec);spec.loader.exec_module(preview)
+AUTH=r'''
+window.__authEvents=[];window.__changes=[];window.__resets=[];
+client.auth.getSession=async()=>({data:{session:window.__signedIn===false?null:{user:{id:'account',email:'review@example.invalid'}}}});
+client.auth.onAuthStateChange=callback=>{__authEvents.push(callback);return {data:{subscription:{unsubscribe(){}}}}};
+client.auth.signOut=async()=>{window.__signedIn=false};
+client.auth.signInWithPassword=async()=>{window.__signedIn=true;return {data:{session:{user:{id:'account'}},user:{id:'account'}}}};
+client.auth.updateUser=async({password})=>{if(window.__updateFail)return {error:{message:'Error de prueba recuperable'}};__changes.push(password);return {data:{user:{id:'account'}}}};
+client.auth.resetPasswordForEmail=async(email,options)=>{__resets.push({email,...options});return {data:{}}};
+return client;
+'''
+class Handler(preview.Handler):
+ def send(self,data,kind='text/html; charset=utf-8',status=200):
+  if isinstance(data,str) and kind.startswith('text/html'):data=data.replace('#signOutBtn,','')
+  return super().send(data,kind,status)
+ def do_GET(self):
+  if self.path.split('?')[0]=='/__review/sdk.js':return self.send(SDK.replace('return client;',AUTH),'application/javascript')
+  return super().do_GET()
+server=http.server.ThreadingHTTPServer(('127.0.0.1',0),lambda *a,**kw:Handler(*a,directory=str(ROOT),**kw));threading.Thread(target=server.serve_forever,daemon=True).start()
+try:
+ with sync_playwright() as p:
+  executable=os.environ.get('CHROMIUM_EXECUTABLE') or ('/usr/bin/chromium' if Path('/usr/bin/chromium').exists() else p.chromium.executable_path)
+  browser=p.chromium.launch(executable_path=executable,headless=True,args=['--no-sandbox']);page=browser.new_page(viewport={'width':1280,'height':900});errors=[]
+  page.on('pageerror',lambda e:errors.append(str(e)))
+  origin=f'http://127.0.0.1:{server.server_port}'
+  page.goto(origin,wait_until='networkidle');page.wait_for_selector('#changePasswordBtn')
+  page.locator('#changePasswordBtn').click();assert page.locator('#passwordDialog').is_visible()
+  page.locator('#newPassword').fill('ClaveNueva123!');page.locator('#repeatPassword').fill('Distinta123!');page.locator('#savePassword').click()
+  assert 'no coinciden' in page.locator('#passwordMessage').inner_text();assert page.evaluate('__changes.length')==0
+  page.locator('#repeatPassword').fill('ClaveNueva123!');page.evaluate('window.__updateFail=true');page.locator('#savePassword').click()
+  page.wait_for_function('document.querySelector("#passwordMessage").textContent.includes("recuperable")');assert page.locator('#savePassword').is_enabled()
+  page.evaluate('window.__updateFail=false');page.locator('#savePassword').click();page.wait_for_function('__changes.length===1')
+  assert 'actualizada' in page.locator('#passwordMessage').inner_text();assert page.locator('#newPassword').input_value()==''
+  page.locator('#closePassword').click();page.locator('#signOutBtn').click();page.wait_for_selector('#authForgotPassword')
+  page.locator('#authForgotPassword').click();assert page.evaluate('__resets.length')==0
+  page.locator('#authEmail').fill('review@example.invalid');page.locator('#authForgotPassword').click();page.wait_for_function('__resets.length===1')
+  assert page.evaluate('__resets[0].redirectTo')==origin+'/?recuperar=1'
+  assert 'Si existe una cuenta' in page.locator('#authMessage').inner_text()
+  # A valid recovery session opens the modal before loading the workspace.
+  page.goto(origin+'/?recuperar=1&next=https://evil.invalid',wait_until='networkidle');page.wait_for_selector('#passwordDialog[open]')
+  assert page.locator('#appShell').is_hidden()
+  page.locator('#newPassword').fill('Recuperada123!');page.locator('#repeatPassword').fill('Recuperada123!');page.locator('#savePassword').click();page.wait_for_function('__changes.length===1')
+  page.locator('#closePassword').click();page.wait_for_selector('#appShell:not(.hidden)');assert 'recuperar=' not in page.url
+  # SDK recovery events are handled without awaiting Auth inside its callback.
+  page.evaluate('__authEvents.forEach(callback=>callback("PASSWORD_RECOVERY"))');page.wait_for_selector('#passwordDialog[open]')
+  page.set_viewport_size({'width':390,'height':844});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
+  page.screenshot(path='/tmp/password-dialog-mobile.png');page.locator('#closePassword').click();page.wait_for_selector('#authGate:not(.hidden)')
+  page.add_init_script('window.__signedIn=false');page.goto(origin+'/?recuperar=1',wait_until='networkidle');page.wait_for_selector('#authGate:not(.hidden)')
+  assert 'caducado' in page.locator('#authMessage').inner_text();assert page.locator('#passwordDialog').is_hidden()
+  assert not errors,errors
+  print('PASS: password mismatch, error/retry, successful update, cleared fields, private recovery response, safe redirect, recovery session/event/cancellation/expired link, mobile; no real emails sent')
+  browser.close()
+finally:server.shutdown();server.server_close()
