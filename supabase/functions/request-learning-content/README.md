@@ -1,8 +1,8 @@
 # Recovered Edge Function package
 
 Latest: [area fusion and curriculum expansion](../../../docs/curriculum-fusion-review.md).
-The complete package now has twelve local imports, including shared
-`reading-library.js` and `curriculum.js`. Maintain byte parity with `js/` when editing
+The complete package now has thirteen local imports, including shared
+`document-library.js`, `reading-library.js` and `curriculum.js`. Maintain byte parity with `js/` when editing
 these sources. Use `python3 tests/browser-curriculum.py` for the current public areas.
 Earlier browser suites below document the previous taxonomy.
 
@@ -10,7 +10,9 @@ Earlier browser suites below document the previous taxonomy.
 All five original `data/{primary,middle,teen,english,literacy}.js` modules have now
 been recovered from the owner's uploads in commit `3a8498e`, without editorial
 changes (Git normalizes line endings). Junior/primary/middle authored banks, a focused teen module and integration
-corrections follow on the review branch. **Nothing here has been deployed.**
+corrections follow on the review branch. **The owner authorized deployment on
+October 17, 2026: function v38 is active from source commit `4f738ec`; the frontend
+is still pending publication.** See the updated [beta record](../../../docs/beta-review-next-steps.md).
 
 The original imports build 1,080 items. They load before requests, but active
 supported domains still use the function's generators; junior, primary and middle use the

@@ -1,6 +1,18 @@
 # Preparación de la prueba con revisora — 17 de octubre de 2026
 
-Estado: rama `fix/early-primary-stimulus-integrity`, sin merge ni despliegue.
+Estado actualizado: rama `fix/early-primary-stimulus-integrity`, sin merge. El
+17 de octubre de 2026, con autorización del propietario, se publicó
+`request-learning-content` v38 desde el commit `4f738ec`. La web sigue pendiente de
+publicación en Cloudflare. Stripe continúa en modo prueba y su webhook conserva v3.
+
+La API de compilación de Supabase (`bundleOnly=true`) empaquetó los 14 archivos
+fuente con sus dependencias oficiales antes de publicar. Se conservó `verify_jwt:true`.
+Se verificaron 20 llamadas autenticadas reales entre cinco franjas, incluyendo
+memoria, velocidad, funciones ejecutivas, documentos y una ficha mixta de ocho
+actividades. Se comprobaron también el rechazo 401 sin autenticación y la
+eliminación de la cuenta técnica y sus cinco perfiles. No se cambiaron datos de
+Elena para esta comprobación. La copia de v37 y los registros de despliegue se
+guardan fuera del repositorio; el paquete web contiene únicamente archivos públicos.
 La cuenta de prueba tiene acceso `complimentary`; se verificaron el inicio de sesión
 con contraseña y la lectura de su cuenta mediante permisos normales de usuario.
 No necesita contratar una suscripción ni activar Stripe para revisar la plataforma.
@@ -46,8 +58,8 @@ Las credenciales se entregan al propietario por separado y no forman parte del r
 - Los navegadores usan la aplicación y el manejador Edge reales con una cuenta/DB
   simuladas. Estas pruebas no demuestran que la función publicada tenga esta versión.
 - No se ejecutó la comprobación nativa Deno en esta instancia: el binario/cache
-  diagnóstico anterior no está disponible. Sigue pendiente verificar el despliegue
-  de Edge con sus dependencias oficiales. No se afirma validación clínica ni que la
+  diagnóstico anterior no está disponible. La compilación oficial y el despliegue de Edge se verificaron después,
+  según el estado actualizado al inicio de este documento. No se afirma validación clínica ni que la
   autoevaluación escrita equivalga a una corrección automática del texto.
 
 ## Orden de salida
@@ -66,5 +78,4 @@ Las credenciales se entregan al propietario por separado y no forman parte del r
    mientras se revisa esta beta.
 
 La clave de servidor permite administrar cuentas y datos, pero no sustituye el
-acceso de despliegue de Supabase ni la configuración de Cloudflare. No se ha
-publicado ni fusionado esta rama como parte de esta revisión.
+acceso de despliegue de Supabase ni la configuración de Cloudflare. La función ya se publicó; la web y la fusión de la rama siguen pendientes.
