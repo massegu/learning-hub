@@ -7,6 +7,8 @@ await import("./junior.js");
 await import("./primary-content.js");
 await import("./middle-content.js");
 await import("./teen-review.js");
+await import("./reading-library.js");
+await import("./curriculum.js");
 await import("./data/primary.js");
 await import("./data/middle.js");
 await import("./data/teen.js");
@@ -14,6 +16,11 @@ await import("./data/english.js");
 await import("./data/literacy.js");
 
 const DATA:any = (globalThis as any).LEARNING_DATA;
+(globalThis as any).Curriculum.registerReasoning((age:string,level:number)=>{
+  const root:any=globalThis;
+  const bank=({junior:root.JuniorContent,primary:root.PrimaryContent,middle:root.MiddleContent,teen:root.TeenReview} as any)[age];
+  return bank?bank.pool("speedReasoning",level):[];
+});
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1111,6 +1118,8 @@ for(const ageKey of ["primary","middle","teen"]){
 // ---------- END V16 CONTENT EXPANSION ----------
 
 function contentSignature(domain:string,item:any){
+  // Text identity survives a changed question or level. Ten sources rotate before reuse.
+  if(item.passageKey)return domain+":item:passage:"+item.passageKey;
   const norm=(v:any):any=>{
     if(Array.isArray(v)) return v.map(norm);
     if(v&&typeof v==="object"){
@@ -1171,7 +1180,8 @@ function generatedItems(domain:string,n:number,recentEntries:string[],factory:()
       const sig=contentSignature(domain,cand);
       if(localItems.has(sig)) continue;
       const msig=mechanicSignature(domain,cand);
-      const itemPenalty=recentItems.has(sig)?100000:0;
+      const previousPassages=[...recentEntries,...out.map((it:any)=>contentSignature(domain,it))].filter((x:string)=>x.includes(":item:passage:")).slice(-9);
+      const itemPenalty=(cand.passageKey?previousPassages.includes(sig):recentItems.has(sig))?100000:0;
       const recentPenalty=veryRecent.has(msig)?10000:0;
       const localPenalty=localMechanics.has(msig)?5000:0;
       const countPenalty=(mechanicCounts.get(msig)||0)*100;
@@ -2259,6 +2269,7 @@ function matrixApplied20(age:string,level:number,v:number){
 }
 
 function variantExercise(age:string,domain:string,level:number,subdomain:string|null=null){
+  if((globalThis as any).Curriculum.supports(age,domain))return {...(globalThis as any).Curriculum.generate(age,domain,level),id:age+"-curriculum-"+crypto.randomUUID()};
   if(age==="teen"&&["teenLanguage","speedReasoning","literacy"].includes(domain))return {...(globalThis as any).TeenReview.generate(domain,level,subdomain),id:"teen-review-"+crypto.randomUUID()};
   if(age==="junior")return {...(globalThis as any).JuniorContent.generate(domain,level,subdomain),id:"junior-"+crypto.randomUUID()};
   if(age==="primary")return {...(globalThis as any).PrimaryContent.generate(domain,level,subdomain),id:"primary-"+crypto.randomUUID()};
@@ -2332,7 +2343,7 @@ Deno.serve(async (req:Request)=>{
   const age=(route==="early"||route==="junior")?route:profile.age_band;
   const locale=(globalThis as any).LocaleContent.normalize(account.content_locale??profile.locale);
   const level=Math.max(1,Math.min(3,Number(body.level||1)));
-  const requestedDomains=kind==="worksheet" ? (Array.isArray(body.domains)&&body.domains.length?body.domains:SUBJECTS[age]) : [body.domain];
+  const requestedDomains=kind==="worksheet" ? (Array.isArray(body.domains)&&body.domains.length?body.domains:(globalThis as any).Curriculum.visible(SUBJECTS[age]||[],age)) : [body.domain];
   if(!SUBJECTS[age] || !Number.isInteger(level) || (kind!=="game" && (!Array.isArray(requestedDomains)||!requestedDomains.length||requestedDomains.some((d:any)=>!SUBJECTS[age].includes(d)))))
     return new Response(JSON.stringify({error:"Área o nivel no permitido para este perfil."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
   if((age==="junior"||age==="primary"||age==="middle"||age==="teen")&&kind==="exercise"&&["language","middleLanguage","teenLanguage"].includes(body.domain)&&body.subdomain&&!["grammar","spelling","writing"].includes(body.subdomain))
@@ -2343,7 +2354,7 @@ Deno.serve(async (req:Request)=>{
     items=[cognitiveGame(age,level,excludeTypes)];
   } else if(kind==="worksheet"){
     const qn=Math.max(6,Math.min(account.subscription_status==="trial"?15:20,Number(body.questions||12)));
-    const domains=(Array.isArray(body.domains)&&body.domains.length?body.domains:SUBJECTS[age].filter((x:string)=>x!=="games")).filter((x:string)=>x!=="games");
+    const domains=(Array.isArray(body.domains)&&body.domains.length?body.domains:(globalThis as any).Curriculum.visible(SUBJECTS[age]||[],age).filter((x:string)=>x!=="games")).filter((x:string)=>x!=="games");
     const {data:wsSeenRows}=await admin.from("content_seen")
       .select("domain,item_signature,mechanic_signature")
       .eq("user_id",user.id)
@@ -2445,5 +2456,5 @@ Deno.serve(async (req:Request)=>{
   await admin.from("content_usage").upsert({user_id:user.id,usage_date:date,kind,used:nextUsed,updated_at:new Date().toISOString()},{onConflict:"user_id,usage_date,kind"});
   const nextProgress={...progress,_delivery:delivery};
   await admin.from("learner_profiles").update({progress:nextProgress}).eq("id",profileId);
-  return new Response(JSON.stringify({items,usage:{kind,used:nextUsed,limit},subjects:SUBJECTS[age]}),{headers:{...corsHeaders,"Content-Type":"application/json"}});
+  return new Response(JSON.stringify({items,usage:{kind,used:nextUsed,limit},subjects:(globalThis as any).Curriculum.visible(SUBJECTS[age]||[],age)}),{headers:{...corsHeaders,"Content-Type":"application/json"}});
 });

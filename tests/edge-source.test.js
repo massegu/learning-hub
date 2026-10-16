@@ -61,11 +61,11 @@ test('saved account country controls selection before history or usage writes, i
   const locale=require('../js/locale-content');
   for(const it of result.items){assert.equal(it.localization.locale,'es_co');assert.doesNotThrow(()=>locale.localizeItem(it,'es_co','executive'));assert.doesNotMatch(JSON.stringify(it),/€|\beuros?\b/u);}
   const phone=require('../supabase/functions/request-learning-content/teen-review').pool('literacy',1).find(it=>it.teenReview.context==='interview');
-  h.context.TeenReview.generate=()=>structuredClone(phone);
+  const original=h.context.Curriculum.generate;h.context.Curriculum.generate=(age,domain,level)=>domain==='literacy'?structuredClone(phone):original(age,domain,level);
   response=await h.request({domain:'literacy',locale:'es_es'});assert.equal(response.status,200);
   const phoneResult=(await response.json()).items[0];assert.match(JSON.stringify(phoneResult.stimulus),/teléfonos celulares/);assert.doesNotMatch(JSON.stringify(phoneResult.stimulus),/teléfonos móviles/);
   const blocked=authorized();blocked.account.content_locale='es_co';
-  blocked.context.JuniorContent.generate=()=>({id:'bad',q:'¿Cuánto queda?',scenario:'Tienes 20 euros y gastas 5.',opts:['15 euros','20 euros'],a:'15 euros'});
+  blocked.context.Curriculum.generate=()=>({id:'bad',q:'¿Cuánto queda?',scenario:'Tienes 20 euros y gastas 5.',opts:['15 euros','20 euros'],a:'15 euros'});
   response=await blocked.request({domain:'executive'});assert.equal(response.status,422);assert.equal(blocked.writes.length,0);
   response=await blocked.request({kind:'worksheet',domains:['executive'],questions:6});assert.equal(response.status,422);assert.equal(blocked.writes.length,0);
 });
@@ -141,4 +141,16 @@ test('authenticated middle route honors Language skills and produces complete te
     const data=await response.json();assert.equal(data.items.length,20);assert.equal(new Set(data.items.map(it=>it.sourceDomain)).size,10);
     for(const it of data.items){assert.equal(it.sourceDomain,it.domain);assert.equal(it.schoolProfile.route,'middle');assert.doesNotThrow(()=>model.printable(it,h.profile));}
   }
+});
+test('public catalog and default worksheets use fused areas while explicit historical domains remain compatible',async()=>{
+ for(const age of ['early','junior','primary','middle','teen']){
+  const h=authorized();h.profile.age_band=['early','junior'].includes(age)?'primary':age;h.profile.progress={ageRoute:age};
+  const response=await h.request({domain:'executive',count:5});assert.equal(response.status,200);const data=await response.json();
+  assert.equal(data.subjects.includes('applied'),false);assert.equal(data.subjects.includes('speedReasoning'),true);
+  if(age==='primary')assert.equal(data.subjects.includes('reading'),false);
+  if(age==='middle')assert.equal(data.subjects.includes('middleReading'),false);
+  const sheet=await h.request({kind:'worksheet',questions:12});assert.equal(sheet.status,200);const tasks=(await sheet.json()).items;
+  assert.equal(tasks.length,12);assert.ok(tasks.every(it=>data.subjects.includes(it.sourceDomain)));
+  const legacy=await h.request({domain:'applied'});assert.equal(legacy.status,200);const oldItem=(await legacy.json()).items[0];assert.equal(oldItem.domain,'applied');assert.doesNotThrow(()=>require('../js/activity-model').printable(oldItem,h.profile));
+ }
 });

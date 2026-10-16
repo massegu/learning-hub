@@ -1,5 +1,11 @@
 # Recovered Edge Function package
 
+Latest: [area fusion and curriculum expansion](../../../docs/curriculum-fusion-review.md).
+The complete package now has twelve local imports, including shared
+`reading-library.js` and `curriculum.js`. Maintain byte parity with `js/` when editing
+these sources. Use `python3 tests/browser-curriculum.py` for the current public areas.
+Earlier browser suites below document the previous taxonomy.
+
 `index.ts` was supplied by the owner; commit `fa71e09` records that baseline.
 All five original `data/{primary,middle,teen,english,literacy}.js` modules have now
 been recovered from the owner's uploads in commit `3a8498e`, without editorial

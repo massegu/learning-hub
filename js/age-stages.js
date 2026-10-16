@@ -3,7 +3,7 @@
   const model=root.ActivityModel || (typeof require==='function'&&require('./activity-model'));
   const definitions={
     junior:{label:'8–10 años',minimumAttempts:8,promote:7/8,demote:3/8,words:[65,95,125],memory:[3,4,5],steps:[2,3,4],options:[3,3,4],theme:'workshop',title:'Tu taller de expediciones',description:'Construye habilidades, descubre pistas y completa misiones.'},
-    primary:{label:'10–12 años',minimumAttempts:10,promote:9/10,demote:4/10,words:[65,100,140],memory:[4,5,6],steps:[3,4,5],options:[3,4,4],theme:'base',title:'Tu base de retos',description:'Elige tu siguiente objetivo y combina habilidades en una misión.'},
+    primary:{label:'10–12 años',minimumAttempts:10,promote:9/10,demote:4/10,words:[100,140,180],memory:[4,5,6],steps:[3,4,5],options:[3,4,4],theme:'base',title:'Tu base de retos',description:'Elige tu siguiente objetivo y combina habilidades en una misión.'},
     middle:{label:'13–15 años',minimumAttempts:12,promote:10/12,demote:5/12,words:[100,180,260],memory:[5,6,7],steps:[4,5,6],options:[4,4,4],theme:'studio'},
   };
   const route=profile=>profile?.progress?.ageRoute || profile?.age_band;

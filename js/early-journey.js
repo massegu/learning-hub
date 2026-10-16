@@ -7,14 +7,14 @@
     attention:{title:'Atención',theme:'Detalles',icon:'star',description:'Mira y encuentra diferencias.'},
     memory:{title:'Memoria',theme:'Recuerdos',icon:'gift',description:'Mira, tapa y recuerda.'},
     executive:{title:'Funciones ejecutivas',theme:'Pasos y planes',icon:'backpack',description:'Piensa y ordena los pasos.'},
-    speedReasoning:{title:'Velocidad y razonamiento',theme:'Pistas',icon:'triangle',description:'Busca parejas y sigue patrones.'},
+    speedReasoning:{title:'Velocidad de procesamiento',theme:'Pistas',icon:'triangle',description:'Compara figuras y responde.'},
     applied:{title:'Cognición aplicada',theme:'Cada día',icon:'bottle',description:'Resuelve pequeñas situaciones.'},
   };
   const missions=[
     {id:'words',title:'Explora las palabras',description:'Tres actividades de Lenguaje.',plan:['language','language','language'],icon:'pencil'},
     {id:'stories',title:'Descubre dos historias',description:'Lee y responde dos veces.',plan:['reading','reading'],icon:'book'},
     {id:'details',title:'Busca los detalles',description:'Tres retos de Atención.',plan:['attention','attention','attention'],icon:'star'},
-    {id:'explore',title:'Una vuelta por el Lab',description:'Cinco actividades en cinco áreas.',plan:['language','division','attention','executive','applied'],icon:'backpack'},
+    {id:'explore',title:'Una vuelta por el Lab',description:'Cinco actividades en cinco áreas.',plan:['language','division','attention','executive','memory'],icon:'backpack'},
   ];
   const definition=id=>missions.find(m=>m.id===id);
   function normalize(value){

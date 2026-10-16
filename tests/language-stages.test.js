@@ -58,6 +58,6 @@ test('school journeys are restricted to 8–12, have distinct themes and reviewe
   let saved=school.start({},'build');saved=school.record(saved,'division','1');
   assert.equal(school.normalize(JSON.parse(JSON.stringify(saved))).active.index,1);
   assert.deepEqual(school.record(saved,'division','1'),saved);
-  saved=school.record(saved,'executive','2');saved=school.record(saved,'applied','3');assert.equal(saved.completed.length,1);
+  saved=school.record(saved,'executive','2');saved=school.record(saved,'executive','3');assert.equal(saved.completed.length,1);
   assert.equal(school.normalize({active:{id:'unknown',index:1}}).active,null);
 });

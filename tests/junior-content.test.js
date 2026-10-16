@@ -67,6 +67,6 @@ test('production recent-history selection avoids repeats until pool exhaustion a
       assert.equal(items.length,7);
       for(const it of items){const sig=api.contentSignature(domain,it);signatures.push(sig);history.push(sig,`${domain}:mechanic:${it.mechanic}`);}
     }
-    assert.equal(new Set(signatures).size,21,`${domain}/${level}`);
+    assert.equal(new Set(signatures).size,['reading','literacy','middleReading'].includes(domain)?10:21,`${domain}/${level}`);if(['reading','literacy','middleReading'].includes(domain))for(let i=0;i<=signatures.length-10;i++)assert.equal(new Set(signatures.slice(i,i+10)).size,10);
   }
 });

@@ -5,7 +5,7 @@
     middleLanguage:'Lenguaje 13-15',middleMath:'Matemáticas 13-15',middleReading:'Lectura 13-15',
     teenLanguage:'Lenguaje 16-18',teenMath:'Matemáticas 16-18',social:'Social Lab',english:'English Lab',
     literacy:'Lectura + Escritura',attention:'Atención',executive:'Funciones ejecutivas',memory:'Memoria',
-    speedReasoning:'Velocidad y razonamiento',applied:'Cognición aplicada'
+    speedReasoning:'Velocidad de procesamiento',applied:'Cognición aplicada'
   };
   let currentLocale='es_intl';
   const $=s=>document.querySelector(s);
@@ -237,7 +237,7 @@
       metrics.forEach((m,i)=>{const row=6+i;sum.getCell(`A${row}`).value=m[0];sum.getCell(`B${row}`).value=m[1];sum.getCell(`A${row}`).font={bold:true,color:{argb:dark}};sum.getCell(`B${row}`).font={bold:true,size:14,color:{argb:green}};});
       sum.getCell('B8').numFmt='0%';sum.getColumn('A').width=27;sum.getColumn('B').width=18;for(let i=3;i<=8;i++)sum.getColumn(i).width=15;
       sum.getCell('D5').value='NIVELES ACTUALES';sum.mergeCells('D5:F5');sum.getCell('D5').font={bold:true,color:{argb:white}};sum.getCell('D5').fill={type:'pattern',pattern:'solid',fgColor:{argb:dark}};
-      const levels=prof.progress?.levels||{};let rr=6;Object.entries(levels).forEach(([k,v])=>{sum.getCell(`D${rr}`).value=SUBJECT_LABELS[k]||k;sum.getCell(`E${rr}`).value=`Nivel ${v}`;rr++;});
+      const levels=prof.progress?.levels||{};let rr=6;Object.entries(levels).filter(([k])=>window.Curriculum.visible([k],window.AgeStages.route(prof)).length).forEach(([k,v])=>{sum.getCell(`D${rr}`).value=SUBJECT_LABELS[k]||k;sum.getCell(`E${rr}`).value=`Nivel ${v}`;rr++;});
       const chart=chartDataUrl(sess.map(s=>`S${s.num}`),sess.map(s=>s.acc));const img=wb.addImage({base64:chart,extension:'png'});sum.addImage(img,{tl:{col:0,row:12},ext:{width:780,height:278}});
       sum.getRow(12).height=20;
       [sum,evo,detail].forEach(ws=>{ws.properties.defaultRowHeight=20;ws.eachRow(row=>row.eachCell(cell=>{cell.border={bottom:{style:'hair',color:{argb:'D9E1D9'}}};}));});

@@ -80,9 +80,9 @@
         language:"Gramática, ortografía y escritura con ejemplos y textos.",
         reading:"Lee el texto y usa sus pistas para comprender lo que ocurre.",
         attention:"Búsqueda, comparación, consignas y selección de información relevante.",
-        executive:"Secuenciación, planificación, control de impulsos y organización.",
+        executive:"Planifica, razona y revisa decisiones con varias condiciones.",
         memory:"Memoria visual y funcional con dificultad progresiva.",
-        speedReasoning:"Comparación rápida, patrones, cálculo y razonamiento.",
+        speedReasoning:"Comparación de figuras y códigos con tiempo de respuesta y precisión.",
         applied:"Situaciones cotidianas que integran varias habilidades cognitivas."
       };
       if(d[active]) desc.textContent=d[active];

@@ -1,7 +1,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),load=require('./edge-harness');
-test('complete Edge package executes all ten local imports and attaches both supplemental banks',()=>{
+test('complete Edge package executes all twelve local imports and attaches both supplemental banks',()=>{
   const {context,loadedImports}=load();
-  assert.deepEqual(loadedImports,['./locale-content.js','./junior.js','./primary-content.js','./middle-content.js','./teen-review.js','./data/primary.js','./data/middle.js','./data/teen.js','./data/english.js','./data/literacy.js']);
+  assert.deepEqual(loadedImports,['./locale-content.js','./junior.js','./primary-content.js','./middle-content.js','./teen-review.js','./reading-library.js','./curriculum.js','./data/primary.js','./data/middle.js','./data/teen.js','./data/english.js','./data/literacy.js']);
   let total=0;
   for(const band of ['primary','middle','teen']){
     const data=context.LEARNING_DATA[band];assert.ok(data);

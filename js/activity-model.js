@@ -107,7 +107,7 @@
     if (new Set(options.map(early?choiceKey:String)).size !== options.length) fail('hay opciones duplicadas o equivalentes.');
     if(early && item.responseType==='choice' && options.length<2)fail('falta una opción alternativa.');
     const tokens = item.tokens || [];
-    if (item.type === 'order') {
+    if (item.type === 'order' || item.memoryResponse === 'order') {
       if (!tokens.length || !tokens.every(hasText) || !Array.isArray(item.answer) || item.answer.length !== tokens.length || new Set(tokens.map(early?choiceKey:String)).size !== tokens.length || new Set(item.answer).size !== tokens.length || !item.answer.every(x => tokens.includes(x))) fail('la secuencia no puede resolverse.');
     } else if (options.length) {
       const answers = item.answers || [item.a];
@@ -115,7 +115,17 @@
     } else if (!item.sample && item.dividend === undefined) fail('la mecánica no tiene una respuesta compatible.');
     if (/memory/i.test(item.type || '') && !item.memoryContent?.length) fail('falta el material de memoria.');
     if(early)validateEvidence(item,stimulus);
-    if (policy.forProfile(profile) && item.type === 'memoryReveal') {
+    if(item.recallEvidence){
+      const e=item.recallEvidence,b=stimulus[e.block];
+      if(e.kind==='sequence'){
+        if(b?.type!=='list'||!Array.isArray(item.answer)||JSON.stringify(item.answer)!==JSON.stringify(e.reverse?[...b.items].reverse():b.items))fail('el orden de memoria no corresponde al estímulo.');
+      }else if(e.kind==='spatial'){
+        if(b?.type!=='table'||!e.targets?.length)fail('falta la cuadrícula de memoria.');
+        const positions=e.targets.map(target=>{const cells=b.rows.flatMap((row,r)=>row.map((value,c)=>({value,r,c}))).filter(x=>x.value===target);if(cells.length!==1)fail('la posición de memoria no es única.');const x=cells[0];return `Fila ${x.r+1}, columna ${x.c+1}`;});
+        if(item.a!==positions.join(' → '))fail('la respuesta espacial no coincide con la cuadrícula.');
+      }else fail('evidencia de memoria no compatible.');
+    }
+    if (policy.forProfile(profile) && item.type === 'memoryReveal' && !item.recallEvidence) {
       const evidence = item.answerEvidence;
       const block = stimulus[evidence?.block];
       let value;
@@ -130,7 +140,7 @@
       }
       if (value === undefined || value !== item.a) fail('la respuesta de memoria no se deriva del estímulo.');
     }
-    return { question, stimulus, options:options.map(String), tokens, responseType:item.type === 'order' ? 'order' : options.length ? 'choice' : 'written' };
+    return { question, stimulus, options:options.map(String), tokens, responseType:item.type === 'order' || item.memoryResponse === 'order' ? 'order' : options.length ? 'choice' : 'written' };
   }
   function validateEvidence(item,stimulus){
     if(item.languageFocus==='spelling'){
@@ -231,6 +241,9 @@
     const visibleBlocks=blocks.length>1&&options.heading?blocks.filter(b=>b.type!=='text'||b.text!==options.heading):blocks;
     return visibleBlocks.map(block => {
       blockValid(block);
+      if(block.presentation==='spatial'){
+        return `<div class="recall-grid" style="--grid-size:${block.rows[0].length}" role="table" aria-label="${escape(block.label||'Cuadrícula para recordar')}">${block.rows.map((row,r)=>`<div role="row">${row.map((x,c)=>`<div role="cell" aria-label="Fila ${r+1}, columna ${c+1}: ${escape(x)}">${visualLabel(x,options.senses)}</div>`).join('')}</div>`).join('')}</div>`;
+      }
       if(options.illustrated){
         const label=block.label?`<p class="stimulus-caption">${escape(block.label)}</p>`:'';
         if(block.type==='text')return block.presentation==='model'?`${label}<div class="early-model"><span class="stimulus-caption">Modelo</span><div>${visualLabel(block.text.slice(8),options.senses)}</div></div>`:`${label}<p>${escape(block.text)}</p>`;

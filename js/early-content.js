@@ -183,6 +183,7 @@
   language.apply(families,{choice,order,text});
   function pool(domain, level = 1, subdomain = null) {
     const bandLevel = Math.max(1, Math.min(3, Number(level) || 1));
+    if(root.Curriculum?.supports('early',domain))return root.Curriculum.pool('early',domain,bandLevel);
     if (!families[domain]) throw new Error('Área no permitida para 6-7.');
     const result = [];
     families[domain].forEach(([mechanic, context, build], family) => {
@@ -229,6 +230,7 @@
     const usedKeys = new Set(history.keys || []);
     const recent = [...history.mechanics];
     const recentFamilies = [...(history.families || [])];
+    const recentPassages=[...(history.passages||[])];
     const chosen = [];
     const pools = new Map(domains.map(d => [d, pool(d, level,subdomain).filter(it=>!accept || accept(it,d))]));
     if(accept && new Set([...pools.values()].flat().map(it=>it.semanticKey)).size<count)
@@ -240,7 +242,7 @@
     }
     for (let i = 0; i < count; i++) {
       let candidates = pools.get(domains[i % domains.length]);
-      let available = candidates.filter(it => !usedKeys.has(it.semanticKey) && !chosen.some(c => c.semanticKey === it.semanticKey));
+      let available = candidates.filter(it => (it.passageKey?!recentPassages.slice(-9).includes(it.passageKey):!usedKeys.has(it.semanticKey)) && !chosen.some(c => c.semanticKey === it.semanticKey));
       if (!available.length) {
         candidates.forEach(it => { used.delete(it.id); usedKeys.delete(it.semanticKey); });
         available = candidates.filter(it => !chosen.some(c => c.semanticKey === it.semanticKey));
@@ -250,6 +252,8 @@
         available=candidates.filter(it=>!usedKeys.has(it.semanticKey)&&!chosen.some(c=>c.semanticKey===it.semanticKey));
         if(!available.length)available=candidates.filter(it=>!chosen.some(c=>c.semanticKey===it.semanticKey));
       }
+      const freshTexts=available.filter(it=>!it.passageKey||!recentPassages.slice(-9).includes(it.passageKey));
+      if(freshTexts.length)available=freshTexts;
       let freshFamilies = available.filter(it => !recentFamilies.slice(-2).includes(it.ageProfile.family));
       if(!freshFamilies.length)freshFamilies=available.filter(it=>it.ageProfile.family!==recentFamilies.at(-1));
       const varied = (freshFamilies.length ? freshFamilies : available).filter(it => !recent.slice(-2).includes(it.ageProfile.mechanic));
@@ -264,9 +268,9 @@
       const selectedFamily=balanced[Math.floor(random()*balanced.length)];
       const familyOptions=options.filter(it=>it.ageProfile.family===selectedFamily);
       const item = familyOptions[Math.floor(random() * familyOptions.length)];
-      chosen.push(item); used.add(item.id); usedKeys.add(item.semanticKey); recent.push(item.ageProfile.mechanic); recentFamilies.push(item.ageProfile.family);
+      chosen.push(item);if(item.passageKey)recentPassages.push(item.passageKey); used.add(item.id); usedKeys.add(item.semanticKey); recent.push(item.ageProfile.mechanic); recentFamilies.push(item.ageProfile.family);
     }
-    profile.progress = { ...profile.progress, _earlyDelivery: { ids: [...used].slice(-600), keys: [...usedKeys].slice(-600), mechanics: recent.slice(-12), families: recentFamilies.slice(-12) } };
+    profile.progress = { ...profile.progress, _earlyDelivery: { ids: [...used].slice(-600), keys: [...usedKeys].slice(-600), mechanics: recent.slice(-12), families: recentFamilies.slice(-12),passages:recentPassages.slice(-9) } };
     return chosen;
   }
   // Call only after an authorized server response. Never retry a rejected request

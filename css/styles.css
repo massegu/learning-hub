@@ -2718,3 +2718,21 @@ body {
   #exercise:not(.early-primary) .level-control { position:static; align-self:flex-start; width:fit-content; }
   .table-scroll-hint { display:block; font-size:.85rem; color:#4b5f69; }
 }
+
+/* Recall positions keep their geometry at every viewport width. */
+.recall-grid,.spatial-answer-grid{--grid-size:2;display:grid;grid-template-columns:repeat(var(--grid-size),minmax(0,1fr));gap:.6rem;width:100%;max-width:40rem;margin:1rem auto}
+.recall-grid>[role=row]{display:contents}
+.recall-grid [role=cell]{display:flex;align-items:center;justify-content:center;min-height:6rem;padding:.6rem;text-align:center;background:#fff;border:2px solid #bccdbf;border-radius:.6rem;overflow-wrap:anywhere}
+.recall-grid .picture-icon svg{width:3rem;height:3rem}
+.spatial-answer-grid .option-btn{min-height:6rem;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:.5rem;text-align:center}
+.spatial-answer-grid small{font-size:.8rem}.sequence-flash{min-height:10rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;font-size:2rem}.sequence-flash svg{width:6rem;height:6rem}
+.speed-key{display:inline-block;margin-right:1rem;padding:.2rem .5rem;border:1px solid currentColor;border-radius:.25rem;font-size:.85rem}.speed-result{font-size:1rem;font-weight:400;line-height:1.6;color:#163c2c}
+@media(max-width:480px){.recall-grid [role=cell]{min-height:5rem;padding:.3rem;font-size:.9rem}.recall-grid{gap:.3rem}.recall-grid .picture-icon svg{width:2rem;height:2rem}}
+/* Keep a timed trial's source and response controls together, especially on phones. */
+#exercise.speed-active .section-intro,#exercise.speed-active .exercise-meta,#exercise.speed-active #exerciseTopic,#exercise.speed-active .early-task-guide,#exercise.speed-active .school-task-guide{display:none!important}
+#exercise.speed-active .exercise-card{padding:1rem!important}
+#exercise.speed-active #exercisePrompt{font-size:1.35rem!important;margin:.25rem 0 .75rem!important;scroll-margin-top:.5rem}
+#exercise.speed-active #exerciseOptions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:.5rem!important;margin-top:.6rem!important}
+#exercise.speed-active #exerciseOptions .option-btn{min-height:3.5rem!important;padding:.5rem!important;font-size:1.15rem!important}
+#exercise.speed-active #exerciseVisual table{margin:.3rem 0!important}
+#exercise.speed-active #exerciseVisual th,#exercise.speed-active #exerciseVisual td{padding:.35rem .6rem!important;font-size:1rem!important;line-height:1.25!important}

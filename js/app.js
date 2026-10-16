@@ -71,17 +71,17 @@
     executive: {
       name: "Funciones ejecutivas",
       icon: "↻",
-      desc: "Nivel 1: secuenciación · Nivel 2: priorización y distractores · Nivel 3: planificación con restricciones e imprevistos.",
+      desc: "Planifica, razona y revisa. Comprueba decisiones y resuelve situaciones con varias condiciones.",
     },
     memory: {
       name: "Memoria",
       icon: "▦",
-      desc: "Listas, conversaciones, recorridos, asociaciones, encargos y memoria funcional.",
+      desc: "Recuerda secuencias, posiciones y asociaciones con dificultad progresiva.",
     },
     speedReasoning: {
-      name: "Velocidad y razonamiento",
+      name: "Velocidad de procesamiento",
       icon: "◇",
-      desc: "Comparación rápida, códigos, patrones, discriminación visual y razonamiento.",
+      desc: "Compara figuras y códigos. Practica respuestas ágiles y precisas.",
     },
     applied: {
       name: "Cognición aplicada",
@@ -220,8 +220,8 @@
   function renderMemoryExercise(it) {
     const visual = $("#exerciseVisual"),
       area = $("#exerciseOptions");
-    const cards = window.ContentPolicy.forProfile(profile)
-      ? `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus,{illustrated:true,senses:it.lexicalSenses})}</div>`
+    const cards = it.stimulus
+      ? `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus,{illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:!window.ContentPolicy.forProfile(profile),senses:it.lexicalSenses})}</div>`
       : (it.memoryContent || [])
       .map((x) =>
         x.person
@@ -232,6 +232,21 @@
     const memoryInstruction = window.ContentPolicy.forProfile(profile)
       ? "Mira bien. Después taparemos las cosas."
       : "Memoriza la información. Después desaparecerá.";
+    if(it.recallSequence){
+      visual.innerHTML='<p>Las figuras aparecerán una a una. Después reconstruirás el orden.</p>';
+      area.innerHTML='<button id="startMemorySequence" class="primary-btn">Mostrar secuencia</button>';
+      $('#startMemorySequence').onclick=()=>{
+        area.innerHTML='';let index=0;
+        const step=()=>{
+          if(currentItem!==it)return;
+          if(index===it.recallSequence.length){
+            visual.innerHTML='';$('#exercisePrompt').textContent=it.memoryQuestion;renderOrderExercise(it);return;
+          }
+          visual.innerHTML=`<div class="sequence-flash"><small>${index+1} / ${it.recallSequence.length}</small>${window.ActivityModel.visualLabel(it.recallSequence[index++],it.lexicalSenses)}</div>`;
+          setTimeout(()=>{if(currentItem!==it)return;visual.innerHTML='<div class="sequence-flash" aria-hidden="true">·</div>';setTimeout(step,250);},it.sequenceStepMs);
+        };step();
+      };return;
+    }
     visual.innerHTML = `<div class="memory-reveal">${cards}</div><div class="memory-timer">${memoryInstruction}</div>`;
     area.innerHTML = "";
     setTimeout(
@@ -240,12 +255,44 @@
         visual.innerHTML = "";
         $("#exercisePrompt").textContent =
           it.memoryQuestion || "¿Qué recuerdas?";
-        if (it.type === "memoryMulti") renderMultiSelect(it);
+        if(it.memoryResponse==='order')renderOrderExercise(it);
+        else if(it.memoryResponse==='spatial')renderSpatialResponse(it);
+        else if (it.type === "memoryMulti") renderMultiSelect(it);
         else renderOptions(it);
       },
       Math.max(2500, Number(it.revealMs || 6000)),
     );
   }
+  function renderSpatialResponse(it){
+    $('#exerciseOptions').classList.add('structured-options');
+    $('#exerciseOptions').innerHTML=`<div class="spatial-answer-grid" style="--grid-size:${it.gridSize}" role="group" aria-label="Elige la posición que recuerdas">${window.Curriculum.spatialPositions(it.gridSize).map(o=>`<button class="option-btn" data-answer="${escapeHtml(o)}" aria-label="${escapeHtml(o)}"><span aria-hidden="true">·</span><small>${escapeHtml(o)}</small></button>`).join('')}</div>`;
+    $$('#exerciseOptions .option-btn').forEach(b=>b.onclick=()=>checkOption(b,b.dataset.answer));
+  }
+  function renderSpeedExercise(it){
+    $('#exerciseVisual').innerHTML=window.ContentPolicy.forProfile(profile)?'<p>Mira y responde. El reloj empieza al mostrar las figuras. También puedes practicar sin medir.</p>':'<p>Responde con precisión y agilidad. El tiempo empieza al mostrar el estímulo. Puedes usar los botones o las teclas numéricas.</p>';
+    $('#exerciseOptions').innerHTML='<button id="startSpeedTrial" class="primary-btn">Mostrar y medir</button><button id="practiceSpeedTrial" class="secondary-btn">Practicar sin medir</button>';
+    const start=measured=>{
+      if(currentItem!==it)return;
+      $('#exercise').classList.add('speed-active');
+      it._timing={started:performance.now(),valid:measured,measured};
+      $('#exerciseVisual').innerHTML=window.ActivityModel.interactiveStimulus(it.stimulus,{illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:true,senses:it.lexicalSenses});
+      const options=shuffle(it.opts);
+      $('#exerciseOptions').innerHTML=options.map((o,i)=>`<button class="option-btn speed-choice" data-answer="${escapeHtml(o)}" aria-label="${escapeHtml(o)}"><small class="speed-key" aria-hidden="true">${i+1}</small>${escapeHtml(o)}</button>`).join('');
+      $$('#exerciseOptions .speed-choice').forEach(b=>b.onclick=()=>checkOption(b,b.dataset.answer));
+      // Exclude instruction reading and bring source + compact response controls into view.
+      $('#exercisePrompt').scrollIntoView({block:'start',behavior:'instant'});
+      it._timing.started=performance.now();
+    };
+    $('#startSpeedTrial').onclick=()=>start(true);$('#practiceSpeedTrial').onclick=()=>start(false);
+  }
+  document.addEventListener('visibilitychange',()=>{if(document.hidden&&currentItem?._timing)currentItem._timing.valid=false;});
+  window.addEventListener('blur',()=>{if(currentItem?._timing&&!currentItem._earlyAnswered)currentItem._timing.valid=false;});
+  document.addEventListener('keydown',event=>{
+    if(event.repeat||event.ctrlKey||event.metaKey||event.altKey||/INPUT|TEXTAREA|SELECT/.test(event.target.tagName))return;
+    if(!$('#exercise').classList.contains('active-section'))return;
+    const choices=$$('#exerciseOptions .speed-choice:not(:disabled)');const index=Number(event.key)-1;
+    if(/^[1-4]$/.test(event.key)&&choices[index]){event.preventDefault();choices[index].click();}
+  });
   function renderMultiSelect(it) {
     $('#exerciseOptions').classList.add('structured-options');
     const selected = new Set();
@@ -317,7 +364,8 @@
   };
   function normalizeState(p) {
     const b = blankState(),
-      s = p?.progress || {};
+      s = window.Curriculum.migrate(p?.progress || {},window.AgeStages.route(p));
+    p.progress=s;
     return {
       ...b,
       ...s,
@@ -343,19 +391,24 @@
     );
   }
   function ageData() {
-    if(window.AgeStages.route(profile)==='junior')return {...AGE.primary,label:'8-10 años',subjects:window.ContentPolicy.early.subjects};
-    if(window.AgeStages.route(profile)==='primary')return {...AGE.primary,subjects:AGE.primary.subjects.filter(s=>s!=='reading')};
-    return window.ContentPolicy.forProfile(profile) || AGE[profile.age_band];
+    const route=window.AgeStages.route(profile);
+    const data=route==='junior'?{...AGE.primary,label:'8-10 años',subjects:window.ContentPolicy.early.subjects}:window.ContentPolicy.forProfile(profile)||AGE[profile.age_band];
+    return {...data,subjects:window.Curriculum.visible(data.subjects,route)};
   }
   function recent(s, n = 10) {
     return state.history.filter((x) => x.subject === s).slice(-n);
   }
   function recalcLevel(s) {
-    if(window.AgeStages.forProfile(profile)){
+    if(window.AgeStages.forProfile(profile)||['executive','speedReasoning'].includes(s)){
       const checkpoints=profile.progress?._levelCheckpoints || {};
       const checkpoint=checkpoints[s] || {attempt:state.totalAttempts-1};
       const results=state.history.filter(x=>x.subject===s && x.attemptNumber>checkpoint.attempt);
-      const level=state.levels[s]||1,next=window.AgeStages.next(level,results,profile);
+      const level=state.levels[s]||1,stage=window.AgeStages.forProfile(profile);
+      let next=window.AgeStages.next(level,results,profile);
+      if(!stage){
+        const minimum=window.ContentPolicy.forProfile(profile)?6:12,windowResults=results.slice(-minimum),accuracy=windowResults.filter(x=>x.correct).length/minimum;
+        if(windowResults.length===minimum)next=accuracy>=.85?Math.min(3,level+1):accuracy<=.4?Math.max(1,level-1):level;
+      }
       checkpoints[s]=next!==level?{attempt:state.totalAttempts}:checkpoint;
       profile.progress={...profile.progress,_levelCheckpoints:checkpoints};state.levels[s]=next;return;
     }
@@ -387,7 +440,7 @@
     }
   }
   function saveResult(s, correct, itemId, detail = "standard") {
-    const earlyAnswer=(window.ContentPolicy.forProfile(profile)||window.AgeStages.forProfile(profile)) && currentItem?.id===itemId && s===subject;
+    const earlyAnswer=currentItem?.id===itemId && s===subject;
     if(earlyAnswer && currentItem._earlyAnswered)return 0;
     if(earlyAnswer){
       currentItem._earlyAnswered=true;
@@ -419,6 +472,7 @@
       level: state.levels[s] || 1,
       itemId,
       detail,
+      ...(currentItem?.id===itemId&&currentItem.speedTask?{speedFamily:currentItem.speedFamily,responseMs:currentItem._timing?.measured?Math.round(performance.now()-currentItem._timing.started):null,timingValid:Boolean(currentItem._timing?.valid),curriculumRevision:2}:{}),
     };
     state.history.push(row);
     state.history = state.history.slice(-5000);
@@ -628,7 +682,7 @@
         attention: "Mira con calma y busca lo que te pedimos.",
         executive: "Piensa qué hacer y ordena los pasos.",
         memory: "Mira las cosas e intenta recordarlas.",
-        speedReasoning: "Busca parejas y descubre qué viene después.",
+        speedReasoning: "Mira, compara y responde. Primero acertar; después ganar agilidad.",
         applied: "Piensa qué puedes hacer en cada situación.",
       };
       $("#exerciseDescription").textContent = descriptions[subject];
@@ -695,6 +749,8 @@
     return res?.items?.[0] || null;
   }
   async function newExercise() {
+    $('#exercise').classList.remove('speed-active');
+    renderEarlyTaskGuide(false);
     $('#exerciseLevelSelect').value=String(state.levels[subject]||1);
     const requestedProfile = profile;
     const requestedSubject = subject;
@@ -807,12 +863,15 @@
       $("#exerciseVisual").innerHTML =
         `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus,{heading:it.topic||it.theme,illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:!window.ContentPolicy.forProfile(profile),senses:it.lexicalSenses})}</div>`;
     $("#exercisePrompt").textContent = it.q || "Actividad";
+    if(it.speedTask){renderSpeedExercise(it);return;}
     if (it.type === "memoryReveal" || it.type === "memoryMulti") {
       renderMemoryExercise(it);
       return;
     }
     if (it.type === "self" || (!it.opts && !it.a && it.sample)) {
       $("#textAnswerArea").classList.remove("hidden");
+      let criteria=$('#writingCriteria');if(!criteria){criteria=document.createElement('div');criteria.id='writingCriteria';$('#textAnswerInput').after(criteria);}
+      criteria.innerHTML=it.writingRubric?.length?`<p>Comprueba tu texto:</p><ul>${it.writingRubric.map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul>`:'';
       $("#textAnswerInput").value = "";
       return;
     }
@@ -851,6 +910,12 @@
       currentItem.type || "standard",
     );
     showFeedback(correct, pts, currentItem.why);
+    if(currentItem.speedTask){
+      const row=state.history.at(-1),summary=window.Curriculum.speedSummary(state.history.filter(x=>x.level===row.level&&x.speedFamily===row.speedFamily).slice(-20));
+      const measurement=row.timingValid?`Tiempo: ${(row.responseMs/1000).toFixed(2)} s.`:row.responseMs===null?'Práctica sin medir.':'Tiempo excluido porque saliste de la ventana.';
+      const stats=summary.attempts?` En las últimas ${summary.attempts} respuestas de esta tarea y nivel: ${summary.accuracy}% de aciertos.${summary.medianMs===null?'':` Mediana de respuestas correctas: ${(summary.medianMs/1000).toFixed(2)} s.`}`:'';
+      const note=document.createElement('p');note.className='speed-result';note.textContent=measurement+stats;$('#exerciseFeedback').append(note);
+    }
   }
   function renderOrderExercise(it) {
     const tokens = [...(it.tokens || [])],
@@ -979,8 +1044,8 @@
         : `No esta vez. Respuesta: ${currentItem.a || "revisa el modelo"}`);
     f.className = "feedback " + (correct ? "ok" : "bad");
     $("#exerciseNext").classList.remove("hidden");
+    $$('#exerciseOptions button').forEach(b=>b.disabled=true);
     if(window.ContentPolicy.forProfile(profile)||window.AgeStages.forProfile(profile)){
-      $$('#exerciseOptions button').forEach(b=>b.disabled=true);
       $('#exerciseNext').textContent=guidedSession?.mission && guidedSession.index===guidedSession.plan.length-1?'Terminar misión →':'Siguiente →';
       renderEarlyTaskGuide(true);
     }
@@ -1001,6 +1066,8 @@
       }),
   );
   $("#textAnswerCheck").onclick = () => {
+    if(!$('#textAnswerInput').value.trim()){$('#exerciseFeedback').textContent='Escribe tu respuesta antes de compararla con el modelo.';$('#textAnswerInput').focus();return;}
+    $('#exerciseFeedback').textContent='';
     $("#modelAnswer").textContent =
       currentItem.sample ||
       currentItem.a ||
@@ -1092,10 +1159,10 @@
     const journey=window.EarlyJourney,stats=journey.stats(state.history),saved=journeyState(),active=saved.active;
     const suggested=$('#recommendedBtn').dataset.subject;
     const next=active?journey.definition(active.id).plan[active.index]:journey.areas[suggested]?suggested:'language';
-    const explored=Object.values(stats).filter(x=>x.attempts>=3).length;
-    hub.innerHTML=`<div class="explore-welcome card"><div><p class="eyebrow">LEARNING LAB · MIS DESCUBRIMIENTOS</p><h3>Un lugar para explorar</h3><p>Elige un área o prueba una misión corta. Vamos paso a paso.</p><button id="earlyContinue" class="primary-btn">${active?'Continuar misión':'Explorar '+journey.areas[next].title} →</button></div><div class="explore-summary"><span class="hub-illustration" aria-hidden="true">${window.StimulusArt.svg('backpack')}</span><strong>${explored} de 8 áreas exploradas</strong><span>${state.totalAttempts} actividades realizadas</span><small>Tres actividades para explorar un área.</small></div></div>
+    const explored=ageData().subjects.filter(d=>stats[d]?.attempts>=3).length;
+    hub.innerHTML=`<div class="explore-welcome card"><div><p class="eyebrow">LEARNING LAB · MIS DESCUBRIMIENTOS</p><h3>Un lugar para explorar</h3><p>Elige un área o prueba una misión corta. Vamos paso a paso.</p><button id="earlyContinue" class="primary-btn">${active?'Continuar misión':'Explorar '+journey.areas[next].title} →</button></div><div class="explore-summary"><span class="hub-illustration" aria-hidden="true">${window.StimulusArt.svg('backpack')}</span><strong>${explored} de ${ageData().subjects.length} áreas exploradas</strong><span>${state.totalAttempts} actividades realizadas</span><small>Tres actividades para explorar un área.</small></div></div>
       <div class="hub-heading"><div><p class="eyebrow">ELIGE TU CAMINO</p><h3>Mis áreas</h3></div><span>También puedes entrar desde el menú.</span></div>
-      <div class="early-area-grid">${Object.entries(journey.areas).map(([domain,area])=>`<button class="early-area-card card" data-early-area="${domain}"><span class="area-illustration" aria-hidden="true">${window.StimulusArt.svg(area.icon)}</span><span class="area-copy"><small>${area.theme}</small><strong>${area.title}</strong><span>${area.description}</span><span class="area-progress" aria-label="Primera exploración: ${stats[domain].firstExploration} de 3 actividades">${[1,2,3].map(i=>`<i class="${stats[domain].firstExploration>=i?'done':''}" aria-hidden="true"></i>`).join('')}<small>${stats[domain].attempts} actividades · nivel ${state.levels[domain]||1}</small></span></span><span aria-hidden="true">→</span></button>`).join('')}</div>
+      <div class="early-area-grid">${Object.entries(journey.areas).filter(([d])=>ageData().subjects.includes(d)).map(([domain,area])=>`<button class="early-area-card card" data-early-area="${domain}"><span class="area-illustration" aria-hidden="true">${window.StimulusArt.svg(area.icon)}</span><span class="area-copy"><small>${area.theme}</small><strong>${area.title}</strong><span>${area.description}</span><span class="area-progress" aria-label="Primera exploración: ${stats[domain].firstExploration} de 3 actividades">${[1,2,3].map(i=>`<i class="${stats[domain].firstExploration>=i?'done':''}" aria-hidden="true"></i>`).join('')}<small>${stats[domain].attempts} actividades · nivel ${state.levels[domain]||1}</small></span></span><span aria-hidden="true">→</span></button>`).join('')}</div>
       <div class="hub-heading"><div><p class="eyebrow">PASO A PASO</p><h3>Misiones cortas</h3></div><span>${saved.completed.length} misiones terminadas</span></div>
       ${active?`<p class="mission-resume" role="status">${journey.definition(active.id).title}: ${active.index} de ${journey.definition(active.id).plan.length} actividades realizadas. Puedes continuar cuando quieras.</p>`:''}
       <div class="early-mission-grid">${journey.missions.map(m=>`<div class="mission-card card"><span aria-hidden="true">${window.StimulusArt.svg(m.icon)}</span><div><h4>${m.title}</h4><p>${m.description}</p><button class="secondary-btn" data-early-mission="${m.id}" ${active&&active.id!==m.id?'disabled':''}>${active?.id===m.id?'Continuar':'Empezar'} →</button></div></div>`).join('')}</div>`;
@@ -1156,7 +1223,11 @@
         const r = state.history.filter((x) => x.subject === s),
           c = r.filter((x) => x.correct).length,
           acc = r.length ? Math.round((c / r.length) * 100) : 0;
-        return `<div class="progress-subject card"><small>${SUBJECT_META[s].name}</small><strong>${acc}%</strong><div class="bar"><span style="width:${acc}%"></span></div><small>${r.length} ejercicios · nivel ${state.levels[s] || 1}</small></div>`;
+        const timings=s==='speedReasoning'?[...new Set(r.filter(x=>x.speedFamily&&x.timingValid).map(x=>x.speedFamily+':'+x.level))].map(key=>{
+          const [family,level]=key.split(':'),stats=window.Curriculum.speedSummary(r.filter(x=>x.speedFamily===family&&String(x.level)===level).slice(-20));
+          return `<p class="speed-progress-detail">${({figures:'Figuras',key:'Clave de códigos',match:'Coincidencias'})[family]||escapeHtml(family)} · nivel ${escapeHtml(level)}: ${stats.accuracy}% de aciertos en ${stats.attempts} respuestas medidas.${stats.medianMs===null?'':` Mediana al acertar: ${(stats.medianMs/1000).toFixed(2)} s.`}</p>`;
+        }).join(''):'';
+        return `<div class="progress-subject card"><small>${SUBJECT_META[s].name}</small><strong>${acc}%</strong><div class="bar"><span style="width:${acc}%"></span></div><small>${r.length} ejercicios · nivel ${state.levels[s] || 1}</small>${timings}</div>`;
       })
       .join("");
     $("#recentResults").innerHTML =
@@ -1197,7 +1268,7 @@
         "nivel",
         "resultado",
         "puntos",
-        "id",
+        "id", "area_original", "tiempo_ms", "tiempo_valido", "tarea_velocidad",
       ],
     ];
     state.history.forEach((x) =>
@@ -1209,7 +1280,7 @@
         x.level,
         x.correct ? "correcto" : "revisar",
         x.points,
-        x.itemId,
+        x.itemId, x.originalSubject||"", x.responseMs??"", x.timingValid??"", x.speedFamily||"",
       ]),
     );
     downloadText(
@@ -1312,7 +1383,7 @@
       "executive",
       "speedReasoning",
       "applied",
-    ];
+    ].filter(d=>ageData().subjects.includes(d));
     const holder = $("#sessionDomainOptions");
     if (!holder) return;
     holder.innerHTML = domains

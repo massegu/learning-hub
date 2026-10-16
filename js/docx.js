@@ -99,7 +99,8 @@
         ]})]})]}));
         block.push(new Paragraph({spacing:{after:75},children:[]}));
       }
-      if(early&&it.type==='memoryReveal') block.push(paragraph('Mira bien. Tapa las cosas y responde.'));
+      if(it.type==='memoryReveal') block.push(paragraph(it.recallSequence?'Una persona muestra las figuras una a una, en el orden impreso. Después tapa la secuencia y pide reproducirla.':'Mira el material. Después tápalo antes de responder.'));
+      if(it.speedTask) block.push(paragraph('Práctica visual en papel: esta ficha no mide el tiempo de respuesta.'));
       block.push(new Paragraph({spacing:{after:90,line:early?360:300},children:[new TextRun({text:prompt,bold:true,size:early?28:21,color:ink,font:'Aptos'})]}));
       if(model.tokens.length){
         block.push(paragraph('Palabras o pasos disponibles:'));
@@ -110,6 +111,7 @@
         block.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:softBorders,rows:[new TableRow({children:[new TableCell({margins:{top:130,bottom:130,left:160,right:160},children:op})]})]}));
         block.push(new Paragraph({spacing:{after:70},children:[]}));
       }
+      if(it.writingRubric?.length){block.push(paragraph('Comprueba tu texto:'));it.writingRubric.forEach(line=>block.push(paragraph('• '+line)));}
       const openAnswer=!op.length || it.type==='self' || it.sample || it.type==='order';
       if(openAnswer){
         block.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:softBorders,rows:[new TableRow({children:[new TableCell({shading:{fill:'FBFCF8'},margins:{top:120,bottom:120,left:160,right:160},children:[

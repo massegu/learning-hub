@@ -6,13 +6,13 @@
     reading:['literal','inference','sequencing'], attention:['matching','search','oddOne','findPlace'],
     memory:['rememberObjects','rememberPlace','rememberPair','rememberOrder'],
     executive:['planning','inhibition','sequencing','organisation'],
-    speedReasoning:['analogy','pattern','classification','relationship'],
+    speedReasoning:['analogy','pattern','classification','relationship','speedCompare'],
     applied:['chooseObject','solveProblem','followRule','findPlace'],
   };
   const early = Object.freeze({
     id: 'early', revision: 1, label: '6-7 años', subjects: Object.freeze(domains),
     contexts: Object.freeze(['school', 'playground', 'animals', 'toys', 'sports', 'snacks', 'birthday', 'family', 'bedroom', 'backpack', 'excursion']),
-    mechanics: Object.freeze(['literal', 'inference', 'vocabulary', 'sentence', 'count', 'addition', 'subtraction', 'compare', 'matching', 'search', 'oddOne', 'rememberObjects', 'rememberPlace', 'rememberPair', 'rememberOrder', 'planning', 'inhibition', 'sequencing', 'organisation', 'analogy', 'pattern', 'classification', 'relationship', 'chooseObject', 'solveProblem', 'followRule', 'findPlace']),
+    mechanics: Object.freeze(['literal', 'inference', 'vocabulary', 'sentence', 'count', 'addition', 'subtraction', 'compare', 'matching', 'search', 'oddOne', 'rememberObjects', 'rememberPlace', 'rememberPair', 'rememberOrder', 'planning', 'inhibition', 'sequencing', 'organisation', 'analogy', 'pattern', 'classification', 'relationship', 'chooseObject', 'solveProblem', 'followRule', 'findPlace', 'speedCompare']),
     maxWords: 45, maxSentenceWords: 14, maxOptions: 3, maxElements: 6,
     memoryElements: Object.freeze([2, 3, 4]), maxSteps: 3,
     stimulusTypes: Object.freeze(['text', 'list', 'table']),
@@ -26,6 +26,7 @@
   }
   function forProfile(profile) { return route(profile) === 'early' ? early : null; }
   function words(text) { return String(text).trim().split(/\s+/).filter(Boolean).length; }
+  function levelIndex(item){return Math.max(0,Math.min(2,(Number(item.level)||1)-1));}
   function validateEarly(item) {
     const meta = item?.ageProfile;
     if (!meta || meta.id !== early.id || meta.revision !== early.revision)
@@ -35,7 +36,7 @@
     if (!domainMechanics[item.domain].includes(meta.mechanic)) throw new Error('La mecánica no pertenece al área solicitada.');
     if (!early.responseTypes.includes(item.responseType) || !Array.isArray(item.stimulus) || !item.stimulus.length)
       throw new Error('La actividad 6-7 necesita un estímulo y una respuesta compatibles.');
-    const expectedType = item.responseType === 'order' ? 'order' : meta.mechanic.startsWith('remember') ? 'memoryReveal' : 'standard';
+    const expectedType = meta.mechanic.startsWith('remember') ? 'memoryReveal' : item.responseType === 'order' ? 'order' : 'standard';
     if (item.type !== expectedType || item.image || item.visual || item.rounds)
       throw new Error('Mecánica o complejidad visual no compatible con 6-7.');
     // Canonical stimuli are the only factual presentation path for early items.
@@ -50,7 +51,7 @@
     const stimulusText = [];
     for (const block of item.stimulus) {
       if (!block || !early.stimulusTypes.includes(block.type)) throw new Error('Estímulo no permitido para 6-7.');
-      const presentations={text:['model'],list:['cards','count','sequence'],table:['comparison']};
+      const presentations={text:['model'],list:['cards','count','sequence'],table:['comparison','spatial']};
       if(block.presentation && !presentations[block.type].includes(block.presentation))throw new Error('Presentación no compatible con el estímulo.');
       if(block.presentation==='model' && !block.text?.startsWith('Modelo: '))throw new Error('El modelo no declara una referencia legible.');
       if(block.label!==undefined){if(typeof block.label!=='string'||!block.label.trim())throw new Error('Falta el título del estímulo.');pieces.push(block.label);stimulusText.push(block.label);}
@@ -68,7 +69,7 @@
         if (block.rows.some(row => row.length > 2)) throw new Error('Tabla demasiado compleja para 6-7.');
       }
     }
-    if (elements > early.maxElements || (item.opts || []).length > early.maxOptions || (item.tokens || []).length > early.maxSteps)
+    if (elements > early.maxElements || (item.opts || []).length > (item.memoryResponse==='spatial'?4:early.maxOptions) || (item.tokens || []).length > (item.memoryResponse==='order'?early.memoryElements[levelIndex(item)]:early.maxSteps))
       throw new Error('Demasiados elementos para el perfil 6-7.');
     if (words(stimulusText.join(' ')) > early.maxWords) throw new Error('El estímulo contiene demasiada lectura.');
     for (const text of [...pieces, ...stimulusText]) {
@@ -77,7 +78,7 @@
         throw new Error('La lectura supera los límites del perfil 6-7.');
     }
     const level = Math.max(1, Math.min(3, Number(item.level) || 1));
-    if (item.type === 'memoryReveal' && (!Array.isArray(item.memoryContent) || !item.memoryContent.length || !item.memoryContent.every(x => x && typeof x.detail === 'string' && x.detail.trim()) || item.memoryContent.length > early.memoryElements[level - 1] || elements !== item.memoryContent.length || item.stimulus.some(block => block.type === 'text') || !Number.isFinite(item.revealMs) || item.revealMs < 6000))
+    if (item.type === 'memoryReveal' && (!Array.isArray(item.memoryContent) || !item.memoryContent.length || !item.memoryContent.every(x => x && typeof x.detail === 'string' && x.detail.trim()) || item.memoryContent.length > early.memoryElements[level - 1] || (!item.recallEvidence && elements !== item.memoryContent.length) || item.stimulus.some(block => block.type === 'text') || !Number.isFinite(item.revealMs) || item.revealMs < 6000))
       throw new Error('Carga de memoria no compatible con 6-7.');
     return item;
   }

@@ -110,7 +110,7 @@
     return checkAgreement(result,key);
   }
   const scalarFields=['q','prompt','memoryQuestion','why','topic','theme','text','title','scenario','sample','model','a','detail','label','instruction','question','rule','n'];
-  const arrayFields=['opts','answers','tokens','answer','modelSequence','rows','visualItems','grid','stimuli','sequence','writingRubric'];
+  const arrayFields=['opts','answers','tokens','answer','modelSequence','rows','visualItems','grid','stimuli','sequence','recallSequence','writingRubric'];
   function html(value,locale,senses) {
     if(!value || !/[<>]/.test(value))return text(value,locale,senses);
     const Parser=root.DOMParser;
@@ -154,6 +154,7 @@
     for(const field of arrayFields)if(item[field]!==undefined && !english)result[field]=map(item[field]);
     if(Array.isArray(item.memoryContent) && !english)result.memoryContent=item.memoryContent.map(x=>typeof x==='string'?adapt(x):{...x,detail:adapt(x.detail)});
     if(Array.isArray(item.stimulus) && !english)result.stimulus=item.stimulus.map(b=>({...b,...(b.label!==undefined?{label:adapt(b.label)}:{}),...(b.type==='text'?{text:adapt(b.text)}:b.type==='list'?{items:map(b.items)}:b.type==='table'?{rows:map(b.rows)}:{})}));
+    if(item.recallEvidence?.targets&&!english)result.recallEvidence={...item.recallEvidence,targets:map(item.recallEvidence.targets)};
     if(item.visual!==undefined && !english)result.visual=html(item.visual,key,senses);
     if(Array.isArray(item.rounds) && !english)result.rounds=item.rounds.map(x=>localizeItem(x,key,domain));
     const visible=x=>JSON.stringify(Object.fromEntries([...scalarFields,...arrayFields,'stimulus','memoryContent','visual'].filter(f=>x[f]!==undefined).map(f=>[f,x[f]])));

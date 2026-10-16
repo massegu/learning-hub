@@ -4,6 +4,13 @@ Esta prueba abre la aplicación real y ejecuta el código de `request-learning-c
 de tu copia del repositorio. Sustituye la cuenta y la base de datos por datos ficticios.
 No consulta Supabase ni modifica tus perfiles reales. No necesitas iniciar sesión.
 
+La revisión de fusión y ampliaciones se describe en
+[Áreas, lectura, memoria y velocidad](curriculum-fusion-review.md). En el menú verás
+Funciones ejecutivas y Velocidad de procesamiento; Cognición aplicada está integrada.
+Hay diez textos por franja, memoria de secuencias y posiciones, y respuestas medidas.
+Para comparar memoria, elige manualmente niveles 1 y 3. En velocidad pulsa «Mostrar
+y medir» para iniciar el ensayo; también puedes practicar sin medir.
+
 ## Primera vez en Windows
 
 1. Instala **Node.js 24 LTS** desde <https://nodejs.org/> si todavía no lo tienes.
