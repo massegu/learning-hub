@@ -13,7 +13,7 @@ test('all primary domains/levels retain evidence, unique choices and locale pari
       assert.deepEqual(stages.audit(it,profile,l).issues,[],it.contentKey);
       for(const c of Object.keys(locale.labels)){
         const local=locale.localizeItem(it,c,d),projection=model.printable(local,profile);
-        assert.ok(projection.stimulus.length);assert.equal(local.a,it.a);
+        assert.ok(projection.stimulus.length);assert.equal(local.a,locale.text(it.a,c,local.lexicalSenses));
         assert.throws(()=>model.printable({...local,stimulus:[]},profile));
       }
       if(it.type==='order')assert.deepEqual([...it.tokens].sort(),[...it.answer].sort());

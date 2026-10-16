@@ -2694,6 +2694,10 @@ body {
 .structured-stimulus-table th { background:#e7eef1; font-weight:700; }
 .structured-stimulus-table tr:nth-child(odd) td { background:#f7fafb; }
 .stimulus-paragraph { max-width:72ch; line-height:1.85; white-space:pre-line; overflow-wrap:anywhere; }
+.scenario-card p { white-space:pre-line; }
+.table-scroll-hint { display:none; }
+#exercise:not(.early-primary) .exercise-layout.single { grid-template-columns:minmax(0,1fr); }
+#exercise:not(.early-primary) .exercise-card, #exercise:not(.early-primary) #exerciseVisual { min-width:0; }
 [data-age-theme="workshop"] #exercise .exercise-card { border-top:5px solid #718b51; }
 [data-age-theme="base"] #exercise .exercise-card { border-top:5px solid #5a719e; }
 [data-age-theme="studio"] .sidebar { background:linear-gradient(160deg,#202c44,#303b58)!important; }
@@ -2709,7 +2713,8 @@ body {
 [data-age-theme="studio"] .hero-visual { display:none; }
 @media(max-width:600px) { .structured-stimulus-list { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; } .structured-stimulus-list li { padding:12px; } .structured-stimulus-table th,.structured-stimulus-table td { padding:12px; min-width:95px; } }
 @media(max-width:640px) {
-  [data-age-theme]:not([data-age-theme=""]) #exercise .section-intro { flex-direction:column; align-items:stretch; gap:18px; }
-  [data-age-theme]:not([data-age-theme=""]) #exercise .section-intro>div { min-width:0; width:100%; }
-  [data-age-theme]:not([data-age-theme=""]) #exercise .level-control { position:static; align-self:flex-start; width:fit-content; }
+  #exercise:not(.early-primary) .section-intro { flex-direction:column; align-items:stretch; gap:18px; }
+  #exercise:not(.early-primary) .section-intro>div { min-width:0; width:100%; }
+  #exercise:not(.early-primary) .level-control { position:static; align-self:flex-start; width:fit-content; }
+  .table-scroll-hint { display:block; font-size:.85rem; color:#4b5f69; }
 }

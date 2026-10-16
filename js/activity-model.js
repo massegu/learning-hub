@@ -241,7 +241,7 @@
         const label=block.label?`<p class="stimulus-caption">${escape(block.label)}</p>`:'';
         if(block.type==='text')return `${label}<p class="stimulus-paragraph">${escape(block.text)}</p>`;
         if(block.type==='list')return `${label}<ul class="structured-stimulus-list">${block.items.map(x=>`<li>${escape(x)}</li>`).join('')}</ul>`;
-        return `${label}<div class="stimulus-table-scroll" tabindex="0" role="region" aria-label="Tabla de datos"><table class="structured-stimulus-table">${block.rows.map((row,i)=>`<tr>${row.map(x=>i===0&&block.header===true?`<th scope="col">${escape(x)}</th>`:`<td>${escape(x)}</td>`).join('')}</tr>`).join('')}</table></div>`;
+        return `${label}${block.rows[0].length>3?'<p class="table-scroll-hint">Desliza la tabla para ver todas las columnas.</p>':''}<div class="stimulus-table-scroll" tabindex="0" role="region" aria-label="Tabla de datos"><table class="structured-stimulus-table">${block.rows.map((row,i)=>`<tr>${row.map(x=>i===0&&block.header===true?`<th scope="col">${escape(x)}</th>`:`<td>${escape(x)}</td>`).join('')}</tr>`).join('')}</table></div>`;
       }
       if (block.type === 'text') return `<p>${escape(block.text)}</p>`;
       if (block.type === 'list') return `<ul>${block.items.map(x => `<li>${escape(x)}</li>`).join('')}</ul>`;

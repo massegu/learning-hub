@@ -42,6 +42,7 @@
     {id:'pool',category:'recreation',sources:[term('piscina','f'),term('alberca','f')],common:term('piscina','f'),preferred:{es_mx:term('alberca','f')}},
   ];
   const bananaRule={id:'banana',category:'food',requiresSense:'banana',sources:[term('plátano'),term('banana','f'),term('banano'),term('guineo')],common:term('banana','f'),preferred:{es_es:term('plátano'),es_mx:term('plátano'),es_co:term('banano'),es_cl:term('plátano'),es_pa:term('guineo'),es_cr:term('banano')}};
+  const headphonesRule={id:'headphones',category:'technology',requiresSense:'headphones',sources:[term('auricular','m','auriculares')],common:term('auricular','m','auriculares'),preferred:{es_mx:term('audífono'),es_co:term('audífono'),es_cl:term('audífono'),es_pa:term('audífono'),es_cr:term('audífono')}};
   const escape = x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
   function casing(value,source) {
     if(source===source.toUpperCase()) return value.toUpperCase();
@@ -92,7 +93,7 @@
     const key=normalize(locale);
     let result=value;
     const lower=value.toLowerCase();
-    for(const rule of senses.banana===true?[...rules,bananaRule]:rules) {
+    for(const rule of [...rules,...(senses.banana===true?[bananaRule]:[]),...(senses.headphones===true?[headphonesRule]:[])]) {
       const target=rule.preferred[key] || rule.common;
       for(const source of rule.sources) {
         if(source.gender===target.gender && source.word===target.word && source.plural===target.plural)continue;
@@ -141,10 +142,14 @@
     const spanishWrappers=['q','prompt','why','topic','theme','instruction'];
     const senses={...(item.lexicalSenses || {})};
     if(item.icons?.includes('banana') || item.memoryContent?.some(x=>x?.icon==='banana'))senses.banana=true;
+    // A standalone object label or a determiner identifies the device sense.
+    // Do not reinterpret anatomical phrases such as «pabellones auriculares».
+    const specimens=[...scalarFields.map(f=>item[f]),...arrayFields.map(f=>item[f]),...(item.memoryContent||[]).map(x=>typeof x==='string'?x:x?.detail),...(item.stimulus||[]).map(b=>b.text||b.items||b.rows)].flat(Infinity);
+    if(item.icons?.includes('headphones')||specimens.some(v=>typeof v==='string'&&(/^(?:auricular|auriculares)$/iu.test(v.trim())||/(?<!\p{L})(?:(?:los|unos|mis|tus|sus)\s+auriculares|(?:el|un|mi|tu|su)\s+auricular)(?!\p{L})/iu.test(v))))senses.headphones=true;
     const adapt=v=>text(v,key,senses);
     const map=v=>Array.isArray(v)?v.map(map):adapt(v);
     const result={...item};
-    if(senses.banana===true)result.lexicalSenses=senses;
+    if(senses.banana===true||senses.headphones===true)result.lexicalSenses=senses;
     for(const field of scalarFields)if(item[field]!==undefined && (!english||spanishWrappers.includes(field)))result[field]=adapt(item[field]);
     for(const field of arrayFields)if(item[field]!==undefined && !english)result[field]=map(item[field]);
     if(Array.isArray(item.memoryContent) && !english)result.memoryContent=item.memoryContent.map(x=>typeof x==='string'?adapt(x):{...x,detail:adapt(x.detail)});
@@ -172,7 +177,7 @@
     const item=localizeItem({q:model.question,stimulus:model.stimulus,opts:model.options,tokens:model.tokens,currencyContext:context.currencyContext,lexicalSenses:context.lexicalSenses},locale,domain);
     return {...model,question:item.q,stimulus:item.stimulus,options:item.opts,tokens:item.tokens};
   }
-  const api={labels,currencies,normalize,effective,rules,senseRules:[bananaRule],text,localizeItem,localizeModel};
+  const api={labels,currencies,normalize,effective,rules,senseRules:[bananaRule,headphonesRule],text,localizeItem,localizeModel};
   root.LocaleContent=api;
   if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);

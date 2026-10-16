@@ -1790,6 +1790,20 @@ function matrixMemory(age:string,level:number,v:number){
 
 function matrixExecutive(age:string,level:number,v:number){
   const s=matrixSeed(v),m=s.m,k=s.k,rank=ageRank(age),easy=rank===0;
+  if(age==="teen"&&m===4){
+    const first=[['PDF','Sí','No','4','Normal'],['PDF','No','Sí','2','Normal'],['TXT','No','Sí','2','Normal'],['TXT','Sí','No','4','Normal']];
+    if(level>=2)first.push(['TXT','Sí','Sí','8','Normal'],['PDF','Sí','Sí','8','Normal']);
+    const second=first.map(row=>row.slice());
+    if(level===3)second[4]=['PDF','No','Sí','2','Urgente'];
+    const labels=(block:number)=>first.map((_,j)=>String.fromCharCode(65+(j+k)%first.length)+block);
+    const ids1=labels(1),ids2=labels(2),chosen=level===3?4:2;
+    const pair=(a:string,b:string)=>a+" → "+b;
+    const rule1="Bloque 1: elige un archivo PDF revisado."+(level>=2?" Además, debe ocupar como máximo 5 MB.":"");
+    const rule2=level===3?"Bloque 2: cambia el criterio. Elige un archivo urgente, con permiso y de como máximo 3 MB. Ahora no importan el formato ni la revisión.":"Bloque 2: cambia el criterio. Elige un archivo TXT con permiso. Ahora no importa la revisión."+(level===2?" Debe ocupar como máximo 3 MB.":"");
+    const rows=(xs:string[][],ids:string[])=>[['Archivo','Formato','Revisado','Permiso',...(level>=2?['Tamaño (MB)']:[]),...(level===3?['Prioridad']:[])],...xs.map((row,j)=>[ids[j],...row.slice(0,3),...(level>=2?[row[3]]:[]),...(level===3?[row[4]]:[])])];
+    const answer=pair(ids1[0],ids2[chosen]);
+    return answerItem({type:"executiveDecision",mechanic:"exec_rule_switch",topic:"Funciones ejecutivas · aplicar dos criterios",q:"¿Qué archivo eliges en el bloque 1 y en el bloque 2, en ese orden?",stimulus:[{type:'text',text:rule1},{type:'table',header:true,rows:rows(first,ids1)},{type:'text',text:rule2},{type:'table',header:true,rows:rows(second,ids2)}],requiresStimulus:true,opts:opt4(answer,pair(ids1[0],ids2[0]),pair(ids1[2],ids2[chosen]),pair(ids1[1],ids2[1])),a:answer,why:"Aplica las condiciones de cada bloque a sus archivos. En el segundo bloque no conserves los criterios que dejaron de exigirse."},age,"executive",level,v);
+  }
   const obj=["cuaderno","mochila","llaves","botella","carpeta"][k%5];
   const simple=(topic:string,scenario:string,q:string,a:string,b:string,c:string,d:string,mech:string)=>answerItem({type:"executiveDecision",topic:"Funciones ejecutivas · "+topic,scenario,q,opts:opt4(a,b,c,d),a,mechanic:mech},age,"executive",level,v);
   const items=[
@@ -1895,7 +1909,7 @@ function matrixAttention15(age:string,level:number,v:number){
       :"RUTA | PARADA | HORA\nA | Centro | 16:20\nB | Norte | 16:35\nA | Parque | 16:50\nC | Centro | 17:05";
     return answerItem({type:"attentionChoice",mechanic:"att_table_cross",topic:"Atención · cruce de información",
       q:easy?"¿En qué fila está la manzana en el centro?":"¿A qué hora pasa la línea A por Parque?",
-      scenario,opts:easy?opt4("Fila 2","Fila 1","Fila 3","Ninguna"):opt4("16:50","16:20","16:35","17:05"),a:easy?"Fila 2":"16:50"},age,"attention",level,v);
+      ...(easy?{scenario}:{stimulus:[{type:'table',header:true,rows:[['Línea','Parada','Hora'],['A','Centro','16:20'],['B','Norte','16:35'],['A','Parque','16:50'],['C','Centro','17:05']]}],requiresStimulus:true}),opts:easy?opt4("Fila 2","Fila 1","Fila 3","Ninguna"):opt4("16:50","16:20","16:35","17:05"),a:easy?"Fila 2":"16:50"},age,"attention",level,v);
   }
   const word=["casa","mesa","luna","pato","nube"][k%5], target=easy?"a":"e";
   const text=easy?word+" "+word+" "+word:"Este pequeño anuncio ofrece entrega gratuita este viernes.";
@@ -2173,6 +2187,7 @@ function matrixReasoning18(age:string,level:number,v:number){
 
 function matrixExecutive20(age:string,level:number,v:number){
   const m=v%20,k=Math.floor(v/20)%20,rank=ageRank(age),easy=rank===0;
+  if(age==="teen"&&m===18)return matrixExecutive(age,level,k*12+4);
   if(m<15) return matrixExecutive15(age,level,k*15+m);
   if(m===15) return answerItem({type:"executiveDecision",mechanic:"exec_pack",topic:"Funciones ejecutivas · preparar materiales",
     scenario:easy?"Vas a natación. Necesitas bañador, toalla y chanclas.":"Vas a una actividad fuera. Necesitas identificación, agua y material de trabajo.",

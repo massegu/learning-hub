@@ -12,7 +12,7 @@ test('all middle activities retain complete evidence and consistent seven-countr
       assert.equal(api.validateItem(api.normalizeItem(structuredClone(it))),true,it.contentKey);
       assert.deepEqual(stages.audit(it,profile,l).issues,[],it.contentKey);
       for(const c of Object.keys(locale.labels)){
-        const local=locale.localizeItem(it,c,d),projection=model.printable(local,profile);assert.ok(projection.stimulus.length);assert.equal(local.a,it.a);
+        const local=locale.localizeItem(it,c,d),projection=model.printable(local,profile);assert.ok(projection.stimulus.length);assert.equal(local.a,locale.text(it.a,c,local.lexicalSenses));
         assert.throws(()=>model.printable({...local,stimulus:[]},profile));
       }
       if(it.type==='order')assert.deepEqual([...it.tokens].sort(),[...it.answer].sort());

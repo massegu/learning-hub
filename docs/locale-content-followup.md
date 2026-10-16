@@ -1,5 +1,8 @@
 # Revisión editorial y regional — 16 de octubre de 2026
 
+**Seguimiento de México:** [aplicación de criterios, horario y audífonos](rule-application-review.md)
+añade la corrección posterior de las capturas y sus pruebas. «Mochila» se conserva.
+
 Rama `fix/early-primary-stimulus-integrity`, a partir de `3d25762`.
 Sin merge, despliegue ni cambios en datos de producción.
 
