@@ -3,6 +3,28 @@
 Seguimiento de `e967bf2`, en `fix/early-primary-stimulus-integrity`.
 Sin merge, despliegue ni datos de producción.
 
+## Seguimiento: lista de llaves y botella
+
+La familia histórica `app_missing` podía pedir «botella, llaves y botella» y
+ofrecer «Botella» y «botella» como opciones diferentes. Para 16–18 se sustituye
+por `app_plan_review`: tres casos escritos, uno por nivel, con requisitos y un
+estado o plan que el usuario debe supervisar. No se presentan las variaciones
+de identificadores como textos nuevos.
+
+- Nivel 1: detectar que la autorización fotografiada carece de firma, aunque
+  el formato digital sea válido y el resto del material esté preparado.
+- Nivel 2: comprobar contenido, tamaño y revisión del archivo final después
+  de añadir gráficos; una revisión de una versión anterior no basta.
+- Nivel 3: relacionar cita, antelación de registro, trayecto y disponibilidad
+  de un comprobante para corregir la salida del plan.
+
+Se conservan los requisitos y las filas de la tabla en la proyección imprimible,
+con opciones distintas y explicación de la corrección. No hay cambios de moneda
+ni dependencias regionales. La ruta histórica de otras edades mantiene una lista
+con tres objetos distintos; sus bancos escolares propios siguen activos.
+Esta intervención no completa la fusión de áreas ni la ampliación de los bancos
+de lectura, memoria o velocidad propuestas en la conversación.
+
 ## Cambio de regla
 
 La pregunta «Antes seleccionabas pares. Ahora seleccionas impares. ¿Qué debes seguir

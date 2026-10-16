@@ -1,5 +1,33 @@
 const test=require('node:test'),assert=require('node:assert/strict'),load=require('./edge-harness');
 const locale=require('../js/locale-content'),model=require('../js/activity-model');
+test('teen list family supervises a concrete plan, with distinct answers and increasing constraints',()=>{
+  const {api}=load(),signatures=new Set();
+  for(const level of [1,2,3])for(let k=0;k<20;k++){
+    const it=api.matrixApplied20('teen',level,k*20+2);
+    assert.equal(it.mechanic,'app_plan_review');assert.equal(it.scenario,undefined);
+    assert.equal(new Set(it.opts.map(o=>o.toLocaleLowerCase('es').trim())).size,4);
+    assert.equal(it.opts.filter(o=>o===it.a).length,1);
+    assert.ok(it.stimulus[0].text.split(/\s+/).length>=50);
+    assert.ok(it.why.length>80);signatures.add(api.contentSignature('applied',it));
+    for(const country of Object.keys(locale.labels)){
+      const local=locale.localizeItem(it,country,'applied');
+      const printed=model.printable(local,{age_band:'teen'});
+      assert.equal(printed.stimulus[1].type,'table');
+      assert.equal(printed.stimulus[1].rows.length,it.stimulus[1].rows.length);
+      assert.ok(local.opts.includes(local.a));
+    }
+    if(level===1){assert.match(it.a,/firma/);assert.match(it.why,/sin firma/);}
+    if(level===2){assert.match(it.a,/conservando los gráficos.*revisar/);assert.match(it.why,/supera el límite/);}
+    if(level===3){
+      const latestArrival=17*60-10,travel=20,latestDeparture=16*60+30;
+      assert.equal(latestDeparture+travel,latestArrival);
+      assert.ok(16*60+25<=latestDeparture);assert.ok(16*60+35+travel>latestArrival);
+      assert.match(it.a,/16:30/);assert.match(it.why,/no lo sustituye/);
+    }
+  }
+  // These are three authored cases, not sixty different lessons.
+  assert.equal(signatures.size,3);
+});
 test('teen rule tasks require applying both criteria to actual records with one justified pair',()=>{
   const {api}=load();
   for(const level of [1,2,3])for(let k=0;k<20;k++){

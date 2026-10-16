@@ -1823,6 +1823,36 @@ function matrixExecutive(age:string,level:number,v:number){
   return items[m]();
 }
 
+function teenPlanReview(level:number,v:number){
+  const cases=[
+    {
+      text:"Participas en un taller de grabación. Para entrar necesitas una identificación y una autorización firmada. Se acepta la autorización en papel o una foto legible. La foto debe estar guardada antes de llegar, porque allí no hay conexión. La organización proporciona los equipos; no tienes que llevar uno propio. Revisa lo que ha preparado una participante.",
+      rows:[["Identificación","Guardada en la mochila"],["Autorización","Foto legible del formulario, sin firma"],["Equipo de grabación","Lo proporciona el taller"]],
+      q:"¿Qué debe corregir para cumplir los requisitos de entrada?",
+      opts:["Conseguir la firma y guardar una foto legible de la autorización firmada","Imprimir la autorización sin firmarla","Llevar un equipo propio y conservar la foto sin firma","Volver a fotografiar la identificación y conservar la autorización sin firma"],
+      why:"La identificación está preparada y el taller aporta el equipo. La foto se acepta, pero el formulario debe estar firmado. Imprimirlo sin firma no resuelve el requisito."
+    },
+    {
+      text:"Tu equipo entrega un informe mediante una plataforma. Debe enviarse en PDF, con todos los gráficos y un tamaño máximo de 5 MB. Una persona revisó la versión de las 16:00. Después se añadieron dos gráficos. La entrega aún no se ha enviado y quedan veinte minutos de plazo. Supervisa el plan antes de autorizar el envío.",
+      rows:[["16:00","Revisar el PDF de 4 MB, sin los dos gráficos nuevos"],["16:05","Añadir los dos gráficos y exportar un nuevo PDF de 6 MB"],["16:10 · paso propuesto","Enviar el nuevo PDF utilizando la revisión de las 16:00"]],
+      q:"¿Qué cambio permite entregar una versión que cumpla todas las condiciones?",
+      opts:["Reducir el tamaño conservando los gráficos y revisar el PDF final antes de enviarlo","Enviar el PDF de 4 MB que ya estaba revisado","Revisar el PDF de 6 MB y enviarlo con ese tamaño","Reducir el nuevo PDF a 5 MB y enviarlo usando solo la revisión de las 16:00"],
+      why:"La versión revisada no incluye los gráficos nuevos. La versión completa supera el límite y todavía no está revisada. Hay que conservar el contenido, ajustar el tamaño y comprobar el archivo que realmente se enviará."
+    },
+    {
+      text:"Tienes una cita a las 17:00 y debes llegar diez minutos antes para registrarte. El trayecto dura veinte minutos. Antes de salir necesitas descargar un comprobante; el envío del formulario no sirve como comprobante. El sistema tarda cinco minutos en generarlo tras el envío. El formulario ya está revisado. Comprueba este plan sin eliminar ningún requisito.",
+      rows:[["16:20","Enviar el formulario"],["16:25","Descargar y comprobar el comprobante"],["16:35 · salida propuesta","Salir hacia la cita"],["16:55 · llegada prevista","Registrarse para la cita de las 17:00"]],
+      q:"¿Qué corrección permite llegar dentro del horario de registro con el comprobante?",
+      opts:["Mantener el envío y la descarga; salir a las 16:30 como máximo","Mantener la salida a las 16:35 porque la cita empieza a las 17:00","Salir a las 16:20 con el aviso de envío en lugar del comprobante","Enviar a las 16:30 y salir inmediatamente sin descargar el comprobante"],
+      why:"El registro exige llegar a las 16:50 como máximo. Con veinte minutos de trayecto, hay que salir a las 16:30 o antes. El comprobante ya estará disponible a las 16:25; el aviso de envío no lo sustituye."
+    }
+  ];
+  const c=cases[Math.max(0,Math.min(2,level-1))];
+  return answerItem({type:"appliedDecision",topic:"Cognición aplicada · supervisar un plan",mechanic:"app_plan_review",requiresStimulus:true,
+    stimulus:[{type:"text",text:c.text},{type:"table",header:true,rows:[["Elemento o momento","Estado o acción prevista"],...c.rows]}],
+    q:c.q,opts:opt4(c.opts[0],c.opts[1],c.opts[2],c.opts[3]),a:c.opts[0],why:c.why},"teen","applied",level,v);
+}
+
 function matrixApplied(age:string,level:number,v:number){
   const s=matrixSeed(v),m=s.m,k=s.k,rank=ageRank(age),easy=rank===0;
   const obj=["cuaderno","botella","llaves","mochila","entrada"][k%5], place=["biblioteca","colegio","entrenamiento","tienda","estación"][k%5];
@@ -1830,7 +1860,7 @@ function matrixApplied(age:string,level:number,v:number){
   const items=[
     ()=>mk("preparación",easy?"Mañana necesitas el cuaderno azul.":"Mañana necesitas "+obj+" para "+place+".","¿Qué ayuda a no olvidarlo?",easy?"Meterlo hoy en la mochila":"Prepararlo hoy y revisarlo","Pensarlo al salir","Esperar a que alguien lo recuerde","No hacer nada","app_prepare"),
     ()=>mk("tiempo",easy?"Son las 5. Tardas 10 minutos en recoger y sales a las 5:15.":"Tienes 35 minutos. Una tarea tarda 20 y preparar la mochila 10.","¿Te da tiempo?",easy?"Sí":"Sí, sobran 5 minutos","No","Sobran 20 minutos","No se sabe","app_time"),
-    ()=>mk("lista",easy?"Necesitas lápiz, cuaderno y botella. Ya tienes lápiz y cuaderno.":"Necesitas "+obj+", llaves y botella. Ya tienes llaves y botella.","¿Qué falta?",easy?"Botella":obj,easy?"Lápiz":"Llaves",easy?"Cuaderno":"Botella","Nada","app_missing"),
+    ()=>age==="teen"?teenPlanReview(level,v):mk("lista",easy?"Necesitas lápiz, cuaderno y botella. Ya tienes lápiz y cuaderno.":"Necesitas cuaderno, llaves y botella. Ya tienes llaves y botella.","¿Qué falta?",easy?"Botella":"Cuaderno",easy?"Lápiz":"Llaves",easy?"Cuaderno":"Botella","Nada","app_missing"),
     ()=>mk("cambio de plan",easy?"Ibas al parque, pero empieza a llover mucho.":"Ibas a "+place+", pero está cerrado.","¿Qué opción tiene más sentido?",easy?"Buscar un juego para dentro":"Buscar una alternativa","Ignorarlo","Seguir igual","No decidir","app_change"),
     ()=>mk("comprobación",easy?"Has preparado la mochila.":"Has terminado una tarea importante.","¿Qué haces antes de terminar?",easy?"Mirar si llevas todo":"Revisar los puntos clave","Vaciar todo","Cambiar todo","No mirar","app_check"),
     ()=>mk("prioridad",easy?"Mañana debes llevar una ficha y también quieres ordenar juguetes.":"Tienes una tarea para mañana y otra opcional.","¿Qué conviene hacer primero?",easy?"Preparar la ficha":"La tarea de mañana","La otra","Las dos a la vez","Ninguna","app_priority"),
