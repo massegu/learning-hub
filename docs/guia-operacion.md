@@ -78,7 +78,7 @@ El flujo `.github/workflows/publicar-beta.yml`:
 
 1. Comprueba las actividades y fichas con `npm test`, las herramientas de despliegue y la interfaz de contraseñas.
 2. Comprueba que no se intenta publicar una revisión anterior o divergente respecto a `pruebas`.
-3. Compila la función en Supabase sin sustituir todavía la versión activa.
+3. Comprueba que el proyecto de Supabase coincide con el configurado en la web y compila la función sin sustituir todavía la versión activa.
 4. Guarda una copia de la función anterior y publica la nueva, conservando la verificación de acceso JWT.
 5. Solo después promueve ese mismo código a `pruebas`.
 6. Espera a Cloudflare y compara los archivos servidos con los archivos del repositorio.

@@ -12,18 +12,18 @@ class Deployment(unittest.TestCase):
   self.assertIn('multipart/form-data',kind);self.assertNotIn(b'sbp_',body)
  def test_missing_key_and_wrong_project_are_rejected(self):
   with self.assertRaises(ValueError):deploy.Management('wrong','not-a-real-token')
-  with self.assertRaises(ValueError):deploy.Management('a'*20,'')
+  with self.assertRaises(ValueError):deploy.Management('duvdwsbzrivtxgeqvsln','')
  def test_compile_does_not_deploy_and_restore_checks_provenance(self):
   current={'slug':deploy.FUNCTION,'version':38,'status':'ACTIVE','verify_jwt':True,'ezbr_sha256':'old'}
   calls=[]
   def request(_self,path,method='GET',data=None,kind=None):
    calls.append((path,method));return dict(current)
-  with patch.dict(os.environ,{'SUPABASE_ACCESS_TOKEN':'offline-placeholder'}),patch.object(deploy.Management,'request',request),patch('sys.argv',['deploy','--check','--project-ref','a'*20]),contextlib.redirect_stdout(io.StringIO()):deploy.main()
+  with patch.dict(os.environ,{'SUPABASE_ACCESS_TOKEN':'offline-placeholder'}),patch.object(deploy.Management,'request',request),patch('sys.argv',['deploy','--check','--project-ref','duvdwsbzrivtxgeqvsln']),contextlib.redirect_stdout(io.StringIO()):deploy.main()
   self.assertEqual(sum(method=='POST' for _,method in calls),1)
   self.assertTrue(all(method!='POST' or 'bundleOnly=true' in path for path,method in calls))
   with tempfile.TemporaryDirectory() as tmp:
    copy=Path(tmp)/'old.eszip';copy.write_bytes(b'old-bundle');copy.with_suffix('.json').write_text(json.dumps({'_project_ref':'b'*20,'slug':deploy.FUNCTION}))
-   with patch.dict(os.environ,{'SUPABASE_ACCESS_TOKEN':'offline-placeholder'}),patch.object(deploy.Management,'request',request),patch('sys.argv',['deploy','--restore',str(copy),'--project-ref','a'*20]):
+   with patch.dict(os.environ,{'SUPABASE_ACCESS_TOKEN':'offline-placeholder'}),patch.object(deploy.Management,'request',request),patch('sys.argv',['deploy','--restore',str(copy),'--project-ref','duvdwsbzrivtxgeqvsln']):
     with self.assertRaisesRegex(ValueError,'no corresponde'):deploy.main()
  def test_deploy_saves_verified_backup_before_mutation_and_confirms_version(self):
   state={'slug':deploy.FUNCTION,'version':38,'status':'ACTIVE','verify_jwt':True,'ezbr_sha256':'old'};calls=[]
@@ -32,8 +32,8 @@ class Deployment(unittest.TestCase):
    if path.endswith('/body'):return b'original-eszip'
    if method=='POST' and 'bundleOnly' not in path:state.update(version=39,ezbr_sha256='new')
    return dict(state)
-  with tempfile.TemporaryDirectory() as tmp,patch.dict(os.environ,{'SUPABASE_ACCESS_TOKEN':'offline-placeholder'}),patch.object(deploy.Management,'request',request),patch('sys.argv',['deploy','--deploy','--project-ref','a'*20,'--backup-dir',tmp]),contextlib.redirect_stdout(io.StringIO()):
+  with tempfile.TemporaryDirectory() as tmp,patch.dict(os.environ,{'SUPABASE_ACCESS_TOKEN':'offline-placeholder'}),patch.object(deploy.Management,'request',request),patch('sys.argv',['deploy','--deploy','--project-ref','duvdwsbzrivtxgeqvsln','--backup-dir',tmp]),contextlib.redirect_stdout(io.StringIO()):
    deploy.main();copies=list(Path(tmp).glob('*.eszip'));self.assertEqual(len(copies),1);self.assertEqual(copies[0].read_bytes(),b'original-eszip')
-   metadata=json.loads(copies[0].with_suffix('.json').read_text());self.assertEqual(metadata['_project_ref'],'a'*20);self.assertEqual(metadata['version'],38)
+   metadata=json.loads(copies[0].with_suffix('.json').read_text());self.assertEqual(metadata['_project_ref'],'duvdwsbzrivtxgeqvsln');self.assertEqual(metadata['version'],38)
   self.assertLess(next(i for i,path in enumerate(calls) if path.endswith('/body')),next(i for i,path in enumerate(calls) if path.startswith('/deploy?') and 'bundleOnly' not in path))
 if __name__=='__main__':unittest.main()

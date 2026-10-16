@@ -55,6 +55,8 @@ def main():
     parser.add_argument('--project-ref',default=os.environ.get('SUPABASE_PROJECT_REF',''))
     parser.add_argument('--backup-dir',type=Path,default=ROOT/'.release-backup')
     args=parser.parse_args();api=Management(args.project_ref,os.environ.get('SUPABASE_ACCESS_TOKEN',''))
+    configured=re.search(r"supabaseUrl:\s*[\"']https://([a-z]{20})\.supabase\.co[\"']",(ROOT/'js/config.js').read_text())
+    if not configured or configured[1]!=args.project_ref:raise ValueError('El proyecto de publicación no coincide con el Supabase de js/config.js. Revisa ambos antes de publicar.')
     current=api.request('/'+FUNCTION)
     if args.access_check:
         print(json.dumps({'access':'ok','function':FUNCTION,'version':current['version'],'status':current['status']}));return
