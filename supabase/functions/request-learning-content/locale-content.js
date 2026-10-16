@@ -21,6 +21,8 @@
   // guineo/plátano (different fruits), coche de bebé, and currencies are not
   // blindly reversed into another country's preferred word.
   const rules = [
+    {id:'cost',category:'shopping',sources:[term('coste','m','costes'),term('costo','m','costos')],common:term('costo','m','costos'),preferred:{es_es:term('coste','m','costes')}},
+    {id:'workshop-seats',category:'education',sources:[term('plazas disponibles','f','plazas disponibles')],common:term('cupos disponibles','m','cupos disponibles'),preferred:{es_es:term('plazas disponibles','f','plazas disponibles')}},
     {id:'pen',category:'school',sources:[term('bolígrafo'),term('esfero'),term('lapicera','f'),term('lápiz pasta','m','lápices pasta')],common:term('bolígrafo'),preferred:{es_mx:term('pluma','f'),es_co:term('esfero'),es_ar:term('lapicera','f'),es_cl:term('lápiz pasta','m','lápices pasta'),es_cr:term('lapicero')}},
     {id:'marker',category:'school',sources:[term('rotulador','m','rotuladores'),term('marcador','m','marcadores')],common:term('marcador','m','marcadores'),preferred:{es_es:term('rotulador','m','rotuladores')}},
     {id:'jacket',category:'clothing',sources:[term('chaqueta','f'),term('chamarra','f'),term('campera','f')],common:term('chaqueta','f'),preferred:{es_mx:term('chamarra','f'),es_ar:term('campera','f')}},
@@ -107,6 +109,7 @@
       // Do not silently emit an unhandled Spain-only plural/reflexive form.
       if(/(?<!\p{L})(?:os|cogéis|coged)(?!\p{L})|(?<!\p{L})(?!(?:dieciséis|veintiséis)(?!\p{L}))\p{L}+(?:áis|éis)(?!\p{L})/iu.test(result)) throw new LocaleAdaptationError('La frase necesita revisión regional de pronombres y verbos.');
     }
+    if(key!=='es_es'&&/taller|inscripci[oó]n|participa|curso|actividad|centro estudia/iu.test(result))result=result.replace(/(?<!\p{L})m[aá]s plazas(?!\p{L})/giu,x=>casing('más cupos',x)).replace(/(?<!\p{L})ampliar plazas(?!\p{L})/giu,x=>casing('ampliar cupos',x));
     return checkAgreement(result,key);
   }
   const scalarFields=['q','prompt','memoryQuestion','why','topic','theme','text','title','scenario','sample','model','a','detail','label','instruction','question','rule','n'];

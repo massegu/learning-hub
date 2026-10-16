@@ -7,6 +7,7 @@ await import("./junior.js");
 await import("./primary-content.js");
 await import("./middle-content.js");
 await import("./teen-review.js");
+await import("./document-library.js");
 await import("./reading-library.js");
 await import("./curriculum.js");
 await import("./data/primary.js");
@@ -1120,6 +1121,7 @@ for(const ageKey of ["primary","middle","teen"]){
 function contentSignature(domain:string,item:any){
   // Text identity survives a changed question or level. Ten sources rotate before reuse.
   if(item.passageKey)return domain+":item:passage:"+item.passageKey;
+  if(item.memoryMaterialKey)return domain+":item:memory:"+item.memoryMaterialKey;
   const norm=(v:any):any=>{
     if(Array.isArray(v)) return v.map(norm);
     if(v&&typeof v==="object"){
@@ -2268,7 +2270,8 @@ function matrixApplied20(age:string,level:number,v:number){
     opts:easy?opt4("El parque","La estación","La tienda","No se sabe"):opt4("La presencia de escaleras además de la distancia","Solo el color del mapa","Solo el nombre de la calle","Nada"),a:easy?"El parque":"La presencia de escaleras además de la distancia"},age,"applied",level,v);
 }
 
-function variantExercise(age:string,domain:string,level:number,subdomain:string|null=null){
+function variantExercise(age:string,domain:string,level:number,subdomain:string|null=null,documentsOnly=false){
+  if((globalThis as any).DocumentLibrary.supports(age,domain)&&(documentsOnly||(["attention","executive"].includes(domain)&&Math.random()<.25)))return {...(globalThis as any).DocumentLibrary.generate(age,domain,level),id:age+"-document-"+crypto.randomUUID()};
   if((globalThis as any).Curriculum.supports(age,domain))return {...(globalThis as any).Curriculum.generate(age,domain,level),id:age+"-curriculum-"+crypto.randomUUID()};
   if(age==="teen"&&["teenLanguage","speedReasoning","literacy"].includes(domain))return {...(globalThis as any).TeenReview.generate(domain,level,subdomain),id:"teen-review-"+crypto.randomUUID()};
   if(age==="junior")return {...(globalThis as any).JuniorContent.generate(domain,level,subdomain),id:"junior-"+crypto.randomUUID()};
@@ -2346,6 +2349,7 @@ Deno.serve(async (req:Request)=>{
   const requestedDomains=kind==="worksheet" ? (Array.isArray(body.domains)&&body.domains.length?body.domains:(globalThis as any).Curriculum.visible(SUBJECTS[age]||[],age)) : [body.domain];
   if(!SUBJECTS[age] || !Number.isInteger(level) || (kind!=="game" && (!Array.isArray(requestedDomains)||!requestedDomains.length||requestedDomains.some((d:any)=>!SUBJECTS[age].includes(d)))))
     return new Response(JSON.stringify({error:"Área o nivel no permitido para este perfil."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
+  if(body.documents_only!==undefined&&(typeof body.documents_only!=="boolean"||body.documents_only&&!((globalThis as any).DocumentLibrary.supports(age,body.domain))))return new Response(JSON.stringify({error:"Los documentos no están disponibles para esta área."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
   if((age==="junior"||age==="primary"||age==="middle"||age==="teen")&&kind==="exercise"&&["language","middleLanguage","teenLanguage"].includes(body.domain)&&body.subdomain&&!["grammar","spelling","writing"].includes(body.subdomain))
     return new Response(JSON.stringify({error:"Habilidad de Lenguaje no válida."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
   let items:any[]=[];
@@ -2416,9 +2420,9 @@ Deno.serve(async (req:Request)=>{
       if(row.mechanic_signature) recentEntries.push(row.mechanic_signature);
     }
     if(domain==="attention"){
-      items=generatedItems(domain,n,recentEntries,()=>regionalCandidate(variantExercise(age,domain,level,subdomain),locale,domain,age));
+      items=generatedItems(domain,n,recentEntries,()=>regionalCandidate(variantExercise(age,domain,level,subdomain,body.documents_only===true),locale,domain,age));
     } else if(["executive","memory","speedReasoning","applied","social","language","middleLanguage","teenLanguage","division","geometry","middleMath","teenMath","reading","middleReading","english","literacy"].includes(domain)){
-      items=generatedItems(domain,n,recentEntries,()=>regionalCandidate(variantExercise(age,domain,level,subdomain),locale,domain,age));
+      items=generatedItems(domain,n,recentEntries,()=>regionalCandidate(variantExercise(age,domain,level,subdomain,body.documents_only===true),locale,domain,age));
     } else {
       const seen=new Set(recentEntries);
       const pool=academicPool(age,domain,subdomain,level);

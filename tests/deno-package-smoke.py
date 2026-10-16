@@ -14,7 +14,7 @@ with tempfile.TemporaryDirectory(prefix='learning-hub-native-') as temp:
 (Deno as any).serve=(handler:any)=>serve({hostname:'127.0.0.1',port:0,onListen({port}){
   const data=(globalThis as any).LEARNING_DATA;
   const total=Object.values(data).reduce((sum:number,band:any)=>sum+band.subjects.reduce((n:number,key:string)=>n+(Array.isArray(band[key])?band[key].length:Object.values(band[key]).reduce((v:number,bank:any)=>v+bank.length,0)),0),0);
-  console.log(JSON.stringify({port,bands:Object.keys(data),total,authored:['JuniorContent','PrimaryContent','MiddleContent','TeenReview','Curriculum'].filter(key=>typeof (globalThis as any)[key]?.generate==='function')}));
+  console.log(JSON.stringify({port,bands:Object.keys(data),total,authored:['JuniorContent','PrimaryContent','MiddleContent','TeenReview','Curriculum','DocumentLibrary'].filter(key=>typeof (globalThis as any)[key]?.generate==='function')}));
 }},handler);
 await import('''+json.dumps((ROOT/'supabase/functions/request-learning-content/index.ts').as_uri())+''');
 ''')
@@ -29,7 +29,7 @@ await import('''+json.dumps((ROOT/'supabase/functions/request-learning-content/i
             line=process.stdout.readline()
             if not line:
                 errors.seek(0);raise AssertionError(errors.read())
-            ready=json.loads(line);assert ready['bands']==['primary','middle','teen'],ready;assert ready['total']==1080,ready;assert ready['authored']==['JuniorContent','PrimaryContent','MiddleContent','TeenReview','Curriculum'],ready
+            ready=json.loads(line);assert ready['bands']==['primary','middle','teen'],ready;assert ready['total']==1080,ready;assert ready['authored']==['JuniorContent','PrimaryContent','MiddleContent','TeenReview','Curriculum','DocumentLibrary'],ready
             origin=f'http://127.0.0.1:{ready["port"]}'
             for method,status in [('OPTIONS',200),('GET',405),('POST',401)]:
                 request=urllib.request.Request(origin,method=method,data=b'{}' if method=='POST' else None)
@@ -40,7 +40,7 @@ await import('''+json.dumps((ROOT/'supabase/functions/request-learning-content/i
                     assert response.headers['Access-Control-Allow-Origin']=='*'
                     body=response.read().decode()
                     if method=='POST':assert json.loads(body)['error']=='Authentication required'
-            print('PASS: diagnostic Deno type check passes; native Deno loads the real SDK, twelve local modules and 1080 legacy items; OPTIONS 200, GET 405, unauthenticated POST 401.')
+            print('PASS: diagnostic Deno type check passes; native Deno loads the real SDK, thirteen local modules and 1080 legacy items; OPTIONS 200, GET 405, unauthenticated POST 401.')
             print('LIMIT: JSR ambient types substituted locally; no credentials, production calls or full deployment validation.')
         finally:
             process.terminate()

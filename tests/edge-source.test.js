@@ -66,6 +66,7 @@ test('saved account country controls selection before history or usage writes, i
   const phoneResult=(await response.json()).items[0];assert.match(JSON.stringify(phoneResult.stimulus),/teléfonos celulares/);assert.doesNotMatch(JSON.stringify(phoneResult.stimulus),/teléfonos móviles/);
   const blocked=authorized();blocked.account.content_locale='es_co';
   blocked.context.Curriculum.generate=()=>({id:'bad',q:'¿Cuánto queda?',scenario:'Tienes 20 euros y gastas 5.',opts:['15 euros','20 euros'],a:'15 euros'});
+  blocked.context.DocumentLibrary.generate=blocked.context.Curriculum.generate;
   response=await blocked.request({domain:'executive'});assert.equal(response.status,422);assert.equal(blocked.writes.length,0);
   response=await blocked.request({kind:'worksheet',domains:['executive'],questions:6});assert.equal(response.status,422);assert.equal(blocked.writes.length,0);
 });
@@ -153,4 +154,21 @@ test('public catalog and default worksheets use fused areas while explicit histo
   assert.equal(tasks.length,12);assert.ok(tasks.every(it=>data.subjects.includes(it.sourceDomain)));
   const legacy=await h.request({domain:'applied'});assert.equal(legacy.status,200);const oldItem=(await legacy.json()).items[0];assert.equal(oldItem.domain,'applied');assert.doesNotThrow(()=>require('../js/activity-model').printable(oldItem,h.profile));
  }
+});
+
+test('document mode retains ownership/quota checks, rejects unsupported requests without writes and rotates its sources',async()=>{
+ const h=authorized();
+ for(const body of [{domain:'memory',documents_only:true},{domain:'attention',documents_only:'yes'}]){
+  const r=await h.request(body);assert.equal(r.status,400);assert.equal(h.writes.length,0);
+ }
+ h.profile.age_band='teen';h.profile.progress={};h.account.content_locale='es_co';
+ h.profile.account_id='other';assert.equal((await h.request({domain:'attention',documents_only:true})).status,404);
+ h.profile.account_id='u';h.usage.used=500;assert.equal((await h.request({domain:'attention',documents_only:true})).status,403);
+ h.usage.used=0;
+ for(const domain of ['attention','executive','literacy']){
+  const r=await h.request({domain,documents_only:true,count:4});assert.equal(r.status,200);
+  const data=await r.json();assert.equal(data.items.length,4);assert.equal(new Set(data.items.map(it=>it.passageKey)).size,4);
+  assert.ok(data.items.every(it=>it.stimulus.some(b=>b.type==='document')&&it.localization.locale==='es_co'));
+ }
+ assert.ok(h.writes.some(w=>w.table==='content_usage'));
 });

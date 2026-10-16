@@ -48,7 +48,7 @@
   function choice(q,a,wrong,stimulus,why){return {type:'standard',q,a:String(a),opts:[String(a),...wrong.map(String)].slice(0,4),stimulus,requiresStimulus:true,why};}
   const numeric=(q,a,stimulus,why)=>choice(q,a,[a+1,a-1,a+2],stimulus,why);
   const ordered=(q,parts,stimulus)=>({type:'order',q,tokens:parts.slice().reverse(),answer:parts,stimulus,requiresStimulus:true,why:'El orden conserva las relaciones indicadas en el texto.'});
-  function written(q,stimulus,sample,rubric){return {type:'self',q,stimulus:[...stimulus,text('Criterios de revisión'),list(rubric)],requiresStimulus:true,sample,writingRubric:rubric,assessment:'self',why:'La producción escrita requiere revisión con los criterios; no tiene una única respuesta automática.'};}
+  function written(q,stimulus,sample,rubric){return {type:'self',q,stimulus,requiresStimulus:true,sample,writingRubric:rubric,assessment:'self',why:'La producción escrita requiere revisión con los criterios; no tiene una única respuesta automática.'};}
   function passage(i,l){return stories[i].slice(0,l).join(' ');}
   function language(c,i,l,focus,m){
     if(focus==='grammar'){

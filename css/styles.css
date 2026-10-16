@@ -2736,3 +2736,28 @@ body {
 #exercise.speed-active #exerciseOptions .option-btn{min-height:3.5rem!important;padding:.5rem!important;font-size:1.15rem!important}
 #exercise.speed-active #exerciseVisual table{margin:.3rem 0!important}
 #exercise.speed-active #exerciseVisual th,#exercise.speed-active #exerciseVisual td{padding:.35rem .6rem!important;font-size:1rem!important;line-height:1.25!important}
+/* Pair recall uses a calm, bounded reading surface rather than a page-wide ledger. */
+.association-frame{max-width:48rem;margin:1rem auto;border:1px solid #dce7e1;border-radius:1rem;overflow:hidden;background:#fff;box-shadow:0 8px 24px #173b2910}
+#exercise .memory-associations{width:100%;border-collapse:collapse;margin:0!important;font-size:1.12rem}
+#exercise .memory-associations thead th{background:#edf5f0;color:#486556;text-transform:uppercase;letter-spacing:.08em;font-size:.72rem;padding:1rem 1.25rem;text-align:left;border:0}
+#exercise .memory-associations tbody th,#exercise .memory-associations tbody td{padding:.8rem 1.25rem;border:0;border-top:1px solid #edf1ee;text-align:left;background:#fff;font-weight:500}
+.person-initial{display:inline-flex;align-items:center;justify-content:center;width:2rem;height:2rem;margin-right:.75rem;border-radius:50%;background:#e3eee6;color:#296043;font-size:.85rem;font-weight:800}
+.memory-order-workspace .sequence-slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem}
+#exercise .memory-order-workspace .sequence-slot{min-height:3.8rem;display:flex!important;align-items:center;gap:.65rem;padding:.65rem;overflow-wrap:anywhere;text-align:left}
+#exercise .memory-order-workspace .sequence-slot>span{flex:0 0 1.8rem}
+#exercise .memory-order-workspace .sequence-slot.filled:after{display:none!important}
+#exercise .memory-order-workspace .token-tray{display:flex;flex-wrap:wrap;gap:.5rem}
+@media(max-width:600px){#exercise .memory-associations tbody th,#exercise .memory-associations tbody td{padding:.65rem .75rem;font-size:1rem}.person-initial{margin-right:.45rem;width:1.7rem;height:1.7rem}.memory-order-workspace .sequence-slots{grid-template-columns:1fr}}
+
+/* Legible original documents, shared with the printable source. */
+#documentModeSwitch{width:fit-content;max-width:100%;flex-wrap:wrap;gap:.35rem;margin-bottom:1rem;padding:.5rem}
+#documentModeSwitch button[aria-pressed="true"]{background:var(--green,#2f7d4a);color:white}
+.practice-document{margin:1rem auto;max-width:540px}
+.practice-document img{display:block;width:100%;height:auto;background:white;border:1px solid #dce5df;box-shadow:0 6px 22px #17332615;border-radius:8px}
+.practice-document figcaption{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;font-size:.9rem;color:#52675b;padding:.7rem 0}
+.document-transcript{max-width:48rem;margin:1rem auto;padding:.8rem 1rem;border:1px solid #dce5df;border-radius:10px;background:#fff}
+.document-transcript summary{cursor:pointer;font-weight:700;color:#215a3a}
+.document-transcript[open] summary{margin-bottom:1rem}
+#documentModeSwitch button{border:0;background:transparent;border-radius:7px;padding:.75rem 1rem;min-height:44px;font:inherit;font-weight:750;color:var(--muted,#52675b);cursor:pointer;flex:1 1 auto}
+#documentModeSwitch button[aria-pressed="true"]{background:#1e4d33;color:#fff;box-shadow:0 2px 0 #133523}
+#documentModeSwitch button:focus-visible{outline:3px solid #d9b74c;outline-offset:2px}

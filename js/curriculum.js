@@ -6,10 +6,16 @@ const T=text=>({type:'text',text}), L=items=>({type:'list',items,presentation:'s
 function rotate(a,n){return a.slice(n%a.length).concat(a.slice(0,n%a.length));}
 function shuffled(a,seed){const b=[...a];for(let i=b.length-1;i>0;i--){seed=(Math.imul(seed+1,1664525)+1013904223)>>>0;const j=seed%(i+1);[b[i],b[j]]=[b[j],b[i]];}return b;}
 function choice(q,stimulus,a,wrong,extra={}){return {type:'standard',responseType:'choice',requiresStimulus:true,q,stimulus,a,opts:[a,...wrong.filter(x=>x!==a)],...extra};}
+function materialKey(value){
+ const text=JSON.stringify(value);let a=2166136261,b=2246822519;
+ for(const ch of text){a=Math.imul(a^ch.charCodeAt(0),16777619);b=Math.imul(b^ch.charCodeAt(0),3266489917);}
+ return (a>>>0).toString(16)+(b>>>0).toString(16);
+}
 function finish(item,age,domain,level,key,mechanic){
  const id=`curriculum-v2-${age}-${domain}-${level}-${key}`;
+ const memoryMaterialKey=domain==='memory'?materialKey([item.recallSequence?'sequence':item.recallEvidence?.kind||'associations',item.stimulus]):null;
  const earlyMechanic=domain==='reading'?'literal':domain==='speedReasoning'?'speedCompare':domain==='memory'?(item.memoryResponse==='spatial'?'rememberPlace':'rememberOrder'):'planning';
- return {...item,id,contentKey:id,semanticKey:item.passageKey||id,domain,level,mechanic,
+ return {...item,id,contentKey:id,semanticKey:item.passageKey||memoryMaterialKey||id,...(memoryMaterialKey?{memoryMaterialKey}:{}),domain,level,mechanic,
   ...(age==='early'?{ageProfile:{id:'early',revision:1,context:'school',mechanic:earlyMechanic,family:`${domain}-${mechanic}`}}:{}),
   ...(age==='junior'?{juniorProfile:{route:age,level}}:{}),...(['primary','middle'].includes(age)?{schoolProfile:{route:age,level}}:{})};
 }
@@ -23,19 +29,21 @@ function reading(age,domain,level){
   return tasks.map((it,m)=>finish(it,age,domain,level,`${i}-${m}`,'reading_'+(['literal','inference','writing'][m])));
  });
 }
-const objects=['el libro','la pelota','el lápiz','la manzana','la botella','la gorra','el cuaderno','el regalo','la galleta'];
+const objects=['el libro','la pelota','el lápiz','la manzana','la botella','la gorra','el cuaderno','el regalo','la galleta','el oso de peluche','la muñeca','el coche de juguete'];
+const schoolObjects=[...objects,'la regla','las tijeras','el pegamento','la carpeta','la cartuchera','el mapa','el sobre','la linterna'];
+const functionalObjects=['la agenda','la tarjeta de transporte','el cargador','la carpeta','el recibo','el mapa','la calculadora','la botella','las llaves','el lápiz','el cuaderno','la regla','los auriculares','la cámara','el reloj','la memoria USB','el adaptador','el paraguas','el sobre','el libro','el estuche','el teléfono móvil','el cable','la tarjeta de acceso'];
 function spatialPositions(size){return Array.from({length:size*size},(_,i)=>`Fila ${Math.floor(i/size)+1}, columna ${i%size+1}`);}
 function memory(age,level){
  const rank=ages.indexOf(age),count=Math.min(8,rank+level+1),items=[];
- for(let v=0;v<18;v++){
-  const values=shuffled(objects,57+v).slice(0,count),reverse=level===3&&rank>=2,expected=reverse?[...values].reverse():values;
+ for(let v=0;v<72;v++){
+  const values=shuffled(rank===0?objects:rank===1?schoolObjects:functionalObjects,57+v).slice(0,count),reverse=level===3&&rank>=2,expected=reverse?[...values].reverse():values;
   items.push(finish({type:'memoryReveal',responseType:'order',memoryResponse:'order',requiresStimulus:true,
    q:reverse?'Mira la secuencia. Después la repetirás desde el final.':'Mira la secuencia. Después repetirás el orden.',
    memoryQuestion:reverse?'Reproduce la secuencia en orden inverso.':'Reproduce la secuencia en el mismo orden.',
    stimulus:[L([...values])],memoryContent:values.map(detail=>({detail})),tokens:shuffled(values,19+v),answer:[...expected],
    revealMs:Math.max(6000,count*1400),sequenceStepMs:1400,recallSequence:[...values],
    recallEvidence:{kind:'sequence',block:0,reverse},topic:'Memoria · secuencias',
-   why:expected.join(' → ')},age,'memory',level,`sequence-${v}`,'memory_sequence'));
+   why:rank===0?'Recuerda los elementos en el mismo orden.':expected.join(' → ')},age,'memory',level,`sequence-${v}`,'memory_sequence'));
   const size=rank<2?2:level===1?2:3,capacity=size*size,load=Math.min(capacity,level+(rank>=2?2:1));
   const places=shuffled(Array.from({length:capacity},(_,i)=>i),v+41),marked=values.slice(0,load),grid=Array.from({length:size},()=>Array(size).fill('—'));
   marked.forEach((x,i)=>{grid[Math.floor(places[i]/size)][places[i]%size]=x;});
@@ -45,12 +53,12 @@ function memory(age,level){
   const a=dual?pos(places[0])+' → '+pos(places[1]):pos(places[0]);
   const opts=dual?[a,pos(places[1])+' → '+pos(places[0]),pos(places[0])+' → '+pos(places[2]),pos(places[2])+' → '+pos(places[1])]:spatialPositions(size);
   items.push(finish({type:'memoryReveal',responseType:'choice',memoryResponse:dual?'spatialPair':'spatial',requiresStimulus:true,
-   q:'Mira dónde está cada objeto. Después taparemos el cuadro.',memoryQuestion:dual?`¿Dónde estaban ${target} y ${target2}, en ese orden?`:`¿Dónde estaba ${target}?`,
+   q:'Mira dónde está cada objeto. Después taparemos el cuadro.',memoryQuestion:dual?`¿Dónde estaban ${target} y ${target2}, en ese orden?`:`¿Dónde ${/^(los|las) /.test(target)?'estaban':'estaba'} ${target}?`,
    stimulus:[{...R(grid),presentation:'spatial',label:'Filas de arriba abajo; columnas de izquierda a derecha.'}],memoryContent:marked.map(detail=>({detail})),
    a,opts,gridSize:size,revealMs:Math.max(6000,load*1800),recallEvidence:{kind:'spatial',block:0,targets:dual?[target,target2]:[target]},topic:'Memoria · posiciones',why:a},age,'memory',level,`spatial-${v}`,'memory_spatial'));
   // Associations keep memory broader than the two new recall modes.
   const people=['Ana','Leo','Sol','Dani','Mar','Hugo','Lola','Nora'].slice(0,count),pairs=people.map((n,i)=>[n,values[i]]),ask=v%count;
-  items.push(finish({type:'memoryReveal',responseType:'choice',requiresStimulus:true,q:'Mira quién tiene cada objeto. Después lo taparemos.',memoryQuestion:`¿Qué tenía ${people[ask]}?`,stimulus:[R(pairs)],memoryContent:pairs.map(([person,detail])=>({person,detail})),a:values[ask],opts:rotate(values,ask).slice(0,rank===0?Math.min(3,count):4),revealMs:Math.max(6000,count*1700),answerEvidence:{type:'tableCell',block:0,row:ask,column:1,subjectColumn:0},topic:'Memoria · personas y objetos'},age,'memory',level,`association-${v}`,'memory_association'));
+  items.push(finish({type:'memoryReveal',responseType:'choice',requiresStimulus:true,q:'Mira quién tiene cada objeto. Después lo taparemos.',memoryQuestion:`¿Qué tenía ${people[ask]}?`,stimulus:[{...R(pairs),presentation:'associations'}],memoryContent:pairs.map(([person,detail])=>({person,detail})),a:values[ask],opts:rotate(values,ask).slice(0,rank===0?Math.min(3,count):4),revealMs:Math.max(6000,count*1700),answerEvidence:{type:'tableCell',block:0,row:ask,column:1,subjectColumn:0},topic:'Memoria · personas y objetos'},age,'memory',level,`association-${v}`,'memory_association'));
  }
  return items;
 }

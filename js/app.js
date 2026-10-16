@@ -143,6 +143,7 @@
     state = null,
     subject = null,
     mode = "grammar",
+    documentOnly = false,
     currentItem = null,
     counter = 0,
     requestGeneration = 0,
@@ -695,11 +696,21 @@
       b.classList.toggle('active',b.dataset.mode===mode);
     });
     $("#languageModeSwitch").classList.toggle("hidden", !isLang);
+    const documentSupport=window.DocumentLibrary?.supports(window.AgeStages.route(profile),subject);
+    if(!documentSupport)documentOnly=false;
+    $('#documentModeSwitch').classList.toggle('hidden',!documentSupport);
+    $$('#documentModeSwitch button').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.documents==='true')===documentOnly)));
     counter = 0;
     renderEarlyTaskGuide();
     renderSchoolTaskGuide();
     newExercise();
   }
+  $('#documentModeSwitch').addEventListener('click',event=>{
+    const button=event.target.closest('button[data-documents]');
+    if(!button)return;
+    documentOnly=button.dataset.documents==='true';
+    setupExercise();
+  });
   async function requestForProfile(payload, targetProfile = profile) {
     const locale = API.effectiveLocale(targetProfile);
     const localeRevision = API.localeRevision;
@@ -735,6 +746,7 @@
   }
   async function requestOne(kind, domain = subject, extra = {}) {
     const res = await requestForProfile({
+      ...(kind==='exercise'&&documentOnly&&window.DocumentLibrary?.supports(window.AgeStages.route(profile),domain)?{documents_only:true}:{}),
       kind,
       domain,
       subdomain: ["language","middleLanguage","teenLanguage"].includes(domain) ? mode : null,
@@ -859,9 +871,9 @@
     if (it.scenario)
       $("#exerciseVisual").innerHTML +=
         `<div class="scenario-card"><span class="scenario-label">SITUACIÓN</span><p>${escapeHtml(it.scenario)}</p></div>`;
-    if (it.stimulus)
+    if (it.stimulus?.length)
       $("#exerciseVisual").innerHTML =
-        `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus,{heading:it.topic||it.theme,illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:!window.ContentPolicy.forProfile(profile),senses:it.lexicalSenses})}</div>`;
+        `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus,{heading:it.topic||it.theme,rubric:it.writingRubric,illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:!window.ContentPolicy.forProfile(profile),senses:it.lexicalSenses})}</div>`;
     $("#exercisePrompt").textContent = it.q || "Actividad";
     if(it.speedTask){renderSpeedExercise(it);return;}
     if (it.type === "memoryReveal" || it.type === "memoryMulti") {
@@ -929,7 +941,7 @@
       const slots = expected
         .map(
           (_, i) =>
-            `<button class="sequence-slot ${picked[i] ? "filled" : ""}" data-slot="${i}"><span>${i + 1}</span>${picked[i] ? escapeHtml(picked[i]) : "Selecciona un paso"}</button>`,
+            `<button class="sequence-slot ${picked[i] ? "filled" : ""}" data-slot="${i}"><span>${i + 1}</span>${picked[i] ? escapeHtml(picked[i]) : it.memoryResponse==='order'?"Elige un elemento":"Selecciona un paso"}</button>`,
         )
         .join("");
       const tray = tokens
@@ -938,7 +950,7 @@
             `<button class="word-token ${picked.includes(tok) ? "used" : ""}" data-token-index="${i}" ${picked.includes(tok) ? "disabled" : ""}>${escapeHtml(tok)}</button>`,
         )
         .join("");
-      area.innerHTML = `<div class="sequence-workspace"><div class="sequence-slots">${slots}</div><div class="token-bank"><p class="eyebrow">PASOS DISPONIBLES</p><div class="token-tray">${tray}</div></div></div><div class="sequence-actions"><button id="orderUndo" class="secondary-btn" ${picked.length ? "" : "disabled"}>Deshacer</button><button id="orderReset" class="ghost-light-btn" ${picked.length ? "" : "disabled"}>Reiniciar</button><button id="orderCheck" class="primary-btn">Comprobar</button></div>`;
+      area.innerHTML = `<div class="sequence-workspace ${it.memoryResponse==='order'?'memory-order-workspace':''}"><div class="sequence-slots">${slots}</div><div class="token-bank"><p class="eyebrow">${it.memoryResponse==='order'?'ELEMENTOS DISPONIBLES':'PASOS DISPONIBLES'}</p><div class="token-tray">${tray}</div></div></div><div class="sequence-actions"><button id="orderUndo" class="secondary-btn" ${picked.length ? "" : "disabled"}>Deshacer</button><button id="orderReset" class="ghost-light-btn" ${picked.length ? "" : "disabled"}>Reiniciar</button><button id="orderCheck" class="primary-btn">Comprobar</button></div>`;
       $$("#exerciseOptions .word-token").forEach(
         (b) =>
           (b.onclick = () => {
@@ -971,7 +983,7 @@
           picked.every((x, i) => x === expected[i]);
         showFeedback(
           ok,
-          saveResult(subject, ok, it.id, "planning"),
+          saveResult(subject, ok, it.id, it.memoryResponse==='order'?'memory_sequence':'planning'),
           ok
             ? "Secuencia correcta."
             : `Orden esperado: ${expected.join(" → ")}`,

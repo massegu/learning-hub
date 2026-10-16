@@ -21,7 +21,7 @@ function harness() {
   }
   const blobs=new Map(), downloads=[];
   const document={body:{appendChild(){}},createElement:()=>({remove(){},click(){downloads.push({name:this.download,blob:blobs.get(this.href)});}})};
-  const context={window:{docx,JSZip:NodeZip,ContentPolicy:policy,ActivityModel:model,LocaleContent:locale,StimulusArt:art},document,URL:{createObjectURL:b=>{const id=String(blobs.size);blobs.set(id,b);return id;},revokeObjectURL(){}},setTimeout(){},Date,console};
+  const context={window:{docx,JSZip:NodeZip,ContentPolicy:policy,ActivityModel:model,LocaleContent:locale,StimulusArt:art},document,URL:{createObjectURL:b=>{const id=String(blobs.size);blobs.set(id,b);return id;},revokeObjectURL(){}},setTimeout(){},Date,console,Uint8Array};
   vm.runInNewContext(fs.readFileSync(require.resolve('../js/docx.js'),'utf8'),context);
   return {generator:context.window.WorksheetGenerator,downloads,context};
 }
@@ -190,4 +190,23 @@ test('old renderer upgrades cannot replace the canonical integrity renderer', ()
     assert.equal(context.window.WorksheetGenerator,generator);
   }
   assert.ok(!fs.readFileSync(require.resolve('../js/config.js'),'utf8').includes('v16_17.js'));
+});
+
+test('document worksheets embed the original four PNGs with accessible transcripts; failed images produce no download',async()=>{
+ const documents=require('../js/document-library');
+ const {generator,downloads,context}=harness();context.window.DocumentLibrary=documents;
+ context.fetch=async path=>({ok:true,arrayBuffer:async()=>{const b=fs.readFileSync(require('node:path').join(__dirname,'..',path));return b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength);}});
+ const items=documents.pool('teen','attention',1);
+ await generator.generate([items],{name:'Reviewer',age_band:'teen'});
+ assert.equal(downloads.length,1);
+ const zip=await JSZip.loadAsync(await downloads[0].blob.arrayBuffer());
+ const media=await Promise.all(Object.values(zip.files).filter(f=>f.name.startsWith('word/media/')&&!f.dir).map(f=>f.async('nodebuffer')));
+ const xml=await zip.file('word/document.xml').async('string');
+ for(const doc of Object.values(documents.documents)){
+  const original=fs.readFileSync(require('node:path').join(__dirname,'..',doc.path));assert.ok(media.some(bytes=>bytes.equals(original)),doc.title);
+  assert.ok(xml.includes(doc.title));
+ }
+ assert.ok(xml.includes('25.000'));assert.ok(xml.includes('22/10/2026'));
+ const failing=harness();failing.context.window.DocumentLibrary=documents;failing.context.fetch=async()=>({ok:false});
+ await assert.rejects(()=>failing.generator.generate([items],{name:'Reviewer',age_band:'teen'}),/cargar el documento/);assert.equal(failing.downloads.length,0);
 });

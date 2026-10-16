@@ -17,7 +17,7 @@ test('all middle activities retain complete evidence and consistent seven-countr
       }
       if(it.type==='order')assert.deepEqual([...it.tokens].sort(),[...it.answer].sort());
       if(it.memoryContent)assert.ok(it.memoryContent.some(x=>x.detail===it.a));
-      if(it.type==='self'){assert.equal(it.assessment,'self');assert.ok(it.writingRubric.length>=3);assert.ok(it.sample);assert.equal(it.a,undefined);const projection=model.printable(it,profile);assert.equal(projection.responseType,'written');assert.ok(it.writingRubric.every(criterion=>projection.stimulus.some(b=>b.type==='list'&&b.items.includes(criterion))));}
+      if(it.type==='self'){assert.equal(it.assessment,'self');assert.ok(it.writingRubric.length>=3);assert.ok(it.sample);assert.equal(it.a,undefined);const projection=model.printable(it,profile);assert.equal(projection.responseType,'written');assert.deepEqual(projection.writingRubric,it.writingRubric);assert.ok(projection.stimulus.every(b=>b.type!=='list'||JSON.stringify(b.items)!==JSON.stringify(it.writingRubric)));}
       assert.doesNotMatch(JSON.stringify(it),/\b(?:de|a) el\b/u);
       assert.doesNotMatch(JSON.stringify(it),/\b(?:hipoteca|factura|embarque|euros|vosotros)\b/iu);
     }

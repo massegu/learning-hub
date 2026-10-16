@@ -1,5 +1,6 @@
 (function (root) {
   'use strict';
+  const documents=root.DocumentLibrary || (typeof require==='function'&&require('./document-library.js'));
   const policy = root.ContentPolicy || (typeof require === 'function' && require('./content-policy.js'));
   const art=root.StimulusArt || (typeof require==='function'&&require('./stimulus-art.js'));
   const icons = { book:'libro', pencil:'lápiz', backpack:'mochila', bottle:'botella', notebook:'cuaderno', apple:'manzana', banana:'plátano', bread:'pan', cookie:'galleta', ball:'pelota', doll:'muñeca', bear:'oso de peluche', car:'coche de juguete', cap:'gorra', gift:'regalo' };
@@ -13,7 +14,8 @@
       if (!Array.isArray(block.items) || !block.items.length || !block.items.every(hasText)) fail('la lista está incompleta.');
     } else if (block.type === 'table') {
       if (!Array.isArray(block.rows) || !block.rows.length || !block.rows.every(r => Array.isArray(r) && r.length && r.every(hasText)) || !block.rows.every(r => r.length === block.rows[0].length)) fail('la tabla está incompleta.');
-    } else fail('el tipo de estímulo no tiene un renderizador compatible.');
+    } else if(block.type==='document'){if(!documents?.get(block.documentId))fail('documento visual desconocido.');}
+    else fail('el tipo de estímulo no tiene un renderizador compatible.');
     return block;
   }
   function legacyStimulus(item) {
@@ -90,7 +92,8 @@
     if (item.stimulus !== undefined && (item.image || item.visual || item.rounds))
       fail('el componente adicional no tiene una representación imprimible.');
     if (policy.forProfile(profile)) policy.validateEarly(item);
-    const stimulus = item.stimulus === undefined ? legacyStimulus(item) : item.stimulus;
+    const rawStimulus = item.stimulus === undefined ? legacyStimulus(item) : item.stimulus;
+    const stimulus=Array.isArray(rawStimulus)&&item.writingRubric?.length?rawStimulus.filter(b=>!(b.type==='text'&&b.text==='Criterios de revisión')&&!(b.type==='list'&&JSON.stringify(b.items)===JSON.stringify(item.writingRubric))):rawStimulus;
     if (!Array.isArray(stimulus)) fail('falta la lista de estímulos.');
     stimulus.forEach(blockValid);
     const question = item.memoryQuestion || item.q || item.prompt || (item.dividend !== undefined ? `${item.dividend} ÷ ${item.divisor}` : '');
@@ -140,7 +143,7 @@
       }
       if (value === undefined || value !== item.a) fail('la respuesta de memoria no se deriva del estímulo.');
     }
-    return { question, stimulus, options:options.map(String), tokens, responseType:item.type === 'order' || item.memoryResponse === 'order' ? 'order' : options.length ? 'choice' : 'written' };
+    return { question, stimulus, options:options.map(String), tokens, writingRubric:item.writingRubric||[], responseType:item.type === 'order' || item.memoryResponse === 'order' ? 'order' : options.length ? 'choice' : 'written' };
   }
   function validateEvidence(item,stimulus){
     if(item.languageFocus==='spelling'){
@@ -239,8 +242,15 @@
     // The topic is already visible above the question. Keep it in the canonical
     // stimulus for standalone worksheets, but do not print it twice on screen.
     const visibleBlocks=blocks.length>1&&options.heading?blocks.filter(b=>b.type!=='text'||b.text!==options.heading):blocks;
-    return visibleBlocks.map(block => {
+    return visibleBlocks.filter(b=>!options.rubric?.length||(!(b.type==='text'&&b.text==='Criterios de revisión')&&!(b.type==='list'&&JSON.stringify(b.items)===JSON.stringify(options.rubric)))).map(block => {
       blockValid(block);
+      if(block.type==='document'){
+        const doc=documents.get(block.documentId);
+        return `<figure class="practice-document"><img src="${escape(doc.path)}" width="${doc.width}" height="${doc.height}" alt="${escape(doc.title)}. Documento ficticio para practicar." loading="eager"><figcaption>${escape(doc.kind)} · Colombia · <a href="${escape(doc.path)}" target="_blank" rel="noopener">Ampliar documento</a></figcaption></figure><details class="document-transcript"><summary>Leer el contenido en texto</summary>${interactiveStimulus(doc.transcript,{structured:true})}</details>`;
+      }
+      if(block.presentation==='associations'){
+        return `<div class="association-frame"><table class="memory-associations"><thead><tr><th scope="col">Persona</th><th scope="col">Objeto</th></tr></thead><tbody>${block.rows.map(row=>`<tr><th scope="row"><span class="person-initial" aria-hidden="true">${escape(row[0].slice(0,1))}</span>${escape(row[0])}</th><td>${options.illustrated?visualLabel(row[1],options.senses):escape(row[1])}</td></tr>`).join('')}</tbody></table></div>`;
+      }
       if(block.presentation==='spatial'){
         return `<div class="recall-grid" style="--grid-size:${block.rows[0].length}" role="table" aria-label="${escape(block.label||'Cuadrícula para recordar')}">${block.rows.map((row,r)=>`<div role="row">${row.map((x,c)=>`<div role="cell" aria-label="Fila ${r+1}, columna ${c+1}: ${escape(x)}">${visualLabel(x,options.senses)}</div>`).join('')}</div>`).join('')}</div>`;
       }

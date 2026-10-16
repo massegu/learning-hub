@@ -52,7 +52,18 @@
   }
   async function makeDoc(items,version,profile,models){
     const {Document,Packer,Paragraph,TextRun,ImageRun,Table,TableRow,TableCell,WidthType,AlignmentType,BorderStyle,Footer,PageBreak}=window.docx;
-    const green='1F633B',green2='2F7D4A',light='EDF5E9',sand='F6F1E5',ink='173326',muted='607064',white='FFFFFF',line='D6DED6';
+    const documentImages=new Map();
+    const ids=[...new Set(models.flatMap(m=>m.stimulus.filter(b=>b.type==='document').map(b=>b.documentId)))];
+    for(const id of ids){
+      const source=window.DocumentLibrary?.get(id);
+      if(!source)throw new Error('Documento visual desconocido.');
+      const response=await fetch(source.path);
+      if(!response.ok)throw new Error('No se pudo cargar el documento visual para la ficha.');
+      const bytes=new Uint8Array(await response.arrayBuffer());
+      if(bytes.length<24||[137,80,78,71,13,10,26,10].some((b,i)=>bytes[i]!==b))throw new Error('El documento visual no es una imagen PNG válida.');
+      documentImages.set(id,bytes);
+    }
+    const green='1F633B' ,green2='2F7D4A',light='EDF5E9',sand='F6F1E5',ink='173326',muted='607064',white='FFFFFF',line='D6DED6';
     const noBorders={top:{style:BorderStyle.NONE,size:0,color:white},bottom:{style:BorderStyle.NONE,size:0,color:white},left:{style:BorderStyle.NONE,size:0,color:white},right:{style:BorderStyle.NONE,size:0,color:white},insideHorizontal:{style:BorderStyle.NONE,size:0,color:white},insideVertical:{style:BorderStyle.NONE,size:0,color:white}};
     const softBorders={top:{style:BorderStyle.SINGLE,size:6,color:line},bottom:{style:BorderStyle.SINGLE,size:6,color:line},left:{style:BorderStyle.SINGLE,size:6,color:line},right:{style:BorderStyle.SINGLE,size:6,color:line},insideHorizontal:{style:BorderStyle.NONE,size:0,color:white},insideVertical:{style:BorderStyle.NONE,size:0,color:white}};
     const early=Boolean(window.ContentPolicy.forProfile(profile));
@@ -68,6 +79,11 @@
     }
     function renderMaterial(material,item){
       const heading=material.label?[paragraph(material.label)]:[];
+      if(material.type==='document'){
+        const source=window.DocumentLibrary.get(material.documentId);
+        const description=source.transcript.map(b=>b.type==='text'?b.text:b.rows.map(r=>r.join(' · ')).join('; ')).join(' ');
+        return [new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({data:documentImages.get(material.documentId),transformation:{width:340,height:510},altText:{title:source.title,description}})]})];
+      }
       if(material.type==='text') return [...heading,paragraph(material.text)];
       if(early && material.presentation==='count' && material.items.every(x=>x==='●'))return [...heading,new Paragraph({spacing:{after:130},children:material.items.flatMap(value=>[new TextRun({text:value,size:40,color:ink}),new TextRun({text:'    '})])})];
       if(material.type==='list')return [...heading,...material.items.map((value,i)=>early && ['count','cards','sequence'].includes(material.presentation)?pictureParagraph(value,item,material,material.presentation==='sequence'?i+1:undefined):paragraph(`${i+1}. ${value}`))];

@@ -14,7 +14,7 @@
   const text=text=>({type:'text',text}),list=items=>({type:'list',items});
   const choice=(q,a,wrong,stimulus,why)=>({type:'standard',q,a,opts:[a,...wrong.filter(x=>x!==a)].slice(0,4),stimulus,requiresStimulus:true,why});
   const numeric=(q,n,wrong,stimulus,why)=>choice(q,String(n),wrong.map(String),stimulus,why);
-  const written=(q,c,l)=>({type:'self',q,stimulus:[text(c.plain+'\n\n'+c.extra),text('Criterios de revisión'),list(['Responde a la pregunta con una idea clara.','Usa al menos un dato o condición del texto.','Explica el límite de la conclusión y revisa los signos.'])],requiresStimulus:true,sample:c.limit,assessment:'self',writingRubric:['Responde a la pregunta con una idea clara.','Usa al menos un dato o condición del texto.','Explica el límite de la conclusión y revisa los signos.'],why:'Compara tu texto con los criterios. La aplicación no corrige automáticamente la redacción.'});
+  const written=(q,c,l)=>({type:'self',q,stimulus:[text(c.plain+'\n\n'+c.extra)],requiresStimulus:true,sample:c.limit,assessment:'self',writingRubric:['Responde a la pregunta con una idea clara.','Usa al menos un dato o condición del texto.','Explica el límite de la conclusión y revisa los signos.'],why:'Compara tu texto con los criterios. La aplicación no corrige automáticamente la redacción.'});
   function language(c,i,l,focus,m){
     if(focus==='spelling'){
       if(m===0){
@@ -51,6 +51,14 @@
     if(focus&&!['grammar','spelling','writing'].includes(focus))throw new Error('Habilidad inválida.');
     return contexts.flatMap((c,i)=>(domain==='teenLanguage'?(focus?[focus]:['grammar','spelling','writing']):[null]).flatMap(skill=>Array.from({length:domain==='teenLanguage'?3:4},(_,m)=>({...((domain==='teenLanguage'?language:domain==='literacy'?literacy:reasoning)(c,i,level,...(domain==='teenLanguage'?[skill,m]:[m]))),domain,level,languageFocus:skill||undefined,topic:c.title,mechanic:`${domain}_${skill||'task'}_${m}`,contentKey:`teen-review-v1:${domain}:${level}:${c.id}:${skill||'task'}:${m}`,teenReview:{version:1,scope:'focused',context:c.id}}))));
   }
-  const api={pool,generate(domain,level,focus){const items=pool(domain,level,focus);return items[Math.floor(Math.random()*items.length)];}};
+  const originalPool=pool;
+  const reviewedPool=(domain,level,focus)=>originalPool(domain,level,focus).map(it=>{
+    if(domain==='teenLanguage'){
+      it.stimulus=it.stimulus.filter(b=>b.type!=='text'||b.text!==it.topic);
+      if(!it.stimulus.length){it.requiresStimulus=false;it.topic=it.languageFocus==='spelling'?'Ortografía · tildes y puntuación':'Gramática · concordancia';}
+    }
+    return it;
+  });
+  const api={pool:reviewedPool,generate(domain,level,focus){const items=reviewedPool(domain,level,focus);return items[Math.floor(Math.random()*items.length)];}};
   root.TeenReview=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);

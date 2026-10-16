@@ -1,5 +1,5 @@
 """Real app and Edge handler: fusion, new sources, recall, timing and DOCX; fake account only."""
-import importlib.util,threading,tempfile
+import importlib.util,threading,tempfile,zipfile
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 from browser_support import ROOT,doc_text
@@ -123,6 +123,9 @@ try:
    assert any('no mide el tiempo' in x for x in nodes);assert any('una a una' in x for x in nodes)
    for item in captured:
     for block in item['stimulus']:
+     if block['type']=='document':
+      with zipfile.ZipFile(path) as archive:assert any(n.startswith('word/media/') and n.endswith('.png') for n in archive.namelist())
+      continue
      for value in ([block['text']] if block['type']=='text' else block['items'] if block['type']=='list' else [v for row in block['rows'] for v in row]):
       assert any(value in node for node in nodes),value
    page.locator('#navMenu [data-section="progress"]').click()

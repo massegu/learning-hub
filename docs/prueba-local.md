@@ -69,3 +69,17 @@ Una captura ayuda a identificar tanto la presentación como el contenido.
   editorial de esta fase; las demás áreas siguen pendientes de revisión completa.
 - No abras el puerto a Internet ni publiques este servidor. Está pensado para
   ejecutarse únicamente en tu ordenador y se enlaza a `127.0.0.1`.
+
+## Documentos visuales y revisión de Memoria
+
+En Atención y Funciones ejecutivas, desde el perfil 8–10, pulsa **Documentos
+visuales**. Desde 10–12 también está disponible en Lectura + Escritura. Abre la
+transcripción con «Leer el contenido en texto» o la imagen con «Ampliar documento».
+Las fichas conservan las imágenes originales. Para volver al banco general pulsa
+«Actividades variadas». El catálogo es el documento inicial para 8–10; las cuatro
+fuentes colombianas están disponibles desde 10–12 y no simulan ser documentos de
+otro país al cambiar la variante de español.
+
+Memoria tiene una tabla de asociaciones revisada y una selección de materiales más
+amplia. Compara nivel 1 y 3 para valorar la carga, el orden inverso y las posiciones.
+El estado y el orden de publicación se detallan en `beta-review-next-steps.md`.
