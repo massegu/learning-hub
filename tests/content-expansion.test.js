@@ -31,7 +31,7 @@ test('eighteen authored document types retain exact transcripts, multiple purpos
   assert.equal(new Set(doc.questions.map(q=>q[0])).size,3,id);assert.equal(new Set(doc.questions.map(q=>q[1])).size,3,id);
   const markup=model.interactiveStimulus([{type:'document',documentId:id}],{structured:true});assert.match(markup,/Ver versión en texto/);assert.ok(!/<details[^>]*\sopen/.test(markup));assert.ok(markup.includes(doc.country));
   for(const block of doc.transcript)if(block.type==='text')assert.ok(markup.includes(block.text.replaceAll('&','&amp;').replaceAll('>','&gt;').replaceAll('<','&lt;')));
-  if(doc.brief){const svg=fs.readFileSync(doc.path.replace('.png','.svg'),'utf8');assert.match(svg,/Documento de práctica/);assert.ok(svg.includes(doc.country));assert.ok(doc.sample.length>30);}
+  if(doc.brief){const svg=fs.readFileSync(doc.path.replace('.png','.svg'),'utf8');assert.doesNotMatch(svg,/Documento ficticio|Documento de práctica|Material original ficticio/);assert.ok(svg.includes(doc.country));assert.ok(doc.sample.length>30);}
  }
  const bank=curriculum.pool('teen','literacy',2).filter(it=>it.stimulus.some(b=>b.type==='document')&&it.writingPurpose);assert.equal(bank.length,14);assert.equal(new Set(bank.map(it=>it.mechanic)).size,14);
  for(const it of bank){assert.ok(it.writingAudience);assert.equal(it.writingRubric.length,3);assert.ok(it.sample);for(const country of Object.keys(locale.labels)){const local=locale.localizeItem(it,country,'literacy');model.printable(local,profile('teen'));assert.equal(local.stimulus[1].documentId,it.stimulus[1].documentId);}}

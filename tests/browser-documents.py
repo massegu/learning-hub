@@ -35,7 +35,7 @@ try:
      page.wait_for_function('()=>document.querySelector(".practice-document img")?.naturalWidth===1024')
      if domain=='attention' and age=='teen':
       screenshot(doc);page.locator('.document-transcript summary').click();assert page.locator('.document-transcript').get_attribute('open') is not None
-      assert 'Documento ficticio' in page.locator('.document-transcript').inner_text()
+      assert 'Documento ficticio' not in page.locator('.document-transcript').inner_text();assert len(page.locator('.document-transcript').inner_text())>50
      page.locator('#exerciseOptions').get_by_role('button',name=it['a'],exact=True).click();count+=1
      if n<(0 if age=='junior' else 3):it=next_item()
     assert len(set(seen))==len(seen),(age,domain,seen)

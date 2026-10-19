@@ -3,19 +3,19 @@
 const text=value=>({type:'text',text:value}),table=rows=>({type:'table',header:true,rows});
 const documents={
  'invoice-co-v1':{title:'Factura de Papelería Norte',kind:'Factura',country:'Colombia',width:1024,height:1536,path:'assets/documents/invoice-co-v1.png',
-  transcript:[text('FACTURA · Papelería Norte · F-1048. Fecha: 14/10/2026. Moneda: pesos colombianos (COP).'),table([['Producto','Cantidad','Precio unitario','Importe'],['Cuadernos','2','6.000','12.000'],['Carpetas','3','2.000','6.000'],['Lápices','4','1.000','4.000']]),text('Subtotal: 22.000. Entrega: 3.000. TOTAL: 25.000. Pagar antes del 20/10/2026. Documento ficticio para practicar.')],
+  transcript:[text('FACTURA · Papelería Norte · F-1048. Fecha: 14/10/2026. Moneda: pesos colombianos (COP).'),table([['Producto','Cantidad','Precio unitario','Importe'],['Cuadernos','2','6.000','12.000'],['Carpetas','3','2.000','6.000'],['Lápices','4','1.000','4.000']]),text('Subtotal: 22.000. Entrega: 3.000. TOTAL: 25.000. Pagar antes del 20/10/2026.')],
   facts:{subtotal:22000,delivery:3000,total:25000,issued:'14/10/2026',due:'20/10/2026'},
   questions:[['¿Cuál es el total que debe pagarse?','25.000 COP',['22.000 COP','3.000 COP','12.000 COP']],['¿Cuánto cuestan los dos cuadernos juntos?','12.000 COP',['6.000 COP','22.000 COP','25.000 COP']],['¿Qué dato falta en un plan que solo reserva 22.000 COP para pagar toda la factura?','Los 3.000 COP de entrega',['Los 12.000 COP de cuadernos','Los 6.000 COP de carpetas','Los 4.000 COP de lápices']]]},
  'receipt-co-v1':{title:'Recibo de Tienda Barrio Verde',kind:'Recibo de compra',country:'Colombia',width:1024,height:1536,path:'assets/documents/receipt-co-v1.png',
-  transcript:[text('Tienda Barrio Verde · RECIBO DE COMPRA · R-0312 · 15/10/2026 · 10:35. Moneda: pesos colombianos (COP).'),table([['Producto','Cantidad','Importe'],['Pan','1','5.000'],['Leche','2','8.000'],['Manzanas','1','6.000']]),text('TOTAL: 19.000. Pagado: 20.000. Cambio: 1.000. Gracias por tu visita. Documento ficticio para practicar.')],
+  transcript:[text('Tienda Barrio Verde · RECIBO DE COMPRA · R-0312 · 15/10/2026 · 10:35. Moneda: pesos colombianos (COP).'),table([['Producto','Cantidad','Importe'],['Pan','1','5.000'],['Leche','2','8.000'],['Manzanas','1','6.000']]),text('TOTAL: 19.000. Pagado: 20.000. Cambio: 1.000. Gracias por tu visita.')],
   facts:{total:19000,paid:20000,change:1000,milkCount:2,milkAmount:8000},
   questions:[['¿Cuánto dinero se entregó para pagar?','20.000 COP',['19.000 COP','1.000 COP','8.000 COP']],['¿Qué cantidad corresponde al importe de las dos unidades de leche?','8.000 COP',['4.000 COP','19.000 COP','2.000 COP']],['Al revisar el pago, alguien dice que deben devolver 2.000 COP. ¿Qué corrección corresponde?','El cambio es 1.000 COP: se pagaron 20.000 y el total es 19.000',['El cambio es 2.000 COP porque se compraron dos unidades de leche','No hay cambio porque el total es 20.000 COP','El cambio es 8.000 COP, igual al importe de la leche']]]},
  'catalogue-co-v1':{title:'Catálogo escolar de Papelería Norte',kind:'Catálogo',country:'Colombia',width:1024,height:1536,path:'assets/documents/catalogue-co-v1.png',
-  transcript:[text('CATÁLOGO ESCOLAR · Papelería Norte. Moneda: pesos colombianos (COP). Válido hasta el 31/10/2026.'),table([['Producto','Precio'],['Cuaderno azul','6.000'],['Carpeta verde','2.000'],['Lápiz','1.000'],['Cartuchera','8.000']]),text('Paquete A: cuaderno + carpeta · 7.000. Paquete B: cartuchera + lápiz · 8.500. Recogida en tienda: sin cargo. Documento ficticio para practicar.')],
+  transcript:[text('CATÁLOGO ESCOLAR · Papelería Norte. Moneda: pesos colombianos (COP). Válido hasta el 31/10/2026.'),table([['Producto','Precio'],['Cuaderno azul','6.000'],['Carpeta verde','2.000'],['Lápiz','1.000'],['Cartuchera','8.000']]),text('Paquete A: cuaderno + carpeta · 7.000. Paquete B: cartuchera + lápiz · 8.500. Recogida en tienda: sin cargo.')],
   facts:{notebook:6000,folder:2000,pencil:1000,pencilCase:8000,packageA:7000,packageB:8500,validUntil:'31/10/2026'},
   questions:[['¿Qué producto tiene un precio de 8.000 COP?','La cartuchera',['El cuaderno azul','La carpeta verde','El lápiz']],['Necesitas un cuaderno y una carpeta. ¿Qué opción tiene menor precio?','El paquete A por 7.000 COP',['Los dos productos por separado por 8.000 COP','El paquete B por 8.500 COP','La cartuchera por 8.000 COP']],['El plan propone comprar el paquete B para conseguir un cuaderno y una carpeta. ¿Qué debe corregirse?','Elegir el paquete A, que incluye los dos productos necesarios',['Añadir otro lápiz al paquete B','Comprar solo la cartuchera','Cambiar el paquete B por un lápiz suelto']]]},
  'brochure-co-v1':{title:'Folleto del taller de dibujo',kind:'Folleto',country:'Colombia',width:1024,height:1536,path:'assets/documents/brochure-co-v1.png',
-  transcript:[text('TALLER DE DIBUJO · Centro Cultural La Plaza. Sábado 24/10/2026. De 10:00 a 12:00.'),table([['Dato','Condición'],['Edad','De 12 a 18 años'],['Inscripción','Hasta el 22/10/2026'],['Materiales','Incluidos'],['Precio','Actividad gratuita'],['Llegada','15 minutos antes'],['Para entrar','Trae tu confirmación de inscripción']]),text('Documento ficticio para practicar.')],
+  transcript:[text('TALLER DE DIBUJO · Centro Cultural La Plaza. Sábado 24/10/2026. De 10:00 a 12:00.'),table([['Dato','Condición'],['Edad','De 12 a 18 años'],['Inscripción','Hasta el 22/10/2026'],['Materiales','Incluidos'],['Precio','Actividad gratuita'],['Llegada','15 minutos antes'],['Para entrar','Trae tu confirmación de inscripción']])],
   facts:{date:'24/10/2026',registration:'22/10/2026',start:'10:00',finish:'12:00',earlyMinutes:15,minAge:12,maxAge:18},
   questions:[['¿Hasta qué fecha se puede hacer la inscripción?','22/10/2026',['24/10/2026','31/10/2026','20/10/2026']],['Si el taller empieza a las 10:00 y pide llegar quince minutos antes, ¿a qué hora debes estar allí?','09:45',['10:00','10:15','09:15']],['El plan propone inscribirse el 23/10 y llegar a las 10:00 del día del taller. ¿Qué dos cambios hacen falta?','Inscribirse como máximo el 22/10 y llegar a las 09:45',['Inscribirse el 24/10 y llegar a las 09:45','Inscribirse el 22/10 y llegar a las 10:00','Inscribirse el 23/10 y llegar a las 09:45']]]}
 };
@@ -68,7 +68,7 @@ const authoredDocuments=[
     "Entrada",
     "España",
     [
-      "MUSEO ABIERTO · Valencia · Entrada de práctica",
+      "MUSEO ABIERTO · Valencia",
       "Domingo 25/10/2026 · Acceso: 11:00 · Sala: Inventos",
       "Esta entrada permite una visita. El taller de robots requiere reserva aparte."
     ],
@@ -324,7 +324,7 @@ const authoredDocuments=[
     "Etiqueta",
     "México",
     [
-      "BEBIDA DE AVENA · Envase de práctica · Guadalajara",
+      "BEBIDA DE AVENA · Guadalajara",
       "Contenido: 250 ml · Ingredientes: agua, avena y cacao.",
       "Contiene avena. Puede contener trazas de leche.",
       "Agitar antes de abrir. Una vez abierta, conservar refrigerada y consumir en 24 horas."
@@ -623,7 +623,7 @@ const authoredDocuments=[
   ]
 ];
 for(const [id,title,kind,country,lines,questions,brief,sample] of authoredDocuments){
- documents[id]={title,kind,country,width:1024,height:1536,path:`assets/documents/${id}.png`,transcript:[...lines.map(text),text('Documento ficticio para practicar.')],questions,brief,sample,minAge:['news-pa','advert-co','form-es'].includes(id)?'middle':'junior'};
+ documents[id]={title,kind,country,width:1024,height:1536,path:`assets/documents/${id}.png`,transcript:lines.map(text),questions,brief,sample,minAge:['news-pa','advert-co','form-es'].includes(id)?'middle':'junior'};
 }
 // Executive tasks ask the learner to apply conditions and review a proposed plan.
 // Attention and literacy retain locating and interpreting source information.
@@ -763,6 +763,9 @@ Object.assign(executiveQuestions,{
     ]
   ]
 });
+// Generated document dimensions.
+const documentHeights={"advert-co": 1020, "brochure-co-v1": 1040, "catalogue-co-v1": 1125, "form-es": 1070, "infographic-cr": 1240, "instructions-cr": 1105, "invoice-co-v1": 1101, "label-mx": 920, "map-cl": 1440, "menu-ar": 1020, "news-pa": 1020, "notice-cl": 935, "post-pa": 1020, "poster-mx": 785, "receipt-co-v1": 1017, "schedule-ar": 955, "ticket-es": 820, "transport-co": 920};
+for(const [id,height] of Object.entries(documentHeights))documents[id].height=height;
 const attentionAdvanced={
  'invoice-co-v1':['¿Qué combinación coincide con el subtotal y la entrega, en ese orden?','22.000 COP y 3.000 COP',['25.000 COP y 3.000 COP','22.000 COP y 6.000 COP','12.000 COP y 4.000 COP']],
  'receipt-co-v1':['¿Qué combinación coincide con el total y el cambio, en ese orden?','19.000 COP y 1.000 COP',['20.000 COP y 1.000 COP','19.000 COP y 2.000 COP','8.000 COP y 6.000 COP']],
@@ -1248,7 +1251,7 @@ function pool(age,domain,level=1){
   const doc=get(id),tuple=domain==='executive'?(executiveQuestions[id]||doc.questions)[level-1]:domain==='attention'&&level===3?(attentionAdvanced[id]||doc.questions[2]):domain!=='attention'?readingQuestions[id][level-1]:doc.questions[level-1],q=tuple[0],a=tuple[1],opts=[a,...tuple[2]];
   return {id:`document-${age}-${domain}-${level}-${id}`,contentKey:`document-v1:${age}:${domain}:${level}:${id}`,passageKey:`document:${id}`,domain,level,
    type:'standard',responseType:'choice',requiresStimulus:true,currencyContext:'foreign',taskFocus:domain==='attention'?'localizar y contrastar datos':domain==='executive'?'supervisar decisiones':'comprender propósito, relaciones y límites',topic:doc.kind+' · interpretar un documento',
-   stimulus:[text(`Documento ficticio de ${doc.country}. ${['invoice-co-v1','receipt-co-v1','catalogue-co-v1'].includes(id)?'Los importes están en pesos colombianos (COP).':''}`),{type:'document',documentId:id}],q,a,opts,
+   stimulus:[text(`Documento de ${doc.country}. ${['invoice-co-v1','receipt-co-v1','catalogue-co-v1'].includes(id)?'Los importes están en pesos colombianos (COP).':''}`),{type:'document',documentId:id}],q,a,opts,
    why:a+'. Comprueba los datos directamente en el documento.',mechanic:`document_${domain}_${doc.kind.replace(/\s/g,'_')}_${level}`,
    ...(age==='junior'?{juniorProfile:{route:age,level}}:{}),...(['primary','middle'].includes(age)?{schoolProfile:{route:age,level}}:{})};
  });

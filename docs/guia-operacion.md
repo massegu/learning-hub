@@ -221,3 +221,10 @@ La opción de comprobación solo estará disponible en las revisiones que incluy
 Un ZIP es un contenedor, no un documento de Word. En Windows: botón derecho sobre el ZIP → **Extraer todo** → abrir cada `.docx` extraído. Una sola versión se descarga directamente en DOCX.
 
 El ZIP adjunto del 19/10 tenía tres DOCX completos, pero las imágenes usaban identificadores repetidos y carecían del atributo de nombre requerido. El generador corrige esas propiedades y añade, además de la imagen original, su contenido como texto y tablas visibles. Las lecturas conservan su texto antes de la pregunta. Las fichas antiguas no cambian: hay que generarlas de nuevo una vez publicada la corrección. La comprobación estructural automatizada no sustituye una apertura de confirmación en Microsoft Word.
+
+
+### Ejecuciones antiguas y mejoras de sesión
+
+«Merge pull request #2 … #3» es el título de una ejecución de Actions: el número #3 identifica la ejecución, no una PR pendiente de fusionar. La PR #2 ya se incorporó a `desarrollo` (revisión `3188720`). Aquella ejecución falló al comprobar Cloudflare después de promover `pruebas`. Se conserva como historial; no es necesario borrarla ni volver a fusionar la PR #2. La siguiente publicación tendrá su propia ejecución y resultado.
+
+«Crear sesión» utiliza ahora las mismas áreas y nombres que el menú para la edad activa. Los documentos visuales se generan con altura proporcional al contenido, sin el aviso repetido de documento ficticio; la imagen y la transcripción siguen compartiendo los mismos datos. Los cuadros de respuesta crecen y se reducen con lo escrito. GitHub comprueba también la navegación de sesiones de las cinco edades, el tamaño del cuadro de respuesta y la proporción de la imagen exportada a Word.

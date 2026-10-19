@@ -5,7 +5,7 @@ test('eighteen original document assets have matching PNG dimensions, consistent
  assert.equal(Object.keys(docs.documents).length,18);
  for(const doc of Object.values(docs.documents)){
   const bytes=fs.readFileSync(doc.path);assert.equal(bytes.readUInt32BE(16),doc.width);assert.equal(bytes.readUInt32BE(20),doc.height);
-  assert.ok(doc.transcript.some(b=>b.type==='text'&&b.text.includes('Documento ficticio')));
+  assert.ok(doc.country);assert.ok(doc.transcript.length);assert.doesNotMatch(JSON.stringify(doc.transcript),/Documento ficticio para practicar/);
  }
  const f=docs.get('invoice-co-v1').facts,r=docs.get('receipt-co-v1').facts;
  assert.equal(f.total,f.subtotal+f.delivery);assert.equal(r.change,r.paid-r.total);

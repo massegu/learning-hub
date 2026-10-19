@@ -79,7 +79,7 @@ try:
    doc=next(b['documentId'] for b in it['stimulus'] if b['type']=='document');source=page.evaluate('(id)=>DocumentLibrary.get(id)',doc)
    page.wait_for_function('()=>document.querySelector(".practice-document img")?.naturalWidth===1024')
    assert source['country'] in page.locator('figcaption').inner_text();assert page.locator('.document-transcript').get_attribute('open') is None
-   page.locator('.document-transcript summary').click();assert page.locator('.document-transcript summary').inner_text()=='Ver versión en texto';assert 'Documento ficticio' in page.locator('.document-transcript').inner_text();answer(it)
+   page.locator('.document-transcript summary').click();assert page.locator('.document-transcript summary').inner_text()=='Ver versión en texto';assert 'Documento ficticio' not in page.locator('.document-transcript').inner_text();assert len(page.locator('.document-transcript').inner_text())>50;answer(it)
    # Real DOCX + ZIP with two versions, retaining images and written questions.
    with page.expect_download() as dl:
     page.evaluate('''()=>{const p=__profiles.find(x=>x.id==='teen');const all=DocumentLibrary.pool('teen','literacy',2);const written=Curriculum.pool('teen','literacy',2).filter(x=>x.writingPurpose).slice(0,2);return WorksheetGenerator.generate([[...all.slice(0,2),...written],all.slice(2,6)],p)}''')

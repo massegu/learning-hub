@@ -1,6 +1,6 @@
 # Documentos visuales de práctica
 
-Cuatro imágenes originales generadas para Level Up Learning Lab. Son documentos
+Dieciocho imágenes originales generadas para Level Up Learning Lab. Son documentos
 ficticios, sin datos de personas reales. Las cifras, fechas y condiciones se revisaron
 visualmente contra `js/document-library.js`; no dependen del texto obtenido por OCR.
 
@@ -9,7 +9,9 @@ visualmente contra `js/document-library.js`; no dependen del texto obtenido por 
 - `catalogue-co-v1.png`: catálogo de cuatro productos y dos paquetes.
 - `brochure-co-v1.png`: taller de dibujo con inscripción, horario y requisitos.
 
-Todos son PNG de 1024 × 1536. Se conservan los originales para que pantalla y ficha
+Todos son PNG de 1024 píxeles de ancho y altura adaptada al contenido.
+Se regeneran con `python scripts/render-authored-documents.py`, que actualiza
+las dimensiones del registro de pantalla y servidor. Se conservan los originales para que pantalla y ficha
 usen exactamente el mismo material. El registro incorpora las transcripciones
 accesibles y las preguntas. Las fechas son datos del ejercicio; no son eventos vigentes.
 Las fuentes se contextualizan expresamente en Colombia, también si se practica

@@ -286,7 +286,7 @@
       blockValid(block);
       if(block.type==='document'){
         const doc=documents.get(block.documentId);
-        return `<figure class="practice-document"><img src="${escape(doc.path)}" width="${doc.width}" height="${doc.height}" alt="${escape(doc.title)}. Documento ficticio para practicar." loading="eager"><figcaption>${escape(doc.kind)} · ${escape(doc.country)} · <a href="${escape(doc.path)}" target="_blank" rel="noopener">Ampliar documento</a></figcaption></figure><details class="document-transcript"><summary>Ver versión en texto</summary>${interactiveStimulus(doc.transcript,{structured:true})}</details>`;
+        return `<figure class="practice-document"><img src="${escape(doc.path)}" width="${doc.width}" height="${doc.height}" alt="${escape(doc.title)}" loading="eager"><figcaption>${escape(doc.kind)} · ${escape(doc.country)} · <a href="${escape(doc.path)}" target="_blank" rel="noopener">Ampliar documento</a></figcaption></figure><details class="document-transcript"><summary>Ver versión en texto</summary>${interactiveStimulus(doc.transcript,{structured:true})}</details>`;
       }
       if(block.presentation==='associations'){
         return `<div class="association-frame"><table class="memory-associations"><thead><tr><th scope="col">Persona</th><th scope="col">Objeto</th></tr></thead><tbody>${block.rows.map(row=>`<tr><th scope="row"><span class="person-initial" aria-hidden="true">${escape(row[0].slice(0,1))}</span>${escape(row[0])}</th><td>${visualLabel(row[1],options.senses)}</td></tr>`).join('')}</tbody></table></div>`;
