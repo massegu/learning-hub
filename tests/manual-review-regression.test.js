@@ -37,8 +37,8 @@ test('focused teen routes deliver real orthography, mature reasoning and evidenc
       if(it.opts){assert.equal(new Set(it.opts).size,it.opts.length);assert.ok(it.opts.includes(it.a));}
       if(domain==='literacy')assert.ok(it.stimulus[0].text.split(/\s+/).length>=45);
     }
-    const delivered=api.variantExercise('teen',domain,level);assert.ok(domain==='teenLanguage'?delivered.teenReview:delivered.contentKey.startsWith('curriculum-v2-teen-'));
-    const worksheet=api.worksheetTask('teen',domain,level);assert.ok(domain==='teenLanguage'?worksheet.teenReview:worksheet.contentKey.startsWith('curriculum-v2-teen-')); assert.equal(worksheet.sourceDomain,domain);
+    const delivered=api.variantExercise('teen',domain,level);assert.ok(domain==='teenLanguage'?delivered.teenReview:delivered.contentKey.startsWith('curriculum-v2-teen-')||delivered.contentKey.startsWith('document-v1:teen:'));
+    const worksheet=api.worksheetTask('teen',domain,level);assert.ok(domain==='teenLanguage'?worksheet.teenReview:worksheet.contentKey.startsWith('curriculum-v2-teen-')||worksheet.contentKey.startsWith('document-v1:teen:')); assert.equal(worksheet.sourceDomain,domain);
     for(const focus of ['grammar','spelling','writing'])assert.equal(api.variantExercise('teen','teenLanguage',level,focus).languageFocus,focus);
     for(const it of teen.pool('teenLanguage',level,'spelling'))assert.doesNotMatch(it.q,/inferencia|resumen|conclusión|refiere/u);
     const history=[],signatures=[];
@@ -47,7 +47,7 @@ test('focused teen routes deliver real orthography, mature reasoning and evidenc
       assert.equal(items.length,7);
       for(const it of items){const signature=api.contentSignature(domain,it);history.push(signature,`${domain}:mechanic:${it.mechanic}`);signatures.push(signature);}
     }
-    assert.equal(new Set(signatures).size,domain==='literacy'?10:21);if(domain==='literacy')for(let i=0;i<=signatures.length-10;i++)assert.equal(new Set(signatures.slice(i,i+10)).size,10);
+    assert.ok(domain==='literacy'?new Set(signatures).size>=10:new Set(signatures).size===21);if(domain==='literacy')for(let i=0;i<=signatures.length-10;i++)assert.equal(new Set(signatures.slice(i,i+10)).size,10);
   }
 });
 test('teen quantitative reasoning answers follow the displayed percentages, ratios and sequences',()=>{

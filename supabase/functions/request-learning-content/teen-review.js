@@ -49,7 +49,7 @@
     if(!['teenLanguage','speedReasoning','literacy'].includes(domain))throw new Error('Área fuera de la revisión de 16–18.');
     if(![1,2,3].includes(level))throw new Error('Nivel inválido.');
     if(focus&&!['grammar','spelling','writing'].includes(focus))throw new Error('Habilidad inválida.');
-    return contexts.flatMap((c,i)=>(domain==='teenLanguage'?(focus?[focus]:['grammar','spelling','writing']):[null]).flatMap(skill=>Array.from({length:domain==='teenLanguage'?3:4},(_,m)=>({...((domain==='teenLanguage'?language:domain==='literacy'?literacy:reasoning)(c,i,level,...(domain==='teenLanguage'?[skill,m]:[m]))),domain,level,languageFocus:skill||undefined,topic:c.title,mechanic:`${domain}_${skill||'task'}_${m}`,contentKey:`teen-review-v1:${domain}:${level}:${c.id}:${skill||'task'}:${m}`,teenReview:{version:1,scope:'focused',context:c.id}}))));
+    return contexts.flatMap((c,i)=>(domain==='teenLanguage'?(focus?[focus]:['grammar','spelling']):[null]).flatMap(skill=>Array.from({length:domain==='teenLanguage'?3:4},(_,m)=>({...((domain==='teenLanguage'?language:domain==='literacy'?literacy:reasoning)(c,i,level,...(domain==='teenLanguage'?[skill,m]:[m]))),domain,level,languageFocus:skill||undefined,topic:c.title,mechanic:`${domain}_${skill||'task'}_${m}`,contentKey:`teen-review-v1:${domain}:${level}:${c.id}:${skill||'task'}:${m}`,teenReview:{version:1,scope:'focused',context:c.id}}))));
   }
   const originalPool=pool;
   const reviewedPool=(domain,level,focus)=>originalPool(domain,level,focus).map(it=>{

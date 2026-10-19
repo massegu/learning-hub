@@ -70,8 +70,9 @@
     const textSize=early?28:19;
     const paragraph=value=>new Paragraph({spacing:{line:early?360:285,after:70},children:[new TextRun({text:value,size:textSize,color:ink,font:'Aptos'})]});
     function pictureParagraph(value,item,material,position){
-      if(!early)return paragraph(value);
-      const key=early?window.StimulusArt?.forLabel(value,{...item.lexicalSenses,subject:material.label}):null;
+      const illustrated=early||item.type==='memoryReveal'||item.speedTask;
+      if(!illustrated)return paragraph(value);
+      const key=illustrated?window.StimulusArt?.forLabel(value,{...item.lexicalSenses,subject:material.label}):null;
       // Glyphs are the units themselves: never add a second pictogram/dot.
       const prefix=position===undefined?[]:[new TextRun({text:`${position}. `,size:textSize})];
       const picture=key&&!/^[●○□△☆]$/.test(value)?[new ImageRun({data:window.StimulusArt.png(key),transformation:{width:32,height:32},altText:{title:value,description:value}}),new TextRun({text:' '})]:[];
@@ -86,7 +87,7 @@
       }
       if(material.type==='text') return [...heading,paragraph(material.text)];
       if(early && material.presentation==='count' && material.items.every(x=>x==='●'))return [...heading,new Paragraph({spacing:{after:130},children:material.items.flatMap(value=>[new TextRun({text:value,size:40,color:ink}),new TextRun({text:'    '})])})];
-      if(material.type==='list')return [...heading,...material.items.map((value,i)=>early && ['count','cards','sequence'].includes(material.presentation)?pictureParagraph(value,item,material,material.presentation==='sequence'?i+1:undefined):paragraph(`${i+1}. ${value}`))];
+      if(material.type==='list')return [...heading,...material.items.map((value,i)=>(early||item.type==='memoryReveal') && ['count','cards','sequence'].includes(material.presentation)?pictureParagraph(value,item,material,material.presentation==='sequence'?i+1:undefined):paragraph(`${i+1}. ${value}`))];
       return [...heading,new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:softBorders,rows:material.rows.map(row=>new TableRow({children:row.map(value=>new TableCell({margins:{top:100,bottom:100,left:120,right:120},children:[pictureParagraph(value,item,material)]}))}))})];
     }
     const header=new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:noBorders,rows:[new TableRow({children:[

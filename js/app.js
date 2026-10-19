@@ -11,7 +11,7 @@
     language: {
       name: "Lenguaje",
       icon: "Aa",
-      desc: "Gramática, ortografía y escritura con ejemplos y textos.",
+      desc: "Gramática, ortografía y vocabulario con ejemplos y textos.",
     },
     division: {
       name: "Divisiones",
@@ -19,14 +19,14 @@
       desc: "Divisiones por una y dos cifras.",
     },
     reading: {
-      name: "Lectura",
+      name: "Lectura + Escritura",
       icon: "▤",
       desc: "Lee el texto y usa sus pistas para responder.",
     },
     middleLanguage: {
       name: "Lenguaje 13-15",
       icon: "Aa",
-      desc: "Gramática, ortografía y escritura para comunicar ideas con claridad.",
+      desc: "Gramática, ortografía y vocabulario para comunicar ideas con claridad.",
     },
     middleMath: {
       name: "Matemáticas 13-15",
@@ -34,14 +34,14 @@
       desc: "Porcentajes, fracciones, ecuaciones, proporcionalidad y geometría.",
     },
     middleReading: {
-      name: "Lectura 13-15",
+      name: "Lectura + Escritura 13-15",
       icon: "▤",
       desc: "Comprende el texto y deduce ideas a partir de sus pistas.",
     },
     teenLanguage: {
       name: "Lenguaje 16-18",
       icon: "Aa",
-      desc: "Gramática, ortografía y escritura con argumentos y pruebas.",
+      desc: "Gramática, ortografía y vocabulario en distintos contextos.",
     },
     teenMath: {
       name: "Matemáticas 16-18",
@@ -473,7 +473,7 @@
       level: state.levels[s] || 1,
       itemId,
       detail,
-      ...(currentItem?.id===itemId&&currentItem.speedTask?{speedFamily:currentItem.speedFamily,responseMs:currentItem._timing?.measured?Math.round(performance.now()-currentItem._timing.started):null,timingValid:Boolean(currentItem._timing?.valid),curriculumRevision:2}:{}),
+      ...(currentItem?.id===itemId&&currentItem.speedTask?{speedFamily:currentItem.speedFamily,speedRevision:currentItem.speedRevision||2,responseMs:currentItem._timing?.measured?Math.round(performance.now()-currentItem._timing.started):null,timingValid:Boolean(currentItem._timing?.valid),curriculumRevision:2}:{}),
     };
     state.history.push(row);
     state.history = state.history.slice(-5000);
@@ -682,7 +682,7 @@
       const descriptions = {
         language: "Juega con las palabras, las letras y las frases.",
         division: "Cuenta y resuelve problemas con cosas que conoces.",
-        reading: "Lee una historia corta y responde.",
+        reading: "Lee, responde y forma frases.",
         attention: "Mira con calma y busca lo que te pedimos.",
         executive: "Piensa qué hacer y ordena los pasos.",
         memory: "Mira las cosas e intenta recordarlas.",
@@ -694,11 +694,15 @@
     $("#exerciseLevelSelect").value = String(state.levels[subject] || 1);
     $("#subjectScore").textContent = state.scores[subject] || 0;
     const isLang = ["language","middleLanguage","teenLanguage"].includes(subject);
+    const isReading=['reading','middleReading','literacy'].includes(subject);
+    if(isLang&&mode==='writing'||isReading&&['spelling','vocabulary'].includes(mode))mode='grammar';
     $$('.language-mode-btn').forEach(b=>{
-      b.textContent=window.ContentPolicy.forProfile(profile)?({grammar:'Palabras y gramática',spelling:'Ortografía',writing:'Formar frases'})[b.dataset.mode]:({grammar:'Gramática',spelling:'Ortografía',writing:'Escritura'})[b.dataset.mode];
+      b.classList.toggle('hidden',isLang&&b.dataset.mode==='writing'||isReading&&['spelling','vocabulary'].includes(b.dataset.mode));
+      b.textContent=window.ContentPolicy.forProfile(profile)?({grammar:'Palabras y gramática',spelling:'Ortografía',writing:'Formar frases',vocabulary:'Vocabulario'})[b.dataset.mode]:({grammar:'Gramática',spelling:'Ortografía',writing:'Escritura',vocabulary:'Vocabulario'})[b.dataset.mode];
+      if(isReading)b.textContent=({grammar:'Lectura',writing:window.ContentPolicy.forProfile(profile)?'Formar frases':'Escritura'})[b.dataset.mode]||'';
       b.classList.toggle('active',b.dataset.mode===mode);
     });
-    $("#languageModeSwitch").classList.toggle("hidden", !isLang);
+    $("#languageModeSwitch").classList.toggle("hidden", !isLang&&!isReading);
     const documentSupport=window.DocumentLibrary?.supports(window.AgeStages.route(profile),subject);
     if(!documentSupport)documentOnly=false;
     $('#documentModeSwitch').classList.toggle('hidden',!documentSupport);
@@ -752,7 +756,7 @@
       ...(kind==='exercise'&&documentOnly&&window.DocumentLibrary?.supports(window.AgeStages.route(profile),domain)?{documents_only:true}:{}),
       kind,
       domain,
-      subdomain: ["language","middleLanguage","teenLanguage"].includes(domain) ? mode : null,
+      subdomain: ["language","middleLanguage","teenLanguage"].includes(domain) ? mode : ["reading","middleReading","literacy"].includes(domain)?(mode==='writing'?'writing':'reading'):null,
       level: state.levels[domain] || 1,
       count: 1,
       ...extra,
@@ -930,7 +934,7 @@
     );
     showFeedback(correct, pts, currentItem.why);
     if(currentItem.speedTask){
-      const row=state.history.at(-1),summary=window.Curriculum.speedSummary(state.history.filter(x=>x.level===row.level&&x.speedFamily===row.speedFamily).slice(-20));
+      const row=state.history.at(-1),summary=window.Curriculum.speedSummary(state.history.filter(x=>x.level===row.level&&x.speedFamily===row.speedFamily&&(x.speedRevision||2)===(row.speedRevision||2)).slice(-20));
       const measurement=row.timingValid?`Tiempo: ${(row.responseMs/1000).toFixed(2)} s.`:row.responseMs===null?'Práctica sin medir.':'Tiempo excluido porque saliste de la ventana.';
       const stats=summary.attempts?` En las últimas ${summary.attempts} respuestas de esta tarea y nivel: ${summary.accuracy}% de aciertos.${summary.medianMs===null?'':` Mediana de respuestas correctas: ${(summary.medianMs/1000).toFixed(2)} s.`}`:'';
       const note=document.createElement('p');note.className='speed-result';note.textContent=measurement+stats;$('#exerciseFeedback').append(note);
@@ -1245,9 +1249,9 @@
         const r = state.history.filter((x) => x.subject === s),
           c = r.filter((x) => x.correct).length,
           acc = r.length ? Math.round((c / r.length) * 100) : 0;
-        const timings=s==='speedReasoning'?[...new Set(r.filter(x=>x.speedFamily&&x.timingValid).map(x=>x.speedFamily+':'+x.level))].map(key=>{
-          const [family,level]=key.split(':'),stats=window.Curriculum.speedSummary(r.filter(x=>x.speedFamily===family&&String(x.level)===level).slice(-20));
-          return `<p class="speed-progress-detail">${({figures:'Figuras',key:'Clave de códigos',match:'Coincidencias'})[family]||escapeHtml(family)} · nivel ${escapeHtml(level)}: ${stats.accuracy}% de aciertos en ${stats.attempts} respuestas medidas.${stats.medianMs===null?'':` Mediana al acertar: ${(stats.medianMs/1000).toFixed(2)} s.`}</p>`;
+        const timings=s==='speedReasoning'?[...new Set(r.filter(x=>x.speedFamily&&x.timingValid).map(x=>x.speedFamily+':'+x.level+':'+(x.speedRevision||2)))].map(key=>{
+          const [family,level,revision]=key.split(':'),stats=window.Curriculum.speedSummary(r.filter(x=>x.speedFamily===family&&String(x.level)===level&&String(x.speedRevision||2)===revision).slice(-20));
+          return `<p class="speed-progress-detail">${({figures:'Figuras',objects:'Objetos',arrows:'Flechas',orientation:'Orientación',pictograms:'Pictogramas',characters:'Letras y números',mixed:'Series mixtas',category:'Categorías',key:'Clave de códigos',match:'Coincidencias'})[family]||escapeHtml(family)} · nivel ${escapeHtml(level)}${revision==='2'?' · formato anterior':''}: ${stats.accuracy}% de aciertos en ${stats.attempts} respuestas medidas.${stats.medianMs===null?'':` Mediana al acertar: ${(stats.medianMs/1000).toFixed(2)} s.`}</p>`;
         }).join(''):'';
         return `<div class="progress-subject card"><small>${SUBJECT_META[s].name}</small><strong>${acc}%</strong><div class="bar"><span style="width:${acc}%"></span></div><small>${r.length} ejercicios · nivel ${state.levels[s] || 1}</small>${timings}</div>`;
       })
@@ -1290,7 +1294,7 @@
         "nivel",
         "resultado",
         "puntos",
-        "id", "area_original", "tiempo_ms", "tiempo_valido", "tarea_velocidad",
+        "id", "area_original", "tiempo_ms", "tiempo_valido", "tarea_velocidad", "version_velocidad",
       ],
     ];
     state.history.forEach((x) =>
@@ -1302,7 +1306,7 @@
         x.level,
         x.correct ? "correcto" : "revisar",
         x.points,
-        x.itemId, x.originalSubject||"", x.responseMs??"", x.timingValid??"", x.speedFamily||"",
+        x.itemId, x.originalSubject||"", x.responseMs??"", x.timingValid??"", x.speedFamily||"", x.speedFamily?(x.speedRevision||2):"",
       ]),
     );
     downloadText(

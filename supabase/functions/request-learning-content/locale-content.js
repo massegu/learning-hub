@@ -176,12 +176,28 @@
     result.localization={locale:key,revision:1,domain};
     return result;
   }
+  function validateOptions(item){
+    if(!Array.isArray(item?.opts))return;
+    const spelling=item.languageFocus==='spelling'||/ortograf|tildes|puntuación/iu.test([item.topic,item.q].join(' '));
+    const punctuationIntent=item.optionContrast==='punctuation'||/puntuación|signos|sílabas/iu.test(item.q||'')||item.languageEvidence?.op==='syllables';
+    const key=value=>{
+      let word=String(value).normalize('NFKC').trim().replace(/\s+/g,' ');
+      if(item.optionContrast!=='case'&&!/mayúscula/iu.test(item.q||''))word=word.toLocaleLowerCase('es');
+      if(spelling&&!punctuationIntent)word=word.replace(/[\p{P}\p{S}]/gu,'').replace(/\s+/g,' ').trim();
+      return word;
+    };
+    if(new Set(item.opts.map(key)).size!==item.opts.length)throw new LocaleAdaptationError('La actividad contiene opciones duplicadas o equivalentes.');
+    if(item.optionMeanings){
+      if(!Array.isArray(item.optionMeanings)||item.optionMeanings.length!==item.opts.length||new Set(item.optionMeanings.map(key)).size!==item.opts.length)throw new LocaleAdaptationError('La actividad tiene respuestas semánticamente equivalentes.');
+    }
+    if(item.answers&&item.answers.length>1&&item.responseType!=='multiple')throw new LocaleAdaptationError('La actividad declara más de una respuesta válida.');
+  }
   function localizeModel(model,locale,domain,context={}) {
     if(domain==='english')return {...model,question:text(model.question,locale)};
     const item=localizeItem({q:model.question,stimulus:model.stimulus,opts:model.options,tokens:model.tokens,currencyContext:context.currencyContext,lexicalSenses:context.lexicalSenses},locale,domain);
     return {...model,question:item.q,stimulus:item.stimulus,options:item.opts,tokens:item.tokens};
   }
-  const api={labels,currencies,normalize,effective,rules,senseRules:[bananaRule,headphonesRule],text,localizeItem,localizeModel};
+  const api={validateOptions,labels,currencies,normalize,effective,rules,senseRules:[bananaRule,headphonesRule],text,localizeItem,localizeModel};
   root.LocaleContent=api;
   if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);

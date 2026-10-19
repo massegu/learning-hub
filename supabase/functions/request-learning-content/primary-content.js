@@ -137,7 +137,7 @@
     if(domain==='language'&&subdomain&&!['grammar','spelling','writing'].includes(subdomain))throw new Error('Habilidad de Lenguaje no válida.');
     return contexts.flatMap((c,i)=>families[domain].flatMap((family,m)=>{
       const focus=domain==='language'?family.split('_')[0]:undefined;
-      if(domain==='language'&&subdomain&&subdomain!==focus)return [];
+      if(domain==='language'&&(subdomain?subdomain!==focus:focus==='writing'))return [];
       const it=domain==='language'?language(c,i,level,focus,m%3):functions[domain](c,i,level,m);
       return [{...it,domain,level,languageFocus:focus,topic:c.title,contentKey:`primary-v1:${domain}:${level}:${c.id}:${family}`,mechanic:family,schoolProfile:{version:1,route:'primary',context:c.id,family,level}}];
     }));

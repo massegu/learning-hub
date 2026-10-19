@@ -66,7 +66,7 @@ test('primary history excludes repeats through three consecutive seven-item sess
       const items=api.generatedItems(d,7,history,()=>api.variantExercise('primary',d,l));assert.equal(items.length,7);
       for(const it of items){const sig=api.contentSignature(d,it);signatures.push(sig);history.push(sig,`${d}:mechanic:${it.mechanic}`);}
     }
-    assert.equal(new Set(signatures).size,['reading','literacy','middleReading'].includes(d)?10:21,`${d}/${l}`);if(['reading','literacy','middleReading'].includes(d))for(let i=0;i<=signatures.length-10;i++)assert.equal(new Set(signatures.slice(i,i+10)).size,10);
+    assert.ok(['reading','literacy','middleReading'].includes(d)?new Set(signatures).size>=10:new Set(signatures).size===21,`${d}/${l}`);if(['reading','literacy','middleReading'].includes(d))for(let i=0;i<=signatures.length-10;i++)assert.equal(new Set(signatures.slice(i,i+10)).size,10);
   }
 });
 test('primary attention and reasoning responses derive from the visible rule and sequence',()=>{

@@ -184,7 +184,7 @@
     contexts.forEach((c,i)=>{
       for(let m=0;m<counts[domain];m++){
         const focus=domain==='language'?['grammar','spelling','writing'][Math.floor(m/3)]:undefined;
-        if(subdomain&&focus!==subdomain&&domain==='language')continue;
+        if(domain==='language'&&(subdomain?focus!==subdomain:focus==='writing'))continue;
         const family=domain==='language'?`${focus}_${m%3}`:mechanics[domain][m];
         const fn={language,reading,division:maths,attention,memory,executive,speedReasoning:reasoning,applied}[domain];
         const item=domain==='language'?fn(c,i,level,focus,m%3):fn(c,i,level,m);

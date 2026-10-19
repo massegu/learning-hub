@@ -2,7 +2,7 @@
   'use strict';
   const areas={
     language:{title:'Lenguaje',theme:'Palabras',icon:'pencil',description:'Juega con las palabras.'},
-    reading:{title:'Lectura',theme:'Historias',icon:'book',description:'Descubre historias cortas.'},
+    reading:{title:'Lectura + Escritura',theme:'Historias',icon:'book',description:'Descubre historias cortas.'},
     division:{title:'Matemáticas',theme:'Cantidades',icon:'apple',description:'Cuenta, junta y compara.'},
     attention:{title:'Atención',theme:'Detalles',icon:'star',description:'Mira y encuentra diferencias.'},
     memory:{title:'Memoria',theme:'Recuerdos',icon:'gift',description:'Mira, tapa y recuerda.'},

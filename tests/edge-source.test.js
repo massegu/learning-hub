@@ -61,6 +61,7 @@ test('saved account country controls selection before history or usage writes, i
   const locale=require('../js/locale-content');
   for(const it of result.items){assert.equal(it.localization.locale,'es_co');assert.doesNotThrow(()=>locale.localizeItem(it,'es_co','executive'));assert.doesNotMatch(JSON.stringify(it),/€|\beuros?\b/u);}
   const phone=require('../supabase/functions/request-learning-content/teen-review').pool('literacy',1).find(it=>it.teenReview.context==='interview');
+  h.context.DocumentLibrary.supports=()=>false;
   const original=h.context.Curriculum.generate;h.context.Curriculum.generate=(age,domain,level)=>domain==='literacy'?structuredClone(phone):original(age,domain,level);
   response=await h.request({domain:'literacy',locale:'es_es'});assert.equal(response.status,200);
   const phoneResult=(await response.json()).items[0];assert.match(JSON.stringify(phoneResult.stimulus),/teléfonos celulares/);assert.doesNotMatch(JSON.stringify(phoneResult.stimulus),/teléfonos móviles/);
@@ -83,14 +84,14 @@ test('real worksheet handler reports exhaustion instead of committing a within-s
   const h=authorized();
   h.profile.progress.ageRoute='primary';
   const pool=require('../supabase/functions/request-learning-content/primary-content').pool('reading',1).slice(0,2);let index=0;
-  h.context.PrimaryContent.generate=()=>structuredClone(pool[(index++)%pool.length]);
+  h.context.Curriculum.generate=()=>structuredClone(pool[(index++)%pool.length]);h.context.DocumentLibrary.supports=()=>false;
   const response=await h.request({kind:'worksheet',domains:['reading'],questions:20});
   assert.equal(response.status,422);assert.match((await response.json()).error,/suficientes actividades distintas/);
   assert.equal(h.writes.length,0);
 });
 test('actual authenticated junior handler routes skills and produces complete mixed worksheets',async()=>{
   const h=authorized(),model=require('../js/activity-model');
-  for(const level of [1,2,3])for(const subdomain of ['grammar','spelling','writing']){
+  for(const level of [1,2,3])for(const subdomain of ['grammar','spelling']){
     const response=await h.request({domain:'language',subdomain,level,count:5});assert.equal(response.status,200);
     const data=await response.json();assert.equal(data.items.length,5);
     assert.ok(data.items.every(it=>it.languageFocus===subdomain&&it.juniorProfile.level===level));
@@ -115,7 +116,7 @@ test('worksheet exhaustion of recent history still uses distinct valid candidate
 });
 test('authenticated primary requests route all Language skills and all eleven worksheet domains',async()=>{
   const h=authorized(),model=require('../js/activity-model');h.profile.progress.ageRoute='primary';
-  for(const level of [1,2,3])for(const subdomain of ['grammar','spelling','writing']){
+  for(const level of [1,2,3])for(const subdomain of ['grammar','spelling']){
     const response=await h.request({domain:'language',subdomain,level,count:5});assert.equal(response.status,200);
     const data=await response.json();assert.equal(data.items.length,5);
     for(const it of data.items){assert.equal(it.languageFocus,subdomain);assert.equal(it.schoolProfile.level,level);assert.doesNotThrow(()=>model.printable(it,h.profile));}
@@ -130,7 +131,7 @@ test('authenticated primary requests route all Language skills and all eleven wo
 });
 test('authenticated middle route honors Language skills and produces complete ten-domain worksheets',async()=>{
   const h=authorized(),model=require('../js/activity-model');h.profile.age_band='middle';h.profile.progress.ageRoute='middle';
-  for(const level of [1,2,3])for(const subdomain of ['grammar','spelling','writing']){
+  for(const level of [1,2,3])for(const subdomain of ['grammar','spelling']){
     const response=await h.request({domain:'middleLanguage',subdomain,level,count:5});assert.equal(response.status,200);
     const data=await response.json();assert.equal(data.items.length,5);
     for(const it of data.items){assert.equal(it.schoolProfile.route,'middle');assert.equal(it.languageFocus,subdomain);assert.equal(it.schoolProfile.level,level);assert.doesNotThrow(()=>model.printable(it,h.profile));}
@@ -172,3 +173,14 @@ test('document mode retains ownership/quota checks, rejects unsupported requests
  }
  assert.ok(h.writes.some(w=>w.table==='content_usage'));
 });
+
+ test('writing is served only in Reading + Writing and obsolete Language requests cannot spend quota',async()=>{
+  for(const age of ['junior','primary','middle','teen']){
+   const h=authorized();h.profile.age_band=['junior','primary'].includes(age)?'primary':age;h.profile.progress.ageRoute=age;
+   const language={middle:'middleLanguage',teen:'teenLanguage'}[age]||'language',reading=age==='junior'?'reading':'literacy';
+   let r=await h.request({domain:language,subdomain:'writing'});assert.equal(r.status,400);assert.equal(h.writes.length,0);assert.match((await r.json()).error,/Lectura/);
+   r=await h.request({domain:reading,subdomain:'wrong'});assert.equal(r.status,400);assert.equal(h.writes.length,0);
+   r=await h.request({domain:reading,subdomain:'writing',level:2,count:4});assert.equal(r.status,200);const data=await r.json();assert.equal(data.items.length,4);for(const it of data.items){assert.equal(it.domain,reading);assert.ok(it.type==='self'||it.type==='order');assert.ok(it.sample||it.answer);}
+   r=await h.request({domain:reading,subdomain:'writing',documents_only:true,level:2,count:3});assert.equal(r.status,200);const visual=(await r.json()).items;assert.equal(visual.length,3);assert.ok(visual.every(it=>it.writingPurpose&&it.stimulus.some(b=>b.type==='document')));
+  }
+ });

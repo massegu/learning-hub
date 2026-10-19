@@ -1,0 +1,395 @@
+{
+  "method": "600 seeded candidate draws per age/domain at level 2; not delivered-user telemetry",
+  "samples": 600,
+  "rows": [
+    {
+      "age": "early",
+      "domain": "language",
+      "families": {
+        "lang_synonym": 29,
+        "lang_temporal_connector": 25,
+        "lang_rhyme": 29,
+        "lang_capital_period": 28,
+        "lang_story_sequence": 29,
+        "lang_build_word": 32,
+        "lang_sentence_order": 26,
+        "lang_revision": 28,
+        "lang_sentence_type": 29,
+        "lang_singular_plural": 36,
+        "lang_question_mark": 36,
+        "lang_description": 32,
+        "lang_note_read": 29,
+        "lang_list_read": 31,
+        "lang_word_spacing": 42,
+        "lang_vocabulary_category": 26,
+        "lang_antonym": 28,
+        "lang_dialogue": 31,
+        "lang_initial_sound": 27,
+        "lang_syllable_count": 27
+      }
+    },
+    {
+      "age": "early",
+      "domain": "reading",
+      "families": {
+        "reading_literal": 600
+      }
+    },
+    {
+      "age": "early",
+      "domain": "memory",
+      "families": {
+        "memory_sequence": 203,
+        "memory_association": 194,
+        "memory_spatial": 203
+      }
+    },
+    {
+      "age": "early",
+      "domain": "speedReasoning",
+      "families": {
+        "speed_compare": 600
+      }
+    },
+    {
+      "age": "early",
+      "domain": "executive",
+      "families": {
+        "executive_supervision": 114,
+        "executive_planning": 244,
+        "executive_reasoning": 242
+      }
+    },
+    {
+      "age": "early",
+      "domain": "attention",
+      "families": {
+        "att_filter_rule": 36,
+        "att_double_rule": 44,
+        "att_symbol_frequency": 31,
+        "att_target_count": 38,
+        "att_odd_one": 32,
+        "att_exact_code": 28,
+        "att_table_cross": 26,
+        "att_schedule": 42,
+        "att_instruction": 28,
+        "att_grid_location": 31,
+        "att_ticket_lookup": 39,
+        "att_position": 37,
+        "att_letter_scan": 40,
+        "att_compare_rows": 28,
+        "att_relevant_info": 39,
+        "att_offer_lookup": 34,
+        "att_line_departure": 24,
+        "att_compare_lists": 23
+      }
+    },
+    {
+      "age": "junior",
+      "domain": "language",
+      "families": {
+        "spelling_0": 77,
+        "grammar_0": 58,
+        "spelling_2": 69,
+        "grammar_2": 65,
+        "writing_2": 66,
+        "grammar_1": 64,
+        "writing_1": 70,
+        "writing_0": 66,
+        "spelling_1": 65
+      }
+    },
+    {
+      "age": "junior",
+      "domain": "reading",
+      "families": {
+        "reading_literal": 282,
+        "reading_inference": 318
+      }
+    },
+    {
+      "age": "junior",
+      "domain": "memory",
+      "families": {
+        "memory_sequence": 197,
+        "memory_association": 198,
+        "memory_spatial": 205
+      }
+    },
+    {
+      "age": "junior",
+      "domain": "speedReasoning",
+      "families": {
+        "speed_key": 225,
+        "speed_match": 190,
+        "speed_compare": 185
+      }
+    },
+    {
+      "age": "junior",
+      "domain": "executive",
+      "families": {
+        "executive_planning": 80,
+        "executive_criteria": 62,
+        "document_executive_Catálogo_2": 163,
+        "executive_reasoning": 72,
+        "executive_supervision": 23,
+        "executive_reasoning_analogy": 30,
+        "executive_verification": 66,
+        "executive_reasoning_classification": 34,
+        "executive_reasoning_series": 42,
+        "executive_reasoning_deduction": 28
+      }
+    },
+    {
+      "age": "junior",
+      "domain": "attention",
+      "families": {
+        "exact_match": 98,
+        "position": 111,
+        "target_count": 127,
+        "document_attention_Catálogo_2": 161,
+        "table_rules": 103
+      }
+    },
+    {
+      "age": "primary",
+      "domain": "language",
+      "families": {
+        "spelling_2": 73,
+        "grammar_2": 64,
+        "spelling_0": 85,
+        "writing_2": 53,
+        "writing_1": 72,
+        "writing_0": 69,
+        "spelling_1": 59,
+        "grammar_1": 54,
+        "grammar_0": 71
+      }
+    },
+    {
+      "age": "primary",
+      "domain": "literacy",
+      "families": {
+        "reading_inference": 210,
+        "reading_literal": 210,
+        "reading_writing": 180
+      }
+    },
+    {
+      "age": "primary",
+      "domain": "memory",
+      "families": {
+        "memory_association": 216,
+        "memory_spatial": 206,
+        "memory_sequence": 178
+      }
+    },
+    {
+      "age": "primary",
+      "domain": "speedReasoning",
+      "families": {
+        "speed_match": 206,
+        "speed_compare": 199,
+        "speed_key": 195
+      }
+    },
+    {
+      "age": "primary",
+      "domain": "executive",
+      "families": {
+        "executive_reasoning_fraction_complement": 35,
+        "executive_reasoning_analogy": 35,
+        "executive_reasoning": 72,
+        "document_executive_Catálogo_2": 35,
+        "executive_reasoning_deduction": 30,
+        "executive_verification": 65,
+        "document_executive_Recibo_de_compra_2": 38,
+        "executive_planning": 73,
+        "document_executive_Folleto_2": 38,
+        "executive_criteria": 68,
+        "executive_reasoning_series": 33,
+        "executive_supervision": 40,
+        "document_executive_Factura_2": 38
+      }
+    },
+    {
+      "age": "primary",
+      "domain": "attention",
+      "families": {
+        "table_rules": 120,
+        "exact_match": 116,
+        "scan": 113,
+        "document_attention_Factura_2": 34,
+        "document_attention_Catálogo_2": 36,
+        "position": 118,
+        "document_attention_Folleto_2": 33,
+        "document_attention_Recibo_de_compra_2": 30
+      }
+    },
+    {
+      "age": "middle",
+      "domain": "middleLanguage",
+      "families": {
+        "writing_0": 57,
+        "grammar_0": 72,
+        "grammar_2": 67,
+        "spelling_2": 76,
+        "spelling_1": 78,
+        "spelling_0": 71,
+        "writing_1": 60,
+        "writing_2": 67,
+        "grammar_1": 52
+      }
+    },
+    {
+      "age": "middle",
+      "domain": "literacy",
+      "families": {
+        "reading_literal": 208,
+        "reading_inference": 210,
+        "reading_writing": 182
+      }
+    },
+    {
+      "age": "middle",
+      "domain": "memory",
+      "families": {
+        "memory_spatial": 212,
+        "memory_association": 191,
+        "memory_sequence": 197
+      }
+    },
+    {
+      "age": "middle",
+      "domain": "speedReasoning",
+      "families": {
+        "speed_match": 202,
+        "speed_compare": 204,
+        "speed_key": 194
+      }
+    },
+    {
+      "age": "middle",
+      "domain": "executive",
+      "families": {
+        "executive_reasoning_pattern": 31,
+        "executive_planning": 72,
+        "executive_reasoning_analogy": 34,
+        "executive_criteria": 55,
+        "executive_reasoning_deduction": 43,
+        "executive_reasoning": 69,
+        "document_executive_Recibo_de_compra_2": 36,
+        "executive_verification": 70,
+        "document_executive_Catálogo_2": 39,
+        "document_executive_Folleto_2": 36,
+        "document_executive_Factura_2": 32,
+        "executive_reasoning_fraction_complement": 37,
+        "executive_supervision": 46
+      }
+    },
+    {
+      "age": "middle",
+      "domain": "attention",
+      "families": {
+        "table_rules": 124,
+        "state_count": 107,
+        "code": 114,
+        "document_attention_Recibo_de_compra_2": 45,
+        "document_attention_Factura_2": 25,
+        "position": 119,
+        "document_attention_Folleto_2": 37,
+        "document_attention_Catálogo_2": 29
+      }
+    },
+    {
+      "age": "teen",
+      "domain": "teenLanguage",
+      "families": {
+        "teenLanguage_grammar_1": 69,
+        "teenLanguage_writing_0": 67,
+        "teenLanguage_writing_1": 72,
+        "teenLanguage_writing_2": 58,
+        "teenLanguage_spelling_2": 66,
+        "teenLanguage_grammar_2": 69,
+        "teenLanguage_grammar_0": 77,
+        "teenLanguage_spelling_1": 67,
+        "teenLanguage_spelling_0": 55
+      }
+    },
+    {
+      "age": "teen",
+      "domain": "literacy",
+      "families": {
+        "reading_inference": 206,
+        "reading_literal": 209,
+        "reading_writing": 185
+      }
+    },
+    {
+      "age": "teen",
+      "domain": "memory",
+      "families": {
+        "memory_association": 209,
+        "memory_spatial": 182,
+        "memory_sequence": 209
+      }
+    },
+    {
+      "age": "teen",
+      "domain": "speedReasoning",
+      "families": {
+        "speed_key": 186,
+        "speed_compare": 199,
+        "speed_match": 215
+      }
+    },
+    {
+      "age": "teen",
+      "domain": "executive",
+      "families": {
+        "document_executive_Folleto_2": 35,
+        "executive_reasoning_speedReasoning_task_0": 32,
+        "executive_verification": 74,
+        "executive_reasoning": 74,
+        "executive_reasoning_speedReasoning_task_1": 35,
+        "document_executive_Recibo_de_compra_2": 34,
+        "executive_supervision": 42,
+        "document_executive_Catálogo_2": 38,
+        "executive_criteria": 62,
+        "document_executive_Factura_2": 39,
+        "executive_reasoning_speedReasoning_task_3": 35,
+        "executive_planning": 70,
+        "executive_reasoning_speedReasoning_task_2": 30
+      }
+    },
+    {
+      "age": "teen",
+      "domain": "attention",
+      "families": {
+        "att_position": 31,
+        "att_symbol_frequency": 25,
+        "att_grid_location": 32,
+        "att_schedule": 31,
+        "att_double_rule": 23,
+        "att_table_cross": 26,
+        "document_attention_Folleto_2": 31,
+        "att_compare_lists": 17,
+        "att_ticket_lookup": 24,
+        "document_attention_Factura_2": 40,
+        "att_line_departure": 30,
+        "att_odd_one": 29,
+        "att_filter_rule": 19,
+        "att_relevant_info": 29,
+        "document_attention_Recibo_de_compra_2": 30,
+        "att_compare_rows": 30,
+        "att_exact_code": 23,
+        "att_target_count": 20,
+        "document_attention_Catálogo_2": 42,
+        "att_offer_lookup": 16,
+        "att_letter_scan": 29,
+        "att_instruction": 23
+      }
+    }
+  ]
+}

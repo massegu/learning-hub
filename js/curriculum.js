@@ -1,6 +1,7 @@
 (function(root){
 'use strict';
 const library=root.ReadingLibrary||(typeof require==='function'&&require('./reading-library'));
+const docs=root.DocumentLibrary||(typeof require==='function'&&require('./document-library'));
 const ages=['early','junior','primary','middle','teen'];
 const T=text=>({type:'text',text}), L=items=>({type:'list',items,presentation:'sequence'}), R=rows=>({type:'table',rows});
 function rotate(a,n){return a.slice(n%a.length).concat(a.slice(0,n%a.length));}
@@ -14,20 +15,42 @@ function materialKey(value){
 function finish(item,age,domain,level,key,mechanic){
  const id=`curriculum-v2-${age}-${domain}-${level}-${key}`;
  const memoryMaterialKey=domain==='memory'?materialKey([item.recallSequence?'sequence':item.recallEvidence?.kind||'associations',item.stimulus]):null;
- const earlyMechanic=domain==='reading'?'literal':domain==='speedReasoning'?'speedCompare':domain==='memory'?(item.memoryResponse==='spatial'?'rememberPlace':'rememberOrder'):'planning';
- return {...item,id,contentKey:id,semanticKey:item.passageKey||memoryMaterialKey||id,...(memoryMaterialKey?{memoryMaterialKey}:{}),domain,level,mechanic,
+ const earlyMechanic=domain==='language'?'vocabulary':domain==='reading'?(item.responseType==='order'?'sequencing':'literal'):domain==='speedReasoning'?'speedCompare':domain==='memory'?(item.memoryResponse==='spatial'?'rememberPlace':'rememberOrder'):'planning';
+ return {...item,...(item.speedTask?{speedRevision:3}:{}),id,contentKey:id,semanticKey:item.passageKey||memoryMaterialKey||id,...(memoryMaterialKey?{memoryMaterialKey}:{}),domain,level,mechanic,
   ...(age==='early'?{ageProfile:{id:'early',revision:1,context:'school',mechanic:earlyMechanic,family:`${domain}-${mechanic}`}}:{}),
   ...(age==='junior'?{juniorProfile:{route:age,level}}:{}),...(['primary','middle'].includes(age)?{schoolProfile:{route:age,level}}:{})};
 }
 function reading(age,domain,level){
- return library[age].flatMap((entry,i)=>{
+ const bank=library[age].flatMap((entry,i)=>{
   const [title,text,q,a,b,iq,ia,ib]=entry,source=[T(text)],passageKey=`reading-v2-${age}-${i}`;
   const base={topic:title,passageKey,why:age==='early'?'Busca la pista en la historia.':ia+'. La explicación debe apoyarse en lo que cuenta el texto.'};
   const tasks=[choice(q,source,a,[b],{...base,why:`La respuesta se encuentra en el texto: ${a}.`})];
   if(age!=='early')tasks.push(choice(iq,source,ia,[ib],base));
-  if(domain==='literacy')tasks.push({type:'self',requiresStimulus:true,responseType:'written',q:`${iq} Escribe ${age==='primary'?'dos o tres frases':'un párrafo breve'}: responde y explica qué dato del texto apoya tu respuesta.`,stimulus:source,...base,sample:ia+'. Una pista del texto es: «'+(text.split(/(?<=[.!?])\s+/)[({primary:[1,5,5,0,3,4,2,5,5,4],middle:[3,3,2,3,3,4,4,3,4,3],teen:[4,4,6,4,5,3,4,5,4,5]})[age]?.[i]||0]||text.split(/(?<=[.!?])\s+/).at(-1))+'».',writingRubric:['Respondo a la pregunta con claridad.','Uso un dato concreto del texto para justificar mi respuesta.','Reviso que las frases se entiendan y tengan puntuación.']});
+  if((domain==='literacy'&&age!=='teen')||age==='junior')tasks.push({type:'self',requiresStimulus:true,responseType:'written',q:`${iq} Escribe ${age==='primary'?'dos o tres frases':'un párrafo breve'}: responde y explica qué dato del texto apoya tu respuesta.`,stimulus:source,...base,sample:ia+'. Una pista del texto es: «'+(text.split(/(?<=[.!?])\s+/)[({primary:[1,5,5,0,3,4,2,5,5,4],middle:[3,3,2,3,3,4,4,3,4,3],teen:[4,4,6,4,5,3,4,5,4,5]})[age]?.[i]||0]||text.split(/(?<=[.!?])\s+/).at(-1))+'».',writingRubric:['Respondo a la pregunta con claridad.','Uso un dato concreto del texto para justificar mi respuesta.','Reviso que las frases se entiendan y tengan puntuación.']});
   return tasks.map((it,m)=>finish(it,age,domain,level,`${i}-${m}`,'reading_'+(['literal','inference','writing'][m])));
  });
+ if(age==='early'){for(const [i,parts] of [['Ana','salta','en el patio'],['Leo','lee','un cuento'],['Mar','riega','la planta'],['Pau','guarda','el libro'],['Nora','dibuja','una casa'],['Dani','come','una manzana']].entries()){const answer=parts.slice(0,level===1?2:3);bank.push(finish({type:'order',responseType:'order',requiresStimulus:true,q:'Forma la frase. Primero va el nombre.',stimulus:[T(answer.join(' '))],tokens:[...answer].reverse(),answer,languageFocus:'writing',passageKey:'writing-early-'+i},age,domain,level,'compose-'+i,'reading_writing'));}}
+ if(age!=='early')bank.push(...documentWriting(age,domain,level));
+ return bank;
+}
+function documentWriting(age,domain,level){
+ return Object.entries(docs.documents).filter(([,doc])=>doc.brief&&ages.indexOf(age)>=ages.indexOf(doc.minAge)).map(([id,doc],i)=>finish({type:'self',responseType:'written',requiresStimulus:true,assessment:'self',q:(age==='junior'?`Escribe dos o tres frases para una persona de tu clase: cuenta lo más importante de «${doc.title}» y usa un dato de la fuente.`:doc.brief)+(level===3?' Comprueba también que no atribuyes al documento algo que no dice.':''),stimulus:[T(`Fuente: ${doc.kind} de ${doc.country}. Documento ficticio.`),{type:'document',documentId:id}],sample:age==='junior'?doc.transcript.slice(0,3).map(b=>b.text).join(' '):doc.sample,writingPurpose:doc.kind,writingAudience:'La persona o el grupo indicado en la consigna',writingRubric:['Cumplo el propósito y el formato pedidos.','Uso datos exactos de la fuente sin inventar otros.','Adapto el mensaje a su destinatario y reviso claridad y signos.'],topic:'Lectura + Escritura · '+doc.title,currencyContext:'foreign',passageKey:'document:'+id},age,domain,level,'write-document-'+id,age==='junior'?'writing_summary':'writing_'+({'poster-mx':'invitation','ticket-es':'inquiry_email','menu-ar':'correct_claim','notice-cl':'public_notice','transport-co':'practical_message','infographic-cr':'caption_evidence','post-pa':'fact_inference_opinion','label-mx':'clear_instructions','form-es':'request_email','map-cl':'directions','schedule-ar':'recommendation','advert-co':'rewrite_advert','instructions-cr':'rewrite_instructions','news-pa':'compare_sources'}[id])));
+}
+// Authored lexical work belongs to Language, separate from composing a text.
+const lexicalCases={
+ early:[['Ana está feliz porque juega con Leo.','feliz','contenta','triste'],['La caja es enorme. No cabe bajo la mesa.','enorme','muy grande','pequeña'],['El gato está oculto bajo la cama.','oculto','escondido','visible'],['El camino está seco. No tiene agua.','seco','sin agua','mojado'],['La puerta está abierta. Podemos pasar.','abierta','sin cerrar','cerrada'],['La sopa está caliente. Esperamos para comer.','caliente','con mucho calor','fría']],
+ junior:[['La pista era breve: tenía solo dos líneas.','breve','corta','extensa'],['El paso es opcional: puedes hacerlo o saltarlo.','opcional','voluntario','obligatorio'],['Hay que conservar el dibujo; no lo tires.','conservar','guardar','desechar'],['El papel es frágil y se rompe con facilidad.','frágil','delicado','resistente'],['El grupo acordó iniciar el juego después del recreo.','iniciar','empezar','terminar'],['La respuesta fue precisa: indicó el lugar exacto.','precisa','exacta','imprecisa']],
+ primary:[['La hipótesis es provisional: cambiará si aparecen otras pruebas.','provisional','temporal','definitiva'],['La explicación es coherente: sus partes no se contradicen.','coherente','consistente','contradictoria'],['Decidieron ampliar la búsqueda a otras dos fuentes.','ampliar','extender','reducir'],['El acceso es restringido: solo entran las personas autorizadas.','restringido','limitado','libre'],['El dato era relevante porque respondía a la pregunta.','relevante','pertinente','irrelevante'],['Se detectó una diferencia y hubo que verificar la copia.','verificar','comprobar','ignorar']],
+ middle:[['El mensaje es ambiguo: permite dos interpretaciones distintas.','ambiguo','poco claro','inequívoco'],['La participación fue voluntaria; nadie estaba obligado.','voluntaria','opcional','obligatoria'],['Se omitió la fecha, por lo que no se sabe cuándo ocurrió.','omitió','dejó fuera','incluyó'],['El proyecto es viable: dispone de tiempo y recursos suficientes.','viable','realizable','inviable'],['La evidencia es insuficiente: aún no permite decidir.','insuficiente','escasa','suficiente'],['La portavoz matizó su frase para limitarla a los casos estudiados.','matizó','precisó','generalizó']],
+ teen:[['Bajaron el volumen para mitigar las molestias, aunque no desaparecieron.','mitigar','reducir','agravar'],['La nueva grabación corrobora la hora indicada en el registro.','corrobora','confirma','refuta'],['La fuente ofrece una estimación, no una cifra medida con exactitud.','estimación','aproximación','medición exacta'],['La autorización es revocable: se puede retirar más adelante.','revocable','anulable','irrevocable'],['El acuerdo es vinculante: las partes deben cumplirlo.','vinculante','obligatorio','opcional'],['La propuesta es inviable porque requiere recursos que no existen.','inviable','irrealizable','viable']]
+};
+function vocabulary(age,domain,level){
+ const tasks=[];
+ lexicalCases[age].forEach(([source,word,meaning,opposite],i)=>{
+  tasks.push(finish(choice(level===3?`Alguien interpreta «${word}» como «${opposite}». ¿Qué significado corrige esa interpretación?`:`¿Qué significa «${word}» aquí?`,[T(source)],meaning,[opposite,...(age==='early'?[]:['No se puede saber'])],{languageFocus:'vocabulary',...(age==='teen'?{teenReview:{version:2,context:'lexical'}}:{}),topic:'Lenguaje · significado en contexto',why:'El significado debe encajar en la situación.'}),age,domain,level,'lexical-context-'+i,'vocabulary_context'));
+  tasks.push(finish(choice(`¿Qué palabra o expresión indica lo contrario de «${word}»?`,[T(source)],opposite,[meaning,...(age==='early'?[]:['Tiene el mismo significado'])],{languageFocus:'vocabulary',...(age==='teen'?{teenReview:{version:2,context:'lexical'}}:{}),topic:'Lenguaje · contraste de significado',why:'Busca el significado contrario, sin cambiar el contexto de la palabra.'}),age,domain,level,'lexical-contrast-'+i,'vocabulary_contrast'));
+ });
+ return tasks;
 }
 const objects=['el libro','la pelota','el lápiz','la manzana','la botella','la gorra','el cuaderno','el regalo','la galleta','el oso de peluche','la muñeca','el coche de juguete'];
 const schoolObjects=[...objects,'la regla','las tijeras','el pegamento','la carpeta','la cartuchera','el mapa','el sobre','la linterna'];
@@ -56,6 +79,12 @@ function memory(age,level){
    q:'Mira dónde está cada objeto. Después taparemos el cuadro.',memoryQuestion:dual?`¿Dónde estaban ${target} y ${target2}, en ese orden?`:`¿Dónde ${/^(los|las) /.test(target)?'estaban':'estaba'} ${target}?`,
    stimulus:[{...R(grid),presentation:'spatial',label:'Filas de arriba abajo; columnas de izquierda a derecha.'}],memoryContent:marked.map(detail=>({detail})),
    a,opts,gridSize:size,revealMs:Math.max(6000,load*1800),recallEvidence:{kind:'spatial',block:0,targets:dual?[target,target2]:[target]},topic:'Memoria · posiciones',why:a},age,'memory',level,`spatial-${v}`,'memory_spatial'));
+  const unseen=(rank===0?objects:rank===1?schoolObjects:functionalObjects).find(x=>!values.includes(x));
+  items.push(finish({type:'memoryReveal',responseType:'choice',requiresStimulus:true,q:'Mira estos objetos. Después los taparemos.',memoryQuestion:'¿Qué objeto estaba en el grupo?',stimulus:[{type:'list',items:[...values],presentation:'cards'}],memoryContent:values.map(detail=>({detail})),a:values[v%values.length],opts:[values[v%values.length],unseen],revealMs:Math.max(6000,count*1300),answerEvidence:{type:'listItem',block:0,index:v%values.length},topic:'Memoria · reconocimiento'},age,'memory',level,`recognition-${v}`,'memory_recognition'));
+  if(rank>0){
+   const takeLast=Math.min(values.length-1,level+1),answer=values.slice(-takeLast);
+   items.push(finish({type:'memoryReveal',responseType:'order',memoryResponse:'order',requiresStimulus:true,q:`Mira toda la secuencia. Después recordarás solo los últimos ${takeLast} objetos.`,memoryQuestion:`Reproduce solo los últimos ${takeLast} objetos en el mismo orden.`,stimulus:[L([...values])],memoryContent:values.map(detail=>({detail})),recallSequence:[...values],tokens:shuffled(answer,91+v),answer,revealMs:Math.max(6000,count*1400),sequenceStepMs:1400,recallEvidence:{kind:'sequence',block:0,takeLast,reverse:false},topic:'Memoria · actualizar lo reciente'},age,'memory',level,`recent-${v}`,'memory_recent'));
+  }
   // Associations keep memory broader than the two new recall modes.
   const people=['Ana','Leo','Sol','Dani','Mar','Hugo','Lola','Nora'].slice(0,count),pairs=people.map((n,i)=>[n,values[i]]),ask=v%count;
   items.push(finish({type:'memoryReveal',responseType:'choice',requiresStimulus:true,q:'Mira quién tiene cada objeto. Después lo taparemos.',memoryQuestion:`¿Qué tenía ${people[ask]}?`,stimulus:[{...R(pairs),presentation:'associations'}],memoryContent:pairs.map(([person,detail])=>({person,detail})),a:values[ask],opts:rotate(values,ask).slice(0,rank===0?Math.min(3,count):4),revealMs:Math.max(6000,count*1700),answerEvidence:{type:'tableCell',block:0,row:ask,column:1,subjectColumn:0},topic:'Memoria · personas y objetos'},age,'memory',level,`association-${v}`,'memory_association'));
@@ -63,13 +92,20 @@ function memory(age,level){
  return items;
 }
 function speed(age,level){
- const rank=ages.indexOf(age),glyphs=['○','□','△','☆'],pool=[];
+ const rank=ages.indexOf(age),pool=[];
+ const vocabularies=[['figures',['○','□','△','☆']],['objects',['libro','pelota','manzana','botella']],['arrows',['↑','→','↓','←']],['orientation',['↗','↘','↙','↖']],['pictograms',['gorra','regalo','lápiz','tijeras']],...(rank>0?[['characters',['A','7','B','3']],['mixed',['A','↑','7','☆']]]:[])];
  for(let v=0;v<96;v++){
+  const [visualFamily,glyphs]=vocabularies[Math.floor(v/2)%vocabularies.length];
   const n=rank===0?level:rank===1?level+1:rank+level;
   const first=Array.from({length:n},(_,j)=>glyphs[(Math.floor(Math.floor(v/2)/Math.pow(4,j)))%4]);
   const second=[...first],same=v%2===0;
   if(!same){const index=(v+level)%n;second[index]=glyphs[(glyphs.indexOf(second[index])+1)%4];}
-  pool.push(finish(choice('¿Son iguales?',[R([[first.join(' '),second.join(' ')]])],same?'Sí':'No',[same?'No':'Sí'],{topic:'Velocidad · comparar figuras',speedTask:true,speedFamily:'figures',speedEvidence:{kind:'equal',block:0},why:same?'Las dos series son iguales.':'Hay una figura diferente.'}),age,'speedReasoning',level,`compare-${v}`,'speed_compare'));
+  pool.push(finish(choice('¿Son iguales?',[{...R([[first.join(' · '),second.join(' · ')]]),presentation:'speedComparison'}],same?'Sí':'No',[same?'No':'Sí'],{topic:'Velocidad · comparar figuras',speedTask:true,speedFamily:visualFamily,speedEvidence:{kind:'equal',block:0},why:same?'Las dos series son iguales.':'Hay una figura diferente.'}),age,'speedReasoning',level,`compare-${v}`,'speed_compare_'+visualFamily));
+  if(v<48){
+   const animals=['gato','perro','conejo','pájaro'],tools=['lápiz','regla','tijeras','pegamento'],sameCategory=v%2===0;
+   const left=animals[Math.floor(v/2)%4],right=sameCategory?animals[(Math.floor(v/2)+1)%4]:tools[Math.floor(v/2)%4];
+   pool.push(finish(choice('¿Los dos son animales?',[{...R([[left,right]]),presentation:'speedComparison'}],sameCategory?'Sí':'No',[sameCategory?'No':'Sí'],{speedTask:true,speedFamily:'category',speedEvidence:{kind:'category',block:0,category:'animals'},topic:'Velocidad · reconocer una categoría',why:sameCategory?'Los dos son animales.':'Uno de los dos es un objeto.'}),age,'speedReasoning',level,`category-${v}`,'speed_category'));
+  }
   if(rank>0){
    const codes=['K','M','R','T','V','Z','P','L'].slice(0,Math.min(8,rank+level+1)),key=rotate(codes,v%codes.length),target=key[(v+level)%key.length],a=String(key.indexOf(target)+1);
    pool.push(finish(choice(`¿Qué número corresponde a ${target}?`,[{type:'table',header:true,rows:[['Código','Número'],...key.map((c,i)=>[c,String(i+1)])]}],a,key.map((_,i)=>String(i+1)).filter(x=>x!==a).slice(0,3),{speedTask:true,speedFamily:'key',topic:'Velocidad · clave de códigos',speedEvidence:{kind:'key',target,block:0},why:`${target} corresponde a ${a}.`}),age,'speedReasoning',level,`key-${v}`,'speed_key'));
@@ -162,21 +198,23 @@ function executive(age,level){
  }
  return tasks;
 }
-const cache=new Map();let reasoningProvider=null;
+const cache=new Map();let reasoningProvider=null,writingProvider=null;
 function registerReasoning(provider){reasoningProvider=provider;for(const key of cache.keys())if(key.includes(':executive:'))cache.delete(key);}
 
+function registerWriting(provider){writingProvider=provider;cache.clear();}
 function supports(age,domain){return ages.includes(age)&&(['executive','applied','memory','speedReasoning'].includes(domain)||(['early','junior'].includes(age)?domain==='reading':['primary','middle','teen'].includes(age)&&['literacy','reading','middleReading'].includes(domain)));}
 function pool(age,domain,level=1){
  if(!supports(age,domain))return [];
  const actual=domain==='applied'?'executive':domain,readingDomain=['reading','middleReading','literacy'].includes(actual),key=[age,actual,level].join(':');
  if(!cache.has(key)){
   const bank=readingDomain?reading(age,actual,level):actual==='memory'?memory(age,level):actual==='speedReasoning'?speed(age,level):executive(age,level);
+  if(readingDomain&&writingProvider&&['junior','primary','middle'].includes(age))bank.push(...writingProvider(age,level).map(it=>({...it,domain:actual,originalDomain:it.domain,passageKey:'writing-legacy:'+age+':'+(it.juniorProfile?.context||it.schoolProfile?.context)})));
   if(actual==='executive'&&reasoningProvider&&age!=='early')bank.push(...reasoningProvider(age,level).map(it=>({...it,domain:'executive',topic:'Funciones ejecutivas · razonamiento',mechanic:'executive_reasoning_'+it.mechanic,contentKey:'merged-'+it.contentKey})));
   cache.set(key,bank);
  }
  return structuredClone(cache.get(key)).map(it=>domain==='applied'?{...it,domain,...(age==='early'?{ageProfile:{...it.ageProfile,mechanic:'chooseObject'}}:{})}:it);
 }
-function generate(age,domain,level=1){const actual=domain==='applied'?'executive':domain,key=[age,actual,level].join(':');if(!cache.has(key))pool(age,actual,level);const bank=cache.get(key)||[];const it=bank[Math.floor(Math.random()*bank.length)];return it?{...structuredClone(it),domain,...(age==='early'&&domain==='applied'?{ageProfile:{...it.ageProfile,mechanic:'chooseObject'}}:{})}:null;}
+function generate(age,domain,level=1,focus=null){const actual=domain==='applied'?'executive':domain,key=[age,actual,level].join(':');if(!cache.has(key))pool(age,actual,level);let bank=cache.get(key)||[];if(focus)bank=bank.filter(x=>focus==='writing'?x.type==='self'||x.responseType==='written'||x.type==='order':x.type!=='self'&&x.responseType!=='written'&&x.type!=='order');const groups=[...new Set(bank.map(x=>x.mechanic))],family=groups[Math.floor(Math.random()*groups.length)];bank=bank.filter(x=>x.mechanic===family);const it=bank[Math.floor(Math.random()*bank.length)];return it?{...structuredClone(it),domain,...(age==='early'&&domain==='applied'?{ageProfile:{...it.ageProfile,mechanic:'chooseObject'}}:{})}:null;}
 function visible(domains,age){return domains.filter(d=>d!=='applied'&&!(age==='primary'&&d==='reading')&&!(age==='middle'&&d==='middleReading'));}
 function migrate(progress={},age){
  if(progress._curriculumRevision===2)return progress;
@@ -187,6 +225,6 @@ function migrate(progress={},age){
   levels:{...progress.levels,executive:1,speedReasoning:1},_levelCheckpoints:{...progress._levelCheckpoints,executive:{attempt:progress.totalAttempts||0},speedReasoning:{attempt:progress.totalAttempts||0}}};
 }
 function speedSummary(history=[]){const rows=history.filter(x=>x.subject==='speedReasoning'&&x.timingValid&&Number.isFinite(x.responseMs));const correct=rows.filter(x=>x.correct).map(x=>x.responseMs).sort((a,b)=>a-b);return {attempts:rows.length,accuracy:rows.length?Math.round(rows.filter(x=>x.correct).length*100/rows.length):null,medianMs:correct.length?correct.length%2?correct[(correct.length-1)/2]:(correct[correct.length/2-1]+correct[correct.length/2])/2:null};}
-const api={pool,generate,supports,visible,migrate,speedSummary,registerReasoning,spatialPositions};root.Curriculum=api;
+const api={vocabulary,pool,generate,supports,visible,migrate,speedSummary,registerReasoning,registerWriting,spatialPositions};root.Curriculum=api;
 if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);

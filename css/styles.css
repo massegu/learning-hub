@@ -2799,3 +2799,17 @@ body {
 .attention-comparison{width:100%;border-collapse:separate;border-spacing:0 12px}
 .attention-comparison th{width:3rem;background:#e4efdf;border-radius:10px 0 0 10px;padding:16px;font-weight:800}
 .attention-comparison td{padding:16px 22px;background:white;border:1px solid #d4e0ce;border-radius:0 10px 10px 0}
+/* Object recall has one consistent visual contract at every age. */
+.memory-object-sequence{display:flex;flex-wrap:wrap;gap:1rem;justify-content:center}
+.memory-object-sequence .stimulus-unit{display:flex;flex-direction:column;align-items:center;gap:.5rem;min-width:7rem;max-width:11rem;padding:1rem;background:white;border:1px solid #cfddd5;border-radius:12px;text-align:center}
+.memory-object-sequence .picture-icon svg,.memory-associations .picture-icon svg{width:3.5rem;height:3.5rem;display:block}
+.memory-associations td>span{vertical-align:middle}.memory-associations .picture-icon{display:inline-block;margin-right:.8rem}
+.empty-memory-cell{font-size:.85rem;color:#64786c;border:1px dashed #b3c5b8;border-radius:8px;padding:.5rem}
+.speed-comparison{display:grid;grid-template-columns:1fr;gap:1.3rem;margin:1rem auto;max-width:62rem}
+.speed-series{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:.9rem;padding:1rem;background:white;border:2px solid #bfd0c5;border-radius:14px;min-height:7rem}
+.speed-symbol{display:inline-flex;flex-direction:column;align-items:center;font-family:ui-monospace,Consolas,monospace;font-size:2.5rem;font-weight:650;line-height:1.4;min-width:3rem}
+.speed-symbol .picture-icon svg{width:4.5rem;height:4.5rem;display:block}.speed-symbol .picture-icon+span{font:500 .9rem system-ui,sans-serif}
+.speed-symbol .picture-glyphs svg{width:3.8rem;height:3.8rem}
+@media(max-width:520px){.speed-series{gap:.65rem;padding:.8rem;min-height:6rem}.speed-symbol{font-size:2.1rem;min-width:2.2rem}.speed-symbol .picture-icon svg{width:3.6rem;height:3.6rem}.speed-symbol .picture-glyphs svg{width:3rem;height:3rem}.memory-object-sequence .stimulus-unit{min-width:6rem;max-width:8rem}.memory-associations .picture-icon svg{width:2.7rem;height:2.7rem}}
+.recall-grid [role=cell]{flex-direction:column;gap:.45rem}.recall-grid .picture-icon svg{width:3.5rem;height:3.5rem}
+@media(max-width:480px){.recall-grid .picture-icon svg{width:3rem;height:3rem}}

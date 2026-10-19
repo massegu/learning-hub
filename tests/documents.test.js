@@ -1,8 +1,8 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
 const docs=require('../js/document-library'),model=require('../js/activity-model'),locale=require('../js/locale-content'),curriculum=require('../js/curriculum'),load=require('./edge-harness');
-test('four original document assets have matching PNG dimensions, consistent arithmetic, and known accessible source contracts',()=>{
+test('eighteen original document assets have matching PNG dimensions, consistent arithmetic, and known accessible source contracts',()=>{
  assert.equal(fs.readFileSync('js/document-library.js','utf8'),fs.readFileSync('supabase/functions/request-learning-content/document-library.js','utf8'));
- assert.equal(Object.keys(docs.documents).length,4);
+ assert.equal(Object.keys(docs.documents).length,18);
  for(const doc of Object.values(docs.documents)){
   const bytes=fs.readFileSync(doc.path);assert.equal(bytes.readUInt32BE(16),doc.width);assert.equal(bytes.readUInt32BE(20),doc.height);
   assert.ok(doc.transcript.some(b=>b.type==='text'&&b.text.includes('Documento ficticio')));
@@ -12,7 +12,7 @@ test('four original document assets have matching PNG dimensions, consistent ari
  for(const age of ['junior','primary','middle','teen'])for(const domain of ['attention','executive','literacy'])for(const level of [1,2,3])for(const it of docs.pool(age,domain,level))for(const country of Object.keys(locale.labels)){
   const local=locale.localizeItem(it,country,domain),printed=model.printable(local,{age_band:age==='junior'?'primary':age,progress:{ageRoute:age}});
   assert.equal(printed.stimulus[1].documentId,it.stimulus[1].documentId);assert.equal(local.a,local.opts.find(o=>o===local.a));
-  const markup=model.interactiveStimulus(local.stimulus,{structured:true});assert.match(markup,/<img /);assert.match(markup,/Leer el contenido en texto/);
+  const markup=model.interactiveStimulus(local.stimulus,{structured:true});assert.match(markup,/<img /);assert.match(markup,/Ver versión en texto/);
  }
  assert.throws(()=>model.printable({requiresStimulus:true,q:'¿Qué aparece?',stimulus:[{type:'document',documentId:'unknown'}],opts:['A','B'],a:'A'},{age_band:'teen'}),/desconocido/);
  assert.equal(docs.supports('early','attention'),false);
@@ -27,7 +27,7 @@ test('memory material identities suppress repeats beyond a renamed question and 
  const {api}=load();
  for(const age of ['early','junior','primary','middle','teen']){
   const pool=curriculum.pool(age,'memory',3);
-  assert.equal(pool.length,216);
+  assert.equal(pool.length,age==='early'?288:360);
   for(const family of ['memory_sequence','memory_spatial','memory_association'])assert.ok(new Set(pool.filter(it=>it.mechanic===family).map(it=>it.memoryMaterialKey)).size>=60);
   const history=[],keys=[];
   for(let n=0;n<24;n++){
@@ -38,4 +38,11 @@ test('memory material identities suppress repeats beyond a renamed question and 
   assert.equal(new Set(keys).size,keys.length);
   if(age==='teen')assert.ok(pool.some(it=>JSON.stringify(it.stimulus).includes('tarjeta de transporte')));
  }
+});
+
+test('expanded document sources are not recycled at ten when unused sources still exist',()=>{
+ const {api,context}=load(),history=[],seen=[];
+ for(let session=0;session<3;session++)for(const it of api.generatedItems('literacy',7,history,()=>context.DocumentLibrary.generate('teen','literacy',2))){seen.push(it.passageKey);history.push(api.contentSignature('literacy',it),'literacy:mechanic:'+it.mechanic);}
+ assert.equal(new Set(seen.slice(0,18)).size,18);
+ for(let i=0;i<=seen.length-10;i++)assert.equal(new Set(seen.slice(i,i+10)).size,10);
 });

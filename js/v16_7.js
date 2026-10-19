@@ -88,7 +88,7 @@
     const allowed=new Set(AGE_ROUTES[route].allowed);
     $$('#navMenu .nav-item[data-subject]').forEach(b=>{
       const s=b.dataset.subject, hide=!allowed.has(s); b.hidden=hide; if(hide) return;
-      const labelMap={language:`Lenguaje ${AGE_ROUTES[route].label.replace(' años','')}`,division:`Matemáticas ${AGE_ROUTES[route].label.replace(' años','')}`,reading:`Lectura ${AGE_ROUTES[route].label.replace(' años','')}`};
+      const labelMap={language:`Lenguaje ${AGE_ROUTES[route].label.replace(' años','')}`,division:`Matemáticas ${AGE_ROUTES[route].label.replace(' años','')}`,reading:`Lectura + Escritura ${AGE_ROUTES[route].label.replace(' años','')}`};
       if(labelMap[s]){
         const icon=(b.textContent||'').trim().split(/\s+/)[0],desired=`${icon} ${labelMap[s]}`;
         if(b.textContent.trim()!==desired) b.textContent=desired;
@@ -104,7 +104,7 @@
     if(!['early','junior'].includes(route)) return;
     const s=$('#navMenu .nav-item.active[data-subject]')?.dataset.subject;
     const short=AGE_ROUTES[route].label.replace(' años','');
-    const label={language:`Lenguaje ${short}`,division:`Matemáticas ${short}`,reading:`Lectura ${short}`}[s];
+    const label={language:`Lenguaje ${short}`,division:`Matemáticas ${short}`,reading:`Lectura + Escritura ${short}`}[s];
     if(label){ if($('#exerciseHeading')) $('#exerciseHeading').textContent=label; if($('#exercisePill')) $('#exercisePill').textContent=label.toUpperCase(); }
   }
 

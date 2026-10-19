@@ -11,7 +11,7 @@ test('shared curriculum has fifty distinct sources and complete localized delive
    const bank=curriculum.pool(age,d,level);assert.ok(bank.length);
    for(const it of bank)for(const country of Object.keys(locale.labels)){
     const local=locale.localizeItem(it,country,d),printed=model.printable(local,profile(age));
-    assert.ok(printed.stimulus.length);assert.equal(local.level,level);assert.equal(local.domain,d);if(it.type==='self'){const quote=it.sample.match(/«(.+)»/)[1];assert.ok(it.stimulus[0].text.includes(quote));assert.equal(it.writingRubric.length,3);}
+    assert.ok(printed.stimulus.length);assert.equal(local.level,level);assert.equal(local.domain,d);if(it.type==='self'&&!it.writingPurpose){const quote=it.sample.match(/«(.+)»/)[1];assert.ok(it.stimulus[0].text.includes(quote));assert.equal(it.writingRubric.length,3);}
     assert.equal(new Set(printed.options.map(x=>x.toLocaleLowerCase('es'))).size,printed.options.length);
    }
   }
@@ -23,7 +23,7 @@ test('reading source identities rotate for ten deliveries despite changed questi
  for(const age of ages){
   const d=['early','junior'].includes(age)?'reading':'literacy',history=[],seen=[];
   for(let n=0;n<25;n++){
-   const it=api.generatedItems(d,1,history,()=>api.variantExercise(age,d,n%3+1))[0];
+   const it=api.generatedItems(d,1,history,()=>api.variantExercise(age,d,n%3+1,'reading'))[0];
    assert.ok(it);seen.push(it.passageKey);history.push(api.contentSignature(d,it),`${d}:mechanic:${it.mechanic}`);
    if(n>=9)assert.equal(new Set(seen.slice(-10)).size,10,age);
   }
@@ -31,7 +31,7 @@ test('reading source identities rotate for ten deliveries despite changed questi
  global.Curriculum=curriculum;
  const early=require('../js/early-content');let p=profile('early'),seen=[];
  for(let n=0;n<25;n++){
-  const it=early.select(p,['reading'],1,n%3+1)[0];seen.push(it.passageKey);p=JSON.parse(JSON.stringify(p));
+  const it=early.select(p,['reading'],1,n%3+1,Math.random,null,'reading')[0];seen.push(it.passageKey);p=JSON.parse(JSON.stringify(p));
   if(n>=9)assert.equal(new Set(seen.slice(-10)).size,10);
  }
  delete global.Curriculum;
@@ -45,9 +45,9 @@ test('memory requires reconstructing sequences and positions, and corrupt answer
   }
   for(const level of [1,2,3])for(const it of curriculum.pool(age,'memory',level)){
    if(it.recallEvidence?.kind==='sequence'){
-    const expected=it.recallEvidence.reverse?[...it.recallSequence].reverse():it.recallSequence;
+    const expected=it.recallEvidence.takeLast?it.recallSequence.slice(-it.recallEvidence.takeLast):it.recallEvidence.reverse?[...it.recallSequence].reverse():it.recallSequence;
     assert.deepEqual(it.answer,expected);assert.ok(it.tokens.every(t=>expected.includes(t)));
-    assert.equal(it.recallEvidence.reverse,level===3&&['primary','middle','teen'].includes(age));
+    assert.equal(it.recallEvidence.reverse,!it.recallEvidence.takeLast&&level===3&&['primary','middle','teen'].includes(age));
     const corrupt=structuredClone(it);[corrupt.answer[0],corrupt.answer[1]]=[corrupt.answer[1],corrupt.answer[0]];
     assert.throws(()=>model.printable(corrupt,profile(age)),/orden/);
    }
@@ -61,7 +61,7 @@ test('memory requires reconstructing sequences and positions, and corrupt answer
 });
 test('processing speed answers derive from comparisons or keys, and timing summaries exclude unmeasured/invalid trials',()=>{
  for(const age of ages)for(const level of [1,2,3])for(const it of curriculum.pool(age,'speedReasoning',level)){
-  assert.equal(it.speedTask,true);assert.ok(['speed_compare','speed_key','speed_match'].includes(it.mechanic));
+  assert.equal(it.speedTask,true);assert.ok(it.mechanic.startsWith('speed_compare_')||['speed_key','speed_match','speed_category'].includes(it.mechanic));
   const b=it.stimulus[0];
   if(it.speedEvidence.kind==='equal')assert.equal(it.a,b.rows[0][0]===b.rows[0][1]?'Sí':'No');
   if(it.speedEvidence.kind==='key')assert.equal(it.a,b.rows.find(row=>row[0]===it.speedEvidence.target)[1]);

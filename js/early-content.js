@@ -183,7 +183,15 @@
   language.apply(families,{choice,order,text});
   function pool(domain, level = 1, subdomain = null) {
     const bandLevel = Math.max(1, Math.min(3, Number(level) || 1));
-    if(root.Curriculum?.supports('early',domain))return root.Curriculum.pool('early',domain,bandLevel);
+    if(root.Curriculum?.supports('early',domain)){
+      let items=root.Curriculum.pool('early',domain,bandLevel);
+      if(domain==='reading'){
+        const writing=pool('language',bandLevel,'writing').map(it=>({...it,domain:'reading',originalDomain:'language',passageKey:'writing-early:'+it.semanticKey,ageProfile:{...it.ageProfile,mechanic:'sequencing',family:'reading-writing'},mechanic:'reading_writing'}));
+        items=items.filter(it=>it.languageFocus!=='writing');
+        items=subdomain==='writing'?writing:subdomain==='reading'||subdomain==='grammar'?items:[...items,...writing];
+      }
+      return items;
+    }
     if (!families[domain]) throw new Error('Área no permitida para 6-7.');
     const result = [];
     families[domain].forEach(([mechanic, context, build], family) => {
@@ -216,9 +224,10 @@
         result.push(item);
       }
     });
+    if(domain==='language'&&root.Curriculum?.vocabulary)result.push(...root.Curriculum.vocabulary('early','language',bandLevel));
     const seen = new Set();
     return result.filter(item => {
-      if(domain==='language'&&subdomain && item.languageFocus!==subdomain)return false;
+      if(domain==='language'&&(subdomain?item.languageFocus!==subdomain:item.languageFocus==='writing'))return false;
       const signature = JSON.stringify([item.type, item.q, item.stimulus, item.opts, item.tokens, item.memoryQuestion]);
       if (seen.has(signature)) return false;
       seen.add(signature); return true;
