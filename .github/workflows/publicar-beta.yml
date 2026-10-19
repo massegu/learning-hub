@@ -5,6 +5,11 @@ on:
   pull_request:
     branches: [desarrollo, main]
   workflow_dispatch:
+    inputs:
+      verificar_solo:
+        description: 'Comprobar únicamente la web (no publica ni modifica Supabase)'
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -12,6 +17,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   comprobar:
+    if: github.event_name != 'workflow_dispatch' || !inputs.verificar_solo
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,9 +34,10 @@ jobs:
       - run: python -m pip install playwright==1.62.0
       - run: python -m playwright install --with-deps chromium
       - run: python tests/browser-auth-account.py
+      - run: python tests/browser-session-layout.py
   publicar:
     needs: comprobar
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/desarrollo'
+    if: github.event_name != 'pull_request' && !inputs.verificar_solo && github.ref == 'refs/heads/desarrollo'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -72,3 +79,10 @@ jobs:
           echo 'Web: https://pruebas.learning-hub-5n9.pages.dev' >> "$GITHUB_STEP_SUMMARY"
           echo "Código: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
           echo 'Comprueba el resultado de cada paso; un enlace por sí solo no acredita una publicación correcta.' >> "$GITHUB_STEP_SUMMARY"
+  verificar_web:
+    if: github.event_name == 'workflow_dispatch' && inputs.verificar_solo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Diagnosticar la web sin publicar
+        run: python3 scripts/verify-beta-web.py --url https://pruebas.learning-hub-5n9.pages.dev --attempts 1

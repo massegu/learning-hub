@@ -196,3 +196,35 @@ La copia de una función NO es una copia de la base de datos. Los cambios en tab
 ## 8. Antes de pasar de beta a pagos reales
 
 Terminar el feedback de Elena, comprobar el circuito de correos y recuperación, decidir la separación de Supabase de pruebas y uso habitual, y verificar Stripe real con sus webhooks y cambios de acceso. Las mejoras semanales pueden continuar después. No se ha activado Stripe real ni se ha convertido esta beta en un lanzamiento de pago.
+
+## 9. Diagnosticar la comprobación de Cloudflare sin publicar otra vez
+
+Si falló únicamente **Confirmar el enlace de Cloudflare**, revisa primero los pasos anteriores. Un fallo de comprobación no revierte la función ni la promoción de `pruebas` ya realizadas. No renueves el token ni repitas toda la publicación sin conocer el error.
+
+El comprobador ahora distingue errores HTTP (por ejemplo 403 o 404), problemas de conexión/DNS/TLS/proxy, espera agotada y archivos de otra revisión. Si recibe una página de acceso o un desafío en vez del archivo esperado, seguirá fallando: no considera suficiente que el enlace responda. Los registros no incluyen el contenido de las respuestas ni cookies.
+
+Para comprobar **la versión ya promovida**, sin cambiar Supabase:
+
+1. En GitHub → Actions → Comprobar y publicar beta, si aparece **Run workflow**, elige la rama `pruebas`, activa **Comprobar únicamente la web** y ejecuta. El resultado estará en el trabajo `verificar_web`.
+2. Si no aparece Run workflow, GitHub puede requerir que el archivo del flujo exista también en la rama predeterminada. No mezcles ramas solo para mostrar ese botón. Puedes ejecutar el comprobador desde VS Code con Python instalado, en una copia actualizada de `pruebas`:
+
+   ```sh
+   python scripts/verify-beta-web.py --url https://pruebas.learning-hub-5n9.pages.dev --attempts 1
+   ```
+
+3. Comparte el mensaje de error de la comprobación. Un error de conexión desde Codex no prueba que GitHub tenga el mismo bloqueo. Tampoco que el enlace abra en tu navegador acredita que GitHub reciba los mismos archivos.
+
+La opción de comprobación solo estará disponible en las revisiones que incluyan esta mejora. Elegir una revisión posterior a la publicada da correctamente «contenido distinto»; para comprobar la nueva mejora hay que promoverla primero mediante el flujo habitual.
+
+## 10. Abrir las fichas descargadas
+
+Un ZIP es un contenedor, no un documento de Word. En Windows: botón derecho sobre el ZIP → **Extraer todo** → abrir cada `.docx` extraído. Una sola versión se descarga directamente en DOCX.
+
+El ZIP adjunto del 19/10 tenía tres DOCX completos, pero las imágenes usaban identificadores repetidos y carecían del atributo de nombre requerido. El generador corrige esas propiedades y añade, además de la imagen original, su contenido como texto y tablas visibles. Las lecturas conservan su texto antes de la pregunta. Las fichas antiguas no cambian: hay que generarlas de nuevo una vez publicada la corrección. La comprobación estructural automatizada no sustituye una apertura de confirmación en Microsoft Word.
+
+
+### Ejecuciones antiguas y mejoras de sesión
+
+«Merge pull request #2 … #3» es el título de una ejecución de Actions: el número #3 identifica la ejecución, no una PR pendiente de fusionar. La PR #2 ya se incorporó a `desarrollo` (revisión `3188720`). Aquella ejecución falló al comprobar Cloudflare después de promover `pruebas`. Se conserva como historial; no es necesario borrarla ni volver a fusionar la PR #2. La siguiente publicación tendrá su propia ejecución y resultado.
+
+«Crear sesión» utiliza ahora las mismas áreas y nombres que el menú para la edad activa. Los documentos visuales se generan con altura proporcional al contenido, sin el aviso repetido de documento ficticio; la imagen y la transcripción siguen compartiendo los mismos datos. Los cuadros de respuesta crecen y se reducen con lo escrito. GitHub comprueba también la navegación de sesiones de las cinco edades, el tamaño del cuadro de respuesta y la proporción de la imagen exportada a Word.

@@ -5,7 +5,7 @@ test('eighteen original document assets have matching PNG dimensions, consistent
  assert.equal(Object.keys(docs.documents).length,18);
  for(const doc of Object.values(docs.documents)){
   const bytes=fs.readFileSync(doc.path);assert.equal(bytes.readUInt32BE(16),doc.width);assert.equal(bytes.readUInt32BE(20),doc.height);
-  assert.ok(doc.transcript.some(b=>b.type==='text'&&b.text.includes('Documento ficticio')));
+  assert.ok(doc.country);assert.ok(doc.transcript.length);assert.doesNotMatch(JSON.stringify(doc.transcript),/Documento ficticio para practicar/);
  }
  const f=docs.get('invoice-co-v1').facts,r=docs.get('receipt-co-v1').facts;
  assert.equal(f.total,f.subtotal+f.delivery);assert.equal(r.change,r.paid-r.total);
@@ -45,4 +45,22 @@ test('expanded document sources are not recycled at ten when unused sources stil
  for(let session=0;session<3;session++)for(const it of api.generatedItems('literacy',7,history,()=>context.DocumentLibrary.generate('teen','literacy',2))){seen.push(it.passageKey);history.push(api.contentSignature('literacy',it),'literacy:mechanic:'+it.mechanic);}
  assert.equal(new Set(seen.slice(0,18)).size,18);
  for(let i=0;i<=seen.length-10;i++)assert.equal(new Set(seen.slice(i,i+10)).size,10);
+});
+
+test('Reading interprets documents while Attention searches data; reading sources alternate before repeats',()=>{
+ const {api}=load();
+ for(const level of [1,2,3]){
+  const reading=docs.pool('teen','literacy',level),attention=docs.pool('teen','attention',level);
+  for(const it of reading){const other=attention.find(x=>x.passageKey===it.passageKey);assert.notEqual(it.q,other.q);assert.notEqual(it.taskFocus,other.taskFocus);}
+ }
+ for(const focus of ['grammar','writing']){
+  const history=[],seen=[],formats=[];
+  for(let n=0;n<8;n++){
+   const it=api.generatedItems('literacy',1,history,()=>api.variantExercise('teen','literacy',2,focus))[0];
+   seen.push(it.passageKey);formats.push(it.stimulus.some(b=>b.type==='document'));
+   history.push(api.contentSignature('literacy',it));
+  }
+  assert.equal(new Set(seen).size,8);
+  for(let n=1;n<formats.length;n++)assert.notEqual(formats[n],formats[n-1],focus+': '+formats);
+ }
 });

@@ -1196,7 +1196,13 @@ function generatedItems(domain:string,n:number,recentEntries:string[],factory:()
       const recentPenalty=veryRecent.has(msig)?10000:0;
       const localPenalty=localMechanics.has(msig)?5000:0;
       const countPenalty=(mechanicCounts.get(msig)||0)*100;
-      const score=itemPenalty+recentPenalty+localPenalty+countPenalty+Math.random();
+      // Alternate text and visual sources where both are available. Fresh
+      // sources and the nine-source recent window retain higher priority.
+      const previousPassage=[...recentEntries,...out.map((it:any)=>contentSignature(domain,it))].filter((x:string)=>x.includes(':item:passage:')).at(-1);
+      const readingDomain=['reading','middleReading','literacy'].includes(domain);
+      const sameFormat=previousPassage&&previousPassage.includes(':passage:document:')===Boolean(cand.passageKey?.startsWith('document:'));
+      const formatPenalty=readingDomain&&sameFormat?20000:0;
+      const score=itemPenalty+formatPenalty+recentPenalty+localPenalty+countPenalty+Math.random();
       if(score<bestScore){best=cand;bestScore=score;}
     }
     if(!best) break;
@@ -2280,7 +2286,7 @@ function matrixApplied20(age:string,level:number,v:number){
 }
 
 function variantExercise(age:string,domain:string,level:number,subdomain:string|null=null,documentsOnly=false){
-  if(documentsOnly&&subdomain==='writing'&&(globalThis as any).DocumentLibrary.supports(age,domain)){const bank=(globalThis as any).Curriculum.pool(age,domain,level).filter((it:any)=>it.writingPurpose);return {...pick(bank),id:age+'-document-writing-'+crypto.randomUUID()};}
+  if(documentsOnly&&subdomain==='writing'&&(globalThis as any).DocumentLibrary.supports(age,domain)){const bank=(globalThis as any).Curriculum.pool(age,domain,level).filter((it:any)=>it.stimulus?.some((b:any)=>b.type==='document'));return {...pick(bank),id:age+'-document-writing-'+crypto.randomUUID()};}
   if(['language','middleLanguage','teenLanguage'].includes(domain)&&(subdomain==='vocabulary'||!subdomain&&Math.random()<.25)){const bank=(globalThis as any).Curriculum.vocabulary(age,domain,level);return {...pick(bank),id:age+'-vocabulary-'+crypto.randomUUID()};}
   if((globalThis as any).DocumentLibrary.supports(age,domain)&&subdomain!=='writing'&&(documentsOnly||((['attention','executive'].includes(domain)||['reading','literacy','middleReading'].includes(domain)&&subdomain!=='writing')&&Math.random()<(domain==='executive'?.25:.35))))return {...(globalThis as any).DocumentLibrary.generate(age,domain,level),id:age+"-document-"+crypto.randomUUID()};
   if((globalThis as any).Curriculum.supports(age,domain))return {...(globalThis as any).Curriculum.generate(age,domain,level,subdomain),id:age+"-curriculum-"+crypto.randomUUID()};

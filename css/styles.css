@@ -1119,7 +1119,8 @@ body {
 .text-answer-area textarea {
   width: 100%;
   resize: vertical;
-  min-height: 110px;
+  min-height: 78px;
+  overflow-y: hidden;
   border: 2px solid var(--line);
   background: #fffefb;
   border-radius: 7px;

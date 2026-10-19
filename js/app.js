@@ -391,6 +391,10 @@
         })[c],
     );
   }
+  function subjectLabel(domain){
+    const schoolName={language:'Lenguaje',division:'Matemáticas',reading:'Lectura + Escritura'}[domain];
+    return schoolName?`${schoolName} ${ageData().label.replace(' años','')}`:SUBJECT_META[domain].name;
+  }
   function ageData() {
     const route=window.AgeStages.route(profile);
     const data=route==='junior'?{...AGE.primary,label:'8-10 años',subjects:window.ContentPolicy.early.subjects}:window.ContentPolicy.forProfile(profile)||AGE[profile.age_band];
@@ -632,7 +636,7 @@
     nav.innerHTML = items
       .map(
         (x, i) =>
-          `<button class="nav-item ${i === 0 ? "active" : ""}" data-section="${x[0]}" ${x[3] ? `data-subject="${x[3]}"` : ""}>${x[1]} ${window.ContentPolicy.forProfile(profile)&&x[3]?window.EarlyJourney.areas[x[3]].title:x[2]}</button>`,
+          `<button class="nav-item ${i === 0 ? "active" : ""}" data-section="${x[0]}" ${x[3] ? `data-subject="${x[3]}"` : ""}>${x[1]} ${x[3]?subjectLabel(x[3]):x[2]}</button>`,
       )
       .join("");
     $$(".nav-item").forEach(
@@ -704,8 +708,8 @@
     });
     $("#languageModeSwitch").classList.toggle("hidden", !isLang&&!isReading);
     const documentSupport=window.DocumentLibrary?.supports(window.AgeStages.route(profile),subject);
-    if(!documentSupport)documentOnly=false;
-    $('#documentModeSwitch').classList.toggle('hidden',!documentSupport);
+    if(!documentSupport||isReading)documentOnly=false;
+    $('#documentModeSwitch').classList.toggle('hidden',!documentSupport||isReading);
     $$('#documentModeSwitch button').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.documents==='true')===documentOnly)));
     counter = 0;
     renderEarlyTaskGuide();
@@ -896,6 +900,7 @@
       let criteria=$('#writingCriteria');if(!criteria){criteria=document.createElement('div');criteria.id='writingCriteria';$('#textAnswerInput').after(criteria);}
       criteria.innerHTML=it.writingRubric?.length?`<p>Comprueba tu texto:</p><ul>${it.writingRubric.map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul>`:'';
       $("#textAnswerInput").value = "";
+      fitTextAnswer();
       return;
     }
     if (it.type === "order") {
@@ -1089,6 +1094,14 @@
         newExercise();
       }),
   );
+  function fitTextAnswer(){
+    const input=$('#textAnswerInput');
+    if(!input.offsetParent)return;
+    input.style.height='auto';
+    input.style.height=(input.scrollHeight+2)+'px';
+  }
+  $('#textAnswerInput').addEventListener('input',fitTextAnswer);
+  window.addEventListener('resize',fitTextAnswer);
   $("#textAnswerCheck").onclick = () => {
     if(!$('#textAnswerInput').value.trim()){$('#exerciseFeedback').textContent='Escribe tu respuesta antes de compararla con el modelo.';$('#textAnswerInput').focus();return;}
     $('#exerciseFeedback').textContent='';
@@ -1404,22 +1417,16 @@
     if(guidedSession.mission)$('#guidedSessionTitle').textContent=missionDefinition().title;
     $('#cancelGuidedSession').textContent=guidedSession.mission?'Guardar y volver al inicio':'Salir de la sesión';
     $("#guidedSessionProgress").textContent =
-      `Actividad ${guidedSession.index + 1} de ${guidedSession.plan.length} · ${SUBJECT_META[guidedSession.plan[guidedSession.index]].name}`;
+      `Actividad ${guidedSession.index + 1} de ${guidedSession.plan.length} · ${subjectLabel(guidedSession.plan[guidedSession.index])}`;
   }
   function buildSessionBuilder() {
-    const domains = [
-      "attention",
-      "memory",
-      "executive",
-      "speedReasoning",
-      "applied",
-    ].filter(d=>ageData().subjects.includes(d));
+    const domains = ageData().subjects;
     const holder = $("#sessionDomainOptions");
     if (!holder) return;
     holder.innerHTML = domains
       .map(
         (s) =>
-          `<label class="session-domain"><input type="checkbox" value="${s}" ${["attention", "memory", "executive"].includes(s) ? "checked" : ""}><span><b>${SUBJECT_META[s].icon}</b><strong>${SUBJECT_META[s].name}</strong><small>${SUBJECT_META[s].desc}</small></span></label>`,
+          `<label class="session-domain"><input type="checkbox" value="${s}" ${["attention", "memory", "executive"].includes(s) ? "checked" : ""}><span><b>${SUBJECT_META[s].icon}</b><strong>${subjectLabel(s)}</strong><small>${SUBJECT_META[s].desc}</small></span></label>`,
       )
       .join("");
     const update = () => {
@@ -1431,7 +1438,7 @@
       for (let i = 0; i < n; i++)
         if (selected.length) plan.push(selected[i % selected.length]);
       $("#sessionPlanPreview").innerHTML = plan.length
-        ? `<p class="eyebrow">VISTA PREVIA</p><div class="session-plan-chips">${plan.map((d, i) => `<span>${i + 1}. ${SUBJECT_META[d].name}</span>`).join("")}</div>`
+        ? `<p class="eyebrow">VISTA PREVIA</p><div class="session-plan-chips">${plan.map((d, i) => `<span>${i + 1}. ${subjectLabel(d)}</span>`).join("")}</div>`
         : '<p class="muted">Selecciona al menos un área.</p>';
       $("#sessionEstimate").textContent =
         n <= 6 ? "≈ 15–20 min" : n <= 8 ? "≈ 20–30 min" : "≈ 30–40 min";
