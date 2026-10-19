@@ -113,12 +113,12 @@
   function patchWorksheetNames(){
     if(worksheetPatched||!window.WorksheetGenerator?.generate||!window.JSZip) return;
     const orig=window.WorksheetGenerator.generate.bind(window.WorksheetGenerator);
-    window.WorksheetGenerator.generate=async(itemsByVersion,profile)=>{
+    window.WorksheetGenerator.generate=async(itemsByVersion,profile,...options)=>{
       const prefix=`LearningLab_${ageSlug(profile)}_${stamp()}`;
       const oldClick=HTMLAnchorElement.prototype.click, oldFile=window.JSZip.prototype.file;
       HTMLAnchorElement.prototype.click=function(){ const d=String(this.download||''); if(/_fichas\.zip$/i.test(d)) this.download=`${prefix}_fichas.zip`; else if(/\.docx$/i.test(d)) this.download=`${prefix}_ficha_01.docx`; return oldClick.call(this); };
       window.JSZip.prototype.file=function(name,...rest){ let next=name; const m=String(name).match(/^LearningLab_ficha_version_(\d+)\.docx$/i); if(m) next=`${prefix}_ficha_${String(m[1]).padStart(2,'0')}.docx`; return oldFile.call(this,next,...rest); };
-      try{return await orig(itemsByVersion,profile);} finally{HTMLAnchorElement.prototype.click=oldClick;window.JSZip.prototype.file=oldFile;}
+      try{return await orig(itemsByVersion,profile,...options);} finally{HTMLAnchorElement.prototype.click=oldClick;window.JSZip.prototype.file=oldFile;}
     };
     worksheetPatched=true;
   }

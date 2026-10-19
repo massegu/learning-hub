@@ -1,17 +1,9 @@
 (function(root){
   'use strict';
   const model=root.ActivityModel || (typeof require==='function'&&require('./activity-model'));
-  const locale=root.LocaleContent || (typeof require==='function'&&require('./locale-content'));
-  const policy=root.ContentPolicy || (typeof require==='function'&&require('./content-policy'));
   const message='No hay suficientes actividades imprimibles distintas para las áreas y el nivel seleccionados. Prueba con menos ejercicios o añade otra área.';
   function checked(item,profile,country,domain){
-    if(item?.domain && domain && item.domain!==domain)throw new Error('El área recibida no coincide con la solicitada.');
-    if(item?.sourceDomain && domain && item.sourceDomain!==domain)throw new Error('El área de origen no coincide con la solicitada.');
-    const localized=locale.localizeItem(item,country,domain);
-    if(policy.forProfile(profile))model.forDelivery(localized,profile,domain);
-    const projection=model.printable(localized,profile);
-    locale.localizeModel(projection,country,domain,localized);
-    return {item:localized,projection};
+    return model.preparePrintable(item,profile,country,domain);
   }
   function compatible(item,profile,country,domain){
     try{checked(item,profile,country,domain);return true;}catch(_){return false;}

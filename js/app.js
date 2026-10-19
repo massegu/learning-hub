@@ -825,6 +825,10 @@
       $("#exercisePrompt").textContent = "No hay contenido disponible.";
       return;
     }
+    if(subject==='attention'&&it.stimulus===undefined){
+      const comparison=window.ActivityModel.comparisonStimulus(it.scenario);
+      if(comparison)it={...it,scenario:undefined,stimulus:comparison,requiresStimulus:true};
+    }
     it = window.LocaleContent.localizeItem(it, API.effectiveLocale(profile), subject);
     window.lastDifficultyAudit=window.AgeStages.audit(it,profile,state.levels[subject]||1);
     currentItem = it;
@@ -1051,6 +1055,7 @@
     }
   }
   function showFeedback(correct, pts, why = "") {
+    if(currentItem?.speedTask)$('#exercise').classList.remove('speed-active');
     const f = $("#exerciseFeedback");
     f.textContent =
       why ||
@@ -1173,11 +1178,13 @@
     hub.classList.toggle('hidden',!early);if(!early||!state)return;
     const journey=window.EarlyJourney,stats=journey.stats(state.history),saved=journeyState(),active=saved.active;
     const suggested=$('#recommendedBtn').dataset.subject;
-    const next=active?journey.definition(active.id).plan[active.index]:journey.areas[suggested]?suggested:'language';
+    const next=active?journey.definition(active.id).plan[active.index]:journey.suggest(state.history,ageData().subjects,suggested);
+    const discovery=journey.overview(state.history,ageData().subjects,saved.completed);
     const explored=ageData().subjects.filter(d=>stats[d]?.attempts>=3).length;
-    hub.innerHTML=`<div class="explore-welcome card"><div><p class="eyebrow">LEARNING LAB · MIS DESCUBRIMIENTOS</p><h3>Un lugar para explorar</h3><p>Elige un área o prueba una misión corta. Vamos paso a paso.</p><button id="earlyContinue" class="primary-btn">${active?'Continuar misión':'Explorar '+journey.areas[next].title} →</button></div><div class="explore-summary"><span class="hub-illustration" aria-hidden="true">${window.StimulusArt.svg('backpack')}</span><strong>${explored} de ${ageData().subjects.length} áreas exploradas</strong><span>${state.totalAttempts} actividades realizadas</span><small>Tres actividades para explorar un área.</small></div></div>
+    hub.innerHTML=`<div class="explore-welcome card"><div><p class="eyebrow">LEARNING LAB · MIS DESCUBRIMIENTOS</p><h3>Un lugar para explorar</h3><p>Elige un área o prueba una misión corta. Vamos paso a paso.</p><button id="earlyContinue" class="primary-btn">${active?'Continuar misión':'Explorar '+journey.areas[next].title} →</button></div><div class="explore-summary"><span class="hub-illustration" aria-hidden="true">${window.StimulusArt.svg('compass')}</span><strong>${explored} de ${ageData().subjects.length} áreas exploradas</strong><span>${state.totalAttempts} actividades realizadas</span><small>Tres actividades para explorar un área.</small></div></div>
+      <section class="discovery-trail" aria-label="Tus descubrimientos"><div><strong>Tu camino de descubrimientos</strong><span>${discovery.discoveries} de ${discovery.goal} pasos explorados</span><progress value="${discovery.discoveries}" max="${discovery.goal}" aria-label="Actividades para explorar todas las áreas"></progress></div><ol>${discovery.milestones.map(m=>`<li class="${m.done?'discovered':''}"><span aria-hidden="true">${m.done?'✓':'○'}</span><span>${m.title}<small>${m.done?'Conseguido':'Por descubrir'}</small></span></li>`).join('')}</ol></section>
       <div class="hub-heading"><div><p class="eyebrow">ELIGE TU CAMINO</p><h3>Mis áreas</h3></div><span>También puedes entrar desde el menú.</span></div>
-      <div class="early-area-grid">${Object.entries(journey.areas).filter(([d])=>ageData().subjects.includes(d)).map(([domain,area])=>`<button class="early-area-card card" data-early-area="${domain}"><span class="area-illustration" aria-hidden="true">${window.StimulusArt.svg(area.icon)}</span><span class="area-copy"><small>${area.theme}</small><strong>${area.title}</strong><span>${area.description}</span><span class="area-progress" aria-label="Primera exploración: ${stats[domain].firstExploration} de 3 actividades">${[1,2,3].map(i=>`<i class="${stats[domain].firstExploration>=i?'done':''}" aria-hidden="true"></i>`).join('')}<small>${stats[domain].attempts} actividades · nivel ${state.levels[domain]||1}</small></span></span><span aria-hidden="true">→</span></button>`).join('')}</div>
+      <div class="early-area-grid">${Object.entries(journey.areas).filter(([d])=>ageData().subjects.includes(d)).map(([domain,area])=>`<button class="early-area-card card" data-early-area="${domain}" data-area="${domain}"><span class="area-illustration" aria-hidden="true">${window.StimulusArt.svg(area.icon)}</span><span class="area-copy"><small>${area.theme}</small><strong>${area.title}</strong><span>${area.description}</span><span class="area-progress" aria-label="Primera exploración: ${stats[domain].firstExploration} de 3 actividades">${[1,2,3].map(i=>`<i class="${stats[domain].firstExploration>=i?'done':''}" aria-hidden="true"></i>`).join('')}<small>${stats[domain].attempts} actividades · nivel ${state.levels[domain]||1}</small></span></span><span aria-hidden="true">→</span></button>`).join('')}</div>
       <div class="hub-heading"><div><p class="eyebrow">PASO A PASO</p><h3>Misiones cortas</h3></div><span>${saved.completed.length} misiones terminadas</span></div>
       ${active?`<p class="mission-resume" role="status">${journey.definition(active.id).title}: ${active.index} de ${journey.definition(active.id).plan.length} actividades realizadas. Puedes continuar cuando quieras.</p>`:''}
       <div class="early-mission-grid">${journey.missions.map(m=>`<div class="mission-card card"><span aria-hidden="true">${window.StimulusArt.svg(m.icon)}</span><div><h4>${m.title}</h4><p>${m.description}</p><button class="secondary-btn" data-early-mission="${m.id}" ${active&&active.id!==m.id?'disabled':''}>${active?.id===m.id?'Continuar':'Empezar'} →</button></div></div>`).join('')}</div>`;
@@ -1190,7 +1197,7 @@
     if(!guide){guide=document.createElement('div');guide.id='earlyTaskGuide';guide.className='early-task-guide';$('.exercise-card').prepend(guide);}
     const early=Boolean(window.ContentPolicy.forProfile(profile));guide.classList.toggle('hidden',!early);if(!early)return;
     const attempts=window.EarlyJourney.stats(state.history)[subject]?.attempts||0;
-    guide.innerHTML=`<button class="mini-btn" id="earlyHomeBtn">← Mis áreas</button><span class="task-steps" aria-label="Mira, responde y sigue"><span>1 · Mira</span><span>2 · Responde</span><span class="${answered?'ready':''}">3 · Sigue</span></span><small>${attempts} actividades en esta área</small>`;
+    guide.innerHTML=`<button class="mini-btn" id="earlyHomeBtn">← Mis áreas</button><span class="task-steps" aria-label="Mira, responde y sigue"><span class="${answered?'':'current'}" ${answered?'':'aria-current="step"'}>1 · Mira</span><span>2 · Responde</span><span class="${answered?'ready':''}">3 · Sigue</span></span><small>${attempts} actividades en esta área</small>`;
     $('#earlyHomeBtn').onclick=()=>{guidedSession=null;hideGuidedBar();switchSection('home');};
   }
   function renderHomeLevels() {
@@ -1367,7 +1374,11 @@
         all.push(valid.items);
       }
       if (worksheetLocaleRevision !== API.localeRevision || worksheetProfile!==profile) throw new Error('El perfil o la variante de español ha cambiado. Solicita una ficha nueva.');
-      await window.WorksheetGenerator.generate(all, worksheetExportProfile);
+      await window.WorksheetGenerator.generate(all, worksheetExportProfile, {domains:selected,fetchMore:async()=>{
+        if(worksheetLocaleRevision!==API.localeRevision||worksheetProfile!==profile)throw new Error('El perfil o la variante de español ha cambiado. Solicita una ficha nueva.');
+        $('#docxStatus').textContent='Comprobando el paquete: sustituimos actividades incompatibles…';
+        return requestForProfile({kind:'worksheet',domains:selected,questions,level:Math.max(...selected.map(s=>state.levels[s]||1))},worksheetProfile);
+      }});
       $("#docxStatus").textContent =
         `${count} ficha${count > 1 ? "s" : ""} creada${count > 1 ? "s" : ""}.`;
     } catch (e) {
