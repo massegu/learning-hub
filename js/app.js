@@ -11,7 +11,7 @@
     language: {
       name: "Lenguaje",
       icon: "Aa",
-      desc: "Gramática, ortografía y escritura con ejemplos y textos.",
+      desc: "Gramática, ortografía y vocabulario con ejemplos y textos.",
     },
     division: {
       name: "Divisiones",
@@ -19,14 +19,14 @@
       desc: "Divisiones por una y dos cifras.",
     },
     reading: {
-      name: "Lectura",
+      name: "Lectura + Escritura",
       icon: "▤",
       desc: "Lee el texto y usa sus pistas para responder.",
     },
     middleLanguage: {
       name: "Lenguaje 13-15",
       icon: "Aa",
-      desc: "Gramática, ortografía y escritura para comunicar ideas con claridad.",
+      desc: "Gramática, ortografía y vocabulario para comunicar ideas con claridad.",
     },
     middleMath: {
       name: "Matemáticas 13-15",
@@ -34,14 +34,14 @@
       desc: "Porcentajes, fracciones, ecuaciones, proporcionalidad y geometría.",
     },
     middleReading: {
-      name: "Lectura 13-15",
+      name: "Lectura + Escritura 13-15",
       icon: "▤",
       desc: "Comprende el texto y deduce ideas a partir de sus pistas.",
     },
     teenLanguage: {
       name: "Lenguaje 16-18",
       icon: "Aa",
-      desc: "Gramática, ortografía y escritura con argumentos y pruebas.",
+      desc: "Gramática, ortografía y vocabulario en distintos contextos.",
     },
     teenMath: {
       name: "Matemáticas 16-18",
@@ -473,7 +473,7 @@
       level: state.levels[s] || 1,
       itemId,
       detail,
-      ...(currentItem?.id===itemId&&currentItem.speedTask?{speedFamily:currentItem.speedFamily,responseMs:currentItem._timing?.measured?Math.round(performance.now()-currentItem._timing.started):null,timingValid:Boolean(currentItem._timing?.valid),curriculumRevision:2}:{}),
+      ...(currentItem?.id===itemId&&currentItem.speedTask?{speedFamily:currentItem.speedFamily,speedRevision:currentItem.speedRevision||2,responseMs:currentItem._timing?.measured?Math.round(performance.now()-currentItem._timing.started):null,timingValid:Boolean(currentItem._timing?.valid),curriculumRevision:2}:{}),
     };
     state.history.push(row);
     state.history = state.history.slice(-5000);
@@ -682,7 +682,7 @@
       const descriptions = {
         language: "Juega con las palabras, las letras y las frases.",
         division: "Cuenta y resuelve problemas con cosas que conoces.",
-        reading: "Lee una historia corta y responde.",
+        reading: "Lee, responde y forma frases.",
         attention: "Mira con calma y busca lo que te pedimos.",
         executive: "Piensa qué hacer y ordena los pasos.",
         memory: "Mira las cosas e intenta recordarlas.",
@@ -694,11 +694,15 @@
     $("#exerciseLevelSelect").value = String(state.levels[subject] || 1);
     $("#subjectScore").textContent = state.scores[subject] || 0;
     const isLang = ["language","middleLanguage","teenLanguage"].includes(subject);
+    const isReading=['reading','middleReading','literacy'].includes(subject);
+    if(isLang&&mode==='writing'||isReading&&['spelling','vocabulary'].includes(mode))mode='grammar';
     $$('.language-mode-btn').forEach(b=>{
-      b.textContent=window.ContentPolicy.forProfile(profile)?({grammar:'Palabras y gramática',spelling:'Ortografía',writing:'Formar frases'})[b.dataset.mode]:({grammar:'Gramática',spelling:'Ortografía',writing:'Escritura'})[b.dataset.mode];
+      b.classList.toggle('hidden',isLang&&b.dataset.mode==='writing'||isReading&&['spelling','vocabulary'].includes(b.dataset.mode));
+      b.textContent=window.ContentPolicy.forProfile(profile)?({grammar:'Palabras y gramática',spelling:'Ortografía',writing:'Formar frases',vocabulary:'Vocabulario'})[b.dataset.mode]:({grammar:'Gramática',spelling:'Ortografía',writing:'Escritura',vocabulary:'Vocabulario'})[b.dataset.mode];
+      if(isReading)b.textContent=({grammar:'Lectura',writing:window.ContentPolicy.forProfile(profile)?'Formar frases':'Escritura'})[b.dataset.mode]||'';
       b.classList.toggle('active',b.dataset.mode===mode);
     });
-    $("#languageModeSwitch").classList.toggle("hidden", !isLang);
+    $("#languageModeSwitch").classList.toggle("hidden", !isLang&&!isReading);
     const documentSupport=window.DocumentLibrary?.supports(window.AgeStages.route(profile),subject);
     if(!documentSupport)documentOnly=false;
     $('#documentModeSwitch').classList.toggle('hidden',!documentSupport);
@@ -752,7 +756,7 @@
       ...(kind==='exercise'&&documentOnly&&window.DocumentLibrary?.supports(window.AgeStages.route(profile),domain)?{documents_only:true}:{}),
       kind,
       domain,
-      subdomain: ["language","middleLanguage","teenLanguage"].includes(domain) ? mode : null,
+      subdomain: ["language","middleLanguage","teenLanguage"].includes(domain) ? mode : ["reading","middleReading","literacy"].includes(domain)?(mode==='writing'?'writing':'reading'):null,
       level: state.levels[domain] || 1,
       count: 1,
       ...extra,
@@ -824,6 +828,10 @@
     if (!it) {
       $("#exercisePrompt").textContent = "No hay contenido disponible.";
       return;
+    }
+    if(subject==='attention'&&it.stimulus===undefined){
+      const comparison=window.ActivityModel.comparisonStimulus(it.scenario);
+      if(comparison)it={...it,scenario:undefined,stimulus:comparison,requiresStimulus:true};
     }
     it = window.LocaleContent.localizeItem(it, API.effectiveLocale(profile), subject);
     window.lastDifficultyAudit=window.AgeStages.audit(it,profile,state.levels[subject]||1);
@@ -926,7 +934,7 @@
     );
     showFeedback(correct, pts, currentItem.why);
     if(currentItem.speedTask){
-      const row=state.history.at(-1),summary=window.Curriculum.speedSummary(state.history.filter(x=>x.level===row.level&&x.speedFamily===row.speedFamily).slice(-20));
+      const row=state.history.at(-1),summary=window.Curriculum.speedSummary(state.history.filter(x=>x.level===row.level&&x.speedFamily===row.speedFamily&&(x.speedRevision||2)===(row.speedRevision||2)).slice(-20));
       const measurement=row.timingValid?`Tiempo: ${(row.responseMs/1000).toFixed(2)} s.`:row.responseMs===null?'Práctica sin medir.':'Tiempo excluido porque saliste de la ventana.';
       const stats=summary.attempts?` En las últimas ${summary.attempts} respuestas de esta tarea y nivel: ${summary.accuracy}% de aciertos.${summary.medianMs===null?'':` Mediana de respuestas correctas: ${(summary.medianMs/1000).toFixed(2)} s.`}`:'';
       const note=document.createElement('p');note.className='speed-result';note.textContent=measurement+stats;$('#exerciseFeedback').append(note);
@@ -1051,6 +1059,7 @@
     }
   }
   function showFeedback(correct, pts, why = "") {
+    if(currentItem?.speedTask)$('#exercise').classList.remove('speed-active');
     const f = $("#exerciseFeedback");
     f.textContent =
       why ||
@@ -1173,11 +1182,13 @@
     hub.classList.toggle('hidden',!early);if(!early||!state)return;
     const journey=window.EarlyJourney,stats=journey.stats(state.history),saved=journeyState(),active=saved.active;
     const suggested=$('#recommendedBtn').dataset.subject;
-    const next=active?journey.definition(active.id).plan[active.index]:journey.areas[suggested]?suggested:'language';
+    const next=active?journey.definition(active.id).plan[active.index]:journey.suggest(state.history,ageData().subjects,suggested);
+    const discovery=journey.overview(state.history,ageData().subjects,saved.completed);
     const explored=ageData().subjects.filter(d=>stats[d]?.attempts>=3).length;
-    hub.innerHTML=`<div class="explore-welcome card"><div><p class="eyebrow">LEARNING LAB · MIS DESCUBRIMIENTOS</p><h3>Un lugar para explorar</h3><p>Elige un área o prueba una misión corta. Vamos paso a paso.</p><button id="earlyContinue" class="primary-btn">${active?'Continuar misión':'Explorar '+journey.areas[next].title} →</button></div><div class="explore-summary"><span class="hub-illustration" aria-hidden="true">${window.StimulusArt.svg('backpack')}</span><strong>${explored} de ${ageData().subjects.length} áreas exploradas</strong><span>${state.totalAttempts} actividades realizadas</span><small>Tres actividades para explorar un área.</small></div></div>
+    hub.innerHTML=`<div class="explore-welcome card"><div><p class="eyebrow">LEARNING LAB · MIS DESCUBRIMIENTOS</p><h3>Un lugar para explorar</h3><p>Elige un área o prueba una misión corta. Vamos paso a paso.</p><button id="earlyContinue" class="primary-btn">${active?'Continuar misión':'Explorar '+journey.areas[next].title} →</button></div><div class="explore-summary"><span class="hub-illustration" aria-hidden="true">${window.StimulusArt.svg('compass')}</span><strong>${explored} de ${ageData().subjects.length} áreas exploradas</strong><span>${state.totalAttempts} actividades realizadas</span><small>Tres actividades para explorar un área.</small></div></div>
+      <section class="discovery-trail" aria-label="Tus descubrimientos"><div><strong>Tu camino de descubrimientos</strong><span>${discovery.discoveries} de ${discovery.goal} pasos explorados</span><progress value="${discovery.discoveries}" max="${discovery.goal}" aria-label="Actividades para explorar todas las áreas"></progress></div><ol>${discovery.milestones.map(m=>`<li class="${m.done?'discovered':''}"><span aria-hidden="true">${m.done?'✓':'○'}</span><span>${m.title}<small>${m.done?'Conseguido':'Por descubrir'}</small></span></li>`).join('')}</ol></section>
       <div class="hub-heading"><div><p class="eyebrow">ELIGE TU CAMINO</p><h3>Mis áreas</h3></div><span>También puedes entrar desde el menú.</span></div>
-      <div class="early-area-grid">${Object.entries(journey.areas).filter(([d])=>ageData().subjects.includes(d)).map(([domain,area])=>`<button class="early-area-card card" data-early-area="${domain}"><span class="area-illustration" aria-hidden="true">${window.StimulusArt.svg(area.icon)}</span><span class="area-copy"><small>${area.theme}</small><strong>${area.title}</strong><span>${area.description}</span><span class="area-progress" aria-label="Primera exploración: ${stats[domain].firstExploration} de 3 actividades">${[1,2,3].map(i=>`<i class="${stats[domain].firstExploration>=i?'done':''}" aria-hidden="true"></i>`).join('')}<small>${stats[domain].attempts} actividades · nivel ${state.levels[domain]||1}</small></span></span><span aria-hidden="true">→</span></button>`).join('')}</div>
+      <div class="early-area-grid">${Object.entries(journey.areas).filter(([d])=>ageData().subjects.includes(d)).map(([domain,area])=>`<button class="early-area-card card" data-early-area="${domain}" data-area="${domain}"><span class="area-illustration" aria-hidden="true">${window.StimulusArt.svg(area.icon)}</span><span class="area-copy"><small>${area.theme}</small><strong>${area.title}</strong><span>${area.description}</span><span class="area-progress" aria-label="Primera exploración: ${stats[domain].firstExploration} de 3 actividades">${[1,2,3].map(i=>`<i class="${stats[domain].firstExploration>=i?'done':''}" aria-hidden="true"></i>`).join('')}<small>${stats[domain].attempts} actividades · nivel ${state.levels[domain]||1}</small></span></span><span aria-hidden="true">→</span></button>`).join('')}</div>
       <div class="hub-heading"><div><p class="eyebrow">PASO A PASO</p><h3>Misiones cortas</h3></div><span>${saved.completed.length} misiones terminadas</span></div>
       ${active?`<p class="mission-resume" role="status">${journey.definition(active.id).title}: ${active.index} de ${journey.definition(active.id).plan.length} actividades realizadas. Puedes continuar cuando quieras.</p>`:''}
       <div class="early-mission-grid">${journey.missions.map(m=>`<div class="mission-card card"><span aria-hidden="true">${window.StimulusArt.svg(m.icon)}</span><div><h4>${m.title}</h4><p>${m.description}</p><button class="secondary-btn" data-early-mission="${m.id}" ${active&&active.id!==m.id?'disabled':''}>${active?.id===m.id?'Continuar':'Empezar'} →</button></div></div>`).join('')}</div>`;
@@ -1190,7 +1201,7 @@
     if(!guide){guide=document.createElement('div');guide.id='earlyTaskGuide';guide.className='early-task-guide';$('.exercise-card').prepend(guide);}
     const early=Boolean(window.ContentPolicy.forProfile(profile));guide.classList.toggle('hidden',!early);if(!early)return;
     const attempts=window.EarlyJourney.stats(state.history)[subject]?.attempts||0;
-    guide.innerHTML=`<button class="mini-btn" id="earlyHomeBtn">← Mis áreas</button><span class="task-steps" aria-label="Mira, responde y sigue"><span>1 · Mira</span><span>2 · Responde</span><span class="${answered?'ready':''}">3 · Sigue</span></span><small>${attempts} actividades en esta área</small>`;
+    guide.innerHTML=`<button class="mini-btn" id="earlyHomeBtn">← Mis áreas</button><span class="task-steps" aria-label="Mira, responde y sigue"><span class="${answered?'':'current'}" ${answered?'':'aria-current="step"'}>1 · Mira</span><span>2 · Responde</span><span class="${answered?'ready':''}">3 · Sigue</span></span><small>${attempts} actividades en esta área</small>`;
     $('#earlyHomeBtn').onclick=()=>{guidedSession=null;hideGuidedBar();switchSection('home');};
   }
   function renderHomeLevels() {
@@ -1238,9 +1249,9 @@
         const r = state.history.filter((x) => x.subject === s),
           c = r.filter((x) => x.correct).length,
           acc = r.length ? Math.round((c / r.length) * 100) : 0;
-        const timings=s==='speedReasoning'?[...new Set(r.filter(x=>x.speedFamily&&x.timingValid).map(x=>x.speedFamily+':'+x.level))].map(key=>{
-          const [family,level]=key.split(':'),stats=window.Curriculum.speedSummary(r.filter(x=>x.speedFamily===family&&String(x.level)===level).slice(-20));
-          return `<p class="speed-progress-detail">${({figures:'Figuras',key:'Clave de códigos',match:'Coincidencias'})[family]||escapeHtml(family)} · nivel ${escapeHtml(level)}: ${stats.accuracy}% de aciertos en ${stats.attempts} respuestas medidas.${stats.medianMs===null?'':` Mediana al acertar: ${(stats.medianMs/1000).toFixed(2)} s.`}</p>`;
+        const timings=s==='speedReasoning'?[...new Set(r.filter(x=>x.speedFamily&&x.timingValid).map(x=>x.speedFamily+':'+x.level+':'+(x.speedRevision||2)))].map(key=>{
+          const [family,level,revision]=key.split(':'),stats=window.Curriculum.speedSummary(r.filter(x=>x.speedFamily===family&&String(x.level)===level&&String(x.speedRevision||2)===revision).slice(-20));
+          return `<p class="speed-progress-detail">${({figures:'Figuras',objects:'Objetos',arrows:'Flechas',orientation:'Orientación',pictograms:'Pictogramas',characters:'Letras y números',mixed:'Series mixtas',category:'Categorías',key:'Clave de códigos',match:'Coincidencias'})[family]||escapeHtml(family)} · nivel ${escapeHtml(level)}${revision==='2'?' · formato anterior':''}: ${stats.accuracy}% de aciertos en ${stats.attempts} respuestas medidas.${stats.medianMs===null?'':` Mediana al acertar: ${(stats.medianMs/1000).toFixed(2)} s.`}</p>`;
         }).join(''):'';
         return `<div class="progress-subject card"><small>${SUBJECT_META[s].name}</small><strong>${acc}%</strong><div class="bar"><span style="width:${acc}%"></span></div><small>${r.length} ejercicios · nivel ${state.levels[s] || 1}</small>${timings}</div>`;
       })
@@ -1283,7 +1294,7 @@
         "nivel",
         "resultado",
         "puntos",
-        "id", "area_original", "tiempo_ms", "tiempo_valido", "tarea_velocidad",
+        "id", "area_original", "tiempo_ms", "tiempo_valido", "tarea_velocidad", "version_velocidad",
       ],
     ];
     state.history.forEach((x) =>
@@ -1295,7 +1306,7 @@
         x.level,
         x.correct ? "correcto" : "revisar",
         x.points,
-        x.itemId, x.originalSubject||"", x.responseMs??"", x.timingValid??"", x.speedFamily||"",
+        x.itemId, x.originalSubject||"", x.responseMs??"", x.timingValid??"", x.speedFamily||"", x.speedFamily?(x.speedRevision||2):"",
       ]),
     );
     downloadText(
@@ -1367,7 +1378,11 @@
         all.push(valid.items);
       }
       if (worksheetLocaleRevision !== API.localeRevision || worksheetProfile!==profile) throw new Error('El perfil o la variante de español ha cambiado. Solicita una ficha nueva.');
-      await window.WorksheetGenerator.generate(all, worksheetExportProfile);
+      await window.WorksheetGenerator.generate(all, worksheetExportProfile, {domains:selected,fetchMore:async()=>{
+        if(worksheetLocaleRevision!==API.localeRevision||worksheetProfile!==profile)throw new Error('El perfil o la variante de español ha cambiado. Solicita una ficha nueva.');
+        $('#docxStatus').textContent='Comprobando el paquete: sustituimos actividades incompatibles…';
+        return requestForProfile({kind:'worksheet',domains:selected,questions,level:Math.max(...selected.map(s=>state.levels[s]||1))},worksheetProfile);
+      }});
       $("#docxStatus").textContent =
         `${count} ficha${count > 1 ? "s" : ""} creada${count > 1 ? "s" : ""}.`;
     } catch (e) {

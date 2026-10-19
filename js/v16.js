@@ -1,7 +1,7 @@
 (function(){
   const LOCALES=window.LocaleContent.labels;
   const SUBJECT_LABELS={
-    geometry:'Geometría',language:'Lenguaje',division:'Divisiones',reading:'Lectura',
+    geometry:'Geometría',language:'Lenguaje',division:'Divisiones',reading:'Lectura + Escritura',
     middleLanguage:'Lenguaje 13-15',middleMath:'Matemáticas 13-15',middleReading:'Lectura 13-15',
     teenLanguage:'Lenguaje 16-18',teenMath:'Matemáticas 16-18',social:'Social Lab',english:'English Lab',
     literacy:'Lectura + Escritura',attention:'Atención',executive:'Funciones ejecutivas',memory:'Memoria',

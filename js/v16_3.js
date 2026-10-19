@@ -1,7 +1,7 @@
 (function(){
   const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
   const SUBJECT_LABELS={
-    geometry:'Geometría',language:'Lenguaje',division:'Divisiones',reading:'Lectura',middleLanguage:'Lenguaje 12-13',middleMath:'Matemáticas 12-13',middleReading:'Lectura 12-13',teenLanguage:'Lenguaje 14-17',teenMath:'Matemáticas 14-17',social:'Social Lab',english:'English Lab',literacy:'Lectura + Escritura',attention:'Atención',executive:'Funciones ejecutivas',memory:'Memoria',speedReasoning:'Velocidad de procesamiento',applied:'Cognición aplicada'
+    geometry:'Geometría',language:'Lenguaje',division:'Divisiones',reading:'Lectura + Escritura',middleLanguage:'Lenguaje 12-13',middleMath:'Matemáticas 12-13',middleReading:'Lectura 12-13',teenLanguage:'Lenguaje 14-17',teenMath:'Matemáticas 14-17',social:'Social Lab',english:'English Lab',literacy:'Lectura + Escritura',attention:'Atención',executive:'Funciones ejecutivas',memory:'Memoria',speedReasoning:'Velocidad de procesamiento',applied:'Cognición aplicada'
   };
   const COLORS={ink:'#24314A',nav:'#252B44',nav2:'#313957',accent:'#5B67D6',accentDark:'#444CAD',accentSoft:'#ECEEFF',coral:'#E47B68',cream:'#FFFDF9',bg:'#F4F3F8',line:'#DFE2EC',muted:'#6F7586',lavender:'#F2F3FF',gold:'#D5A94C',white:'#FFFFFF',danger:'#C95D6A'};
 

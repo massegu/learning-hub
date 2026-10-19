@@ -88,7 +88,7 @@
     const allowed=new Set(AGE_ROUTES[route].allowed);
     $$('#navMenu .nav-item[data-subject]').forEach(b=>{
       const s=b.dataset.subject, hide=!allowed.has(s); b.hidden=hide; if(hide) return;
-      const labelMap={language:`Lenguaje ${AGE_ROUTES[route].label.replace(' años','')}`,division:`Matemáticas ${AGE_ROUTES[route].label.replace(' años','')}`,reading:`Lectura ${AGE_ROUTES[route].label.replace(' años','')}`};
+      const labelMap={language:`Lenguaje ${AGE_ROUTES[route].label.replace(' años','')}`,division:`Matemáticas ${AGE_ROUTES[route].label.replace(' años','')}`,reading:`Lectura + Escritura ${AGE_ROUTES[route].label.replace(' años','')}`};
       if(labelMap[s]){
         const icon=(b.textContent||'').trim().split(/\s+/)[0],desired=`${icon} ${labelMap[s]}`;
         if(b.textContent.trim()!==desired) b.textContent=desired;
@@ -104,7 +104,7 @@
     if(!['early','junior'].includes(route)) return;
     const s=$('#navMenu .nav-item.active[data-subject]')?.dataset.subject;
     const short=AGE_ROUTES[route].label.replace(' años','');
-    const label={language:`Lenguaje ${short}`,division:`Matemáticas ${short}`,reading:`Lectura ${short}`}[s];
+    const label={language:`Lenguaje ${short}`,division:`Matemáticas ${short}`,reading:`Lectura + Escritura ${short}`}[s];
     if(label){ if($('#exerciseHeading')) $('#exerciseHeading').textContent=label; if($('#exercisePill')) $('#exercisePill').textContent=label.toUpperCase(); }
   }
 
@@ -113,12 +113,12 @@
   function patchWorksheetNames(){
     if(worksheetPatched||!window.WorksheetGenerator?.generate||!window.JSZip) return;
     const orig=window.WorksheetGenerator.generate.bind(window.WorksheetGenerator);
-    window.WorksheetGenerator.generate=async(itemsByVersion,profile)=>{
+    window.WorksheetGenerator.generate=async(itemsByVersion,profile,...options)=>{
       const prefix=`LearningLab_${ageSlug(profile)}_${stamp()}`;
       const oldClick=HTMLAnchorElement.prototype.click, oldFile=window.JSZip.prototype.file;
       HTMLAnchorElement.prototype.click=function(){ const d=String(this.download||''); if(/_fichas\.zip$/i.test(d)) this.download=`${prefix}_fichas.zip`; else if(/\.docx$/i.test(d)) this.download=`${prefix}_ficha_01.docx`; return oldClick.call(this); };
       window.JSZip.prototype.file=function(name,...rest){ let next=name; const m=String(name).match(/^LearningLab_ficha_version_(\d+)\.docx$/i); if(m) next=`${prefix}_ficha_${String(m[1]).padStart(2,'0')}.docx`; return oldFile.call(this,next,...rest); };
-      try{return await orig(itemsByVersion,profile);} finally{HTMLAnchorElement.prototype.click=oldClick;window.JSZip.prototype.file=oldFile;}
+      try{return await orig(itemsByVersion,profile,...options);} finally{HTMLAnchorElement.prototype.click=oldClick;window.JSZip.prototype.file=oldFile;}
     };
     worksheetPatched=true;
   }

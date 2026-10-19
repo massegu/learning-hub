@@ -210,3 +210,27 @@ test('document worksheets embed the original four PNGs with accessible transcrip
  const failing=harness();failing.context.window.DocumentLibrary=documents;failing.context.fetch=async()=>({ok:false});
  await assert.rejects(()=>failing.generator.generate([items],{name:'Reviewer',age_band:'teen'}),/cargar el documento/);assert.equal(failing.downloads.length,0);
 });
+
+test('late-invalid candidates are replaced at the real exporter boundary for single and ZIP in all countries',async()=>{
+ for(const country of ['es_es','es_mx','es_co','es_ar','es_cl','es_pa','es_cr'])for(const versions of [1,2]){
+  const {generator,downloads,context}=harness();context.window.WorksheetSelection=selection;
+  const valid=n=>({id:'v'+n,domain:n%2?'attention':'memory',type:'standard',requiresStimulus:true,q:'¿Qué número aparece en la tarjeta?',stimulus:[{type:'text',text:'Tarjeta '+n}],a:String(n),opts:[String(n),String(n+1)]});
+  const profile={name:'Revisión',age_band:'teen',contentLocale:country};
+  const initial=Array.from({length:versions},(_,v)=>[{...valid(v*10),stimulus:[]},valid(v*10+1)]);let calls=0;
+  await generator.generate(initial,profile,{domains:['attention','memory'],fetchMore:async({version})=>{calls++;return {items:[valid(version*10+2)]};}});
+  assert.equal(calls,versions);assert.equal(downloads.length,1);
+  const documents=versions===1?[downloads[0].blob]:await (async()=>{const zip=await JSZip.loadAsync(await downloads[0].blob.arrayBuffer());return Promise.all(Object.values(zip.files).filter(f=>!f.dir).map(async f=>new Blob([await f.async('uint8array')])));})();
+  for(let v=0;v<versions;v++){
+   const nodes=textNodes(await xml(documents[v]));assert.ok(nodes.includes('Tarjeta '+(v*10+1)));assert.ok(nodes.includes('Tarjeta '+(v*10+2)));
+   assert.equal(nodes.filter(x=>/^ACTIVIDAD \d+$/.test(x)).length,2);
+  }
+ }
+});
+test('export replacement preserves exhaustion and service errors, without partial downloads',async()=>{
+ for(const error of [null,new Error('Daily content limit reached')]){
+  const {generator,downloads,context}=harness();context.window.WorksheetSelection=selection;
+  const invalid={domain:'attention',q:'¿Qué aparece?',stimulus:[],opts:['A','B'],a:'A'};
+  await assert.rejects(()=>generator.generate([[invalid],[invalid]],{name:'R',age_band:'teen'},{domains:['attention'],fetchMore:async()=>{if(error)throw error;return {items:[invalid],exhausted:true};}}),error?/Daily content limit/:/suficientes actividades/);
+  assert.equal(downloads.length,0);
+ }
+});

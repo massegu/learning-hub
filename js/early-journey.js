@@ -2,7 +2,7 @@
   'use strict';
   const areas={
     language:{title:'Lenguaje',theme:'Palabras',icon:'pencil',description:'Juega con las palabras.'},
-    reading:{title:'Lectura',theme:'Historias',icon:'book',description:'Descubre historias cortas.'},
+    reading:{title:'Lectura + Escritura',theme:'Historias',icon:'book',description:'Descubre historias cortas.'},
     division:{title:'Matemáticas',theme:'Cantidades',icon:'apple',description:'Cuenta, junta y compara.'},
     attention:{title:'Atención',theme:'Detalles',icon:'star',description:'Mira y encuentra diferencias.'},
     memory:{title:'Memoria',theme:'Recuerdos',icon:'gift',description:'Mira, tapa y recuerda.'},
@@ -42,7 +42,20 @@
       return [domain,{attempts:results.length,correct:results.filter(x=>x.correct).length,firstExploration:Math.min(3,results.length)}];
     }));
   }
-  const api={areas,missions,definition,normalize,start,record,stats};
+  function overview(history=[],domains=[],completed=[]){
+    const byArea=stats(history),available=domains.filter(d=>areas[d]);
+    const explored=available.filter(d=>byArea[d].firstExploration===3).length;
+    return {explored,discoveries:available.reduce((n,d)=>n+byArea[d].firstExploration,0),goal:available.length*3,
+      milestones:[{id:'first',title:'Tu primera actividad',done:available.some(d=>byArea[d].attempts>0)},
+        {id:'area',title:'Un área explorada',done:explored>0},
+        {id:'mission',title:'Una misión terminada',done:normalize({completed}).completed.length>0}]};
+  }
+  function suggest(history=[],domains=[],preferred){
+    const byArea=stats(history),available=domains.filter(d=>areas[d]);
+    if(available.includes(preferred)&&byArea[preferred].firstExploration<3)return preferred;
+    return [...available].sort((a,b)=>byArea[a].firstExploration-byArea[b].firstExploration||byArea[a].attempts-byArea[b].attempts)[0]||'language';
+  }
+  const api={areas,missions,definition,normalize,start,record,stats,overview,suggest};
   root.EarlyJourney=api;
   if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);

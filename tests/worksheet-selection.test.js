@@ -66,3 +66,25 @@ test('bad age, source-domain and regional currency candidates are rejected witho
   const euro={...remote(2),q:'Cuesta 2 euros. ¿Cuánto cuesta?',a:'2 euros',opts:['2 euros','3 euros']};
   assert.equal(selector.compatible(euro,{age_band:'teen'},'es_mx','attention'),false);
 });
+test('explicit age metadata cannot cross school routes during replacement',async()=>{
+ const wrong={...remote(1),schoolProfile:{route:'teen',level:1}},good={...remote(2),schoolProfile:{route:'primary',level:1}};
+ const result=await selector.collect({initial:{items:[wrong,good]},profile:{age_band:'primary'},country:'es_co',domains:['attention'],count:1});
+ assert.equal(result.rejected,1);assert.equal(result.items[0].id,good.id);
+});
+test('strict model comparison preserves every source value and never guesses incomplete prose',()=>{
+ const model=require('../js/activity-model');const source='MODELO: E14-O6  A: E14-O6  B: E14O6  C: E14-O8  D: F14-O6';
+ const blocks=model.comparisonStimulus(source);assert.equal(blocks[0].text,'Modelo: E14-O6');assert.equal(blocks[1].rows.length,4);
+ const html=model.interactiveStimulus(blocks,{structured:true});assert.match(html,/attention-model/);assert.match(html,/scope="row"/);
+ assert.equal(model.comparisonStimulus('MODELO: E14-O6 A: E14-O6 B: E14O6'),null);
+ assert.equal(model.comparisonStimulus(source+' Falta algo.'),null);
+ const early=require('../js/early-content');for(const level of [1,2,3])for(const it of early.pool('attention',level))assert.doesNotMatch(JSON.stringify(it),/E14-O6/);
+});
+test('broken printable pictograms are rejected before commitment while glyph-only counting stays printable',()=>{
+ const art=require('../js/stimulus-art'),bank=early.pool('division',1),profile=child();
+ const pictured=bank.find(it=>it.stimulus.some(b=>(b.type==='list'?b.items:b.type==='table'?b.rows.flat():[]).some(v=>art.forLabel(v)&&!/^[●○□△☆]$/.test(v))));
+ const counted=bank.find(it=>it.stimulus.some(b=>b.presentation==='count'&&b.items.every(v=>v==='●')));
+ assert.ok(pictured);assert.ok(counted);const original=art.png;
+ try{art.png=()=>new Uint8Array([1]);assert.equal(selector.compatible(pictured,profile,'es_es','division'),false);assert.equal(selector.compatible(counted,profile,'es_es','division'),true);}
+ finally{art.png=original;}
+ assert.equal(selector.compatible(pictured,profile,'es_es','division'),true);
+});

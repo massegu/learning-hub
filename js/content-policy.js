@@ -51,7 +51,7 @@
     const stimulusText = [];
     for (const block of item.stimulus) {
       if (!block || !early.stimulusTypes.includes(block.type)) throw new Error('Estímulo no permitido para 6-7.');
-      const presentations={text:['model'],list:['cards','count','sequence'],table:['comparison','spatial','associations']};
+      const presentations={text:['model'],list:['cards','count','sequence'],table:['speedComparison','comparison','spatial','associations']};
       if(block.presentation && !presentations[block.type].includes(block.presentation))throw new Error('Presentación no compatible con el estímulo.');
       if(block.presentation==='model' && !block.text?.startsWith('Modelo: '))throw new Error('El modelo no declara una referencia legible.');
       if(block.label!==undefined){if(typeof block.label!=='string'||!block.label.trim())throw new Error('Falta el título del estímulo.');pieces.push(block.label);stimulusText.push(block.label);}

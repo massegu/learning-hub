@@ -44,12 +44,12 @@
     const map={
       middleLanguage:"Lenguaje 13-15",
       middleMath:"Matemáticas 13-15",
-      middleReading:"Lectura 13-15",
+      middleReading:"Lectura + Escritura 13-15",
       teenLanguage:"Lenguaje 16-18",
       teenMath:"Matemáticas 16-18",
       language:`Lenguaje ${label.replace(" años","")}`,
       division:`Matemáticas ${label.replace(" años","")}`,
-      reading:`Lectura ${label.replace(" años","")}`
+      reading:`Lectura + Escritura ${label.replace(" años","")}`
     };
     $$("#navMenu .nav-item[data-subject]").forEach(b=>{
       const s=b.dataset.subject;
@@ -77,7 +77,7 @@
       if(!desc) return;
       const d={
         division:"Cálculo, problemas cotidianos, series, tiempo y dinero ajustados a la edad.",
-        language:"Gramática, ortografía y escritura con ejemplos y textos.",
+        language:"Gramática, ortografía y vocabulario con ejemplos y textos.",
         reading:"Lee el texto y usa sus pistas para comprender lo que ocurre.",
         attention:"Búsqueda, comparación, consignas y selección de información relevante.",
         executive:"Planifica, razona y revisa decisiones con varias condiciones.",

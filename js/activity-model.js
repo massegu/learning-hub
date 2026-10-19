@@ -18,6 +18,14 @@
     else fail('el tipo de estímulo no tiene un renderizador compatible.');
     return block;
   }
+  function comparisonStimulus(value){
+    if(typeof value!=='string')return null;
+    // Recognize a complete authored model + four labels, never infer missing
+    // fields or the answer. Unknown prose stays untouched.
+    const match=value.match(/^\s*MODELO:\s*(\S+)\s+A:\s*(\S+)\s+B:\s*(\S+)\s+C:\s*(\S+)\s+D:\s*(\S+)\s*$/iu);
+    return match?[{type:'text',text:'Modelo: '+match[1],presentation:'model'},
+      {type:'table',rows:match.slice(2).map((code,i)=>[String.fromCharCode(65+i),code]),presentation:'codeComparison'}]:null;
+  }
   function legacyStimulus(item) {
     const blocks = [];
     const text = value => { if (hasText(value)) blocks.push({type:'text', text:value}); };
@@ -27,7 +35,8 @@
       if (!Array.isArray(item.memoryContent)) fail('la memoria no contiene una lista.');
       list(item.memoryContent.map(x => typeof x === 'string' ? x : x?.person && hasText(x.detail) ? `${x.person}: ${x.detail}` : x?.detail || ''));
     }
-    text(item.scenario);
+    const comparison=comparisonStimulus(item.scenario);
+    if(comparison)blocks.push(...comparison);else text(item.scenario);
     if (item.text) text(item.title ? `${item.title}: ${item.text}` : item.text);
     if (item.model) text(`Modelo: ${item.model}`);
     if (item.modelSequence) text(`Modelo: ${item.modelSequence.join(' · ')}`);
@@ -106,6 +115,7 @@
     if (dependent && !stimulus.length) fail('falta el estímulo requerido.');
     const options = item.opts || [];
     if (!Array.isArray(options) || !options.every(x => (typeof x === 'string' || typeof x === 'number' && Number.isFinite(x)) && hasText(String(x)))) fail('las opciones están incompletas.');
+    (root.LocaleContent||(typeof require==='function'&&require('./locale-content'))).validateOptions(item);
     const early=Boolean(policy.forProfile(profile));
     if (new Set(options.map(early?choiceKey:String)).size !== options.length) fail('hay opciones duplicadas o equivalentes.');
     if(early && item.responseType==='choice' && options.length<2)fail('falta una opción alternativa.');
@@ -121,7 +131,7 @@
     if(item.recallEvidence){
       const e=item.recallEvidence,b=stimulus[e.block];
       if(e.kind==='sequence'){
-        if(b?.type!=='list'||!Array.isArray(item.answer)||JSON.stringify(item.answer)!==JSON.stringify(e.reverse?[...b.items].reverse():b.items))fail('el orden de memoria no corresponde al estímulo.');
+        if(b?.type!=='list'||!Array.isArray(item.answer)||JSON.stringify(item.answer)!==JSON.stringify(e.takeLast?b.items.slice(-e.takeLast):e.reverse?[...b.items].reverse():b.items))fail('el orden de memoria no corresponde al estímulo.');
       }else if(e.kind==='spatial'){
         if(b?.type!=='table'||!e.targets?.length)fail('falta la cuadrícula de memoria.');
         const positions=e.targets.map(target=>{const cells=b.rows.flatMap((row,r)=>row.map((value,c)=>({value,r,c}))).filter(x=>x.value===target);if(cells.length!==1)fail('la posición de memoria no es única.');const x=cells[0];return `Fila ${x.r+1}, columna ${x.c+1}`;});
@@ -219,11 +229,39 @@
       if(!subject || !(item.q||'').toLowerCase().includes(subject.toLowerCase()) || block.rows.filter(r=>choiceKey(r[e.subjectColumn])===choiceKey(subject)).length!==1 || row[e.valueColumn]!==item.a)fail('la búsqueda no tiene una referencia única.');
     }
   }
+  function preparePrintable(item,profile,country,domain){
+    const regional=root.LocaleContent||(typeof require==='function'&&require('./locale-content'));
+    if(!regional)fail('falta el adaptador regional.');
+    if(item?.domain&&domain&&item.domain!==domain)fail('el área recibida no coincide con la solicitada.');
+    if(item?.sourceDomain&&domain&&item.sourceDomain!==domain)fail('el área de origen no coincide con la solicitada.');
+    const age=profile?.progress?.ageRoute||profile?.age_band;
+    const declared=item?.ageProfile?.id||item?.juniorProfile?.route||item?.schoolProfile?.route||(item?.teenReview?'teen':null);
+    if(declared&&declared!==age)fail('la actividad pertenece a otra franja de edad.');
+    const localized=regional.localizeItem(item,country,domain);
+    if(policy.forProfile(profile))forDelivery(localized,profile,domain);
+    const projection=regional.localizeModel(printable(localized,profile),country,domain,localized);
+    if(policy.forProfile(profile)||item?.type==='memoryReveal'||item?.speedTask){
+      // Verify the same local pictures the Word renderer will embed before
+      // selection commits the candidate. Text is always the factual source.
+      for(const block of projection.stimulus){
+        const values=block.type==='list'&&['count','cards','sequence'].includes(block.presentation)?block.items:block.type==='table'?block.rows.flat():[];
+        for(const value of values){
+          const key=art?.forLabel(value,{...localized.lexicalSenses,subject:block.label});
+          if(key&&!/^[●○□△☆]$/.test(value)){
+            const bytes=art.png(key);
+            if(bytes.length<24||[137,80,78,71,13,10,26,10].some((b,i)=>bytes[i]!==b))fail('la ilustración no es un PNG imprimible válido.');
+          }
+        }
+      }
+    }
+    return {item:localized,projection};
+  }
   function validateBatch(versions, profile) {
     if (!Array.isArray(versions) || !versions.length || versions.some(v => !Array.isArray(v) || !v.length)) fail('el lote está vacío.');
     return versions.map(items => items.map(item => printable(item, profile)));
   }
   function forDelivery(item, profile, domain) {
+    (root.LocaleContent||(typeof require==='function'&&require('./locale-content'))).validateOptions(item);
     if (!policy.forProfile(profile)) return item;
     if (domain && item?.domain !== domain) fail('el área recibida no coincide con la solicitada.');
     // Identical contract at the domain boundary, on screen and in the exporter.
@@ -233,6 +271,8 @@
   }
   function escape(text) { return String(text).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
   function visualLabel(value,senses={}){
+    if(value===undefined||value===null||!String(value).trim())throw new Error('Falta la etiqueta visual.');
+    if(value==='—')return '<span class="empty-memory-cell">Vacío</span>';
     const raw=String(value),glyphs=/^[●○□△☆\s·]+$/.test(raw)?raw.match(/[●○□△☆]/g):null;
     if(glyphs)return `<span class="picture-glyphs" aria-hidden="true">${glyphs.map(x=>art.svg(art.forLabel(x))).join('')}</span><span class="stimulus-only-text">${escape(raw)}</span>`;
     const key=art?.forLabel(raw,senses);
@@ -246,14 +286,18 @@
       blockValid(block);
       if(block.type==='document'){
         const doc=documents.get(block.documentId);
-        return `<figure class="practice-document"><img src="${escape(doc.path)}" width="${doc.width}" height="${doc.height}" alt="${escape(doc.title)}. Documento ficticio para practicar." loading="eager"><figcaption>${escape(doc.kind)} · Colombia · <a href="${escape(doc.path)}" target="_blank" rel="noopener">Ampliar documento</a></figcaption></figure><details class="document-transcript"><summary>Leer el contenido en texto</summary>${interactiveStimulus(doc.transcript,{structured:true})}</details>`;
+        return `<figure class="practice-document"><img src="${escape(doc.path)}" width="${doc.width}" height="${doc.height}" alt="${escape(doc.title)}. Documento ficticio para practicar." loading="eager"><figcaption>${escape(doc.kind)} · ${escape(doc.country)} · <a href="${escape(doc.path)}" target="_blank" rel="noopener">Ampliar documento</a></figcaption></figure><details class="document-transcript"><summary>Ver versión en texto</summary>${interactiveStimulus(doc.transcript,{structured:true})}</details>`;
       }
       if(block.presentation==='associations'){
-        return `<div class="association-frame"><table class="memory-associations"><thead><tr><th scope="col">Persona</th><th scope="col">Objeto</th></tr></thead><tbody>${block.rows.map(row=>`<tr><th scope="row"><span class="person-initial" aria-hidden="true">${escape(row[0].slice(0,1))}</span>${escape(row[0])}</th><td>${options.illustrated?visualLabel(row[1],options.senses):escape(row[1])}</td></tr>`).join('')}</tbody></table></div>`;
+        return `<div class="association-frame"><table class="memory-associations"><thead><tr><th scope="col">Persona</th><th scope="col">Objeto</th></tr></thead><tbody>${block.rows.map(row=>`<tr><th scope="row"><span class="person-initial" aria-hidden="true">${escape(row[0].slice(0,1))}</span>${escape(row[0])}</th><td>${visualLabel(row[1],options.senses)}</td></tr>`).join('')}</tbody></table></div>`;
       }
+      if(block.type==='list'&&['sequence','cards'].includes(block.presentation))return `${block.label?`<p class="stimulus-caption">${escape(block.label)}</p>`:''}<div class="memory-object-sequence" role="list">${block.items.map((x,i)=>`<div class="stimulus-unit" role="listitem">${block.presentation==='sequence'?`<span class="unit-position">${i+1}</span>`:''}${visualLabel(x,{...options.senses,subject:block.label})}</div>`).join('')}</div>`;
       if(block.presentation==='spatial'){
         return `<div class="recall-grid" style="--grid-size:${block.rows[0].length}" role="table" aria-label="${escape(block.label||'Cuadrícula para recordar')}">${block.rows.map((row,r)=>`<div role="row">${row.map((x,c)=>`<div role="cell" aria-label="Fila ${r+1}, columna ${c+1}: ${escape(x)}">${visualLabel(x,options.senses)}</div>`).join('')}</div>`).join('')}</div>`;
       }
+      if(block.presentation==='speedComparison')return `<div class="speed-comparison" role="group" aria-label="Dos series para comparar">${block.rows[0].map((series,i)=>`<div class="speed-series" aria-label="Serie ${i+1}">${series.split(' · ').map(x=>`<span class="speed-symbol">${visualLabel(x,options.senses)}</span>`).join('')}</div>`).join('')}</div>`;
+      if(block.presentation==='codeComparison')return `<table class="attention-comparison"><tbody>${block.rows.map(row=>`<tr><th scope="row">${escape(row[0])}</th><td><code>${escape(row[1])}</code></td></tr>`).join('')}</tbody></table>`;
+      if(block.type==='text'&&block.presentation==='model'&&!options.illustrated)return `<div class="attention-model"><span>MODELO</span><code>${escape(block.text.slice(8))}</code></div>`;
       if(options.illustrated){
         const label=block.label?`<p class="stimulus-caption">${escape(block.label)}</p>`:'';
         if(block.type==='text')return block.presentation==='model'?`${label}<div class="early-model"><span class="stimulus-caption">Modelo</span><div>${visualLabel(block.text.slice(8),options.senses)}</div></div>`:`${label}<p>${escape(block.text)}</p>`;
@@ -271,7 +315,7 @@
       return `<table>${block.rows.map(row => `<tr>${row.map(x => `<td>${escape(x)}</td>`).join('')}</tr>`).join('')}</table>`;
     }).join('');
   }
-  const api = { printable, validateBatch, forDelivery, interactiveStimulus, choiceKey, visualLabel };
+  const api = { comparisonStimulus, preparePrintable, printable, validateBatch, forDelivery, interactiveStimulus, choiceKey, visualLabel };
   root.ActivityModel = api;
   if (typeof module !== 'undefined') module.exports = api;
 })(typeof window === 'undefined' ? globalThis : window);

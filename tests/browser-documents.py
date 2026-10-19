@@ -64,10 +64,10 @@ try:
   it=open_area('teenLanguage')
   page.evaluate('window.__current=null');page.locator('#languageModeSwitch [data-mode=spelling]').click();it=current()
   assert all(b.get('text')!=it['topic'] for b in it.get('stimulus',[]));assert page.locator('#exerciseVisual').inner_text().strip()!='Dos rutas y un horario'
-  page.evaluate('window.__current=null');page.locator('#languageModeSwitch [data-mode=writing]').click();it=current()
+  page.evaluate('window.__current=null');page.locator('#navMenu [data-subject=literacy]').click();current();page.evaluate('window.__current=null');page.locator('#languageModeSwitch [data-mode=writing]').click();it=current()
   assert page.locator('#writingCriteria li').count()==len(it['writingRubric'])
   assert 'Criterios de revisión' not in page.locator('#exerciseVisual').inner_text();screenshot('writing-criteria-once')
   assert not errors,errors
-  print(f'PASS: {count} answered document activities across four ages, source rotation, Colombian mode, desktop/mobile, real DOCX with four exact original PNGs, association table; no page errors',flush=True)
+  print(f'PASS: {count} answered document activities across four ages, source rotation, Colombian mode, desktop/mobile, real DOCX with all 18 exact original PNGs, association table; no page errors',flush=True)
   browser.close()
 finally:server.shutdown();server.server_close()

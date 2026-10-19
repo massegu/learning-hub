@@ -2770,3 +2770,46 @@ body {
 .password-dialog input{width:100%;padding:.8rem;border:1px solid #c4d5c9;border-radius:7px;font:inherit}
 .password-dialog [role=status]{min-height:1.5rem;overflow-wrap:anywhere}
 .password-dialog .auth-actions{display:flex;flex-wrap:wrap;gap:.6rem}
+
+/* Early exploration layer: original small vectors; older routes retain their UI. */
+.early-experience .discovery-trail{padding:22px;border:1px solid #ccdbc7;border-radius:16px;background:#fffdf7;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:24px}
+.discovery-trail>div{display:grid;gap:8px;align-content:center}
+.discovery-trail>div>span{font-size:.9rem;color:#536b57}
+.discovery-trail progress{width:100%;height:12px;accent-color:#397c50}
+.discovery-trail ol{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.discovery-trail li{display:flex;align-items:center;gap:10px;padding:12px;border-radius:12px;background:#f0f3ec;line-height:1.5;min-width:0}
+.discovery-trail li>span:first-child{font-size:1.5rem;flex:none;color:#527653}
+.discovery-trail li small{display:block;color:#536b57;font-size:.8rem}
+.discovery-trail .discovered{background:#e0efdb;border:1px solid #9dbe90}
+.early-experience .early-area-card{border-radius:18px;box-shadow:0 4px 0 #1d422d0c;transition:background .15s}
+.early-experience .early-area-card[data-area=language],.early-experience .early-area-card[data-area=reading]{background:#fffaf1}
+.early-experience .early-area-card[data-area=attention],.early-experience .early-area-card[data-area=memory]{background:#f4faf6}
+.early-experience .early-area-card[data-area=division]{background:#f2f8fc}
+#exercise.early-primary .task-steps .current{background:#e0eed8;border:1px solid #9ab78a;font-weight:750}
+#exercise.early-primary .early-model{padding:20px;background:#fffdf5;border:2px solid #96b583;border-radius:14px;margin-bottom:22px}
+#exercise.early-primary .early-comparison td{padding:18px;letter-spacing:.06em;line-height:1.7}
+#exercise.early-primary .early-comparison tr{border-bottom:8px solid #f4f6eb}
+#exercise.early-primary .stimulus-unit{min-height:84px;border-radius:14px}
+@media(max-width:900px){.early-experience .discovery-trail{grid-template-columns:1fr}.discovery-trail ol{gap:8px}}
+@media(max-width:520px){.discovery-trail ol{grid-template-columns:1fr}.early-experience .discovery-trail{padding:18px}#exercise.early-primary .early-comparison td{padding:14px 10px}}
+@media(prefers-reduced-motion:reduce){.early-experience .early-area-card{transition:none}}
+.attention-model{display:flex;flex-wrap:wrap;align-items:center;gap:18px;padding:20px;border:2px solid #90ad85;border-radius:14px;background:#fffdf6;margin-bottom:22px}
+.attention-model>span{font-weight:800;color:#386344;font-size:.85rem;letter-spacing:.08em}
+.attention-model code,.attention-comparison code{font-family:ui-monospace,Consolas,monospace;font-variant-ligatures:none;font-size:1.25em;letter-spacing:.12em;overflow-wrap:anywhere}
+.attention-comparison{width:100%;border-collapse:separate;border-spacing:0 12px}
+.attention-comparison th{width:3rem;background:#e4efdf;border-radius:10px 0 0 10px;padding:16px;font-weight:800}
+.attention-comparison td{padding:16px 22px;background:white;border:1px solid #d4e0ce;border-radius:0 10px 10px 0}
+/* Object recall has one consistent visual contract at every age. */
+.memory-object-sequence{display:flex;flex-wrap:wrap;gap:1rem;justify-content:center}
+.memory-object-sequence .stimulus-unit{display:flex;flex-direction:column;align-items:center;gap:.5rem;min-width:7rem;max-width:11rem;padding:1rem;background:white;border:1px solid #cfddd5;border-radius:12px;text-align:center}
+.memory-object-sequence .picture-icon svg,.memory-associations .picture-icon svg{width:3.5rem;height:3.5rem;display:block}
+.memory-associations td>span{vertical-align:middle}.memory-associations .picture-icon{display:inline-block;margin-right:.8rem}
+.empty-memory-cell{font-size:.85rem;color:#64786c;border:1px dashed #b3c5b8;border-radius:8px;padding:.5rem}
+.speed-comparison{display:grid;grid-template-columns:1fr;gap:1.3rem;margin:1rem auto;max-width:62rem}
+.speed-series{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:.9rem;padding:1rem;background:white;border:2px solid #bfd0c5;border-radius:14px;min-height:7rem}
+.speed-symbol{display:inline-flex;flex-direction:column;align-items:center;font-family:ui-monospace,Consolas,monospace;font-size:2.5rem;font-weight:650;line-height:1.4;min-width:3rem}
+.speed-symbol .picture-icon svg{width:4.5rem;height:4.5rem;display:block}.speed-symbol .picture-icon+span{font:500 .9rem system-ui,sans-serif}
+.speed-symbol .picture-glyphs svg{width:3.8rem;height:3.8rem}
+@media(max-width:520px){.speed-series{gap:.65rem;padding:.8rem;min-height:6rem}.speed-symbol{font-size:2.1rem;min-width:2.2rem}.speed-symbol .picture-icon svg{width:3.6rem;height:3.6rem}.speed-symbol .picture-glyphs svg{width:3rem;height:3rem}.memory-object-sequence .stimulus-unit{min-width:6rem;max-width:8rem}.memory-associations .picture-icon svg{width:2.7rem;height:2.7rem}}
+.recall-grid [role=cell]{flex-direction:column;gap:.45rem}.recall-grid .picture-icon svg{width:3.5rem;height:3.5rem}
+@media(max-width:480px){.recall-grid .picture-icon svg{width:3rem;height:3rem}}

@@ -23,3 +23,13 @@ test('area discovery measures actual participation rather than selected level or
   assert.deepEqual(stats.attention,{attempts:3,correct:1,firstExploration:3});
   assert.equal(stats.memory.attempts,0);
 });
+test('discovery milestones are participation-based, bounded and ignore hidden or unknown domains',()=>{
+ const domains=['language','reading','memory'];const history=Array.from({length:6},()=>({subject:'language',correct:false}));
+ const summary=journey.overview(history,domains,[]);
+ assert.equal(summary.discoveries,3);assert.equal(summary.goal,9);assert.equal(summary.explored,1);
+ assert.deepEqual(summary.milestones.map(x=>x.done),[true,true,false]);
+ assert.equal(journey.suggest(history,domains,'language'),'reading');
+ assert.equal(journey.suggest(history,domains,'memory'),'memory');
+ assert.equal(journey.overview([],domains,[{id:'unknown'}]).milestones[2].done,false);
+ assert.equal(journey.overview([],domains,[{id:'stories'}]).milestones[2].done,true);
+});

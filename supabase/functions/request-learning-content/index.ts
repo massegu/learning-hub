@@ -23,6 +23,11 @@ const DATA:any = (globalThis as any).LEARNING_DATA;
   return bank?bank.pool("speedReasoning",level):[];
 });
 
+(globalThis as any).Curriculum.registerWriting((age:string,level:number)=>{
+  const root:any=globalThis,bank=({junior:root.JuniorContent,primary:root.PrimaryContent,middle:root.MiddleContent} as any)[age];
+  return bank?bank.pool(age==='middle'?'middleLanguage':'language',level,'writing'):[];
+});
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -967,6 +972,7 @@ function socialExercise(level:number){
 
 function validateItem(item:any):boolean{
   if(!item||typeof item!=="object") return false;
+  try{(globalThis as any).LocaleContent.validateOptions(item);}catch(_){return false;}
   if(String(item.type||"").startsWith("memory") && (!Array.isArray(item.memoryContent)||!item.memoryContent.length)) return false;
   if(Array.isArray(item.opts)){
     const opts=item.opts.map((x:any)=>String(x));
@@ -1177,13 +1183,16 @@ function generatedItems(domain:string,n:number,recentEntries:string[],factory:()
   const localMechanics=new Set<string>();
 
   for(let i=0;i<n;i++){
+    // A recent-window rotation is only a fallback after the available pool has
+    // no unseen source left. More documents must not cause earlier repeats.
+    const freshAvailable=pool.some(cand=>{const sig=contentSignature(domain,cand);return !localItems.has(sig)&&!recentItems.has(sig);});
     let best:any=null, bestScore=Infinity;
     for(const cand of pool){
       const sig=contentSignature(domain,cand);
       if(localItems.has(sig)) continue;
       const msig=mechanicSignature(domain,cand);
       const previousPassages=[...recentEntries,...out.map((it:any)=>contentSignature(domain,it))].filter((x:string)=>x.includes(":item:passage:")).slice(-9);
-      const itemPenalty=(cand.passageKey?previousPassages.includes(sig):recentItems.has(sig))?100000:0;
+      const itemPenalty=(recentItems.has(sig)&&(!cand.passageKey||freshAvailable)||cand.passageKey&&previousPassages.includes(sig))?100000:0;
       const recentPenalty=veryRecent.has(msig)?10000:0;
       const localPenalty=localMechanics.has(msig)?5000:0;
       const countPenalty=(mechanicCounts.get(msig)||0)*100;
@@ -1281,7 +1290,7 @@ function cognitiveGame(age:string,level:number,excludeTypes:string[]=[]){
     const pool=["🎧","📘","🍎","🚲","🎬","⚽"];
     const length=level===1?10:level===2?12:14;
     const sequence=Array.from({length},()=>pick(pool));
-    for(let i=n;i<sequence.length;i++) if(Math.random()<.35) sequence[i]=sequence[i-n];
+    for(let i=n;i<sequence.length;i++) if(Math.random()<(domain==='executive'?.25:.35)) sequence[i]=sequence[i-n];
     return {id,level,type,topic:"Memoria de trabajo · "+n+"-back",q:"Indica si el símbolo actual es igual al de "+(n===1?"un paso":"dos pasos")+" atrás.",n,sequence};
   }
   if(type==="ruleShift"){
@@ -2271,8 +2280,10 @@ function matrixApplied20(age:string,level:number,v:number){
 }
 
 function variantExercise(age:string,domain:string,level:number,subdomain:string|null=null,documentsOnly=false){
-  if((globalThis as any).DocumentLibrary.supports(age,domain)&&(documentsOnly||(["attention","executive"].includes(domain)&&Math.random()<.25)))return {...(globalThis as any).DocumentLibrary.generate(age,domain,level),id:age+"-document-"+crypto.randomUUID()};
-  if((globalThis as any).Curriculum.supports(age,domain))return {...(globalThis as any).Curriculum.generate(age,domain,level),id:age+"-curriculum-"+crypto.randomUUID()};
+  if(documentsOnly&&subdomain==='writing'&&(globalThis as any).DocumentLibrary.supports(age,domain)){const bank=(globalThis as any).Curriculum.pool(age,domain,level).filter((it:any)=>it.writingPurpose);return {...pick(bank),id:age+'-document-writing-'+crypto.randomUUID()};}
+  if(['language','middleLanguage','teenLanguage'].includes(domain)&&(subdomain==='vocabulary'||!subdomain&&Math.random()<.25)){const bank=(globalThis as any).Curriculum.vocabulary(age,domain,level);return {...pick(bank),id:age+'-vocabulary-'+crypto.randomUUID()};}
+  if((globalThis as any).DocumentLibrary.supports(age,domain)&&subdomain!=='writing'&&(documentsOnly||((['attention','executive'].includes(domain)||['reading','literacy','middleReading'].includes(domain)&&subdomain!=='writing')&&Math.random()<(domain==='executive'?.25:.35))))return {...(globalThis as any).DocumentLibrary.generate(age,domain,level),id:age+"-document-"+crypto.randomUUID()};
+  if((globalThis as any).Curriculum.supports(age,domain))return {...(globalThis as any).Curriculum.generate(age,domain,level,subdomain),id:age+"-curriculum-"+crypto.randomUUID()};
   if(age==="teen"&&["teenLanguage","speedReasoning","literacy"].includes(domain))return {...(globalThis as any).TeenReview.generate(domain,level,subdomain),id:"teen-review-"+crypto.randomUUID()};
   if(age==="junior")return {...(globalThis as any).JuniorContent.generate(domain,level,subdomain),id:"junior-"+crypto.randomUUID()};
   if(age==="primary")return {...(globalThis as any).PrimaryContent.generate(domain,level,subdomain),id:"primary-"+crypto.randomUUID()};
@@ -2350,7 +2361,9 @@ Deno.serve(async (req:Request)=>{
   if(!SUBJECTS[age] || !Number.isInteger(level) || (kind!=="game" && (!Array.isArray(requestedDomains)||!requestedDomains.length||requestedDomains.some((d:any)=>!SUBJECTS[age].includes(d)))))
     return new Response(JSON.stringify({error:"Área o nivel no permitido para este perfil."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
   if(body.documents_only!==undefined&&(typeof body.documents_only!=="boolean"||body.documents_only&&!((globalThis as any).DocumentLibrary.supports(age,body.domain))))return new Response(JSON.stringify({error:"Los documentos no están disponibles para esta área."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
-  if((age==="junior"||age==="primary"||age==="middle"||age==="teen")&&kind==="exercise"&&["language","middleLanguage","teenLanguage"].includes(body.domain)&&body.subdomain&&!["grammar","spelling","writing"].includes(body.subdomain))
+  if(kind==='exercise'&&['reading','middleReading','literacy'].includes(body.domain)&&body.subdomain&&!['reading','writing'].includes(body.subdomain))return new Response(JSON.stringify({error:'Modalidad de Lectura + Escritura no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(kind==='exercise'&&['language','middleLanguage','teenLanguage'].includes(body.domain)&&body.subdomain==='writing')return new Response(JSON.stringify({error:'Escritura está en Lectura + Escritura.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if((age==="junior"||age==="primary"||age==="middle"||age==="teen")&&kind==="exercise"&&["language","middleLanguage","teenLanguage"].includes(body.domain)&&body.subdomain&&!["grammar","spelling","vocabulary","writing"].includes(body.subdomain))
     return new Response(JSON.stringify({error:"Habilidad de Lenguaje no válida."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
   let items:any[]=[];
   if(kind==="game"){

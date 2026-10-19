@@ -70,8 +70,9 @@
     const textSize=early?28:19;
     const paragraph=value=>new Paragraph({spacing:{line:early?360:285,after:70},children:[new TextRun({text:value,size:textSize,color:ink,font:'Aptos'})]});
     function pictureParagraph(value,item,material,position){
-      if(!early)return paragraph(value);
-      const key=early?window.StimulusArt?.forLabel(value,{...item.lexicalSenses,subject:material.label}):null;
+      const illustrated=early||item.type==='memoryReveal'||item.speedTask;
+      if(!illustrated)return paragraph(value);
+      const key=illustrated?window.StimulusArt?.forLabel(value,{...item.lexicalSenses,subject:material.label}):null;
       // Glyphs are the units themselves: never add a second pictogram/dot.
       const prefix=position===undefined?[]:[new TextRun({text:`${position}. `,size:textSize})];
       const picture=key&&!/^[●○□△☆]$/.test(value)?[new ImageRun({data:window.StimulusArt.png(key),transformation:{width:32,height:32},altText:{title:value,description:value}}),new TextRun({text:' '})]:[];
@@ -86,7 +87,7 @@
       }
       if(material.type==='text') return [...heading,paragraph(material.text)];
       if(early && material.presentation==='count' && material.items.every(x=>x==='●'))return [...heading,new Paragraph({spacing:{after:130},children:material.items.flatMap(value=>[new TextRun({text:value,size:40,color:ink}),new TextRun({text:'    '})])})];
-      if(material.type==='list')return [...heading,...material.items.map((value,i)=>early && ['count','cards','sequence'].includes(material.presentation)?pictureParagraph(value,item,material,material.presentation==='sequence'?i+1:undefined):paragraph(`${i+1}. ${value}`))];
+      if(material.type==='list')return [...heading,...material.items.map((value,i)=>(early||item.type==='memoryReveal') && ['count','cards','sequence'].includes(material.presentation)?pictureParagraph(value,item,material,material.presentation==='sequence'?i+1:undefined):paragraph(`${i+1}. ${value}`))];
       return [...heading,new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:softBorders,rows:material.rows.map(row=>new TableRow({children:row.map(value=>new TableCell({margins:{top:100,bottom:100,left:120,right:120},children:[pictureParagraph(value,item,material)]}))}))})];
     }
     const header=new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:noBorders,rows:[new TableRow({children:[
@@ -146,15 +147,27 @@
     const doc=new Document({sections:[{properties:{page:{size:{width:12240,height:15840},margin:{top:580,right:690,bottom:620,left:690}}},footers:{default:footer},children}]});
     return Packer.toBlob(doc);
   }
-  async function generate(itemsByVersion,profile){
+  async function generate(itemsByVersion,profile,replacement){
+    if(!Array.isArray(itemsByVersion)||!itemsByVersion.length||itemsByVersion.some(items=>!Array.isArray(items)||!items.length))throw new Error('Actividad no imprimible: el lote está vacío.');
     if(!window.LocaleContent)throw new Error('No se ha cargado el adaptador regional.');
     const locale=window.LocaleContent.effective(profile,profile?.contentLocale ?? window.LearningAPI?.contentLocale);
-    itemsByVersion=itemsByVersion.map(items=>items.map(item=>window.LocaleContent.localizeItem(item,locale)));
-    // Validate every version before creating any file: no partial download and
-    // no guessing a missing stimulus from the supplied correct answer.
-    let models=window.ActivityModel.validateBatch(itemsByVersion,profile);
+    if(replacement){
+      if(!window.WorksheetSelection)throw new Error('No se ha cargado el selector de fichas.');
+      const selected=[];
+      for(let version=0;version<itemsByVersion.length;version++){
+        const valid=await window.WorksheetSelection.collect({initial:{items:itemsByVersion[version]},profile,country:locale,
+          domains:replacement.domains,count:itemsByVersion[version].length,
+          fetchMore:replacement.fetchMore?extra=>replacement.fetchMore({...extra,version}):undefined});
+        selected.push(valid.items);
+      }
+      itemsByVersion=selected;
+    }
+    // Fail closed for direct callers without a replacement source. Normal UI
+    // calls can recover before any file is made, including late-invalid items.
+    const prepared=itemsByVersion.map(items=>items.map(item=>window.ActivityModel.preparePrintable(item,profile,locale,item?.localization?.domain||item?.domain||item?.sourceDomain)));
+    itemsByVersion=prepared.map(items=>items.map(x=>x.item));
+    const models=prepared.map(items=>items.map(x=>x.projection));
     if(window.ContentPolicy.forProfile(profile)&&!window.StimulusArt)throw new Error('No se ha cargado el adaptador de ilustraciones.');
-    models=models.map((version,v)=>version.map((model,i)=>window.LocaleContent.localizeModel(model,locale,itemsByVersion[v][i].localization?.domain || itemsByVersion[v][i].domain,itemsByVersion[v][i])));
     if(!window.docx) throw new Error('No se ha cargado el generador DOCX. Comprueba la conexión.');
     if(itemsByVersion.length>1&&!window.JSZip) throw new Error('No se ha cargado el generador ZIP. Comprueba la conexión.');
     const p=prefix(profile);

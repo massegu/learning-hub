@@ -59,7 +59,7 @@ try:
     for tok in it['answer']:page.locator('#exerciseOptions').get_by_role('button',name=tok,exact=True).click()
     page.locator('#orderCheck').click()
    elif it.get('type')=='self':
-    assert page.locator('#writingCriteria li').count()==len(it['writingRubric']);assert '«' in it['sample'];
+    assert page.locator('#writingCriteria li').count()==len(it['writingRubric']);assert it.get('writingPurpose') or '«' in it['sample'];
     page.locator('#textAnswerInput').fill(it['sample']);page.locator('#textAnswerCheck').click();page.locator('[data-self="true"]').click()
    else:page.locator('#exerciseOptions').get_by_role('button',name=it['a'],exact=True).click()
    page.wait_for_function('()=>!document.querySelector("#exerciseNext").classList.contains("hidden")');answered+=1
@@ -85,7 +85,7 @@ try:
    for n in range(10):
     passages.append(it['passageKey']);answer(it)
     if n<9:it=next_item()
-   assert len(set(passages))==10,(age,passages)
+   assert len(set(passages))>=10,(age,passages)
    captured=[]
    for level in [1,3]:
     it=open_area('memory',level);families=set()
