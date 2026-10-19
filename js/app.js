@@ -704,8 +704,8 @@
     });
     $("#languageModeSwitch").classList.toggle("hidden", !isLang&&!isReading);
     const documentSupport=window.DocumentLibrary?.supports(window.AgeStages.route(profile),subject);
-    if(!documentSupport)documentOnly=false;
-    $('#documentModeSwitch').classList.toggle('hidden',!documentSupport);
+    if(!documentSupport||isReading)documentOnly=false;
+    $('#documentModeSwitch').classList.toggle('hidden',!documentSupport||isReading);
     $$('#documentModeSwitch button').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.documents==='true')===documentOnly)));
     counter = 0;
     renderEarlyTaskGuide();

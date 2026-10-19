@@ -75,7 +75,7 @@
       const key=illustrated?window.StimulusArt?.forLabel(value,{...item.lexicalSenses,subject:material.label}):null;
       // Glyphs are the units themselves: never add a second pictogram/dot.
       const prefix=position===undefined?[]:[new TextRun({text:`${position}. `,size:textSize})];
-      const picture=key&&!/^[●○□△☆]$/.test(value)?[new ImageRun({data:window.StimulusArt.png(key),transformation:{width:32,height:32},altText:{title:value,description:value}}),new TextRun({text:' '})]:[];
+      const picture=key&&!/^[●○□△☆]$/.test(value)?[new ImageRun({data:window.StimulusArt.png(key),transformation:{width:32,height:32},altText:{name:'Objeto: '+value,title:value,description:value}}),new TextRun({text:' '})]:[];
       return new Paragraph({spacing:{line:360,after:90},children:[...prefix,...picture,new TextRun({text:value,size:textSize,color:ink,font:'Aptos'})]});
     }
     function renderMaterial(material,item){
@@ -83,7 +83,7 @@
       if(material.type==='document'){
         const source=window.DocumentLibrary.get(material.documentId);
         const description=source.transcript.map(b=>b.type==='text'?b.text:b.rows.map(r=>r.join(' · ')).join('; ')).join(' ');
-        return [new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({data:documentImages.get(material.documentId),transformation:{width:340,height:510},altText:{title:source.title,description}})]})];
+        return [new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({data:documentImages.get(material.documentId),transformation:{width:340,height:510},altText:{name:source.title,title:source.title,description}})]}),paragraph('Contenido del documento visual:'),...source.transcript.flatMap(block=>renderMaterial(block,item))];
       }
       if(material.type==='text') return [...heading,paragraph(material.text)];
       if(early && material.presentation==='count' && material.items.every(x=>x==='●'))return [...heading,new Paragraph({spacing:{after:130},children:material.items.flatMap(value=>[new TextRun({text:value,size:40,color:ink}),new TextRun({text:'    '})])})];
@@ -145,7 +145,21 @@
 
     const footer=new Footer({children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'LEVEL UP · Learning Lab',size:14,color:muted,font:'Aptos'})]})]});
     const doc=new Document({sections:[{properties:{page:{size:{width:12240,height:15840},margin:{top:580,right:690,bottom:620,left:690}}},footers:{default:footer},children}]});
-    return Packer.toBlob(doc);
+    // docx 8.5 creates a new counter for every drawing, yielding repeated
+    // wp:docPr ids. Normalize the packaged XML without touching its content.
+    const archive=await window.JSZip.loadAsync(await (await Packer.toBlob(doc)).arrayBuffer());
+    let drawingId=0;
+    for(const name of Object.keys(archive.files).filter(name=>/^word\/.*\.xml$/.test(name)).sort()){
+      const entry=archive.file(name);
+      if(!entry)continue;
+      const xml=await entry.async('string');
+      const normalized=xml.replace(/<wp:docPr\b[^>]*>/g,tag=>{
+        if(!/\bname="[^"]*"/.test(tag)||!/\bid="\d+"/.test(tag))throw new Error('La imagen de la ficha tiene propiedades incompletas.');
+        return tag.replace(/\bid="\d+"/,`id="${++drawingId}"`);
+      });
+      if(normalized!==xml)archive.file(name,normalized);
+    }
+    return archive.generateAsync({type:'uint8array',compression:'DEFLATE'});
   }
   async function generate(itemsByVersion,profile,replacement){
     if(!Array.isArray(itemsByVersion)||!itemsByVersion.length||itemsByVersion.some(items=>!Array.isArray(items)||!items.length))throw new Error('Actividad no imprimible: el lote está vacío.');
@@ -169,10 +183,10 @@
     const models=prepared.map(items=>items.map(x=>x.projection));
     if(window.ContentPolicy.forProfile(profile)&&!window.StimulusArt)throw new Error('No se ha cargado el adaptador de ilustraciones.');
     if(!window.docx) throw new Error('No se ha cargado el generador DOCX. Comprueba la conexión.');
-    if(itemsByVersion.length>1&&!window.JSZip) throw new Error('No se ha cargado el generador ZIP. Comprueba la conexión.');
+    if(!window.JSZip) throw new Error('No se ha cargado el generador ZIP. Comprueba la conexión.');
     const p=prefix(profile);
     if(itemsByVersion.length===1){
-      downloadBlob(await makeDoc(itemsByVersion[0],1,profile,models[0]),`${p}_ficha_01.docx`);
+      downloadBlob(new Blob([await makeDoc(itemsByVersion[0],1,profile,models[0])],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),`${p}_ficha_01.docx`);
       return;
     }
     const zip=new window.JSZip();

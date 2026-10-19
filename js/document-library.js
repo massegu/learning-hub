@@ -444,7 +444,7 @@ const authoredDocuments=[
         ]
       ]
     ],
-    "Escribe indicaciones claras para una visitante que entra y quiere llegar a la biblioteca sin escaleras. Usa solo los datos del plano.",
+    "Una visitante está en la entrada y quiere llegar a la biblioteca sin subir escalones. Escribe dos o tres frases dirigidas a ella: indica por qué espacio debe pasar y qué acceso debe usar. No inventes distancias ni horarios.",
     "Desde la entrada, avanza hasta el patio. Sigue hacia la biblioteca. Ese acceso no tiene escalones."
   ],
   [
@@ -769,15 +769,485 @@ const attentionAdvanced={
  'catalogue-co-v1':['¿Qué combinación coincide con el precio del paquete B y su contenido?','8.500 COP: cartuchera y lápiz',['7.000 COP: cartuchera y lápiz','8.500 COP: cuaderno y carpeta','8.000 COP: cuaderno y lápiz']],
  'brochure-co-v1':['¿Qué combinación coincide con la fecha límite de inscripción y el horario del taller?','22/10/2026 y de 10:00 a 12:00',['24/10/2026 y de 10:00 a 12:00','22/10/2026 y de 09:45 a 12:00','31/10/2026 y de 10:00 a 12:00']]
 };
+const readingQuestions={
+ "invoice-co-v1": [
+  [
+   "¿Para qué sirve esta factura?",
+   "Para detallar una compra y el importe pendiente",
+   [
+    "Para invitar a un taller",
+    "Para explicar cómo usar un cuaderno"
+   ]
+  ],
+  [
+   "¿Qué relación hay entre cantidad, precio unitario e importe?",
+   "El importe de cada producto corresponde a todas sus unidades",
+   [
+    "El importe es siempre el precio de una sola unidad",
+    "La cantidad indica el dinero entregado"
+   ]
+  ],
+  [
+   "¿Qué afirmación está respaldada por la factura?",
+   "La compra incluye productos y un cargo de entrega",
+   [
+    "La compra ya se ha pagado en efectivo",
+    "Todos los productos tienen el mismo precio"
+   ]
+  ]
+ ],
+ "receipt-co-v1": [
+  [
+   "¿Qué deja registrado este recibo?",
+   "Una compra con el pago y el dinero devuelto",
+   [
+    "Una reserva para otro día",
+    "Una lista de precios sin compra"
+   ]
+  ],
+  [
+   "¿Qué diferencia hay entre «total» y «pagado»?",
+   "El total es el coste de la compra; pagado es el dinero entregado",
+   [
+    "Ambos indican el precio de la leche",
+    "El total incluye solo el cambio"
+   ]
+  ],
+  [
+   "¿Qué no se puede concluir a partir del recibo?",
+   "Que la compra se entregó a domicilio",
+   [
+    "Que se compraron pan, leche y manzanas",
+    "Que se devolvió parte del dinero entregado"
+   ]
+  ]
+ ],
+ "catalogue-co-v1": [
+  [
+   "¿Qué ofrece este catálogo?",
+   "Productos escolares y paquetes con sus precios",
+   [
+    "Una compra ya pagada",
+    "Las normas de una biblioteca"
+   ]
+  ],
+  [
+   "¿Por qué aparecen productos sueltos y paquetes?",
+   "Para presentar distintas formas de comprar los artículos",
+   [
+    "Porque todos los paquetes tienen el mismo contenido",
+    "Porque los productos sueltos son gratuitos"
+   ]
+  ],
+  [
+   "¿Qué información necesitarías preguntar antes de pedir una entrega a casa?",
+   "Si se ofrece entrega y cuánto cuesta",
+   [
+    "Qué incluye el paquete A",
+    "Hasta cuándo es válido el catálogo"
+   ]
+  ]
+ ],
+ "brochure-co-v1": [
+  [
+   "¿A quién se dirige este folleto?",
+   "A personas de 12 a 18 años interesadas en dibujar",
+   [
+    "Solo a quienes ya trabajan como artistas",
+    "A quienes quieren comprar materiales"
+   ]
+  ],
+  [
+   "¿Qué significa que los materiales estén incluidos en una actividad gratuita?",
+   "El folleto no pide comprarlos ni pagar por participar",
+   [
+    "Cada participante debe comprarlos al llegar",
+    "Solo se puede asistir llevando materiales propios"
+   ]
+  ],
+  [
+   "¿Qué afirmación añade una promesa que el folleto no hace?",
+   "Todas las personas saldrán sabiendo dibujar retratos",
+   [
+    "El taller dura dos horas",
+    "Hay que llevar la confirmación de inscripción"
+   ]
+  ]
+ ],
+ "poster-mx": [
+  [
+   "¿Qué anuncia este cartel?",
+   "Una proyección de cine con entrada gratuita",
+   [
+    "Una venta de películas",
+    "Una clase de música"
+   ]
+  ],
+  [
+   "¿Por qué se indican dos horas distintas?",
+   "Una corresponde a la entrada y otra al comienzo de la película",
+   [
+    "Se proyectan dos películas",
+    "Una es para los días de lluvia"
+   ]
+  ],
+  [
+   "¿Qué afirmación no está justificada por el cartel?",
+   "Se entregará una manta a cada asistente",
+   [
+    "La lluvia puede cambiar el espacio de proyección",
+    "Hay tiempo de entrada antes de la película"
+   ]
+  ]
+ ],
+ "ticket-es": [
+  [
+   "¿Qué función tiene esta entrada?",
+   "Permitir una visita a una sala del museo",
+   [
+    "Reservar todas las actividades del museo",
+    "Pedir prestado un robot"
+   ]
+  ],
+  [
+   "¿Qué significa «reserva aparte»?",
+   "El taller exige una gestión adicional a esta entrada",
+   [
+    "El taller se celebra fuera del museo",
+    "La entrada incluye automáticamente el taller"
+   ]
+  ],
+  [
+   "¿Qué afirmación excede la información de la entrada?",
+   "La visita dura exactamente dos horas",
+   [
+    "La entrada permite una visita",
+    "El taller requiere su propia reserva"
+   ]
+  ]
+ ],
+ "menu-ar": [
+  [
+   "¿Para qué consulta alguien este menú?",
+   "Para conocer la oferta de comida y sus precios",
+   [
+    "Para confirmar una compra ya pagada",
+    "Para conocer el horario de un taller"
+   ]
+  ],
+  [
+   "¿Qué implica la expresión «el combo no incluye postre»?",
+   "El precio del combo no cubre un postre",
+   [
+    "El postre sustituye al agua",
+    "Todos los pedidos llevan postre gratis"
+   ]
+  ],
+  [
+   "¿Qué afirmación sería necesario comprobar por otra vía?",
+   "Que el sándwich es adecuado para una alergia concreta",
+   [
+    "Que el menú ofrece ensalada",
+    "Que el combo incluye agua"
+   ]
+  ]
+ ],
+ "notice-cl": [
+  [
+   "¿Por qué se ha publicado este aviso?",
+   "Para explicar cambios temporales por una reparación",
+   [
+    "Para anunciar un cierre definitivo",
+    "Para presentar un libro nuevo"
+   ]
+  ],
+  [
+   "¿Qué diferencia establece el aviso entre espacio y servicio?",
+   "Una sala cierra mientras algunos servicios siguen funcionando",
+   [
+    "Cerrar una sala significa suspender todos los servicios",
+    "El buzón sustituye también el préstamo"
+   ]
+  ],
+  [
+   "¿Qué afirmación no permite sostener el aviso?",
+   "Que el préstamo funcionará con ese horario todo el año",
+   [
+    "Que el cierre de la sala es temporal",
+    "Que se pueden hacer devoluciones por el buzón"
+   ]
+  ]
+ ],
+ "transport-co": [
+  [
+   "¿Qué propósito tiene este aviso de transporte?",
+   "Informar de un cambio temporal de parada",
+   [
+    "Anunciar una nueva tarifa",
+    "Vender entradas para la biblioteca"
+   ]
+  ],
+  [
+   "¿Qué significa que el cambio «solo afecta al sábado 24»?",
+   "La información del traslado se limita a esa fecha",
+   [
+    "La línea deja de existir después del sábado",
+    "La nueva parada se usará todo el mes"
+   ]
+  ],
+  [
+   "¿Qué afirmación necesitaría otra fuente?",
+   "El motivo de que las obras duren un solo día",
+   [
+    "Que las obras causan el cambio de parada",
+    "Que el aviso mantiene la tarifa"
+   ]
+  ]
+ ],
+ "infographic-cr": [
+  [
+   "¿Qué presenta esta infografía?",
+   "Resultados de una revisión de grifos en una escuela",
+   [
+    "Una norma para todas las escuelas",
+    "La venta de grifos nuevos"
+   ]
+  ],
+  [
+   "¿Por qué se distinguen fugas detectadas y reparadas?",
+   "Porque detectar un problema no significa que ya esté resuelto",
+   [
+    "Porque los grifos reparados nunca tuvieron fugas",
+    "Porque se revisaron dos escuelas distintas"
+   ]
+  ],
+  [
+   "¿Qué dato adicional permitiría estudiar la evolución del problema?",
+   "Otra revisión de la misma escuela en una fecha posterior",
+   [
+    "El color de la infografía",
+    "La opinión de alguien que no vio los grifos"
+   ]
+  ]
+ ],
+ "post-pa": [
+  [
+   "¿Qué busca esta publicación?",
+   "Animar a participar en un intercambio de libros",
+   [
+    "Garantizar la venta de cualquier título",
+    "Pedir una devolución a la biblioteca"
+   ]
+  ],
+  [
+   "¿Por qué se advierte que no se garantiza un título concreto?",
+   "La oferta depende de los libros que lleven los participantes",
+   [
+    "No se permite elegir ningún libro",
+    "El club entrega el mismo título a todo el mundo"
+   ]
+  ],
+  [
+   "¿Cómo se relaciona el comentario con el anuncio?",
+   "Expresa una expectativa personal, sin probar el resultado de la actividad",
+   [
+    "Certifica que la actividad ya ha terminado",
+    "Añade una condición obligatoria de participación"
+   ]
+  ]
+ ],
+ "label-mx": [
+  [
+   "¿Qué clase de información reúne esta etiqueta?",
+   "Ingredientes, contenido y pautas de conservación",
+   [
+    "Una cita para visitar una fábrica",
+    "Una valoración de clientes"
+   ]
+  ],
+  [
+   "¿Qué diferencia hay entre ingredientes y posibles trazas?",
+   "La etiqueta distingue la composición de una posible presencia de leche",
+   [
+    "Las trazas son instrucciones para abrir el envase",
+    "La leche es el único ingrediente declarado"
+   ]
+  ],
+  [
+   "¿Qué conclusión no está respaldada por la etiqueta?",
+   "La bebida es adecuada para todas las personas con alergias",
+   [
+    "Hay instrucciones para conservarla después de abrirla",
+    "Se declara una posible presencia de leche"
+   ]
+  ]
+ ],
+ "form-es": [
+  [
+   "¿Para qué sirve este formulario?",
+   "Para solicitar una cámara e indicar las fechas de uso",
+   [
+    "Para publicar una fotografía",
+    "Para comprar una cámara"
+   ]
+  ],
+  [
+   "¿Por qué se distingue guardar de enviar?",
+   "Son acciones diferentes y solo una formaliza la entrega",
+   [
+    "Ambas garantizan que el centro ha recibido la solicitud",
+    "Guardar equivale a devolver la cámara"
+   ]
+  ],
+  [
+   "¿Qué no demuestra por sí solo un comprobante de envío?",
+   "Que la solicitud haya sido aprobada",
+   [
+    "Que se haya realizado un envío",
+    "Que se haya superado la fase de borrador"
+   ]
+  ]
+ ],
+ "map-cl": [
+  [
+   "¿Para qué puede usarse este plano?",
+   "Para orientarse entre los espacios del centro",
+   [
+    "Para saber las horas de apertura",
+    "Para conocer el precio de los talleres"
+   ]
+  ],
+  [
+   "¿Qué información permite comparar dos rutas?",
+   "Indica qué acceso tiene escalones y cuál no",
+   [
+    "Indica cuántos minutos dura cada recorrido",
+    "Indica qué sala abre antes"
+   ]
+  ],
+  [
+   "¿Qué información tendrías que consultar fuera del plano?",
+   "Si la biblioteca está abierta a la hora de tu visita",
+   [
+    "Qué lugar comunica la entrada con la biblioteca",
+    "A qué lado del patio está el taller"
+   ]
+  ]
+ ],
+ "schedule-ar": [
+  [
+   "¿Qué organiza este horario?",
+   "Talleres con sus horas y aulas",
+   [
+    "El precio de una matrícula",
+    "Los libros prestados en una semana"
+   ]
+  ],
+  [
+   "¿Qué implica asistir a un taller «completo»?",
+   "Estar presente durante todo el intervalo indicado",
+   [
+    "Llegar solo al final",
+    "Asistir a cualquier parte del taller"
+   ]
+  ],
+  [
+   "¿Qué no se puede afirmar con este horario?",
+   "Que quien asista obtendrá un certificado",
+   [
+    "Que las actividades tienen duraciones delimitadas",
+    "Que hay actividades simultáneas"
+   ]
+  ]
+ ],
+ "advert-co": [
+  [
+   "¿Qué intenta conseguir este anuncio?",
+   "Promover la contratación de un plan de datos",
+   [
+    "Confirmar que se ha pagado una factura",
+    "Informar de una avería general"
+   ]
+  ],
+  [
+   "¿Cómo deben leerse el titular y las condiciones?",
+   "Juntos: las condiciones precisan el alcance de la oferta",
+   [
+    "Solo importa el titular más llamativo",
+    "Las condiciones describen otro producto"
+   ]
+  ],
+  [
+   "¿Qué reformulación explica la oferta sin exagerar?",
+   "Plan de 30 días con 4 GB a la velocidad inicial y reducción posterior",
+   [
+    "Velocidad máxima ilimitada durante treinta días",
+    "Llamadas y datos sin condiciones"
+   ]
+  ]
+ ],
+ "instructions-cr": [
+  [
+   "¿Qué objetivo tienen estas instrucciones?",
+   "Explicar cómo preparar y entregar una entrevista de audio",
+   [
+    "Promocionar una emisora comercial",
+    "Elegir a la persona ganadora de un concurso"
+   ]
+  ],
+  [
+   "¿Por qué se escucha la grabación antes de exportarla?",
+   "Para comprobar su claridad antes de preparar el archivo final",
+   [
+    "Para sustituir el permiso de la persona",
+    "Para evitar tener que enviar un archivo"
+   ]
+  ],
+  [
+   "¿Qué afirmación añade una obligación que no aparece?",
+   "La entrevista debe durar exactamente cinco minutos",
+   [
+    "Se necesita permiso para grabar",
+    "La entrega tiene una condición de tamaño de archivo"
+   ]
+  ]
+ ],
+ "news-pa": [
+  [
+   "¿Sobre qué asunto informan las dos fuentes?",
+   "La petición de sombra y una actuación del centro",
+   [
+    "La apertura de un nuevo centro",
+    "El resultado de una elección"
+   ]
+  ],
+  [
+   "¿Por qué conviene leer juntas las dos fuentes?",
+   "Una recoge preferencias y la otra una actuación y el tamaño del centro",
+   [
+    "Ambas miden exactamente la misma cosa",
+    "Una demuestra que todas las personas respondieron"
+   ]
+  ],
+  [
+   "¿Qué conclusión exige datos que aún no se tienen?",
+   "La actuación ha satisfecho la petición de sombra",
+   [
+    "Hay una petición de más sombra entre quienes respondieron",
+    "El centro ha instalado toldos"
+   ]
+  ]
+ ]
+};
 function get(id){return documents[id]||null;}
 function supports(age,domain){return ['junior','primary','middle','teen'].includes(age)&&['attention','executive','literacy','reading','middleReading'].includes(domain)&&!(age==='junior'&&domain==='literacy');}
 function pool(age,domain,level=1){
  if(!supports(age,domain))return [];
  const source=Object.keys(documents).filter(id=>domain!=='executive'||Object.hasOwn(executiveQuestions,id)).filter(id=>!documents[id].minAge?age!=='junior'||id==='catalogue-co-v1':['early','junior','primary','middle','teen'].indexOf(age)>=['early','junior','primary','middle','teen'].indexOf(documents[id].minAge));
  return source.map(id=>{
-  const doc=get(id),tuple=domain==='executive'?(executiveQuestions[id]||doc.questions)[level-1]:domain==='attention'&&level===3?(attentionAdvanced[id]||doc.questions[2]):doc.questions[level-1],q=tuple[0],a=tuple[1],opts=[a,...tuple[2]];
+  const doc=get(id),tuple=domain==='executive'?(executiveQuestions[id]||doc.questions)[level-1]:domain==='attention'&&level===3?(attentionAdvanced[id]||doc.questions[2]):domain!=='attention'?readingQuestions[id][level-1]:doc.questions[level-1],q=tuple[0],a=tuple[1],opts=[a,...tuple[2]];
   return {id:`document-${age}-${domain}-${level}-${id}`,contentKey:`document-v1:${age}:${domain}:${level}:${id}`,passageKey:`document:${id}`,domain,level,
-   type:'standard',responseType:'choice',requiresStimulus:true,currencyContext:'foreign',topic:doc.kind+' · interpretar un documento',
+   type:'standard',responseType:'choice',requiresStimulus:true,currencyContext:'foreign',taskFocus:domain==='attention'?'localizar y contrastar datos':domain==='executive'?'supervisar decisiones':'comprender propósito, relaciones y límites',topic:doc.kind+' · interpretar un documento',
    stimulus:[text(`Documento ficticio de ${doc.country}. ${['invoice-co-v1','receipt-co-v1','catalogue-co-v1'].includes(id)?'Los importes están en pesos colombianos (COP).':''}`),{type:'document',documentId:id}],q,a,opts,
    why:a+'. Comprueba los datos directamente en el documento.',mechanic:`document_${domain}_${doc.kind.replace(/\s/g,'_')}_${level}`,
    ...(age==='junior'?{juniorProfile:{route:age,level}}:{}),...(['primary','middle'].includes(age)?{schoolProfile:{route:age,level}}:{})};

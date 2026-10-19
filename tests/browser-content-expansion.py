@@ -46,7 +46,9 @@ try:
    it=switch_mode('vocabulary');assert it['languageFocus']=='vocabulary';shot(age+'-vocabulary');answer(it)
    it=open_area(read);assert 'Escritura' in page.locator(f'#navMenu [data-subject={read}]').inner_text()
    it=switch_mode('writing');assert page.evaluate('__requests.at(-1).subdomain')=='writing';assert it.get('type') in ['self','order'] or it.get('languageFocus')=='writing';shot(age+'-writing');answer(it)
-   if age=='teen':assert it.get('writingPurpose');assert page.locator('.document-transcript').get_attribute('open') is None
+   if age=='teen':
+    assert it.get('writingPurpose')
+    if any(b['type']=='document' for b in it['stimulus']):assert page.locator('.document-transcript').get_attribute('open') is None
    it=open_area('memory');seen=set()
    for n in range(15):
     family=it['mechanic'];seen.add(family)
@@ -69,7 +71,11 @@ try:
   for country in ['es_es','es_mx','es_co','es_ar','es_cl','es_pa','es_cr','es_intl']:
    page.locator('#v16ContentLocale').select_option(country);page.wait_for_function('(x)=>LearningAPI.contentLocale===x',arg=country)
    it=open_area('literacy');it=switch_mode('grammar')
-   page.evaluate('window.__current=null');page.locator('#documentModeSwitch [data-documents=true]').click();it=current()
+   assert not page.locator('#documentModeSwitch').is_visible()
+   assert not page.evaluate('__requests.at(-1).documents_only===true')
+   for _ in range(4):
+    if any(b['type']=='document' for b in it['stimulus']):break
+    answer(it);it=next_item()
    doc=next(b['documentId'] for b in it['stimulus'] if b['type']=='document');source=page.evaluate('(id)=>DocumentLibrary.get(id)',doc)
    page.wait_for_function('()=>document.querySelector(".practice-document img")?.naturalWidth===1024')
    assert source['country'] in page.locator('figcaption').inner_text();assert page.locator('.document-transcript').get_attribute('open') is None
@@ -84,7 +90,7 @@ try:
     for name in z.namelist():
      with zipfile.ZipFile(io.BytesIO(z.read(name))) as docx:
       assert any(n.startswith('word/media/') for n in docx.namelist());assert b'<w:drawing>' in docx.read('word/document.xml');exports+=1
-   page.evaluate('window.__current=null');page.locator('#documentModeSwitch [data-documents=false]').click();current()
+   assert not page.locator('#documentModeSwitch').is_visible()
   # All 18 document sources embedded in one real DOCX, including alt text.
   with page.expect_download() as dl:page.evaluate('()=>WorksheetGenerator.generate([DocumentLibrary.pool("teen","literacy",1)],__profiles.find(x=>x.id==="teen"))')
   target=Path(tmp)/'all-documents.docx';dl.value.save_as(target)

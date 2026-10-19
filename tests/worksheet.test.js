@@ -21,7 +21,7 @@ function harness() {
   }
   const blobs=new Map(), downloads=[];
   const document={body:{appendChild(){}},createElement:()=>({remove(){},click(){downloads.push({name:this.download,blob:blobs.get(this.href)});}})};
-  const context={window:{docx,JSZip:NodeZip,ContentPolicy:policy,ActivityModel:model,LocaleContent:locale,StimulusArt:art},document,URL:{createObjectURL:b=>{const id=String(blobs.size);blobs.set(id,b);return id;},revokeObjectURL(){}},setTimeout(){},Date,console,Uint8Array};
+  const context={window:{docx,JSZip:NodeZip,ContentPolicy:policy,ActivityModel:model,LocaleContent:locale,StimulusArt:art},document,URL:{createObjectURL:b=>{const id=String(blobs.size);blobs.set(id,b);return id;},revokeObjectURL(){}},setTimeout(){},Date,console,Uint8Array,Blob};
   vm.runInNewContext(fs.readFileSync(require.resolve('../js/docx.js'),'utf8'),context);
   return {generator:context.window.WorksheetGenerator,downloads,context};
 }
@@ -192,7 +192,7 @@ test('old renderer upgrades cannot replace the canonical integrity renderer', ()
   assert.ok(!fs.readFileSync(require.resolve('../js/config.js'),'utf8').includes('v16_17.js'));
 });
 
-test('document worksheets embed the original four PNGs with accessible transcripts; failed images produce no download',async()=>{
+test('document worksheets embed all original PNGs and visible source transcripts; failed images produce no download',async()=>{
  const documents=require('../js/document-library');
  const {generator,downloads,context}=harness();context.window.DocumentLibrary=documents;
  context.fetch=async path=>({ok:true,arrayBuffer:async()=>{const b=fs.readFileSync(require('node:path').join(__dirname,'..',path));return b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength);}});
@@ -205,6 +205,7 @@ test('document worksheets embed the original four PNGs with accessible transcrip
  for(const doc of Object.values(documents.documents)){
   const original=fs.readFileSync(require('node:path').join(__dirname,'..',doc.path));assert.ok(media.some(bytes=>bytes.equals(original)),doc.title);
   assert.ok(xml.includes(doc.title));
+  const nodes=textNodes(xml);for(const block of doc.transcript)for(const text of block.type==='text'?[block.text]:block.rows.flat())assert.ok(nodes.includes(text),'missing visible source: '+text);
  }
  assert.ok(xml.includes('25.000'));assert.ok(xml.includes('22/10/2026'));
  const failing=harness();failing.context.window.DocumentLibrary=documents;failing.context.fetch=async()=>({ok:false});
@@ -232,5 +233,28 @@ test('export replacement preserves exhaustion and service errors, without partia
   const invalid={domain:'attention',q:'¿Qué aparece?',stimulus:[],opts:['A','B'],a:'A'};
   await assert.rejects(()=>generator.generate([[invalid],[invalid]],{name:'R',age_band:'teen'},{domains:['attention'],fetchMore:async()=>{if(error)throw error;return {items:[invalid],exhausted:true};}}),error?/Daily content limit/:/suficientes actividades/);
   assert.equal(downloads.length,0);
+ }
+});
+
+// Word is stricter than ZIP readers about required drawing properties. Inspect
+// real generated packages, including each document nested in a downloaded ZIP.
+test('single and ZIP DOCX drawings have unique ids, required names and internal image relationships',async()=>{
+ const {generator,downloads}=harness();
+ const bank=early.pool('memory',2).filter(it=>it.ageProfile.mechanic==='rememberObjects').slice(0,2);
+ for(const versions of [[bank],[bank,bank]]){
+  downloads.length=0;await generator.generate(versions,child);
+  const outer=await JSZip.loadAsync(await downloads[0].blob.arrayBuffer());
+  const packages=versions.length===1?[outer]:await Promise.all(Object.values(outer.files).filter(f=>!f.dir).map(async f=>JSZip.loadAsync(await f.async('uint8array'))));
+  for(const pkg of packages){
+   const xml=await pkg.file('word/document.xml').async('string');
+   const props=[...xml.matchAll(/<wp:docPr\b([^>]*)>/g)].map(m=>m[1]);assert.ok(props.length>1);
+   const ids=props.map(p=>p.match(/\bid="(\d+)"/)[1]);assert.equal(new Set(ids).size,ids.length);
+   for(const p of props)assert.match(p,/\bname="[^"]+"/);
+   const rels=await pkg.file('word/_rels/document.xml.rels').async('string');
+   for(const embed of xml.matchAll(/r:embed="([^"]+)"/g)){
+    const rel=[...rels.matchAll(/<Relationship\b([^>]+)>/g)].find(m=>m[1].includes(`Id="${embed[1]}"`));assert.ok(rel);
+    const target=rel[1].match(/Target="([^"]+)"/)[1];assert.ok(pkg.file('word/'+target));
+   }
+  }
  }
 });

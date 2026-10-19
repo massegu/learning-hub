@@ -33,7 +33,7 @@ test('eighteen authored document types retain exact transcripts, multiple purpos
   for(const block of doc.transcript)if(block.type==='text')assert.ok(markup.includes(block.text.replaceAll('&','&amp;').replaceAll('>','&gt;').replaceAll('<','&lt;')));
   if(doc.brief){const svg=fs.readFileSync(doc.path.replace('.png','.svg'),'utf8');assert.match(svg,/Documento de práctica/);assert.ok(svg.includes(doc.country));assert.ok(doc.sample.length>30);}
  }
- const bank=curriculum.pool('teen','literacy',2).filter(it=>it.writingPurpose);assert.equal(bank.length,14);assert.equal(new Set(bank.map(it=>it.mechanic)).size,14);
+ const bank=curriculum.pool('teen','literacy',2).filter(it=>it.stimulus.some(b=>b.type==='document')&&it.writingPurpose);assert.equal(bank.length,14);assert.equal(new Set(bank.map(it=>it.mechanic)).size,14);
  for(const it of bank){assert.ok(it.writingAudience);assert.equal(it.writingRubric.length,3);assert.ok(it.sample);for(const country of Object.keys(locale.labels)){const local=locale.localizeItem(it,country,'literacy');model.printable(local,profile('teen'));assert.equal(local.stimulus[1].documentId,it.stimulus[1].documentId);}}
  const co=documents.pool('teen','literacy',2).find(x=>x.stimulus[1].documentId==='advert-co');const international=locale.localizeItem(co,'es_intl','literacy');assert.match(international.stimulus[0].text,/Colombia/);assert.match(documents.get('advert-co').transcript.map(x=>x.text).join(' '),/20.000 COP/);
 });

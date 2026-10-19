@@ -26,7 +26,7 @@ try:
   count=0
   for age in ['junior','primary','middle','teen']:
    page.locator('#profileSelect').select_option(age);page.locator('#v16ContentLocale').select_option('es_co');page.wait_for_function('()=>LearningAPI.contentLocale==="es_co"')
-   for domain in (['attention','executive'] if age=='junior' else ['attention','executive','literacy']):
+   for domain in (['attention','executive'] if age=='junior' else ['attention','executive']):
     it=open_area(domain)
     page.evaluate('window.__current=null');page.locator('#documentModeSwitch [data-documents=true]').click();it=current();seen=[]
     for n in range(1 if age=='junior' else 4):
