@@ -258,3 +258,14 @@ test('single and ZIP DOCX drawings have unique ids, required names and internal 
   }
  }
 });
+
+test('mixed worksheets flow as ordinary body blocks without exercise-count page breaks or enclosing activity rows',async()=>{
+ const {generator,downloads}=harness();
+ const items=Array.from({length:12},(_,i)=>({id:'flow-'+i,domain:'attention',type:'standard',q:'¿Qué número aparece?',requiresStimulus:true,stimulus:[{type:'text',text:'Tarjeta '+i}],a:String(i),opts:[String(i),String(i+1)]}));
+ await generator.generate([items],{name:'Revisión',age_band:'teen'});
+ const document=await xml(downloads[0].blob);
+ assert.doesNotMatch(document,/<w:br[^>]*w:type="page"|<w:pageBreakBefore/);
+ const topLevelTitles=document.match(/<w:p><w:pPr><w:keepNext\/>[\s\S]*?<w:t[^>]*>ACTIVIDAD \d+<\/w:t>/g)||[];
+ assert.equal(topLevelTitles.length,items.length);
+ assertAnswerable(textNodes(document),items,{age_band:'teen'});
+});

@@ -2814,3 +2814,7 @@ body {
 @media(max-width:520px){.speed-series{gap:.65rem;padding:.8rem;min-height:6rem}.speed-symbol{font-size:2.1rem;min-width:2.2rem}.speed-symbol .picture-icon svg{width:3.6rem;height:3.6rem}.speed-symbol .picture-glyphs svg{width:3rem;height:3rem}.memory-object-sequence .stimulus-unit{min-width:6rem;max-width:8rem}.memory-associations .picture-icon svg{width:2.7rem;height:2.7rem}}
 .recall-grid [role=cell]{flex-direction:column;gap:.45rem}.recall-grid .picture-icon svg{width:3.5rem;height:3.5rem}
 @media(max-width:480px){.recall-grid .picture-icon svg{width:3rem;height:3rem}}
+
+/* Executive situations use the available card width; reading retains its measure. */
+#exercise[data-subject="executive"] .stimulus-paragraph { max-width:none; }
+#exercise[data-subject="executive"] .scenario-card { max-width:none; }

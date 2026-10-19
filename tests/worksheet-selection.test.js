@@ -88,3 +88,15 @@ test('broken printable pictograms are rejected before commitment while glyph-onl
  finally{art.png=original;}
  assert.equal(selector.compatible(pictured,profile,'es_es','division'),true);
 });
+
+test('four labelled attention codes render as structured data without changing the target or accepting partial prose',()=>{
+ const model=require('../js/activity-model');
+ for(const values of [['P25-P3','P25-P3','P25-P4','P25-P3'],['⭐','⭐','🌙','⭐']]){
+  const source=values.map((v,i)=>`${'ABCD'[i]}: ${v}`).join(' '),blocks=model.comparisonStimulus(source);
+  assert.deepEqual(blocks[0].rows,values.map((v,i)=>['ABCD'[i],v]));
+  const it={type:'standard',requiresStimulus:true,scenario:source,q:'¿Cuál es diferente?',a:'C',opts:['A','B','C','D']};
+  assert.deepEqual(model.printable(it,{age_band:'teen'}).stimulus,blocks);
+  assert.match(model.interactiveStimulus(blocks,{structured:true}),/attention-comparison/);
+ }
+ for(const source of ['A: P1 B: P1 C: P2','A: P1 B: P1 C: P2 D: P1 después revisa','Hay A: P1 B: P1 C: P2 D: P1'])assert.equal(model.comparisonStimulus(source),null);
+});
