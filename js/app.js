@@ -677,6 +677,7 @@
     if(id==='home')renderSchoolHub();
   }
   function setupExercise() {
+    $("#exercise").dataset.subject=subject;
     const m = SUBJECT_META[subject];
     $("#exercisePill").textContent = m.name.toUpperCase();
     $("#exerciseHeading").textContent = m.name;
@@ -1064,7 +1065,7 @@
     }
   }
   function showFeedback(correct, pts, why = "") {
-    if(currentItem?.speedTask)$('#exercise').classList.remove('speed-active');
+    // Preserve the trial layout while showing feedback; reset on the next item.
     const f = $("#exerciseFeedback");
     f.textContent =
       why ||

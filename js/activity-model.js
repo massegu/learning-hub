@@ -23,8 +23,12 @@
     // Recognize a complete authored model + four labels, never infer missing
     // fields or the answer. Unknown prose stays untouched.
     const match=value.match(/^\s*MODELO:\s*(\S+)\s+A:\s*(\S+)\s+B:\s*(\S+)\s+C:\s*(\S+)\s+D:\s*(\S+)\s*$/iu);
-    return match?[{type:'text',text:'Modelo: '+match[1],presentation:'model'},
-      {type:'table',rows:match.slice(2).map((code,i)=>[String.fromCharCode(65+i),code]),presentation:'codeComparison'}]:null;
+    if(match)return [{type:'text',text:'Modelo: '+match[1],presentation:'model'},
+      {type:'table',rows:match.slice(2).map((code,i)=>[String.fromCharCode(65+i),code]),presentation:'codeComparison'}];
+    // A complete four-choice comparison is the same material without a model.
+    // Keep labels and code characters intact; incomplete prose stays untouched.
+    const choices=value.match(/^\s*A:\s*(\S+)\s+B:\s*(\S+)\s+C:\s*(\S+)\s+D:\s*(\S+)\s*$/iu);
+    return choices?[{type:'table',rows:choices.slice(1).map((code,i)=>[String.fromCharCode(65+i),code]),presentation:'codeComparison'}]:null;
   }
   function legacyStimulus(item) {
     const blocks = [];

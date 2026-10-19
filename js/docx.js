@@ -51,7 +51,7 @@
     }));
   }
   async function makeDoc(items,version,profile,models){
-    const {Document,Packer,Paragraph,TextRun,ImageRun,Table,TableRow,TableCell,WidthType,AlignmentType,BorderStyle,Footer,PageBreak}=window.docx;
+    const {Document,Packer,Paragraph,TextRun,ImageRun,Table,TableRow,TableCell,WidthType,AlignmentType,BorderStyle,Footer}=window.docx;
     const documentImages=new Map();
     const ids=[...new Set(models.flatMap(m=>m.stimulus.filter(b=>b.type==='document').map(b=>b.documentId)))];
     for(const id of ids){
@@ -105,10 +105,9 @@
     const children=[header,new Paragraph({spacing:{after:80},children:[]}),identity,new Paragraph({spacing:{after:120},children:[]})];
 
     items.forEach((it,i)=>{
-      if(i>0 && i%(early?3:5)===0) children.push(new Paragraph({children:[new PageBreak()]}));
       const model=models[i];
       const prompt=model.question;
-      const block=[new Paragraph({spacing:{after:90},children:[new TextRun({text:`ACTIVIDAD ${i+1}`,bold:true,size:15,color:green2,font:'Aptos'})]})];
+      const block=[new Paragraph({keepNext:true,spacing:{before:i?160:0,after:90},children:[new TextRun({text:`ACTIVIDAD ${i+1}`,bold:true,size:15,color:green2,font:'Aptos'})]})];
       if(model.stimulus.length){
         block.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:softBorders,rows:[new TableRow({children:[new TableCell({shading:{fill:light},margins:{top:140,bottom:140,left:170,right:170},children:[
           new Paragraph({spacing:{after:55},children:[new TextRun({text:early?'MIRA':'INFORMACIÓN',bold:true,size:early?20:13,color:green,font:'Aptos'})]}),
@@ -118,7 +117,7 @@
       }
       if(it.type==='memoryReveal') block.push(paragraph(it.recallSequence?'Una persona muestra las figuras una a una, en el orden impreso. Después tapa la secuencia y pide reproducirla.':'Mira el material. Después tápalo antes de responder.'));
       if(it.speedTask) block.push(paragraph('Práctica visual en papel: esta ficha no mide el tiempo de respuesta.'));
-      block.push(new Paragraph({spacing:{after:90,line:early?360:300},children:[new TextRun({text:prompt,bold:true,size:early?28:21,color:ink,font:'Aptos'})]}));
+      block.push(new Paragraph({keepNext:true,spacing:{after:90,line:early?360:300},children:[new TextRun({text:prompt,bold:true,size:early?28:21,color:ink,font:'Aptos'})]}));
       if(model.tokens.length){
         block.push(paragraph('Palabras o pasos disponibles:'));
         model.tokens.forEach((token,j)=>block.push(paragraph(`${j+1}. ${token}`)));
@@ -139,7 +138,9 @@
       }else{
         block.push(new Paragraph({spacing:{before:35,after:65},children:[new TextRun({text:'Respuesta: ________________________________________________',size:18,color:muted,font:'Aptos'})]}));
       }
-      children.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:softBorders,rows:[new TableRow({children:[new TableCell({margins:{top:150,bottom:150,left:180,right:180},children:block})]})]}));
+      // Let Word paginate the activity's paragraphs and source tables normally.
+      // A whole activity inside one outer table makes natural breaks brittle.
+      children.push(...block);
       children.push(new Paragraph({spacing:{after:130},children:[]}));
     });
 
