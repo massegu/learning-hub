@@ -167,6 +167,217 @@ const contexts={
  ['El equipo publica una comparación de consumo entre dos equipos. Uno consume menos por unidad, pero requiere dos unidades para cubrir el mismo espacio. El plan recomienda ese equipo sin sumar el consumo de ambas unidades. Los dos deben ofrecer la misma prestación y funcionar durante el mismo tiempo.','¿Qué corrección hace válida la comparación?','Comparar el consumo total necesario para la misma prestación y tiempo',['Comparar solo una unidad de cada modelo','Acortar el tiempo del equipo recomendado']],
  ['Un servicio cambia la hora de una cita colectiva y avisa a una sola persona. Esa persona actualiza el calendario, pero no comprueba si las demás tienen acceso ni si han visto el cambio. El plan da por terminado el aviso. Hay participantes que organizan transporte compartido y necesitan conocer la hora antes de salir.','¿Qué debe comprobar antes de cerrar la tarea?','Que todas las personas afectadas recibieron y confirmaron el nuevo horario',['Que el calendario conserve también la hora antigua sin explicarla','Que quien editó el calendario recuerde la hora de memoria']]
  ]};
+const reviewCases={
+ junior:[
+  ["Preparar la mesa de pintura","El grupo va a pintar. Antes de empezar revisa si el material preparado coincide con lo que pidió la profesora.",[
+   ["Papel", "Una hoja por persona", "Una hoja para todo el grupo"],
+   ["Agua", "Un vaso para lavar pinceles", "Ningún vaso"],
+   ["Protección", "Mesa cubierta", "Mesa sin cubrir"],
+   ["Pinceles", "Uno por persona", "Uno para todo el grupo"],
+   ["Limpieza", "Lavar los pinceles al terminar", "Guardar los pinceles con pintura"],
+  ]],
+  ["La bolsa de la excursión","La clase prepara una bolsa para salir al parque. Hay que comparar la lista acordada con el plan antes de cerrar la bolsa.",[
+   ["Bebida", "Una botella de agua", "Una botella vacía"],
+   ["Comida", "Una pieza de fruta", "Solo una servilleta"],
+   ["Gorra", "Una gorra", "Ninguna gorra"],
+   ["Abrigo", "Una chaqueta", "Solo la bolsa"],
+   ["Identificación", "Escribir el nombre en la bolsa", "No escribir el nombre"],
+  ]],
+  ["Cuidar las plantas","A una pareja le toca cuidar las plantas del aula. El cartel indica qué necesita cada una antes de irse a casa.",[
+   ["Planta pequeña", "Un vaso de agua", "Tres vasos de agua"],
+   ["Maceta grande", "Dos vasos de agua", "Ningún vaso de agua"],
+   ["Ubicación", "Junto a la ventana", "Dentro del armario"],
+   ["Bandeja", "Debajo de la maceta", "Encima de las hojas"],
+   ["Hojas", "Dejar libres las hojas", "Cubrir las hojas con una bolsa"],
+  ]],
+  ["Devolver los juegos","Tras jugar, la clase debe guardar cada material en su lugar. Revisa el plan para poder encontrarlo mañana.",[
+   ["Cartas", "En la caja roja", "En la caja azul"],
+   ["Dados", "En la bolsa verde", "Sobre la mesa"],
+   ["Tablero", "En la estantería", "En el suelo"],
+   ["Fichas", "Dentro de la caja del juego", "En una caja de lápices"],
+   ["Caja", "Cerrar al terminar", "Dejar abierta la caja"],
+  ]],
+  ["Enviar una invitación","La clase quiere invitar a otra clase a ver su mural. Han preparado un mensaje y van a revisarlo antes de enviarlo.",[
+   ["Destinatario", "La clase de al lado", "El grupo de deportes"],
+   ["Día", "El jueves", "El martes"],
+   ["Lugar", "El aula de arte", "El patio"],
+   ["Actividad", "Ver el mural", "Jugar con una pelota"],
+   ["Hora", "Después del recreo", "Antes del recreo"],
+  ]],
+  ["Preparar un préstamo","Una compañera prestará un cuento hasta el lunes. Revisa que el plan respete lo que ha acordado con su amigo.",[
+   ["Libro", "El cuento de animales", "El libro de canciones"],
+   ["Entrega", "Hoy en clase", "Mañana en casa"],
+   ["Devolución", "El lunes", "El viernes"],
+   ["Cuidado", "Guardar en una carpeta", "Dejar en el patio"],
+   ["Aviso", "Avisar si el libro se estropea", "No avisar si se estropea"],
+  ]],
+ ],
+ primary:[
+  ["El ensayo del grupo","El grupo ha acordado las condiciones del ensayo. Una persona propone este plan. Comprueba todas las condiciones antes de darlo por válido.",[
+   ["Inicio", "A las 16:00", "A las 16:30"],
+   ["Duración", "Treinta minutos", "Una hora"],
+   ["Lugar", "El aula de música", "La biblioteca"],
+   ["Material", "Traer la letra impresa", "Traer solo una foto"],
+   ["Cierre", "Guardar los instrumentos", "Dejarlos sobre las sillas"],
+  ]],
+  ["Un mural para la biblioteca","La biblioteca ha pedido un mural. El equipo debe respetar estas condiciones para poder colocarlo el día acordado.",[
+   ["Tema", "Animales del entorno", "Personajes de una película"],
+   ["Tamaño", "Una cartulina", "Tres cartulinas unidas"],
+   ["Entrega", "El miércoles", "El viernes"],
+   ["Firma", "Nombres del equipo", "Sin nombres"],
+   ["Fijación", "Cinta que se pueda retirar", "Pegamento permanente"],
+  ]],
+  ["Revisar la salida al museo","El grupo prepara una salida. Ya están confirmados los requisitos; ahora hay que comprobar el plan escrito.",[
+   ["Llegada", "A las 09:30", "A las 10:00"],
+   ["Grupo", "Diez personas", "Doce personas"],
+   ["Documento", "Llevar la confirmación", "Llevar solo el anuncio"],
+   ["Comida", "Comer fuera de las salas", "Comer dentro de una sala"],
+   ["Regreso", "A las 13:00", "A las 14:00"],
+  ]],
+  ["Reunir material para ciencias","El equipo prepara una observación. Cada condición de la tabla es necesaria para hacer la actividad tal como se ha acordado.",[
+   ["Muestras", "Tres hojas distintas", "Tres hojas iguales"],
+   ["Registro", "Anotar la fecha", "Omitir la fecha"],
+   ["Lupa", "Una por pareja", "Ninguna lupa"],
+   ["Cuidado", "No arrancar plantas", "Arrancar una planta"],
+   ["Limpieza", "Recoger al terminar", "Dejar las muestras en el suelo"],
+  ]],
+  ["Una entrevista para la clase","El grupo quiere entrevistar a una vecina. Antes de la visita revisa el plan con los acuerdos que ella ha aceptado.",[
+   ["Visita", "El martes", "El miércoles"],
+   ["Grabación", "Pedir permiso antes", "Grabar sin preguntar"],
+   ["Preguntas", "Enviar tres preguntas antes", "Improvisar todas las preguntas"],
+   ["Duración", "Quince minutos", "Cuarenta minutos"],
+   ["Copia", "Ofrecer una copia del audio", "No guardar ninguna copia"],
+  ]],
+  ["Organizar un intercambio","La clase intercambiará libros durante el recreo. Revisa qué partes del plan no respetan las condiciones anunciadas.",[
+   ["Cantidad", "Hasta dos libros por persona", "Cinco libros por persona"],
+   ["Estado", "Libros con todas sus páginas", "Libros con páginas arrancadas"],
+   ["Lugar", "La mesa del patio", "La puerta de la calle"],
+   ["Horario", "Durante el recreo", "Durante la clase de matemáticas"],
+   ["Cierre", "Devolver lo que no se intercambie", "Dejarlo en la mesa"],
+  ]],
+ ],
+ middle:[
+  ["Publicar el boletín","El equipo prepara el boletín del centro. Ha recibido requisitos concretos y dispone de un borrador de publicación; revisa las diferencias antes de autorizarlo.",[
+   ["Fecha", "Publicar el viernes", "Publicar el miércoles"],
+   ["Autoría", "Incluir el nombre de cada autor", "Eliminar la autoría"],
+   ["Imágenes", "Usar imágenes con permiso", "Usar imágenes sin permiso"],
+   ["Fuente", "Enlazar el informe citado", "Citar solo un comentario"],
+   ["Revisión", "Revisar antes de publicar", "Revisar después de publicar"],
+   ["Acceso", "Permitir lectura sin registro", "Exigir una cuenta privada"],
+  ]],
+  ["La entrega del proyecto","La profesora ha concretado la entrega del proyecto. El equipo ha redactado un plan y quiere asegurarse de que cumple cada requisito.",[
+   ["Formato", "Un archivo PDF", "Una presentación editable"],
+   ["Extensión", "Hasta cinco páginas", "Ocho páginas"],
+   ["Identificación", "Incluir los nombres", "No incluir nombres"],
+   ["Destino", "La carpeta de la clase", "Una carpeta personal privada"],
+   ["Plazo", "Antes del jueves", "El viernes"],
+   ["Confirmación", "Comprobar que se abre", "Suponer que se abre"],
+  ]],
+  ["Reservar un espacio","El centro ha ofrecido un espacio para una reunión. Solo estará disponible si se respetan las condiciones comunicadas.",[
+   ["Horario", "De 17:00 a 18:00", "De 18:00 a 19:00"],
+   ["Asistencia", "Hasta doce personas", "Dieciséis personas"],
+   ["Acceso", "Entrada por recepción", "Entrada por una puerta cerrada"],
+   ["Mobiliario", "Dejar las mesas como estaban", "Cambiar las mesas de sala"],
+   ["Sonido", "Sin altavoces", "Usar altavoces"],
+   ["Responsable", "Nombrar una persona de contacto", "No indicar contacto"],
+  ]],
+  ["Compartir una encuesta","El grupo quiere compartir los resultados de una encuesta. La tutoría ha fijado estas condiciones para proteger la información y explicar bien los datos.",[
+   ["Identidad", "Publicar resultados sin nombres", "Publicar los nombres"],
+   ["Muestra", "Indicar quiénes respondieron", "Afirmar que respondió todo el centro"],
+   ["Resultado", "Separar datos y opiniones", "Presentar opiniones como datos"],
+   ["Permiso", "Revisar antes de difundir", "Difundir sin revisión"],
+   ["Archivo", "Compartir solo el resumen", "Compartir respuestas personales"],
+   ["Fecha", "Indicar cuándo se recogió", "Omitir la fecha"],
+  ]],
+  ["Preparar una demostración","El equipo organiza una demostración de ciencias para otro curso. Las condiciones se han confirmado con la persona responsable del aula.",[
+   ["Material", "Usar agua a temperatura ambiente", "Usar agua hirviendo"],
+   ["Prueba", "Ensayar antes de la visita", "Probar por primera vez con público"],
+   ["Participación", "Una persona por turno", "Todo el grupo a la vez"],
+   ["Registro", "Anotar cada resultado", "Anotar solo el último"],
+   ["Espacio", "Mantener el paso libre", "Dejar cajas en el paso"],
+   ["Cierre", "Recoger y secar la mesa", "Dejar el agua en la mesa"],
+  ]],
+  ["Una publicación del club","El club prepara una publicación para anunciar un encuentro. Revisa si el plan respeta todos los acuerdos antes de que el equipo lo programe.",[
+   ["Día", "El sábado 24", "El domingo 25"],
+   ["Horario", "De 10:00 a 12:00", "De 12:00 a 14:00"],
+   ["Lugar", "Patio cubierto", "Patio sin cubierta"],
+   ["Inscripción", "Por el formulario del club", "Por una cuenta personal"],
+   ["Contacto", "Correo del club", "Teléfono de una compañera"],
+   ["Imagen", "Cartel aprobado por el equipo", "Foto sin permiso"],
+  ]],
+ ],
+ teen:[
+  ["Autorizar una publicación","Un equipo ha preparado una publicación con datos de una consulta. Antes de autorizarla, contrasta el plan con los acuerdos de difusión. Todos los requisitos de la tabla son obligatorios.",[
+   ["Alcance", "Describir solo a quienes respondieron", "Generalizar a toda la población"],
+   ["Identidad", "Eliminar los nombres personales", "Publicar nombres y respuestas"],
+   ["Fuente", "Enlazar el informe completo", "Omitir el informe"],
+   ["Gráfico", "Mantener la escala original", "Recortar la escala sin indicarlo"],
+   ["Revisión", "Aprobar el borrador antes", "Publicar antes de la aprobación"],
+   ["Fecha", "Indicar el periodo de consulta", "Omitir el periodo"],
+  ]],
+  ["Entregar una propuesta","El grupo ha recibido las condiciones de una convocatoria. La propuesta está preparada, pero aún hay que comprobar el plan de entrega antes de enviarla.",[
+   ["Plazo", "Enviar antes del lunes", "Enviar el martes"],
+   ["Formato", "Un PDF de hasta seis páginas", "Un archivo editable de diez páginas"],
+   ["Anexos", "Adjuntar la autorización", "Enviar sin autorización"],
+   ["Destino", "Usar el portal de la convocatoria", "Mandar a una cuenta personal"],
+   ["Registro", "Guardar el comprobante", "Cerrar sin guardar comprobante"],
+   ["Versión", "Enviar la versión aprobada", "Enviar un borrador anterior"],
+  ]],
+  ["Organizar una sesión de prueba","El equipo va a probar un recurso con personas voluntarias. La coordinación ha fijado estas condiciones para que la prueba pueda realizarse.",[
+   ["Participación", "Confirmar que es voluntaria", "Presentarla como obligatoria"],
+   ["Datos", "Usar alias en el registro", "Usar nombres completos"],
+   ["Instrucciones", "Dar la misma consigna", "Cambiar la consigna entre participantes"],
+   ["Incidencias", "Anotar las interrupciones", "Ignorar las interrupciones"],
+   ["Duración", "Respetar veinte minutos", "Continuar sin límite"],
+   ["Cierre", "Explicar cómo retirar los datos", "No ofrecer información de cierre"],
+  ]],
+  ["Publicar una entrevista","La persona entrevistada ha autorizado una versión concreta. El equipo revisa el plan para asegurarse de respetar los acuerdos antes de publicar el audio.",[
+   ["Versión", "Publicar la versión autorizada", "Publicar el audio sin revisar"],
+   ["Nombre", "Usar el alias acordado", "Publicar el nombre completo"],
+   ["Cortes", "Mantener el sentido de las frases", "Unir frases que cambian el sentido"],
+   ["Canal", "Publicar en el canal del centro", "Publicar en una cuenta personal"],
+   ["Acceso", "Compartir el enlace aprobado", "Compartir archivos privados"],
+   ["Revisión", "Escuchar el archivo final", "Revisar solo el nombre del archivo"],
+  ]],
+  ["Preparar una solicitud de material","La organización ofrece material para un proyecto si se cumplen las condiciones de préstamo. Antes de aprobar el plan, comprueba cada compromiso de la tabla.",[
+   ["Recogida", "El jueves por la mañana", "El viernes por la tarde"],
+   ["Devolución", "El lunes siguiente", "Dos semanas después"],
+   ["Uso", "Solo en el proyecto autorizado", "Prestarlo a otro equipo"],
+   ["Responsable", "Identificar a quien lo recoge", "Recoger sin identificar responsable"],
+   ["Estado", "Comprobar el inventario al recoger", "Comprobarlo solo al devolver"],
+   ["Incidencias", "Avisar al detectar un daño", "Esperar al final para avisar"],
+  ]],
+  ["Compartir un informe de resultados","El equipo debe entregar un informe breve para decidir si continúa una actividad. La coordinación quiere que se distingan claramente las observaciones de las conclusiones.",[
+   ["Muestra", "Indicar cuántas personas participaron", "Omitir el número de participantes"],
+   ["Resultado", "Incluir resultados favorables y desfavorables", "Mostrar solo resultados favorables"],
+   ["Límite", "Explicar lo que aún no se sabe", "Presentar todo como demostrado"],
+   ["Fuentes", "Separar encuesta y registro", "Mezclar las dos fuentes sin indicar cuál"],
+   ["Propuesta", "Proponer una comprobación posterior", "Dar por cerrada la evaluación"],
+   ["Versión", "Enviar el informe revisado", "Enviar notas sin revisar"],
+  ]],
+ ],
+};
+function validateReview(item){
+ if(item.type!=='multiSelect'||item.responseType!=='multiple'||item.domain!=='executive')throw new Error('Revisión incompatible.');
+ const block=item.stimulus?.[item.reviewEvidence?.block];
+ if(block?.type!=='table'||block.header!==true||block.rows.length<4||block.rows.some(row=>row.length!==3||row.some(x=>typeof x!=='string'||!x.trim())))throw new Error('Faltan los datos de revisión.');
+ const rows=block.rows.slice(1),labels=rows.map(row=>row[0]),expected=rows.filter(row=>row[1]!==row[2]).map(row=>row[0]);
+ if(new Set(labels).size!==labels.length||!expected.length||expected.length===rows.length||!Array.isArray(item.opts)||item.opts.length!==labels.length||!labels.every(x=>item.opts.includes(x))||!Array.isArray(item.answers)||new Set(item.answers).size!==item.answers.length||item.answers.length!==expected.length||!expected.every(x=>item.answers.includes(x)))throw new Error('La respuesta no coincide con el plan y sus condiciones.');
+ return expected;
+}
+function review(age,level){
+ return (reviewCases[age]||[]).map(([title,source,checks],i)=>{
+  const load=level===1?3:level===2?4:checks.length;
+  const count=level===1?1:level===2?2:age==='junior'?2:3;
+  const rows=checks.slice(0,load).map(([label,expected,alternative],j)=>[label,expected,(j-i%load+load)%load<count?alternative:expected]);
+  const item=finish({type:'multiSelect',responseType:'multiple',requiresStimulus:true,q:'Marca todas las partes del plan que hay que corregir. Puede haber más de una.',
+   stimulus:[{...T(source),label:title},{type:'table',header:true,presentation:'reviewPlan',label:'Compara cada condición con el plan',rows:[['Comprobación','Lo pedido','Lo previsto'],...rows]}],
+   opts:rows.map(row=>row[0]),answers:rows.filter(row=>row[1]!==row[2]).map(row=>row[0]),reviewEvidence:{block:1},
+   topic:'Funciones ejecutivas · revisar un plan',passageKey:'review-plan-'+age+'-'+i,
+   why:rows.filter(row=>row[1]!==row[2]).map(row=>row[0]+': se pide «'+row[1]+'» y el plan propone «'+row[2]+'».').join(' ')},age,'executive',level,'review-plan-'+i,'executive_review_all');
+  validateReview(item);return item;
+ });
+}
 function executive(age,level){
  const rank=ages.indexOf(age),tasks=[];
  contexts[age].forEach(([source,q,a,wrong],i)=>{
@@ -206,7 +417,7 @@ function executive(age,level){
    tasks.push(finish({type:'order',responseType:'order',requiresStimulus:true,q:'Ordena las acciones respetando qué necesita cada una.',stimulus:[T('El grupo organiza un proyecto y quiere evitar tener que repetir el trabajo. '+(count>=6?'El comprobante solo existe después de entregar el proyecto. ':'')+(count>=4?'No se revisa una versión final que todavía no se ha creado. ':'')+(count>=3?'Para crear la versión final hace falta tener preparado el material. ':'')+(count>=5?'La entrega requiere haber revisado la versión final. ':'')+'Antes de preparar el material hay que confirmar los requisitos. Solo debes ordenar las acciones disponibles.')],tokens:shuffled(steps,v),answer:steps,topic:'Funciones ejecutivas · planificación'},age,'executive',level,`plan-${v}`,'executive_planning'));
   }
  }
- return tasks;
+ return tasks.concat(review(age,level));
 }
 const cache=new Map();let reasoningProvider=null,writingProvider=null;
 function registerReasoning(provider){reasoningProvider=provider;for(const key of cache.keys())if(key.includes(':executive:'))cache.delete(key);}
@@ -235,6 +446,6 @@ function migrate(progress={},age){
   levels:{...progress.levels,executive:1,speedReasoning:1},_levelCheckpoints:{...progress._levelCheckpoints,executive:{attempt:progress.totalAttempts||0},speedReasoning:{attempt:progress.totalAttempts||0}}};
 }
 function speedSummary(history=[]){const rows=history.filter(x=>x.subject==='speedReasoning'&&x.timingValid&&Number.isFinite(x.responseMs));const correct=rows.filter(x=>x.correct).map(x=>x.responseMs).sort((a,b)=>a-b);return {attempts:rows.length,accuracy:rows.length?Math.round(rows.filter(x=>x.correct).length*100/rows.length):null,medianMs:correct.length?correct.length%2?correct[(correct.length-1)/2]:(correct[correct.length/2-1]+correct[correct.length/2])/2:null};}
-const api={vocabulary,pool,generate,supports,visible,migrate,speedSummary,registerReasoning,registerWriting,spatialPositions};root.Curriculum=api;
+const api={validateReview,vocabulary,pool,generate,supports,visible,migrate,speedSummary,registerReasoning,registerWriting,spatialPositions};root.Curriculum=api;
 if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);

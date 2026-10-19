@@ -299,7 +299,7 @@
     const selected = new Set();
     const opts = shuffle(it.opts || []);
     $("#exerciseOptions").innerHTML =
-      `<div class="multi-select-grid">${opts.map((o) => `<button class="option-btn multi-option" data-value="${escapeHtml(o)}">${escapeHtml(o)}</button>`).join("")}</div><div class="multi-actions"><span id="multiCount">0/${(it.answers || []).length} seleccionados</span><button id="multiCheck" class="primary-btn">Comprobar selección</button></div>`;
+      `<div class="multi-select-grid">${opts.map((o) => `<button class="option-btn multi-option" data-value="${escapeHtml(o)}" aria-label="${escapeHtml(o)}" aria-pressed="false">${escapeHtml(o)}</button>`).join("")}</div><div class="multi-actions"><span id="multiCount" role="status">${it.type==='multiSelect'?'0 seleccionadas':`0/${(it.answers || []).length} seleccionados`}</span><button id="multiCheck" class="primary-btn" ${it.type==='multiSelect'?'disabled':''}>Comprobar selección</button></div>`;
     $$("#exerciseOptions .multi-option").forEach(
       (b) =>
         (b.onclick = () => {
@@ -311,8 +311,9 @@
             selected.add(v);
             b.classList.add("selected");
           }
-          $("#multiCount").textContent =
-            `${selected.size}/${(it.answers || []).length} seleccionados`;
+          b.setAttribute('aria-pressed',String(selected.has(v)));
+          $("#multiCount").textContent = it.type==='multiSelect'?`${selected.size} seleccionadas`:`${selected.size}/${(it.answers || []).length} seleccionados`;
+          if(it.type==='multiSelect')$('#multiCheck').disabled=!selected.size;
         }),
     );
     $("#multiCheck").onclick = () => {
@@ -328,8 +329,8 @@
       $("#multiCheck").disabled = true;
       showFeedback(
         ok,
-        saveResult(subject, ok, it.id, "memoryMulti"),
-        ok
+        saveResult(subject, ok, it.id, it.type),
+        it.type==='multiSelect'?it.why:ok
           ? "Has reconocido correctamente todos los elementos."
           : "Revisa los elementos marcados en verde.",
       );
@@ -892,6 +893,7 @@
         `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus,{heading:it.topic||it.theme,rubric:it.writingRubric,illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:!window.ContentPolicy.forProfile(profile),senses:it.lexicalSenses})}</div>`;
     $("#exercisePrompt").textContent = it.q || "Actividad";
     if(it.speedTask){renderSpeedExercise(it);return;}
+    if(it.type==='multiSelect'){renderMultiSelect(it);return;}
     if (it.type === "memoryReveal" || it.type === "memoryMulti") {
       renderMemoryExercise(it);
       return;

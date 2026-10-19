@@ -24,7 +24,12 @@ try:
    return it
   def answer(it,invalid_time=False,practice=False,wrong=False):
    global answered
-   if it.get('speedTask'):
+   if it['type']=='multiSelect':
+    selected=it['answers'][:-1] if wrong else it['answers']
+    for label in selected:page.locator('#exerciseOptions .multi-option').get_by_text(label,exact=True).click()
+    if not selected:page.locator('#exerciseOptions .multi-option').first.click()
+    page.locator('#multiCheck').click()
+   elif it.get('speedTask'):
     assert page.locator('#exerciseOptions .speed-choice').count()==0
     assert page.locator('#exerciseVisual table').count()==0
     if not invalid_time and not practice and not wrong:page.set_viewport_size({'width':390,'height':900})

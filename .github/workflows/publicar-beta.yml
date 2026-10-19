@@ -35,6 +35,7 @@ jobs:
       - run: python -m playwright install --with-deps chromium
       - run: python tests/browser-auth-account.py
       - run: python tests/browser-session-layout.py
+      - run: python tests/browser-supervision.py
   publicar:
     needs: comprobar
     if: github.event_name != 'pull_request' && !inputs.verificar_solo && github.ref == 'refs/heads/desarrollo'
