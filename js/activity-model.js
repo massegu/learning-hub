@@ -16,6 +16,8 @@
       if (!Array.isArray(block.rows) || !block.rows.length || !block.rows.every(r => Array.isArray(r) && r.length && r.every(hasText)) || !block.rows.every(r => r.length === block.rows[0].length)) fail('la tabla está incompleta.');
     } else if(block.type==='document'){if(!documents?.get(block.documentId))fail('documento visual desconocido.');}
     else fail('el tipo de estímulo no tiene un renderizador compatible.');
+    if(block.presentation==='memoryScene'&&(block.type!=='table'||block.rows.length>9||block.rows.some(row=>row.length!==2)||new Set(block.rows.map(row=>row[0])).size!==block.rows.length))fail('la escena no declara zonas únicas.');
+    if(block.presentation==='routeMap'&&(block.type!=='list'||block.items.length>9||new Set(block.items).size!==block.items.length||block.positions!==undefined&&(!Array.isArray(block.positions)||block.positions.length!==block.items.length||new Set(block.positions).size!==block.positions.length||block.positions.some(n=>!Number.isInteger(n)||n<0||n>8))))fail('el mapa no declara posiciones distintas y válidas.');
     return block;
   }
   function comparisonStimulus(value){
@@ -109,6 +111,9 @@
     if (policy.forProfile(profile)) policy.validateEarly(item);
     if(item.memoryResponse==='multiple'||item.selectiveRecall)(root.Curriculum||(typeof require==='function'&&require('./curriculum'))).validateSelectiveRecall(item);
     if(item.type==='documentReview'||item.documentPlan)documents.validateExecutiveTask(item);
+    if(item.speedEvidence)(root.Curriculum||(typeof require==='function'&&require('./curriculum'))).validateSpeed(item);
+    if(item.planEvidence)(root.Curriculum||(typeof require==='function'&&require('./curriculum'))).validatePlan(item);
+    if(item.mathEvidence)(root.Curriculum||(typeof require==='function'&&require('./curriculum'))).validateMath(item);
     if(item.type==='multiSelect')(root.Curriculum||(typeof require==='function'&&require('./curriculum'))).validateReview(item);
     const rawStimulus = item.stimulus === undefined ? legacyStimulus(item) : item.stimulus;
     const stimulus=Array.isArray(rawStimulus)&&item.writingRubric?.length?rawStimulus.filter(b=>!(b.type==='text'&&b.text==='Criterios de revisión')&&!(b.type==='list'&&JSON.stringify(b.items)===JSON.stringify(item.writingRubric))):rawStimulus;
@@ -147,7 +152,7 @@
         if(item.a!==positions.join(' → '))fail('la respuesta espacial no coincide con la cuadrícula.');
       }else fail('evidencia de memoria no compatible.');
     }
-    if (policy.forProfile(profile) && item.type === 'memoryReveal' && !item.recallEvidence) {
+    if ((policy.forProfile(profile)||item.answerEvidence) && item.type === 'memoryReveal' && !item.recallEvidence) {
       const evidence = item.answerEvidence;
       const block = stimulus[evidence?.block];
       let value;
@@ -271,7 +276,7 @@
   }
   function forDelivery(item, profile, domain) {
     (root.LocaleContent||(typeof require==='function'&&require('./locale-content'))).validateOptions(item);
-    if (!policy.forProfile(profile)){if(item.type==='multiSelect'||item.type==='documentReview'||item.documentPlan||item.memoryResponse==='multiple'||item.selectiveRecall)printable(item,profile);return item;}
+    if (!policy.forProfile(profile)){if(item.type==='multiSelect'||item.type==='documentReview'||item.documentPlan||item.memoryResponse==='multiple'||item.selectiveRecall||item.speedEvidence||item.planEvidence||item.mathEvidence||item.type==='memoryReveal'&&item.answerEvidence)printable(item,profile);return item;}
     if (domain && item?.domain !== domain) fail('el área recibida no coincide con la solicitada.');
     // Identical contract at the domain boundary, on screen and in the exporter.
     // This applies to local, remote and future cache sources alike.
@@ -288,16 +293,37 @@
     const key=art?.forLabel(raw,senses);
     return `${key?`<span class="picture-icon" aria-hidden="true">${art.svg(key)}</span>`:''}<span>${escape(key&&senses.memory?memoryLabel(raw):raw)}</span>`;
   }
+  function sceneFurniture(place,x,y){
+    const frame=`fill="#d3b597" stroke="#8d7761" stroke-width="3" stroke-linejoin="round"`;
+    const name=memoryLabel(place);
+    if(name==='mesa'||name==='banco')return `<path d="M${x-83} ${y+15}h166v15H${x-83}Zm14 15v43m138-43v43" ${frame}/>`;
+    if(name==='alfombra')return `<ellipse cx="${x}" cy="${y+33}" rx="94" ry="28" fill="#c8d4be" stroke="#8fa489" stroke-width="3"/><ellipse cx="${x}" cy="${y+33}" rx="78" ry="17" fill="none" stroke="#e8e9d6" stroke-width="3"/>`;
+    if(name==='ventana')return `<rect x="${x-78}" y="${y-108}" width="156" height="139" rx="5" fill="#d5e5e7" stroke="#a6927b" stroke-width="7"/><path d="M${x} ${y-108}v139m-78-70h156M${x-87} ${y+31}h174" stroke="#a6927b" stroke-width="7"/>`;
+    if(name==='silla')return `<rect x="${x-58}" y="${y-99}" width="116" height="115" rx="14" ${frame}/><path d="M${x-68} ${y+17}h136v15H${x-68}Zm15 15v39m106-39v39" ${frame}/>`;
+    if(name==='puerta')return `<rect x="${x-62}" y="${y-115}" width="124" height="176" rx="7" fill="#d8c8af" stroke="#a6927b" stroke-width="5"/><circle cx="${x+43}" cy="${y+5}" r="5" fill="#8d7761"/>`;
+    return `<rect x="${x-83}" y="${y-110}" width="166" height="162" rx="9" fill="#e5dccb" stroke="#a6927b" stroke-width="4"/><path d="M${x-83} ${y+25}h166" stroke="#a6927b" stroke-width="7"/>`;
+  }
   function interactiveStimulus(blocks,options={}) {
     // The topic is already visible above the question. Keep it in the canonical
     // stimulus for standalone worksheets, but do not print it twice on screen.
     const visibleBlocks=blocks.length>1&&options.heading?blocks.filter(b=>b.type!=='text'||b.text!==options.heading):blocks;
-    return visibleBlocks.filter(b=>!options.rubric?.length||(!(b.type==='text'&&b.text==='Criterios de revisión')&&!(b.type==='list'&&JSON.stringify(b.items)===JSON.stringify(options.rubric)))).map(block => {
+    const redundantSources=new Set(visibleBlocks.filter(b=>b.type==='document').map(b=>{const doc=documents.get(b.documentId);return `Fuente: ${doc.kind} de ${doc.country}.`;}));
+    return visibleBlocks.filter(b=>!(b.type==='text'&&redundantSources.has(b.text))).filter(b=>!options.rubric?.length||(!(b.type==='text'&&b.text==='Criterios de revisión')&&!(b.type==='list'&&JSON.stringify(b.items)===JSON.stringify(options.rubric)))).map(block => {
       blockValid(block);
       if(block.type==='document'){
         const doc=documents.get(block.documentId);
-        return `<figure class="practice-document"><img src="${escape(doc.path)}" width="${doc.width}" height="${doc.height}" alt="${escape(doc.title)}" loading="eager"><figcaption>${escape(doc.kind)} · ${escape(doc.country)} · <a href="${escape(doc.path)}" target="_blank" rel="noopener">Ampliar documento</a></figcaption></figure><details class="document-transcript"><summary>Ver versión en texto</summary>${interactiveStimulus(doc.transcript,{structured:true})}</details>`;
+        return `<figure class="practice-document"><img src="${escape(doc.path)}" width="${doc.width}" height="${doc.height}" alt="${escape(doc.title)}" loading="eager"><figcaption><a href="${escape(doc.path)}" target="_blank" rel="noopener">Ampliar documento</a></figcaption></figure><details class="document-transcript"><summary>Ver versión en texto</summary>${interactiveStimulus(doc.transcript,{structured:true})}</details>`;
       }
+      if(block.presentation==='memoryScene'){
+        const positions=[[130,140],[360,140],[590,140],[130,370],[360,370],[590,370],[130,600],[360,600],[590,600]],height=block.rows.length>6?720:490;
+        return `<figure class="memory-scene"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 ${height}" font-family="Arial, sans-serif" role="img" aria-label="Escena para recordar"><rect x="4" y="4" width="712" height="${height-8}" rx="24" fill="#f1eee4"/><path d="M8 ${height-80}H712" stroke="#d8cfb8" stroke-width="3"/>${block.rows.map(([place,value],i)=>{const [x,y]=positions[i],key=art.forLabel(value,options.senses);return `<g>${sceneFurniture(place,x,y)}${key?`<svg x="${x-36}" y="${y-88}" width="72" height="72" viewBox="0 0 64 64">${art.svg(key).replace(/^<svg[^>]*>|<\/svg>$/g,'')}</svg>`:''}<text x="${x}" y="${y+13}" text-anchor="middle" font-size="18" fill="#264b43">${escape(memoryLabel(value))}</text><text x="${x}" y="${y+95}" text-anchor="middle" font-size="19" font-weight="600" fill="#264b43">${escape(memoryLabel(place))}</text></g>`;}).join('')}</svg><details><summary>Ver los elementos de la escena</summary>${interactiveStimulus([{type:'table',rows:block.rows}],{structured:true})}</details></figure>`;
+      }
+      if(block.presentation==='routeMap'){
+        const coords=[[110,100],[350,100],[590,100],[590,260],[350,260],[110,260],[110,420],[350,420],[590,420]],locations=block.items.map((_,i)=>coords[block.positions?.[i]??i]),points=locations.map(x=>x.join(',')).join(' '),height=510;
+        return `<figure class="memory-route"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 ${height}" font-family="Arial, sans-serif" role="img" aria-label="Mapa con el orden de las visitas"><rect width="700" height="${height}" rx="24" fill="#eef3e9"/><path d="M0 180H700M0 340H700M230 0V${height}M470 0V${height}" stroke="#d5dfd4" stroke-width="24"/><polyline points="${points}" fill="none" stroke="#668d89" stroke-width="7" stroke-dasharray="9 8" stroke-linecap="round"/>${block.items.map((place,i)=>{const [x,y]=locations[i];return `<g><rect x="${x-83}" y="${y-53}" width="166" height="96" rx="15" fill="#fffdf7" stroke="#b6cbbd" stroke-width="2"/><path d="M${x-36} ${y-17}v-17l36-17 36 17v17Z" fill="${['#bb9277','#92a9b8','#a9ad82'][i%3]}"/><circle cx="${x-72}" cy="${y-45}" r="16" fill="#28564b"/><text x="${x-72}" y="${y-39}" text-anchor="middle" fill="white" font-size="18">${i+1}</text><text x="${x}" y="${y+22}" text-anchor="middle" fill="#264b43" font-size="19">${escape(place)}</text></g>`;}).join('')}</svg><ol class="route-legend">${block.items.map(x=>`<li>${escape(x)}</li>`).join('')}</ol></figure>`;
+      }
+      if(block.presentation==='speedSearch'||block.presentation==='flanker')return `<div class="${block.presentation==='flanker'?'flanker-strip':'speed-search-grid'}" role="list">${block.items.map(x=>`<div role="listitem">${visualLabel(x,options.senses)}</div>`).join('')}</div>`;
+      if(block.presentation==='pairScan')return `<table class="pair-scan"><tbody>${block.rows.map(row=>`<tr>${row.map(x=>`<td><code>${escape(x)}</code></td>`).join('')}</tr>`).join('')}</tbody></table>`;
       if(block.presentation==='associations'){
         return `<div class="association-frame"><table class="memory-associations"><thead><tr><th scope="col">Persona</th><th scope="col">Imagen</th></tr></thead><tbody>${block.rows.map(row=>`<tr><th scope="row"><span class="person-initial" aria-hidden="true">${escape(row[0].slice(0,1))}</span>${escape(row[0])}</th><td>${visualLabel(row[1],{...options.senses,memory:true})}</td></tr>`).join('')}</tbody></table></div>`;
       }

@@ -971,6 +971,11 @@ function socialExercise(level:number){
 }
 
 function validateItem(item:any):boolean{
+  try{
+    if(item?.speedEvidence)(globalThis as any).Curriculum.validateSpeed(item);
+    if(item?.planEvidence)(globalThis as any).Curriculum.validatePlan(item);
+    if(item?.mathEvidence)(globalThis as any).Curriculum.validateMath(item);
+  }catch(_){return false;}
   if(!item||typeof item!=="object") return false;
   if(item.memoryResponse==="multiple"||item.selectiveRecall){try{(globalThis as any).Curriculum.validateSelectiveRecall(item);}catch(_){return false;}}
   if(item.type==="documentReview"||item.documentPlan){try{(globalThis as any).DocumentLibrary.validateExecutiveTask(item);}catch(_){return false;}}
@@ -2294,6 +2299,8 @@ function matrixApplied20(age:string,level:number,v:number){
 }
 
 function variantExercise(age:string,domain:string,level:number,subdomain:string|null=null,documentsOnly:boolean|null=null){
+  const academic=(globalThis as any).Curriculum.generateAcademic(age,domain,level,subdomain||'grammar');
+  if(academic)return {...academic,id:age+'-academic-'+crypto.randomUUID()};
   if(documentsOnly&&subdomain==='writing'&&(globalThis as any).DocumentLibrary.supports(age,domain)){const bank=(globalThis as any).Curriculum.pool(age,domain,level).filter((it:any)=>it.stimulus?.some((b:any)=>b.type==='document'));return {...pick(bank),id:age+'-document-writing-'+crypto.randomUUID()};}
   if(['language','middleLanguage','teenLanguage'].includes(domain)&&(subdomain==='vocabulary'||!subdomain&&Math.random()<.25)){const bank=(globalThis as any).Curriculum.vocabulary(age,domain,level);return {...pick(bank),id:age+'-vocabulary-'+crypto.randomUUID()};}
   if((globalThis as any).DocumentLibrary.supports(age,domain)&&subdomain!=='writing'&&(documentsOnly===true||documentsOnly===null&&((['attention','executive'].includes(domain)||['reading','literacy','middleReading'].includes(domain)&&subdomain!=='writing')&&Math.random()<(domain==='executive'?.25:.35))))return {...(globalThis as any).DocumentLibrary.generate(age,domain,level),id:age+"-document-"+crypto.randomUUID()};

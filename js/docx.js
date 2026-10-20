@@ -52,6 +52,23 @@
   }
   async function makeDoc(items,version,profile,models){
     const {Document,Packer,Paragraph,TextRun,ImageRun,Table,TableRow,TableCell,WidthType,AlignmentType,BorderStyle,Footer}=window.docx;
+    const sceneImages=new Map();
+    // In the browser export the exact same SVG scene/map as a Word-compatible
+    // PNG; canonical text/table evidence is also retained below the image.
+    if(typeof window.Image==='function'){
+      for(const [index,model] of models.entries())for(const block of model.stimulus){
+        if(!['memoryScene','routeMap'].includes(block.presentation))continue;
+        const key=JSON.stringify(block);if(sceneImages.has(key))continue;
+        const holder=document.createElement('div');holder.innerHTML=window.ActivityModel.interactiveStimulus([block],{memory:true,senses:items[index].lexicalSenses});
+        const svg=holder.querySelector('svg');if(!svg)throw new Error('Falta la escena visual para la ficha.');
+        const bounds=svg.getAttribute('viewBox').split(/\s+/).map(Number);svg.setAttribute('width',String(bounds[2]));svg.setAttribute('height',String(bounds[3]));
+        const image=new window.Image();
+        {
+          image.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg.outerHTML);await image.decode();const canvas=document.createElement('canvas');canvas.width=bounds[2];canvas.height=bounds[3];canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);
+          const bytes=Uint8Array.from(atob(canvas.toDataURL('image/png').split(',')[1]),x=>x.charCodeAt(0));sceneImages.set(key,{bytes,width:canvas.width,height:canvas.height});
+        }
+      }
+    }
     const documentImages=new Map();
     const ids=[...new Set(models.flatMap(m=>m.stimulus.filter(b=>b.type==='document').map(b=>b.documentId)))];
     for(const id of ids){
@@ -80,6 +97,8 @@
     }
     function renderMaterial(material,item){
       const heading=material.label?[paragraph(material.label)]:[];
+      const scene=sceneImages.get(JSON.stringify(material));
+      if(scene)heading.push(new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({data:scene.bytes,transformation:{width:340,height:Math.round(scene.height*340/scene.width)},altText:{name:material.presentation==='routeMap'?'Mapa del recorrido':'Escena para recordar',title:'Estímulo de memoria',description:JSON.stringify(material.items||material.rows)}})]}));
       if(material.type==='document'){
         const source=window.DocumentLibrary.get(material.documentId);
         const description=source.transcript.map(b=>b.type==='text'?b.text:b.rows.map(r=>r.join(' · ')).join('; ')).join(' ');

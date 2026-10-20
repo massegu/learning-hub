@@ -266,7 +266,7 @@
   }
   function renderSpatialResponse(it){
     $('#exerciseOptions').classList.add('structured-options');
-    $('#exerciseOptions').innerHTML=`<div class="spatial-answer-grid" style="--grid-size:${it.gridSize}" role="group" aria-label="Elige la posición que recuerdas">${window.Curriculum.spatialPositions(it.gridSize).map(o=>`<button class="option-btn" data-answer="${escapeHtml(o)}" aria-label="${escapeHtml(o)}"><span aria-hidden="true">·</span><small>${escapeHtml(o)}</small></button>`).join('')}</div>`;
+    $('#exerciseOptions').innerHTML=`<div class="spatial-answer-grid" style="--grid-size:${it.gridSize}" role="group" aria-label="Marca en la cuadrícula la posición que recuerdas">${window.Curriculum.spatialPositions(it.gridSize).map(o=>`<button class="option-btn" data-answer="${escapeHtml(o)}" aria-label="${escapeHtml(o)}"><span aria-hidden="true">${it.spatialAnswer==='grid'?'＋':'·'}</span>${it.spatialAnswer==='grid'?'':`<small>${escapeHtml(o)}</small>`}</button>`).join('')}</div>`;
     $$('#exerciseOptions .option-btn').forEach(b=>b.onclick=()=>checkOption(b,b.dataset.answer));
   }
   function renderSpeedExercise(it){
@@ -971,7 +971,7 @@
       const tray = tokens
         .map(
           (tok, i) =>
-            `<button class="word-token ${picked.includes(tok) ? "used" : ""}" data-token-index="${i}" ${picked.includes(tok) ? "disabled" : ""}>${escapeHtml(tok)}</button>`,
+            `<button class="word-token ${picked.includes(tok) ? "used" : ""}" data-token-index="${i}" aria-label="${escapeHtml(tok)}" ${picked.includes(tok) ? "disabled" : ""}>${it.memoryResponse==='order'?escapeHtml(window.ActivityModel.memoryLabel(tok)):escapeHtml(tok)}</button>`,
         )
         .join("");
       area.innerHTML = `<div class="sequence-workspace ${it.memoryResponse==='order'?'memory-order-workspace':''}"><div class="sequence-slots">${slots}</div><div class="token-bank"><p class="eyebrow">${it.memoryResponse==='order'?'ELEMENTOS DISPONIBLES':'PASOS DISPONIBLES'}</p><div class="token-tray">${tray}</div></div></div><div class="sequence-actions"><button id="orderUndo" class="secondary-btn" ${picked.length ? "" : "disabled"}>Deshacer</button><button id="orderReset" class="ghost-light-btn" ${picked.length ? "" : "disabled"}>Reiniciar</button><button id="orderCheck" class="primary-btn">Comprobar</button></div>`;
@@ -1283,9 +1283,9 @@
           acc = r.length ? Math.round((c / r.length) * 100) : 0;
         const timings=s==='speedReasoning'?[...new Set(r.filter(x=>x.speedFamily&&x.timingValid).map(x=>x.speedFamily+':'+x.level+':'+(x.speedRevision||2)))].map(key=>{
           const [family,level,revision]=key.split(':'),stats=window.Curriculum.speedSummary(r.filter(x=>x.speedFamily===family&&String(x.level)===level&&String(x.speedRevision||2)===revision).slice(-20));
-          return `<p class="speed-progress-detail">${({figures:'Figuras',objects:'Objetos',arrows:'Flechas',orientation:'Orientación',pictograms:'Pictogramas',characters:'Letras y números',mixed:'Series mixtas',category:'Categorías',key:'Clave de códigos',match:'Coincidencias'})[family]||escapeHtml(family)} · nivel ${escapeHtml(level)}${revision==='2'?' · formato anterior':''}: ${stats.accuracy}% de aciertos en ${stats.attempts} respuestas medidas.${stats.medianMs===null?'':` Mediana al acertar: ${(stats.medianMs/1000).toFixed(2)} s.`}</p>`;
+          return `<p class="speed-progress-detail">${({figures:'Figuras',objects:'Objetos',arrows:'Flechas',orientation:'Orientación',pictograms:'Pictogramas',characters:'Letras y números',mixed:'Series mixtas',category:'Categorías',key:'Clave de códigos',match:'Coincidencias',search:'Búsqueda visual',pairs:'Revisar parejas',flanker:'Ignorar distractores',translation:'Traducción de claves'})[family]||escapeHtml(family)} · nivel ${escapeHtml(level)}${revision!=='4'?' · formato anterior':''}: ${stats.accuracy}% de aciertos en ${stats.attempts} respuestas medidas.${stats.medianMs===null?'':` Mediana al acertar: ${(stats.medianMs/1000).toFixed(2)} s.`}</p>`;
         }).join(''):'';
-        return `<div class="progress-subject card"><small>${SUBJECT_META[s].name}</small><strong>${acc}%</strong><div class="bar"><span style="width:${acc}%"></span></div><small>${r.length} ejercicios · nivel ${state.levels[s] || 1}</small>${timings}</div>`;
+        return `<div class="progress-subject card"><small>${SUBJECT_META[s].name}</small><div class="accuracy-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="ring-track" cx="60" cy="60" r="49"/><circle class="ring-value" cx="60" cy="60" r="49" pathLength="100" stroke-opacity="${acc?1:0}" stroke-dasharray="${acc} 100"/></svg><div><strong>${r.length?acc+'%':'—'}</strong><span>${r.length?'de aciertos':'sin práctica'}</span></div></div><small>${r.length} ${r.length===1?'ejercicio':'ejercicios'} · nivel ${state.levels[s] || 1}</small>${timings}</div>`;
       })
       .join("");
     $("#recentResults").innerHTML =
@@ -1297,10 +1297,17 @@
             `<div class="recent-row"><span>${SUBJECT_META[x.subject]?.name || x.subject}</span><span>${x.correct ? "✓ Correcto" : "× A revisar"}</span><strong>${x.points || 0}</strong></div>`,
         )
         .join("") || '<p class="muted">Aún no hay resultados.</p>';
-    $("#bankCoverage").innerHTML =
-      '<p class="muted">El catálogo se entrega desde el servidor y se amplía progresivamente. El banco completo no se descarga al dispositivo.</p>';
-    $("#sessionEvolution").innerHTML =
-      '<p class="muted">La evolución detallada se irá completando con nuevas sesiones.</p>';
+    const sessions=new Map();
+    for(const row of state.history){
+      const key=row.sessionId||row.ts?.slice(0,10)||'anterior';
+      if(!sessions.has(key))sessions.set(key,{attempts:0,correct:0,date:row.sessionStartedAt||row.ts});
+      const session=sessions.get(key);session.attempts++;if(row.correct)session.correct++;
+    }
+    const recent=[...sessions.values()].slice(-12);
+    if(!recent.length){$('#sessionEvolution').innerHTML='<p class="muted">Completa algunos ejercicios para ver aquí tu evolución.</p>';return;}
+    const points=recent.map((row,i)=>({x:recent.length===1?350:60+i*580/(recent.length-1),y:200-160*row.correct/row.attempts,accuracy:Math.round(100*row.correct/row.attempts),...row}));
+    const path=points.map((p,i)=>`${i?'L':'M'}${p.x},${p.y}`).join(' ');
+    $('#sessionEvolution').innerHTML=`<div class="progress-chart-summary"><strong>${recent.reduce((n,r)=>n+r.attempts,0)} ejercicios</strong><span>en ${recent.length} ${recent.length===1?'sesión reciente':'sesiones recientes'}</span></div><svg class="evolution-chart" viewBox="0 0 700 250" role="img" aria-label="Porcentaje de aciertos por sesión. Los datos completos aparecen debajo."><defs><linearGradient id="progressFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#669c88" stop-opacity=".26"/><stop offset="100%" stop-color="#669c88" stop-opacity=".02"/></linearGradient></defs>${[0,50,100].map(n=>`<g><path d="M60 ${200-n*1.6}H650" stroke="#dce5dc" stroke-dasharray="4 6"/><text x="46" y="${205-n*1.6}" text-anchor="end" fill="#61776a" font-size="13">${n}%</text></g>`).join('')}<path d="${path}L${points.at(-1).x},200L${points[0].x},200Z" fill="url(#progressFill)"/><path d="${path}" fill="none" stroke="#397b67" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${points.map((p,i)=>`<g><circle cx="${p.x}" cy="${p.y}" r="6" fill="#fffdf7" stroke="#397b67" stroke-width="3"><title>Sesión ${i+1}: ${p.accuracy}% de aciertos, ${p.attempts} ejercicios</title></circle><text x="${p.x}" y="230" text-anchor="middle" fill="#61776a" font-size="13">${i+1}</text></g>`).join('')}</svg><details class="progress-chart-data"><summary>Ver los datos por sesión</summary><table><thead><tr><th>Sesión</th><th>Ejercicios</th><th>Aciertos</th></tr></thead><tbody>${points.map((p,i)=>`<tr><td>${i+1}</td><td>${p.attempts}</td><td>${p.accuracy}%</td></tr>`).join('')}</tbody></table></details>`;
   }
   function csvEscape(v) {
     const s = String(v ?? "");

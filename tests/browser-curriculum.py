@@ -59,7 +59,10 @@ try:
      expected=[f'Fila {r+1}, columna {c+1}' for r in range(it['gridSize']) for c in range(it['gridSize'])]
      assert positions==expected,(positions,expected)
      screenshot(f'{age}-spatial-response-L{it["level"]}')
-    if it.get('memoryResponse')=='multiple':
+    if it.get('memoryResponse')=='order':
+     for tok in it['answer']:page.locator('#exerciseOptions').get_by_role('button',name=tok,exact=True).click()
+     page.locator('#orderCheck').click()
+    elif it.get('memoryResponse')=='multiple':
      for label in it['answers']:page.locator('#exerciseOptions').get_by_role('button',name=label,exact=True).click()
      page.locator('#multiCheck').click()
     else:page.locator('#exerciseOptions').get_by_role('button',name=it['a'],exact=True).click()
@@ -128,14 +131,18 @@ try:
    page.evaluate('(items)=>window.__exportItems=items',captured)
    with page.expect_download() as dl:page.evaluate('(age)=>WorksheetGenerator.generate([__exportItems],__profiles.find(p=>p.id===age))',age)
    path=Path(tmp)/f'{age}-new.docx';dl.value.save_as(path);nodes=doc_text(path.read_bytes());exports+=1
-   assert any('no mide el tiempo' in x for x in nodes);assert any('una a una' in x for x in nodes)
+   assert any('no mide el tiempo' in x for x in nodes)
+   if any(it.get('recallSequence') for it in captured):assert any('una a una' in x for x in nodes)
+   if any(it.get('type')=='memoryReveal' and not it.get('recallSequence') for it in captured):assert any('Mira el material' in x for x in nodes)
    for item in captured:
     for block in item['stimulus']:
      if block['type']=='document':
       with zipfile.ZipFile(path) as archive:assert any(n.startswith('word/media/') and n.endswith('.png') for n in archive.namelist())
       continue
      for value in ([block['text']] if block['type']=='text' else block['items'] if block['type']=='list' else [v for row in block['rows'] for v in row]):
-      assert any(value in node for node in nodes),value
+      if not any(value in node for node in nodes):
+       visible=page.evaluate("({value,item})=>item.type==='memoryReveal'&&StimulusArt.forLabel(value,item.lexicalSenses)?ActivityModel.memoryLabel(value):value",{'value':value,'item':item})
+       assert visible!=value and any(visible in node for node in nodes),value
    page.locator('#navMenu [data-section="progress"]').click()
    assert 'Mediana al acertar' in page.locator('#progressCards').inner_text()
    with page.expect_download() as dl:page.locator('#exportDetailCsv').click()

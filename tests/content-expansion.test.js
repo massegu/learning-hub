@@ -29,7 +29,7 @@ test('eighteen authored document types retain exact transcripts, multiple purpos
  assert.equal(Object.keys(documents.documents).length,18);assert.equal(new Set(Object.values(documents.documents).map(x=>x.kind)).size,18);
  for(const [id,doc] of Object.entries(documents.documents)){
   assert.equal(new Set(doc.questions.map(q=>q[0])).size,3,id);assert.equal(new Set(doc.questions.map(q=>q[1])).size,3,id);
-  const markup=model.interactiveStimulus([{type:'document',documentId:id}],{structured:true});assert.match(markup,/Ver versión en texto/);assert.ok(!/<details[^>]*\sopen/.test(markup));assert.ok(markup.includes(doc.country));
+  const markup=model.interactiveStimulus([{type:'document',documentId:id}],{structured:true});assert.match(markup,/Ver versión en texto/);assert.ok(!/<details[^>]*\sopen/.test(markup));assert.match(markup,/<figcaption><a[^>]+>Ampliar documento<\/a><\/figcaption>/);
   for(const block of doc.transcript)if(block.type==='text')assert.ok(markup.includes(block.text.replaceAll('&','&amp;').replaceAll('>','&gt;').replaceAll('<','&lt;')));
   if(doc.brief){const svg=fs.readFileSync(doc.path.replace('.png','.svg'),'utf8');assert.doesNotMatch(svg,/Documento ficticio|Documento de práctica|Material original ficticio/);assert.ok(svg.includes(doc.country));assert.ok(doc.sample.length>30);}
  }
@@ -48,10 +48,10 @@ test('spelling rejects duplicate meanings, case, spacing and unintentional punct
 });
 test('speed includes geometric, object, directional and category tasks with balanced yes/no and factual answers',()=>{
  for(const age of ages)for(const level of [1,2,3]){
-  const bank=curriculum.pool(age,'speedReasoning',level);assert.ok(bank.every(it=>it.speedRevision===3));const families=new Set(bank.map(x=>x.speedFamily));for(const f of ['figures','objects','arrows','orientation','pictograms','category'])assert.ok(families.has(f));
+  const bank=curriculum.pool(age,'speedReasoning',level);assert.ok(bank.every(it=>it.speedRevision===4));const families=new Set(bank.map(x=>x.speedFamily));for(const f of ['figures','objects','arrows','orientation','pictograms','category'])assert.ok(families.has(f));
   if(age!=='early')for(const f of ['characters','mixed','key','match'])assert.ok(families.has(f));
   for(const f of families){const tasks=bank.filter(it=>it.speedFamily===f);if(!['key','match'].includes(f))assert.equal(tasks.filter(it=>it.a==='Sí').length,tasks.filter(it=>it.a==='No').length,f);}
-  for(const it of bank){if(it.speedEvidence.kind==='category'){assert.equal(it.a,['gato','perro','conejo','pájaro'].includes(it.stimulus[0].rows[0][1])?'Sí':'No');}if(it.stimulus[0].presentation==='speedComparison'){const markup=model.interactiveStimulus(it.stimulus);assert.match(markup,/speed-series/);assert.equal((markup.match(/class="speed-series"/g)||[]).length,2);}}
+  for(const it of bank){if(it.speedEvidence.kind==='category'){assert.equal(it.a,it.stimulus[0].items.every(value=>['gato','perro','conejo','pájaro'].includes(value))?'Sí':'No');}if(it.stimulus[0].presentation==='speedComparison'){const markup=model.interactiveStimulus(it.stimulus);assert.match(markup,/speed-series/);assert.equal((markup.match(/class="speed-series"/g)||[]).length,2);}}
  }
 });
 
