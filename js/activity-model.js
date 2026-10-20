@@ -105,6 +105,8 @@
     if (item.stimulus !== undefined && (item.image || item.visual || item.rounds))
       fail('el componente adicional no tiene una representación imprimible.');
     if (policy.forProfile(profile)) policy.validateEarly(item);
+    if(item.memoryResponse==='multiple'||item.selectiveRecall)(root.Curriculum||(typeof require==='function'&&require('./curriculum'))).validateSelectiveRecall(item);
+    if(item.type==='documentReview'||item.documentPlan)documents.validateExecutiveTask(item);
     if(item.type==='multiSelect')(root.Curriculum||(typeof require==='function'&&require('./curriculum'))).validateReview(item);
     const rawStimulus = item.stimulus === undefined ? legacyStimulus(item) : item.stimulus;
     const stimulus=Array.isArray(rawStimulus)&&item.writingRubric?.length?rawStimulus.filter(b=>!(b.type==='text'&&b.text==='Criterios de revisión')&&!(b.type==='list'&&JSON.stringify(b.items)===JSON.stringify(item.writingRubric))):rawStimulus;
@@ -267,7 +269,7 @@
   }
   function forDelivery(item, profile, domain) {
     (root.LocaleContent||(typeof require==='function'&&require('./locale-content'))).validateOptions(item);
-    if (!policy.forProfile(profile)){if(item.type==='multiSelect')printable(item,profile);return item;}
+    if (!policy.forProfile(profile)){if(item.type==='multiSelect'||item.type==='documentReview'||item.documentPlan||item.memoryResponse==='multiple'||item.selectiveRecall)printable(item,profile);return item;}
     if (domain && item?.domain !== domain) fail('el área recibida no coincide con la solicitada.');
     // Identical contract at the domain boundary, on screen and in the exporter.
     // This applies to local, remote and future cache sources alike.
@@ -294,7 +296,7 @@
         return `<figure class="practice-document"><img src="${escape(doc.path)}" width="${doc.width}" height="${doc.height}" alt="${escape(doc.title)}" loading="eager"><figcaption>${escape(doc.kind)} · ${escape(doc.country)} · <a href="${escape(doc.path)}" target="_blank" rel="noopener">Ampliar documento</a></figcaption></figure><details class="document-transcript"><summary>Ver versión en texto</summary>${interactiveStimulus(doc.transcript,{structured:true})}</details>`;
       }
       if(block.presentation==='associations'){
-        return `<div class="association-frame"><table class="memory-associations"><thead><tr><th scope="col">Persona</th><th scope="col">Objeto</th></tr></thead><tbody>${block.rows.map(row=>`<tr><th scope="row"><span class="person-initial" aria-hidden="true">${escape(row[0].slice(0,1))}</span>${escape(row[0])}</th><td>${visualLabel(row[1],options.senses)}</td></tr>`).join('')}</tbody></table></div>`;
+        return `<div class="association-frame"><table class="memory-associations"><thead><tr><th scope="col">Persona</th><th scope="col">Imagen</th></tr></thead><tbody>${block.rows.map(row=>`<tr><th scope="row"><span class="person-initial" aria-hidden="true">${escape(row[0].slice(0,1))}</span>${escape(row[0])}</th><td>${visualLabel(row[1],options.senses)}</td></tr>`).join('')}</tbody></table></div>`;
       }
       if(block.type==='list'&&['sequence','cards'].includes(block.presentation))return `${block.label?`<p class="stimulus-caption">${escape(block.label)}</p>`:''}<div class="memory-object-sequence" role="list">${block.items.map((x,i)=>`<div class="stimulus-unit" role="listitem">${block.presentation==='sequence'?`<span class="unit-position">${i+1}</span>`:''}${visualLabel(x,{...options.senses,subject:block.label})}</div>`).join('')}</div>`;
       if(block.presentation==='spatial'){

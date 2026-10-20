@@ -258,7 +258,7 @@
           it.memoryQuestion || "¿Qué recuerdas?";
         if(it.memoryResponse==='order')renderOrderExercise(it);
         else if(it.memoryResponse==='spatial')renderSpatialResponse(it);
-        else if (it.type === "memoryMulti") renderMultiSelect(it);
+        else if (it.type === "memoryMulti" || it.memoryResponse==='multiple') renderMultiSelect(it);
         else renderOptions(it);
       },
       Math.max(2500, Number(it.revealMs || 6000)),
@@ -299,7 +299,7 @@
     const selected = new Set();
     const opts = shuffle(it.opts || []);
     $("#exerciseOptions").innerHTML =
-      `<div class="multi-select-grid">${opts.map((o) => `<button class="option-btn multi-option" data-value="${escapeHtml(o)}" aria-label="${escapeHtml(o)}" aria-pressed="false">${escapeHtml(o)}</button>`).join("")}</div><div class="multi-actions"><span id="multiCount" role="status">${it.type==='multiSelect'?'0 seleccionadas':`0/${(it.answers || []).length} seleccionados`}</span><button id="multiCheck" class="primary-btn" ${it.type==='multiSelect'?'disabled':''}>Comprobar selección</button></div>`;
+      `<div class="multi-select-grid">${opts.map((o) => `<button class="option-btn multi-option" data-value="${escapeHtml(o)}" aria-label="${escapeHtml(o)}" aria-pressed="false">${it.memoryResponse==='multiple'?window.ActivityModel.visualLabel(o,it.lexicalSenses):escapeHtml(o)}</button>`).join("")}</div><div class="multi-actions"><span id="multiCount" role="status">${(['multiSelect','documentReview'].includes(it.type)||it.memoryResponse==='multiple')?'0 seleccionadas':`0/${(it.answers || []).length} seleccionados`}</span><button id="multiCheck" class="primary-btn" ${(['multiSelect','documentReview'].includes(it.type)||it.memoryResponse==='multiple')?'disabled':''}>Comprobar selección</button></div>`;
     $$("#exerciseOptions .multi-option").forEach(
       (b) =>
         (b.onclick = () => {
@@ -312,8 +312,8 @@
             b.classList.add("selected");
           }
           b.setAttribute('aria-pressed',String(selected.has(v)));
-          $("#multiCount").textContent = it.type==='multiSelect'?`${selected.size} seleccionadas`:`${selected.size}/${(it.answers || []).length} seleccionados`;
-          if(it.type==='multiSelect')$('#multiCheck').disabled=!selected.size;
+          $("#multiCount").textContent = (['multiSelect','documentReview'].includes(it.type)||it.memoryResponse==='multiple')?`${selected.size} ${selected.size===1?'seleccionada':'seleccionadas'}`:`${selected.size}/${(it.answers || []).length} seleccionados`;
+          if((['multiSelect','documentReview'].includes(it.type)||it.memoryResponse==='multiple'))$('#multiCheck').disabled=!selected.size;
         }),
     );
     $("#multiCheck").onclick = () => {
@@ -330,7 +330,7 @@
       showFeedback(
         ok,
         saveResult(subject, ok, it.id, it.type),
-        it.type==='multiSelect'?it.why:ok
+        (['multiSelect','documentReview'].includes(it.type)||it.memoryResponse==='multiple')?it.why:ok
           ? "Has reconocido correctamente todos los elementos."
           : "Revisa los elementos marcados en verde.",
       );
@@ -712,6 +712,8 @@
     const documentSupport=window.DocumentLibrary?.supports(window.AgeStages.route(profile),subject);
     if(!documentSupport||isReading)documentOnly=false;
     $('#documentModeSwitch').classList.toggle('hidden',!documentSupport||isReading);
+    $('#documentModeHint').classList.toggle('hidden',!documentSupport||isReading);
+    $('#documentModeHint').textContent=subject==='executive'?(documentOnly?'Usa el documento para organizar acciones y corregir un plan.':'Ordena acciones, aplica reglas y revisa decisiones.'):(documentOnly?'Localiza y contrasta los datos del documento.':'Compara figuras, códigos y listas.');
     $$('#documentModeSwitch button').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.documents==='true')===documentOnly)));
     counter = 0;
     renderEarlyTaskGuide();
@@ -729,6 +731,7 @@
     const localeRevision = API.localeRevision;
     const res = await API.requestContent({
       ...payload,
+      client_revision:2,
       profile_id: targetProfile.id,
       locale,
     });
@@ -759,7 +762,7 @@
   }
   async function requestOne(kind, domain = subject, extra = {}) {
     const res = await requestForProfile({
-      ...(kind==='exercise'&&documentOnly&&window.DocumentLibrary?.supports(window.AgeStages.route(profile),domain)?{documents_only:true}:{}),
+      ...(kind==='exercise'&&['attention','executive'].includes(domain)&&window.DocumentLibrary?.supports(window.AgeStages.route(profile),domain)?{documents_only:documentOnly}:{}),
       kind,
       domain,
       subdomain: ["language","middleLanguage","teenLanguage"].includes(domain) ? mode : ["reading","middleReading","literacy"].includes(domain)?(mode==='writing'?'writing':'reading'):null,
@@ -792,6 +795,8 @@
     $("#textAnswerArea").classList.add("hidden");
     $("#selfAssessment").classList.add("hidden");
     $("#textAnswerInput").value = "";
+    $("#reviseWritingAnswer").classList.add("hidden");
+    $$(".self-buttons button").forEach(b=>b.disabled=false);
     $("#modelAnswer").textContent = "";
     $("#exerciseNext").classList.add("hidden");
     if(window.ContentPolicy.forProfile(profile))$('#exerciseNext').textContent='Siguiente →';
@@ -893,7 +898,7 @@
         `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus,{heading:it.topic||it.theme,rubric:it.writingRubric,illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:!window.ContentPolicy.forProfile(profile),senses:it.lexicalSenses})}</div>`;
     $("#exercisePrompt").textContent = it.q || "Actividad";
     if(it.speedTask){renderSpeedExercise(it);return;}
-    if(it.type==='multiSelect'){renderMultiSelect(it);return;}
+    if(['multiSelect','documentReview'].includes(it.type)){renderMultiSelect(it);return;}
     if (it.type === "memoryReveal" || it.type === "memoryMulti") {
       renderMemoryExercise(it);
       return;
@@ -1113,14 +1118,25 @@
       currentItem.a ||
       "Revisa si tu respuesta responde con claridad.";
     $("#selfAssessment").classList.remove("hidden");
+    if(currentItem._selfAssessed){$("#exerciseFeedback").textContent="Compara tu versión revisada con el modelo. Puedes seguir revisándola o continuar con Siguiente.";}
   };
   $$(".self-buttons button").forEach(
     (b) =>
       (b.onclick = () => {
         const ok = b.dataset.self === "true";
-        showFeedback(ok, saveResult(subject, ok, currentItem.id, "self"));
+        if(currentItem._selfAssessed)return;
+        currentItem._selfAssessed=true;
+        showFeedback(ok, saveResult(subject, ok, currentItem.id, "self"),ok?'Has indicado que lo has conseguido.':'Has indicado que necesitas practicar. Revisa tu texto con el modelo y la lista de comprobación.');
+        $$('.self-buttons button').forEach(button=>button.disabled=true);
+        $('#reviseWritingAnswer').classList.toggle('hidden',ok);
+        if(!ok)$('#exerciseFeedback').className='feedback practice';
       }),
   );
+  $('#reviseWritingAnswer').onclick=()=>{
+    $('#textAnswerInput').focus();
+    $('#textAnswerInput').scrollIntoView({block:'center',behavior:'smooth'});
+    $('#exerciseFeedback').textContent='Puedes corregir tu texto y volver a compararlo con el modelo. Después continúa cuando quieras.';
+  };
   function updateGlobalUI() {
     if (!profile) return;
     const total = Object.values(state.scores).reduce(

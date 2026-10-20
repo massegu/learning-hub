@@ -36,7 +36,11 @@ try:
      if domain=='attention' and age=='teen':
       screenshot(doc);page.locator('.document-transcript summary').click();assert page.locator('.document-transcript').get_attribute('open') is not None
       assert 'Documento ficticio' not in page.locator('.document-transcript').inner_text();assert len(page.locator('.document-transcript').inner_text())>50
-     page.locator('#exerciseOptions').get_by_role('button',name=it['a'],exact=True).click();count+=1
+     if it['type']=='order':
+      for token in it['answer']:page.locator('#exerciseOptions').get_by_role('button',name=token,exact=True).click()
+      page.locator('#orderCheck').click()
+     else:page.locator('#exerciseOptions').get_by_role('button',name=it['a'],exact=True).click()
+     count+=1
      if n<(0 if age=='junior' else 3):it=next_item()
     assert len(set(seen))==len(seen),(age,domain,seen)
     page.evaluate('window.__current=null');page.locator('#documentModeSwitch [data-documents=false]').click();current()
@@ -57,9 +61,13 @@ try:
     for token in it['answer']:page.locator('#exerciseOptions').get_by_role('button',name=token,exact=True).click()
     page.locator('#orderCheck').click()
    else:
-    page.clock.fast_forward(it['revealMs']+50);page.locator('#exerciseOptions').get_by_role('button',name=it['a'],exact=True).click()
+    page.clock.fast_forward(it['revealMs']+50)
+    if it.get('answers'):
+     for label in it['answers']:page.locator('#exerciseOptions').get_by_role('button',name=label,exact=True).click()
+     page.locator('#multiCheck').click()
+    else:page.locator('#exerciseOptions').get_by_role('button',name=it['a'],exact=True).click()
    it=next_item()
-  assert it['mechanic']=='memory_association';assert page.locator('.memory-associations th[scope=col]').evaluate_all('(els)=>els.map(e=>e.textContent)')==['Persona','Objeto'],(it,page.locator('#exerciseVisual').inner_html());screenshot('memory-associations')
+  assert it['mechanic']=='memory_association';assert page.locator('.memory-associations th[scope=col]').evaluate_all('(els)=>els.map(e=>e.textContent)')==['Persona','Imagen'],(it,page.locator('#exerciseVisual').inner_html());screenshot('memory-associations')
   page.clock.fast_forward(it['revealMs']+50);page.locator('#exerciseOptions').get_by_role('button',name=it['a'],exact=True).click()
   it=open_area('teenLanguage')
   page.evaluate('window.__current=null');page.locator('#languageModeSwitch [data-mode=spelling]').click();it=current()

@@ -59,7 +59,10 @@ try:
      expected=[f'Fila {r+1}, columna {c+1}' for r in range(it['gridSize']) for c in range(it['gridSize'])]
      assert positions==expected,(positions,expected)
      screenshot(f'{age}-spatial-response-L{it["level"]}')
-    page.locator('#exerciseOptions').get_by_role('button',name=it['a'],exact=True).click()
+    if it.get('memoryResponse')=='multiple':
+     for label in it['answers']:page.locator('#exerciseOptions').get_by_role('button',name=label,exact=True).click()
+     page.locator('#multiCheck').click()
+    else:page.locator('#exerciseOptions').get_by_role('button',name=it['a'],exact=True).click()
    elif it.get('type')=='order':
     for tok in it['answer']:page.locator('#exerciseOptions').get_by_role('button',name=tok,exact=True).click()
     page.locator('#orderCheck').click()
