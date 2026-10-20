@@ -45,7 +45,7 @@ test('memory requires reconstructing sequences and positions, and corrupt answer
   }
   for(const level of [1,2,3])for(const it of curriculum.pool(age,'memory',level)){
    if(it.recallEvidence?.kind==='sequence'){
-    const expected=it.recallEvidence.takeLast?it.recallSequence.slice(-it.recallEvidence.takeLast):it.recallEvidence.reverse?[...it.recallSequence].reverse():it.recallSequence;
+    const expected=it.recallEvidence.takeLast?it.stimulus[0].items.slice(-it.recallEvidence.takeLast):it.recallEvidence.reverse?[...it.stimulus[0].items].reverse():it.stimulus[0].items;
     assert.deepEqual(it.answer,expected);assert.ok(it.tokens.every(t=>expected.includes(t)));
     assert.equal(it.recallEvidence.reverse,!it.recallEvidence.takeLast&&level===3&&['primary','middle','teen'].includes(age));
     const corrupt=structuredClone(it);[corrupt.answer[0],corrupt.answer[1]]=[corrupt.answer[1],corrupt.answer[0]];
@@ -61,7 +61,7 @@ test('memory requires reconstructing sequences and positions, and corrupt answer
 });
 test('processing speed answers derive from comparisons or keys, and timing summaries exclude unmeasured/invalid trials',()=>{
  for(const age of ages)for(const level of [1,2,3])for(const it of curriculum.pool(age,'speedReasoning',level)){
-  assert.equal(it.speedTask,true);assert.ok(it.mechanic.startsWith('speed_compare_')||['speed_key','speed_match','speed_category'].includes(it.mechanic));
+  assert.equal(it.speedTask,true);assert.ok(it.mechanic.startsWith('speed_compare_')||['speed_key','speed_match','speed_category','speed_search','speed_pairs','speed_flanker','speed_translation'].includes(it.mechanic));
   const b=it.stimulus[0];
   if(it.speedEvidence.kind==='equal')assert.equal(it.a,b.rows[0][0]===b.rows[0][1]?'Sí':'No');
   if(it.speedEvidence.kind==='key')assert.equal(it.a,b.rows.find(row=>row[0]===it.speedEvidence.target)[1]);

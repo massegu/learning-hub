@@ -18,8 +18,8 @@ test('executive document plans require their actual source and exact plan, at ev
   if(item.type==='documentReview'){const bad=structuredClone(item);bad.answers=[];assert.equal(api.validateItem(bad),false);const missing=structuredClone(item);delete missing.documentPlan;assert.equal(api.validateItem(missing),false);}
  }
 });
-test('nine memory categories have real SVG/PNG and appear in the youngest as well as oldest groups',()=>{
- assert.equal(c.memoryCategories.length,9);assert.equal(new Set(c.memoryCategories.flatMap(x=>x.items)).size,36);
+test('fifteen memory categories have real SVG/PNG and appear in the youngest as well as oldest groups',()=>{
+ assert.equal(c.memoryCategories.length,15);assert.equal(new Set(c.memoryCategories.flatMap(x=>x.items)).size,60);
  for(const age of ['early','junior','primary','middle','teen']){
   const bank=c.pool(age,'memory',1),shown=new Set(bank.flatMap(it=>it.memoryContent.map(x=>x.detail)));
   for(const group of c.memoryCategories)for(const label of group.items){assert.ok(shown.has(label),age+'/'+label);const key=art.forLabel(label,{banana:true});assert.ok(key,label);assert.match(art.svg(key),/<svg/);assert.deepEqual([...art.png(key).slice(0,8)],[137,80,78,71,13,10,26,10]);}
@@ -28,7 +28,7 @@ test('nine memory categories have real SVG/PNG and appear in the youngest as wel
 test('selective recall requires both category membership and actual prior exposure; corrupted targets fail closed',()=>{
  const {api}=load();
  for(const age of ['junior','primary','middle','teen'])for(const level of [1,2,3]){
-  const bank=c.pool(age,'memory',level).filter(it=>it.selectiveRecall);assert.equal(bank.length,72);
+  const bank=c.pool(age,'memory',level).filter(it=>it.selectiveRecall);assert.equal(bank.length,120);
   for(const it of bank){assert.equal(it.answers.length,level);assert.ok(it.opts.some(x=>!it.stimulus[0].items.includes(x)));assert.ok(api.validateItem(it));
    for(const country of Object.keys(l.labels))m.printable(l.localizeItem(it,country,'memory'),profile(age));
   }
