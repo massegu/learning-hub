@@ -28,6 +28,8 @@
     // A complete four-choice comparison is the same material without a model.
     // Keep labels and code characters intact; incomplete prose stays untouched.
     const choices=value.match(/^\s*A:\s*(\S+)\s+B:\s*(\S+)\s+C:\s*(\S+)\s+D:\s*(\S+)\s*$/iu);
+    const labelled=value.match(/^\s*A\)\s*([^·]+?)\s*·\s*B\)\s*([^·]+?)\s*·\s*C\)\s*([^·]+?)\s*·\s*D\)\s*([^·]+?)\s*$/iu);
+    if(labelled&&labelled.slice(1).every(data=>data.trim()))return [{type:'table',rows:labelled.slice(1).map((data,i)=>[String.fromCharCode(65+i),data.trim()]),presentation:'labelledComparison'}];
     return choices?[{type:'table',rows:choices.slice(1).map((code,i)=>[String.fromCharCode(65+i),code]),presentation:'codeComparison'}]:null;
   }
   function legacyStimulus(item) {
@@ -277,13 +279,14 @@
     return item;
   }
   function escape(text) { return String(text).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function memoryLabel(value){return String(value).replace(/^(?:el|la|los|las|un|una|unos|unas)\s+/iu,'');}
   function visualLabel(value,senses={}){
     if(value===undefined||value===null||!String(value).trim())throw new Error('Falta la etiqueta visual.');
     if(value==='—')return '<span class="empty-memory-cell">Vacío</span>';
     const raw=String(value),glyphs=/^[●○□△☆\s·]+$/.test(raw)?raw.match(/[●○□△☆]/g):null;
     if(glyphs)return `<span class="picture-glyphs" aria-hidden="true">${glyphs.map(x=>art.svg(art.forLabel(x))).join('')}</span><span class="stimulus-only-text">${escape(raw)}</span>`;
     const key=art?.forLabel(raw,senses);
-    return `${key?`<span class="picture-icon" aria-hidden="true">${art.svg(key)}</span>`:''}<span>${escape(raw)}</span>`;
+    return `${key?`<span class="picture-icon" aria-hidden="true">${art.svg(key)}</span>`:''}<span>${escape(key&&senses.memory?memoryLabel(raw):raw)}</span>`;
   }
   function interactiveStimulus(blocks,options={}) {
     // The topic is already visible above the question. Keep it in the canonical
@@ -296,14 +299,15 @@
         return `<figure class="practice-document"><img src="${escape(doc.path)}" width="${doc.width}" height="${doc.height}" alt="${escape(doc.title)}" loading="eager"><figcaption>${escape(doc.kind)} · ${escape(doc.country)} · <a href="${escape(doc.path)}" target="_blank" rel="noopener">Ampliar documento</a></figcaption></figure><details class="document-transcript"><summary>Ver versión en texto</summary>${interactiveStimulus(doc.transcript,{structured:true})}</details>`;
       }
       if(block.presentation==='associations'){
-        return `<div class="association-frame"><table class="memory-associations"><thead><tr><th scope="col">Persona</th><th scope="col">Imagen</th></tr></thead><tbody>${block.rows.map(row=>`<tr><th scope="row"><span class="person-initial" aria-hidden="true">${escape(row[0].slice(0,1))}</span>${escape(row[0])}</th><td>${visualLabel(row[1],options.senses)}</td></tr>`).join('')}</tbody></table></div>`;
+        return `<div class="association-frame"><table class="memory-associations"><thead><tr><th scope="col">Persona</th><th scope="col">Imagen</th></tr></thead><tbody>${block.rows.map(row=>`<tr><th scope="row"><span class="person-initial" aria-hidden="true">${escape(row[0].slice(0,1))}</span>${escape(row[0])}</th><td>${visualLabel(row[1],{...options.senses,memory:true})}</td></tr>`).join('')}</tbody></table></div>`;
       }
-      if(block.type==='list'&&['sequence','cards'].includes(block.presentation))return `${block.label?`<p class="stimulus-caption">${escape(block.label)}</p>`:''}<div class="memory-object-sequence" role="list">${block.items.map((x,i)=>`<div class="stimulus-unit" role="listitem">${block.presentation==='sequence'?`<span class="unit-position">${i+1}</span>`:''}${visualLabel(x,{...options.senses,subject:block.label})}</div>`).join('')}</div>`;
+      if(block.type==='list'&&['sequence','cards'].includes(block.presentation))return `${block.label?`<p class="stimulus-caption">${escape(block.label)}</p>`:''}<div class="memory-object-sequence" role="list">${block.items.map((x,i)=>`<div class="stimulus-unit" role="listitem">${block.presentation==='sequence'?`<span class="unit-position">${i+1}</span>`:''}${visualLabel(x,{...options.senses,subject:block.label,memory:options.memory})}</div>`).join('')}</div>`;
       if(block.presentation==='spatial'){
-        return `<div class="recall-grid" style="--grid-size:${block.rows[0].length}" role="table" aria-label="${escape(block.label||'Cuadrícula para recordar')}">${block.rows.map((row,r)=>`<div role="row">${row.map((x,c)=>`<div role="cell" aria-label="Fila ${r+1}, columna ${c+1}: ${escape(x)}">${visualLabel(x,options.senses)}</div>`).join('')}</div>`).join('')}</div>`;
+        return `<div class="recall-grid" style="--grid-size:${block.rows[0].length}" role="table" aria-label="${escape(block.label||'Cuadrícula para recordar')}">${block.rows.map((row,r)=>`<div role="row">${row.map((x,c)=>`<div role="cell" aria-label="Fila ${r+1}, columna ${c+1}: ${escape(x)}">${visualLabel(x,{...options.senses,memory:true})}</div>`).join('')}</div>`).join('')}</div>`;
       }
       if(block.presentation==='speedComparison')return `<div class="speed-comparison" role="group" aria-label="Dos series para comparar">${block.rows[0].map((series,i)=>`<div class="speed-series" aria-label="Serie ${i+1}">${series.split(' · ').map(x=>`<span class="speed-symbol">${visualLabel(x,options.senses)}</span>`).join('')}</div>`).join('')}</div>`;
       if(block.presentation==='reviewPlan')return `${block.label?`<p class="stimulus-caption">${escape(block.label)}</p>`:''}<div class="stimulus-table-scroll" tabindex="0" role="region" aria-label="Compara las condiciones y el plan"><table class="structured-stimulus-table review-plan-table"><thead><tr>${block.rows[0].map(x=>`<th scope="col">${escape(x)}</th>`).join('')}</tr></thead><tbody>${block.rows.slice(1).map(row=>`<tr><th scope="row">${escape(row[0])}</th>${row.slice(1).map((value,i)=>`<td><span class="review-column-label" aria-hidden="true">${escape(block.rows[0][i+1])}</span>${escape(value)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+      if(block.presentation==='labelledComparison')return `<table class="attention-comparison attention-data"><thead><tr><th scope="col">Opción</th><th scope="col">Datos</th></tr></thead><tbody>${block.rows.map(row=>`<tr><th scope="row">${escape(row[0])}</th><td>${escape(row[1])}</td></tr>`).join('')}</tbody></table>`;
       if(block.presentation==='codeComparison')return `<table class="attention-comparison"><tbody>${block.rows.map(row=>`<tr><th scope="row">${escape(row[0])}</th><td><code>${escape(row[1])}</code></td></tr>`).join('')}</tbody></table>`;
       if(block.type==='text'&&block.presentation==='model'&&!options.illustrated)return `<div class="attention-model"><span>MODELO</span><code>${escape(block.text.slice(8))}</code></div>`;
       if(options.illustrated){
@@ -323,7 +327,7 @@
       return `<table>${block.rows.map(row => `<tr>${row.map(x => `<td>${escape(x)}</td>`).join('')}</tr>`).join('')}</table>`;
     }).join('');
   }
-  const api = { comparisonStimulus, preparePrintable, printable, validateBatch, forDelivery, interactiveStimulus, choiceKey, visualLabel };
+  const api = { memoryLabel, comparisonStimulus, preparePrintable, printable, validateBatch, forDelivery, interactiveStimulus, choiceKey, visualLabel };
   root.ActivityModel = api;
   if (typeof module !== 'undefined') module.exports = api;
 })(typeof window === 'undefined' ? globalThis : window);

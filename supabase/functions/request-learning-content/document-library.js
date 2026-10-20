@@ -876,7 +876,7 @@ function validateExecutiveTask(item){
  return true;
 }
 // Generated document dimensions.
-const documentHeights={"advert-co": 1020, "brochure-co-v1": 1040, "catalogue-co-v1": 1125, "form-es": 1070, "infographic-cr": 1240, "instructions-cr": 1105, "invoice-co-v1": 1101, "label-mx": 920, "map-cl": 1440, "menu-ar": 1020, "news-pa": 1020, "notice-cl": 935, "post-pa": 1020, "poster-mx": 785, "receipt-co-v1": 1017, "schedule-ar": 955, "ticket-es": 820, "transport-co": 920};
+const documentHeights={"advert-co": 1020, "brochure-co-v1": 1040, "catalogue-co-v1": 1144, "form-es": 1070, "infographic-cr": 1240, "instructions-cr": 1105, "invoice-co-v1": 1204, "label-mx": 920, "map-cl": 1440, "menu-ar": 1020, "news-pa": 1020, "notice-cl": 935, "post-pa": 1020, "poster-mx": 785, "receipt-co-v1": 1168, "schedule-ar": 955, "ticket-es": 820, "transport-co": 920};
 for(const [id,height] of Object.entries(documentHeights))documents[id].height=height;
 const attentionAdvanced={
  'invoice-co-v1':['¿Qué combinación coincide con el subtotal y la entrega, en ese orden?','22.000 COP y 3.000 COP',['25.000 COP y 3.000 COP','22.000 COP y 6.000 COP','12.000 COP y 4.000 COP']],

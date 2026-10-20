@@ -76,7 +76,7 @@
       // Glyphs are the units themselves: never add a second pictogram/dot.
       const prefix=position===undefined?[]:[new TextRun({text:`${position}. `,size:textSize})];
       const picture=key&&!/^[●○□△☆]$/.test(value)?[new ImageRun({data:window.StimulusArt.png(key),transformation:{width:32,height:32},altText:{name:'Objeto: '+value,title:value,description:value}}),new TextRun({text:' '})]:[];
-      return new Paragraph({spacing:{line:360,after:90},children:[...prefix,...picture,new TextRun({text:value,size:textSize,color:ink,font:'Aptos'})]});
+      return new Paragraph({spacing:{line:360,after:90},children:[...prefix,...picture,new TextRun({text:key&&item.type==='memoryReveal'?window.ActivityModel.memoryLabel(value):value,size:textSize,color:ink,font:'Aptos'})]});
     }
     function renderMaterial(material,item){
       const heading=material.label?[paragraph(material.label)]:[];
