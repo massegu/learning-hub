@@ -28,7 +28,13 @@ try:
   browser=p.chromium.launch(executable_path=executable,headless=True,args=['--no-sandbox']);page=browser.new_page(viewport={'width':1280,'height':900});errors=[]
   page.on('pageerror',lambda e:errors.append(str(e)))
   origin=f'http://127.0.0.1:{server.server_port}'
+  # A remembered profile can be deleted, or belong to a previous account.
+  page.add_init_script("localStorage.setItem('lh_current_profile','unavailable-profile')")
   page.goto(origin,wait_until='networkidle');page.wait_for_selector('#changePasswordBtn')
+  assert page.locator('#profileSelect').input_value()=='early'
+  assert page.evaluate("localStorage.getItem('lh_current_profile')")=='early'
+  page.locator('#navMenu [data-subject=language]').click()
+  page.wait_for_selector('#exerciseOptions .option-btn')
   page.locator('#changePasswordBtn').click();assert page.locator('#passwordDialog').is_visible()
   page.locator('#newPassword').fill('ClaveNueva123!');page.locator('#repeatPassword').fill('Distinta123!');page.locator('#savePassword').click()
   assert 'no coinciden' in page.locator('#passwordMessage').inner_text();assert page.evaluate('__changes.length')==0
@@ -37,6 +43,19 @@ try:
   page.evaluate('window.__updateFail=false');page.locator('#savePassword').click();page.wait_for_function('__changes.length===1')
   assert 'actualizada' in page.locator('#passwordMessage').inner_text();assert page.locator('#newPassword').input_value()==''
   page.locator('#closePassword').click();page.locator('#signOutBtn').click();page.wait_for_selector('#authForgotPassword')
+  # Sign in with a different owned profile list in the same tab. Previously
+  # the old navigation stayed visible with profile=null and every area failed.
+  page.evaluate("__profiles=__profiles.map(p=>({...p,id:'another-'+p.id}))")
+  page.locator('#authEmail').fill('review@example.invalid');page.locator('#authPassword').fill('LocalTest123!');page.locator('#authSignIn').click()
+  page.wait_for_function("()=>document.querySelector('#profileSelect').value==='another-early'")
+  assert page.evaluate("localStorage.getItem('lh_current_profile')")=='another-early'
+  page.locator('#profileSelect').select_option('another-teen')
+  for domain in ['teenLanguage','teenMath','executive','memory']:
+   page.locator(f'#navMenu [data-subject={domain}]').click();page.wait_for_selector('#exerciseOptions .option-btn')
+   assert 'Cannot read' not in page.locator('#exercisePrompt').inner_text()
+   assert page.evaluate('__requests.at(-1).profile_id')=='another-teen'
+  page.locator('#signOutBtn').click();page.wait_for_selector('#authForgotPassword')
+  page.locator('#authEmail').fill('')
   page.locator('#authForgotPassword').click();assert page.evaluate('__resets.length')==0
   page.locator('#authEmail').fill('review@example.invalid');page.locator('#authForgotPassword').click();page.wait_for_function('__resets.length===1')
   assert page.evaluate('__resets[0].redirectTo')==origin+'/?recuperar=1'
@@ -52,7 +71,18 @@ try:
   page.screenshot(path='/tmp/password-dialog-mobile.png');page.locator('#closePassword').click();page.wait_for_selector('#authGate:not(.hidden)')
   page.add_init_script('window.__signedIn=false');page.goto(origin+'/?recuperar=1',wait_until='networkidle');page.wait_for_selector('#authGate:not(.hidden)')
   assert 'caducado' in page.locator('#authMessage').inner_text();assert page.locator('#passwordDialog').is_hidden()
+  # An account without learners must offer creation, not retain the last
+  # account's navigation or remembered selection.
+  page.evaluate("__profiles=[];localStorage.setItem('lh_current_profile','another-teen')")
+  page.locator('#authEmail').fill('review@example.invalid');page.locator('#authPassword').fill('LocalTest123!');page.locator('#authSignIn').click()
+  page.wait_for_selector('#profileGate:not(.hidden)')
+  assert page.locator('#navMenu [data-subject]').count()==0
+  assert page.evaluate("localStorage.getItem('lh_current_profile')") is None
+  page.locator('#newProfileName').fill('Nuevo perfil');page.locator('#newProfileAge').select_option('teen');page.locator('#createProfileBtn').click()
+  page.wait_for_selector('#profileGate.hidden',state='hidden')
+  page.locator('#navMenu [data-subject=teenLanguage]').click();page.wait_for_selector('#exerciseOptions .option-btn')
+  assert page.evaluate('__requests.at(-1).profile_id')=='created'
   assert not errors,errors
-  print('PASS: password mismatch, error/retry, successful update, cleared fields, private recovery response, safe redirect, recovery session/event/cancellation/expired link, mobile; no real emails sent')
+  print('PASS: unavailable remembered profile, account switch with four working areas, owned request IDs, password mismatch, error/retry, update, recovery and mobile; no real emails sent')
   browser.close()
 finally:server.shutdown();server.server_close()

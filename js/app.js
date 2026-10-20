@@ -518,13 +518,19 @@
     hideAuth();
     renderAccountStatus();
     if (!profiles.length) {
+      profile = null;
+      currentItem = null;
+      ++requestGeneration;
+      localStorage.removeItem("lh_current_profile");
+      $("#navMenu").innerHTML = "";
       renderProfiles();
       openProfileGate();
       return;
     }
-    activateProfile(
-      localStorage.getItem("lh_current_profile") || profiles[0].id,
-    );
+    // The remembered selection may belong to a deleted profile or another
+    // account. Only activate a profile returned for the current account.
+    const remembered = localStorage.getItem("lh_current_profile");
+    activateProfile((profiles.find(p => p.id === remembered) || profiles[0]).id);
   }
   function renderAccountStatus() {
     const chip = $("#accountStatus");
@@ -727,6 +733,7 @@
     setupExercise();
   });
   async function requestForProfile(payload, targetProfile = profile) {
+    if (!targetProfile?.id) throw new Error('Selecciona o crea un perfil para empezar.');
     const locale = API.effectiveLocale(targetProfile);
     const localeRevision = API.localeRevision;
     const res = await API.requestContent({
