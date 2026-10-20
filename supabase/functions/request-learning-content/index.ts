@@ -972,6 +972,8 @@ function socialExercise(level:number){
 
 function validateItem(item:any):boolean{
   if(!item||typeof item!=="object") return false;
+  if(item.memoryResponse==="multiple"||item.selectiveRecall){try{(globalThis as any).Curriculum.validateSelectiveRecall(item);}catch(_){return false;}}
+  if(item.type==="documentReview"||item.documentPlan){try{(globalThis as any).DocumentLibrary.validateExecutiveTask(item);}catch(_){return false;}}
   if(item.type==="multiSelect"){try{(globalThis as any).Curriculum.validateReview(item);}catch(_){return false;}}
   try{(globalThis as any).LocaleContent.validateOptions(item);}catch(_){return false;}
   if(String(item.type||"").startsWith("memory") && (!Array.isArray(item.memoryContent)||!item.memoryContent.length)) return false;
@@ -2286,10 +2288,10 @@ function matrixApplied20(age:string,level:number,v:number){
     opts:easy?opt4("El parque","La estación","La tienda","No se sabe"):opt4("La presencia de escaleras además de la distancia","Solo el color del mapa","Solo el nombre de la calle","Nada"),a:easy?"El parque":"La presencia de escaleras además de la distancia"},age,"applied",level,v);
 }
 
-function variantExercise(age:string,domain:string,level:number,subdomain:string|null=null,documentsOnly=false){
+function variantExercise(age:string,domain:string,level:number,subdomain:string|null=null,documentsOnly:boolean|null=null){
   if(documentsOnly&&subdomain==='writing'&&(globalThis as any).DocumentLibrary.supports(age,domain)){const bank=(globalThis as any).Curriculum.pool(age,domain,level).filter((it:any)=>it.stimulus?.some((b:any)=>b.type==='document'));return {...pick(bank),id:age+'-document-writing-'+crypto.randomUUID()};}
   if(['language','middleLanguage','teenLanguage'].includes(domain)&&(subdomain==='vocabulary'||!subdomain&&Math.random()<.25)){const bank=(globalThis as any).Curriculum.vocabulary(age,domain,level);return {...pick(bank),id:age+'-vocabulary-'+crypto.randomUUID()};}
-  if((globalThis as any).DocumentLibrary.supports(age,domain)&&subdomain!=='writing'&&(documentsOnly||((['attention','executive'].includes(domain)||['reading','literacy','middleReading'].includes(domain)&&subdomain!=='writing')&&Math.random()<(domain==='executive'?.25:.35))))return {...(globalThis as any).DocumentLibrary.generate(age,domain,level),id:age+"-document-"+crypto.randomUUID()};
+  if((globalThis as any).DocumentLibrary.supports(age,domain)&&subdomain!=='writing'&&(documentsOnly===true||documentsOnly===null&&((['attention','executive'].includes(domain)||['reading','literacy','middleReading'].includes(domain)&&subdomain!=='writing')&&Math.random()<(domain==='executive'?.25:.35))))return {...(globalThis as any).DocumentLibrary.generate(age,domain,level),id:age+"-document-"+crypto.randomUUID()};
   if((globalThis as any).Curriculum.supports(age,domain))return {...(globalThis as any).Curriculum.generate(age,domain,level,subdomain),id:age+"-curriculum-"+crypto.randomUUID()};
   if(age==="teen"&&["teenLanguage","speedReasoning","literacy"].includes(domain))return {...(globalThis as any).TeenReview.generate(domain,level,subdomain),id:"teen-review-"+crypto.randomUUID()};
   if(age==="junior")return {...(globalThis as any).JuniorContent.generate(domain,level,subdomain),id:"junior-"+crypto.randomUUID()};
@@ -2367,6 +2369,10 @@ Deno.serve(async (req:Request)=>{
   const requestedDomains=kind==="worksheet" ? (Array.isArray(body.domains)&&body.domains.length?body.domains:(globalThis as any).Curriculum.visible(SUBJECTS[age]||[],age)) : [body.domain];
   if(!SUBJECTS[age] || !Number.isInteger(level) || (kind!=="game" && (!Array.isArray(requestedDomains)||!requestedDomains.length||requestedDomains.some((d:any)=>!SUBJECTS[age].includes(d)))))
     return new Response(JSON.stringify({error:"Área o nivel no permitido para este perfil."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
+  if(body.client_revision!==undefined&&![1,2].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  // Existing tabs must never receive an interaction they cannot score. Old
+  // clients retain established tasks; the new document audit requests a refresh.
+  if(kind==='exercise'&&body.client_revision!==2&&body.domain==='executive'&&body.documents_only===true&&level>=2)return new Response(JSON.stringify({error:'Actualiza la página para abrir las nuevas actividades con documentos.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.documents_only!==undefined&&(typeof body.documents_only!=="boolean"||body.documents_only&&!((globalThis as any).DocumentLibrary.supports(age,body.domain))))return new Response(JSON.stringify({error:"Los documentos no están disponibles para esta área."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
   if(kind==='exercise'&&['reading','middleReading','literacy'].includes(body.domain)&&body.subdomain&&!['reading','writing'].includes(body.subdomain))return new Response(JSON.stringify({error:'Modalidad de Lectura + Escritura no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(kind==='exercise'&&['language','middleLanguage','teenLanguage'].includes(body.domain)&&body.subdomain==='writing')return new Response(JSON.stringify({error:'Escritura está en Lectura + Escritura.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -2439,10 +2445,15 @@ Deno.serve(async (req:Request)=>{
       if(row.item_signature) recentEntries.push(row.item_signature);
       if(row.mechanic_signature) recentEntries.push(row.mechanic_signature);
     }
+    const compatibleExercise=()=>{
+      const item=variantExercise(age,domain,level,subdomain,typeof body.documents_only==='boolean'?body.documents_only:null);
+      if(!item||body.client_revision!==2&&(item.type==='documentReview'||item.selectiveRecall))return null;
+      return regionalCandidate(item,locale,domain,age);
+    };
     if(domain==="attention"){
-      items=generatedItems(domain,n,recentEntries,()=>regionalCandidate(variantExercise(age,domain,level,subdomain,body.documents_only===true),locale,domain,age));
+      items=generatedItems(domain,n,recentEntries,compatibleExercise);
     } else if(["executive","memory","speedReasoning","applied","social","language","middleLanguage","teenLanguage","division","geometry","middleMath","teenMath","reading","middleReading","english","literacy"].includes(domain)){
-      items=generatedItems(domain,n,recentEntries,()=>regionalCandidate(variantExercise(age,domain,level,subdomain,body.documents_only===true),locale,domain,age));
+      items=generatedItems(domain,n,recentEntries,compatibleExercise);
     } else {
       const seen=new Set(recentEntries);
       const pool=academicPool(age,domain,subdomain,level);

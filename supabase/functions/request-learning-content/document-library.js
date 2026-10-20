@@ -316,7 +316,7 @@ const authoredDocuments=[
       ]
     ],
     "Redacta 4–5 frases para el boletín: distingue un hecho del anuncio, una inferencia razonable y la opinión del comentario. Señala cuál es cada una.",
-    "Hecho: el intercambio será el sábado de 10:00 a 12:00. Inferencia: habrá títulos diferentes según los libros que lleven las personas. Opinión: decir que será la mejor actividad del año expresa una valoración que aún no se ha comprobado."
+    "Hecho: el intercambio será el sábado 24/10/2026 de 10:00 a 12:00. Inferencia: habrá títulos diferentes según los libros que lleven las personas. Opinión: decir que será la mejor actividad del año expresa una valoración que aún no se ha comprobado."
   ],
   [
     "label-mx",
@@ -627,142 +627,254 @@ for(const [id,title,kind,country,lines,questions,brief,sample] of authoredDocume
 }
 // Executive tasks ask the learner to apply conditions and review a proposed plan.
 // Attention and literacy retain locating and interpreting source information.
-const executiveQuestions={
- 'invoice-co-v1':[
- ['Debes pagar toda la factura. El plan reserva solo el subtotal y olvida la entrega. ¿Qué cantidad debes reservar?', '25.000 COP', ['22.000 COP','3.000 COP','12.000 COP']],
- ['Una persona reserva 25.000 COP, pero cree que los cuadernos cuestan 6.000 COP en total. ¿Qué dato debe corregir antes de registrar el gasto?', 'Los dos cuadernos cuestan 12.000 COP en total', ['El total de la factura debe cambiarse a 22.000 COP','La entrega no tiene ningún cargo','Las carpetas cuestan 2.000 COP en total']],
- documents['invoice-co-v1'].questions[2]],
- 'receipt-co-v1':[
- ['Pagaste con 20.000 COP. Antes de guardar el recibo debes comprobar el cambio. ¿Qué cantidad debe coincidir?', '1.000 COP', ['2.000 COP','8.000 COP','19.000 COP']],
- ['En tu registro anotaste 20.000 COP como gasto final de esta compra. Al revisar el recibo ves que hubo cambio. ¿Cómo corriges el registro?', 'Registrar 19.000 COP de gasto y 1.000 COP de cambio', ['Registrar 20.000 COP de gasto y ningún cambio','Registrar 18.000 COP de gasto y 2.000 COP de cambio','Registrar 8.000 COP de gasto y 12.000 COP de cambio']],
- documents['receipt-co-v1'].questions[2]],
- 'catalogue-co-v1':[
- ['Necesitas un cuaderno y una carpeta. El presupuesto es de 7.000 COP. ¿Qué compra cumple las dos condiciones?', 'El paquete A', ['El paquete B','Solo el cuaderno azul','Los dos productos por separado']],
- ['El plan compra un cuaderno y una carpeta por separado por 8.000 COP. Debes conseguir ambos por el menor precio. ¿Qué cambio haces?', 'Comprar el paquete A por 7.000 COP', ['Comprar el paquete B por 8.500 COP','Comprar solo la carpeta por 2.000 COP','Comprar una cartuchera por 8.000 COP']],
- documents['catalogue-co-v1'].questions[2]],
- 'brochure-co-v1':[
- ['Tienes 16 años y quieres asistir al taller. Antes de la fecha límite debes hacer un trámite. ¿Qué paso incluyes primero?', 'Hacer la inscripción como máximo el 22/10/2026', ['Presentarte sin inscripción el 24/10/2026','Pagar materiales que el taller ya incluye','Esperar al 31/10/2026 para inscribirte']],
- ['Ya estás inscrito. El plan es llegar al taller a las 10:00 sin llevar nada. ¿Qué dos detalles debes revisar?', 'Llegar a las 09:45 y llevar la confirmación', ['Llegar a las 10:15 y pagar materiales','Llegar a las 12:00 y llevar la confirmación','Llegar a las 10:00 y volver a inscribirte']],
- documents['brochure-co-v1'].questions[2]]
-};
-Object.assign(executiveQuestions,{
-  "notice-cl": [
-    [
-      "El plan dice que no se puede pedir un libro porque la sala está cerrada. ¿Qué corrección permite hacerlo durante esos días?",
-      "Ir al préstamo en la entrada norte de 09:00 a 13:00",
-      [
-        "Esperar dentro de la sala cerrada",
-        "Ir a la entrada norte a las 18:00",
-        "Usar el buzón para pedir un libro"
-      ]
-    ],
-    [
-      "Debes devolver un libro el martes 27. El plan propone esperar a que abra la sala. ¿Qué opción permite cumplir la devolución ese día?",
-      "Depositar el libro en el buzón de devoluciones",
-      [
-        "Entrar en la sala cerrada",
-        "Guardar el libro hasta el jueves",
-        "Dejarlo en cualquier aula"
-      ]
-    ],
-    [
-      "Revisas un mensaje que dice «Del 26 al 28 no funciona ningún servicio de biblioteca». ¿Qué debes corregir antes de enviarlo?",
-      "Solo cierra la sala; continúan el préstamo en la entrada norte y las devoluciones en el buzón",
-      [
-        "Todos los servicios abren hasta las 18:00",
-        "El buzón también está cerrado",
-        "El préstamo se hace dentro de la sala cerrada"
-      ]
-    ]
+const documentPlans={
+ "invoice-co-v1": {
+  "goal": "organizar el pago completo de la factura",
+  "steps": [
+   "Revisar los productos y la entrega",
+   "Reservar el importe completo",
+   "Pagar antes de la fecha límite"
   ],
-  "schedule-ar": [
-    [
-      "Quieres completar dos talleres. ¿Qué plan no tiene horas superpuestas?",
-      "Fotografía y Dibujo",
-      [
-        "Fotografía y Música",
-        "Música y Dibujo",
-        "Los tres talleres completos"
-      ]
-    ],
-    [
-      "El plan reserva Música y Dibujo completos. Antes de confirmarlo revisas el horario. ¿Qué error debes señalar?",
-      "Se superponen de 11:15 a 11:30",
-      [
-        "Los dos son en el aula 2",
-        "Dibujo empieza antes que Música",
-        "Fotografía termina a las 12:15"
-      ]
-    ],
-    [
-      "Una persona propone salir de Música a las 11:15 para llegar a Dibujo y cuenta ambos como completos. ¿Cumple la condición del documento?",
-      "No; dejaría Música quince minutos antes de su final",
-      [
-        "Sí; basta con llegar al inicio de Dibujo",
-        "Sí; las aulas son diferentes",
-        "No; Dibujo ya habría terminado"
-      ]
-    ]
-  ],
-  "instructions-cr": [
-    [
-      "El plan comienza grabando a una persona sin preguntarle. ¿Qué paso debe ir antes?",
-      "Obtener su permiso",
-      [
-        "Guardar el comprobante",
-        "Exportar el archivo final",
-        "Publicar el enlace privado"
-      ]
-    ],
-    [
-      "Ya tienes permiso y has grabado. El plan pasa directamente al envío sin revisar el sonido. ¿Qué paso falta?",
-      "Escuchar el audio y comprobar que se entiende",
-      [
-        "Cambiar MP3 por un documento PDF",
-        "Eliminar la grabación sin escucharla",
-        "Enviar únicamente un enlace privado"
-      ]
-    ],
-    [
-      "El plan entrega un enlace privado a un archivo de 15 MB. ¿Qué dos cambios cumplen las instrucciones?",
-      "Enviar el archivo MP3 y reducirlo a 10 MB como máximo",
-      [
-        "Enviar el enlace privado y mantener 15 MB",
-        "Enviar un PDF de 10 MB",
-        "Enviar el MP3 de 15 MB sin enlace"
-      ]
-    ]
-  ],
-  "form-es": [
-    [
-      "El plan considera completo el ejemplo de solicitud. ¿Qué dato debe completarse antes de enviarlo?",
-      "La fecha de devolución",
-      [
-        "Un segundo nombre",
-        "La hora del taller de robots",
-        "El precio de un libro"
-      ]
-    ],
-    [
-      "Ya completaste todos los campos. El plan termina al guardar el borrador. ¿Qué falta para acreditar la entrega?",
-      "Enviar la solicitud y guardar el comprobante",
-      [
-        "Guardar de nuevo el borrador",
-        "Borrar la firma",
-        "Cambiar la fecha sin enviar"
-      ]
-    ],
-    [
-      "Una persona afirma que el borrador guardado prueba que la solicitud está entregada, aunque falta la fecha de devolución. ¿Qué debe exigir la supervisión?",
-      "Completar la fecha, enviar y obtener el comprobante",
-      [
-        "Solo guardar otra copia del borrador",
-        "Solo añadir la fecha sin enviar",
-        "Entregar la cámara sin completar la solicitud"
-      ]
-    ]
+  "checks": [
+   [
+    "Importe reservado",
+    "25.000",
+    "22.000"
+   ],
+   [
+    "Entrega incluida",
+    "3.000",
+    "0"
+   ],
+   [
+    "Fecha de pago",
+    "19/10/2026",
+    "21/10/2026",
+    "antes del 20/10/2026"
+   ]
   ]
-});
+ },
+ "receipt-co-v1": {
+  "goal": "comprobar el pago y registrar la compra",
+  "steps": [
+   "Comprobar los productos comprados",
+   "Comparar el total con el dinero entregado y el cambio",
+   "Anotar el gasto final y guardar el recibo"
+  ],
+  "checks": [
+   [
+    "Gasto anotado",
+    "19.000",
+    "20.000"
+   ],
+   [
+    "Dinero entregado",
+    "20.000",
+    "19.000"
+   ],
+   [
+    "Cambio recibido",
+    "1.000",
+    "2.000"
+   ]
+  ]
+ },
+ "catalogue-co-v1": {
+  "goal": "comprar un cuaderno y una carpeta con un máximo de 7.000 COP",
+  "steps": [
+   "Comparar los productos y los paquetes",
+   "Elegir una compra que cumpla la lista y el límite de precio",
+   "Recoger la compra en la tienda"
+  ],
+  "checks": [
+   [
+    "Compra elegida",
+    "Paquete A",
+    "Paquete B"
+   ],
+   [
+    "Importe reservado",
+    "7.000",
+    "8.500"
+   ],
+   [
+    "Productos incluidos",
+    "cuaderno + carpeta",
+    "cartuchera + lápiz"
+   ]
+  ]
+ },
+ "brochure-co-v1": {
+  "goal": "preparar la asistencia al taller de una persona de 16 años",
+  "steps": [
+   "Hacer la inscripción dentro del plazo",
+   "Guardar la confirmación para llevarla al taller",
+   "Llegar quince minutos antes del inicio"
+  ],
+  "checks": [
+   [
+    "Inscripción prevista",
+    "22/10/2026",
+    "23/10/2026"
+   ],
+   [
+    "Hora de inicio anotada",
+    "10:00",
+    "10:15"
+   ],
+   [
+    "Materiales previstos",
+    "Incluidos",
+    "No incluidos"
+   ],
+   [
+    "Antelación de llegada",
+    "15 minutos antes",
+    "Al comenzar el taller"
+   ]
+  ]
+ },
+ "notice-cl": {
+  "goal": "pedir prestado un libro mientras la sala está cerrada",
+  "steps": [
+   "Comprobar los días y el horario del servicio",
+   "Acudir a la entrada norte durante el horario de préstamo",
+   "Pedir el libro en el servicio que sigue abierto"
+  ],
+  "checks": [
+   [
+    "Entrada elegida",
+    "entrada norte",
+    "entrada sur"
+   ],
+   [
+    "Horario de préstamo",
+    "09:00 a 13:00",
+    "15:00 a 18:00"
+   ],
+   [
+    "Lugar para devolver libros",
+    "buzón",
+    "sala de lectura"
+   ]
+  ]
+ },
+ "schedule-ar": {
+  "goal": "asistir completos a Fotografía y Dibujo",
+  "steps": [
+   "Entrar al aula de Fotografía antes de que empiece",
+   "Completar Fotografía y esperar al siguiente taller",
+   "Asistir a Dibujo desde el inicio hasta el final"
+  ],
+  "checks": [
+   [
+    "Fotografía anotada",
+    "10:00–11:00",
+    "10:30–11:30"
+   ],
+   [
+    "Dibujo anotado",
+    "11:15–12:15",
+    "11:00–12:00"
+   ],
+   [
+    "Aula para Fotografía y Dibujo",
+    "Aula 1",
+    "Aula 2"
+   ]
+  ]
+ },
+ "instructions-cr": {
+  "goal": "entregar una entrevista que se pueda escuchar y cumpla las instrucciones",
+  "steps": [
+   "Grabar con permiso y comprobar que el audio se entiende",
+   "Exportar el archivo con el formato y tamaño pedidos",
+   "Enviar el archivo y guardar el comprobante"
+  ],
+  "checks": [
+   [
+    "Formato de entrega",
+    "MP3",
+    "PDF"
+   ],
+   [
+    "Límite de tamaño",
+    "hasta 10 MB",
+    "15 MB"
+   ],
+   [
+    "Comprobación del sonido",
+    "Escucha el audio",
+    "No escuchar el audio"
+   ],
+   [
+    "Archivo que se envía",
+    "Envía el MP3",
+    "Enviar solo un enlace privado"
+   ]
+  ]
+ },
+ "form-es": {
+  "goal": "completar y entregar una solicitud de cámara",
+  "steps": [
+   "Completar todos los datos obligatorios que faltan",
+   "Enviar la solicitud después de revisarla",
+   "Guardar el comprobante que se genera al enviar"
+  ],
+  "checks": [
+   [
+    "Nombre",
+    "Completar el nombre",
+    "Dejar el nombre vacío",
+    "nombre"
+   ],
+   [
+    "Recogida",
+    "Indicar la fecha de recogida",
+    "Omitir la fecha de recogida",
+    "fecha de recogida"
+   ],
+   [
+    "Devolución",
+    "Indicar la fecha de devolución",
+    "Omitir la fecha de devolución",
+    "fecha de devolución"
+   ],
+   [
+    "Entrega",
+    "Enviar y obtener el comprobante",
+    "Guardar solo un borrador",
+    "Al enviarla se genera un comprobante"
+   ]
+  ]
+ }
+};
+function executiveTask(age,level,id){
+ const doc=get(id),plan=documentPlans[id];
+ const base={id:`document-plan-${age}-${level}-${id}`,contentKey:`document-plan-v2:${age}:${level}:${id}`,passageKey:`document:${id}`,domain:'executive',level,requiresStimulus:true,currencyContext:'foreign',documentPlan:{age,id,level},topic:'Funciones ejecutivas · '+doc.kind,
+  taskFocus:level===1?'planificar con el documento':'supervisar un plan con el documento',
+  stimulus:[text(`Usa el documento para ${plan.goal}.`),{type:'document',documentId:id}],
+  ...(age==='junior'?{juniorProfile:{route:age,level}}:{}),...(['primary','middle'].includes(age)?{schoolProfile:{route:age,level}}:{})};
+ if(level===1)return {...base,type:'order',responseType:'order',mechanic:'document_executive_plan',q:'Ordena las acciones para cumplir el objetivo. Consulta las condiciones del documento.',tokens:[plan.steps[2],plan.steps[0],plan.steps[1]],answer:[...plan.steps],why:'Primero comprueba y prepara lo necesario; después realiza la acción y completa el cierre.'};
+ const errors=level===2?1:Math.min(3,plan.checks.length-1),offset=Object.keys(documentPlans).indexOf(id)%plan.checks.length;
+ const rows=plan.checks.map(([label,expected,wrong],i)=>[label,(i-offset+plan.checks.length)%plan.checks.length<errors?wrong:expected]);
+ return {...base,type:'documentReview',responseType:'multiple',mechanic:'document_executive_audit',
+  q:'Este es el plan propuesto. Consulta el documento y marca todas las partes que debes corregir.',
+  stimulus:[...base.stimulus,{type:'table',header:true,label:'Plan propuesto: compruébalo con el documento',rows:[['Parte del plan','Propuesta'],...rows]}],
+  opts:rows.map(row=>row[0]),answers:rows.filter((row,i)=>row[1]!==plan.checks[i][1]).map(row=>row[0]),
+  why:rows.flatMap((row,i)=>row[1]===plan.checks[i][1]?[]:[row[0]+': debe ser «'+plan.checks[i][1]+'».']).join(' ')};
+}
+function validateExecutiveTask(item){
+ const meta=item.documentPlan,plan=documentPlans[meta?.id],doc=get(meta?.id);
+ if(!plan||!doc||item.domain!=='executive'||![1,2,3].includes(meta.level)||item.level!==meta.level||!supports(meta.age,'executive'))throw new Error('Plan documental incompatible.');
+ const source=JSON.stringify(doc.transcript);
+ if(plan.checks.some(check=>!source.includes(check[3]||check[1])))throw new Error('Las condiciones del plan no corresponden al documento.');
+ const expected=executiveTask(meta.age,meta.level,meta.id);
+ for(const key of ['type','responseType','stimulus','answer','answers'])if(JSON.stringify(item[key])!==JSON.stringify(expected[key]))throw new Error('El plan o sus respuestas no coinciden con el documento.');
+ const values=expected.tokens||expected.opts,received=item.tokens||item.opts;
+ if(!Array.isArray(received)||received.length!==values.length||new Set(received).size!==values.length||!values.every(x=>received.includes(x)))throw new Error('Faltan opciones del plan documental.');
+ return true;
+}
 // Generated document dimensions.
 const documentHeights={"advert-co": 1020, "brochure-co-v1": 1040, "catalogue-co-v1": 1125, "form-es": 1070, "infographic-cr": 1240, "instructions-cr": 1105, "invoice-co-v1": 1101, "label-mx": 920, "map-cl": 1440, "menu-ar": 1020, "news-pa": 1020, "notice-cl": 935, "post-pa": 1020, "poster-mx": 785, "receipt-co-v1": 1017, "schedule-ar": 955, "ticket-es": 820, "transport-co": 920};
 for(const [id,height] of Object.entries(documentHeights))documents[id].height=height;
@@ -1246,9 +1358,10 @@ function get(id){return documents[id]||null;}
 function supports(age,domain){return ['junior','primary','middle','teen'].includes(age)&&['attention','executive','literacy','reading','middleReading'].includes(domain)&&!(age==='junior'&&domain==='literacy');}
 function pool(age,domain,level=1){
  if(!supports(age,domain))return [];
- const source=Object.keys(documents).filter(id=>domain!=='executive'||Object.hasOwn(executiveQuestions,id)).filter(id=>!documents[id].minAge?age!=='junior'||id==='catalogue-co-v1':['early','junior','primary','middle','teen'].indexOf(age)>=['early','junior','primary','middle','teen'].indexOf(documents[id].minAge));
+ const source=Object.keys(documents).filter(id=>domain!=='executive'||Object.hasOwn(documentPlans,id)).filter(id=>!documents[id].minAge?age!=='junior'||id==='catalogue-co-v1':['early','junior','primary','middle','teen'].indexOf(age)>=['early','junior','primary','middle','teen'].indexOf(documents[id].minAge));
+ if(domain==='executive')return source.map(id=>executiveTask(age,level,id));
  return source.map(id=>{
-  const doc=get(id),tuple=domain==='executive'?(executiveQuestions[id]||doc.questions)[level-1]:domain==='attention'&&level===3?(attentionAdvanced[id]||doc.questions[2]):domain!=='attention'?readingQuestions[id][level-1]:doc.questions[level-1],q=tuple[0],a=tuple[1],opts=[a,...tuple[2]];
+  const doc=get(id),tuple=domain==='attention'&&level===3?(attentionAdvanced[id]||doc.questions[2]):domain!=='attention'?readingQuestions[id][level-1]:doc.questions[level-1],q=tuple[0],a=tuple[1],opts=[a,...tuple[2]];
   return {id:`document-${age}-${domain}-${level}-${id}`,contentKey:`document-v1:${age}:${domain}:${level}:${id}`,passageKey:`document:${id}`,domain,level,
    type:'standard',responseType:'choice',requiresStimulus:true,currencyContext:'foreign',taskFocus:domain==='attention'?'localizar y contrastar datos':domain==='executive'?'supervisar decisiones':'comprender propósito, relaciones y límites',topic:doc.kind+' · interpretar un documento',
    stimulus:[text(`Documento de ${doc.country}. ${['invoice-co-v1','receipt-co-v1','catalogue-co-v1'].includes(id)?'Los importes están en pesos colombianos (COP).':''}`),{type:'document',documentId:id}],q,a,opts,
@@ -1257,6 +1370,6 @@ function pool(age,domain,level=1){
  });
 }
 function generate(age,domain,level){const bank=pool(age,domain,level);return bank[Math.floor(Math.random()*bank.length)]||null;}
-const api={documents,get,supports,pool,generate};root.DocumentLibrary=api;
+const api={validateExecutiveTask,documents,get,supports,pool,generate};root.DocumentLibrary=api;
 if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);

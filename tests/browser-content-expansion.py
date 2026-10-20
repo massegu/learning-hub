@@ -27,6 +27,9 @@ try:
    if it.get('answer'):
     for token in it['answer']:page.locator('#exerciseOptions .word-token').get_by_text(token,exact=True).click()
     page.locator('#orderCheck').click()
+   elif it.get('answers'):
+    for label in it['answers']:page.locator('#exerciseOptions').get_by_role('button',name=label,exact=True).click()
+    page.locator('#multiCheck').click()
    elif it['type']=='self':
     page.locator('#textAnswerInput').fill(it['sample']);page.locator('#textAnswerCheck').click();page.locator('[data-self="true"]').click()
    elif it.get('memoryResponse')=='spatial':

@@ -246,3 +246,21 @@ Hay seis situaciones originales por franja (24 en total), con tres dificultades 
 Para probarlo, abre Funciones ejecutivas en una de las cuatro franjas. La mecánica se alterna con las existentes. Comprueba un acierto completo y una selección incompleta; revisa después Progreso y genera una ficha. La ficha incluye situación, condiciones, plan y opciones, sin imprimir la solución. Las comprobaciones automáticas prueban también teclado, adaptación regional, rechazo de fuentes o respuestas inconsistentes, variantes de dificultad y las imágenes y textos de las fichas existentes.
 
 La publicación sigue el mismo flujo: PR hacia `desarrollo`, comprobaciones, fusión y ejecución verde de `publicar`. No es necesario activar Stripe ni cambiar credenciales para esta mejora.
+
+## Autoevaluación, modos documentales y nuevas categorías de Memoria
+
+**Necesito practicar** registra una autoevaluación, no una corrección automática del texto. Ahora presenta una explicación neutral y el botón **Revisar mi texto**. Este conserva lo escrito, enfoca la respuesta y permite consultar de nuevo el modelo y los criterios. La revisión no crea otro intento ni concede puntos adicionales. Siguiente abre una actividad nueva y restablece los controles. La actividad de hecho/inferencia/opinión dispone de criterios específicos y el modelo distingue la fecha de publicación de la fecha del intercambio.
+
+En Atención y Funciones ejecutivas, **Actividades variadas** solicita expresamente ejercicios sin los documentos de la biblioteca visual. **Documentos visuales** solicita esos documentos. Lectura + Escritura conserva la alternancia automática de fuentes, y las fichas siguen combinando materiales.
+
+- Atención con documentos localiza y contrasta información.
+- Funciones ejecutivas con documentos usa ocho fuentes para dos formas de resolución: ordenar acciones para cumplir un objetivo (nivel 1) y marcar todas las partes incorrectas de un plan propuesto (niveles 2–3). Las condiciones se consultan en el documento; no se repiten en una columna que permita prescindir de él. La dificultad superior incorpora más incumplimientos. Se comprueba la correspondencia entre fuente, plan, opciones y respuestas antes de entregar o imprimir la actividad.
+- La supervisión de planes sin documentos nombra las columnas **Apartado / Condición obligatoria / Plan propuesto**, y la consigna explica que se marcan las filas donde el plan contradice lo exigido.
+
+Memoria incorpora nueve categorías de cuatro imágenes: animales, alimentos, transportes, herramientas, ciudades (plaza, puente, edificios y calle), naturaleza, viaje, muebles y flores. Son iconos originales con etiquetas legibles; pantalla y Word comparten la representación. No se exige reconocer ciudades concretas ni monumentos. Se mantiene la representación regional de los nombres. La asociación con personas habla de imágenes que las acompañan, para evitar frases como «Ana tiene una montaña».
+
+Desde 8–10 años aparece además **recuerdo por categoría**. Primero se muestra un grupo mixto; después desaparece y se pide seleccionar los animales o alimentos que realmente estaban. Entre las opciones hay un miembro de la categoría que no se mostró. Clasificar por sí solo no basta: es necesario recordar la exposición. En 8–10 el grupo tiene de tres a cinco imágenes; en las franjas superiores, de tres a siete. El contador no revela cuántas respuestas son correctas. Las nuevas categorías se usan también en las mecánicas de memoria existentes de 6–7, sin introducir selección múltiple en esa franja.
+
+Para que una pestaña abierta durante la publicación no reciba una interacción que desconoce, la web declara su revisión de interacciones. Las versiones anteriores conservan ejercicios compatibles; la auditoría documental nueva puede pedir recargar la página antes de empezar. Esto no requiere cambiar credenciales ni migrar datos.
+
+Comprobación recomendada tras publicar: usar Necesito practicar y revisar el texto; alternar ambos modos en Atención y FFEE; resolver una planificación y una auditoría documental; completar un recuerdo por categoría; descargar fichas y abrir los DOCX extraídos del ZIP. Las nuevas pruebas de navegador se incorporan al flujo de GitHub antes de publicar.

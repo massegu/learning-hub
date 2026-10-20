@@ -10,6 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FILES = ['index.html', 'js/app.js', 'js/api.js', 'js/auth-account.js',
          'js/document-library.js', 'js/curriculum.js', 'js/docx.js',
+         'js/stimulus-art.js', 'js/stimulus-art-png.js',
          'js/config.js', 'css/styles.css', 'assets/documents/map-cl.png']
 
 

@@ -11,7 +11,7 @@ test('eighteen original document assets have matching PNG dimensions, consistent
  assert.equal(f.total,f.subtotal+f.delivery);assert.equal(r.change,r.paid-r.total);
  for(const age of ['junior','primary','middle','teen'])for(const domain of ['attention','executive','literacy'])for(const level of [1,2,3])for(const it of docs.pool(age,domain,level))for(const country of Object.keys(locale.labels)){
   const local=locale.localizeItem(it,country,domain),printed=model.printable(local,{age_band:age==='junior'?'primary':age,progress:{ageRoute:age}});
-  assert.equal(printed.stimulus[1].documentId,it.stimulus[1].documentId);assert.equal(local.a,local.opts.find(o=>o===local.a));
+  assert.equal(printed.stimulus[1].documentId,it.stimulus[1].documentId);if(local.opts)assert.ok((local.answers||[local.a]).every(a=>local.opts.includes(a)));else assert.deepEqual([...local.tokens].sort(),[...local.answer].sort());
   const markup=model.interactiveStimulus(local.stimulus,{structured:true});assert.match(markup,/<img /);assert.match(markup,/Ver versión en texto/);
  }
  assert.throws(()=>model.printable({requiresStimulus:true,q:'¿Qué aparece?',stimulus:[{type:'document',documentId:'unknown'}],opts:['A','B'],a:'A'},{age_band:'teen'}),/desconocido/);
@@ -27,7 +27,7 @@ test('memory material identities suppress repeats beyond a renamed question and 
  const {api}=load();
  for(const age of ['early','junior','primary','middle','teen']){
   const pool=curriculum.pool(age,'memory',3);
-  assert.equal(pool.length,age==='early'?288:360);
+  assert.equal(pool.length,age==='early'?288:432);
   for(const family of ['memory_sequence','memory_spatial','memory_association'])assert.ok(new Set(pool.filter(it=>it.mechanic===family).map(it=>it.memoryMaterialKey)).size>=60);
   const history=[],keys=[];
   for(let n=0;n<24;n++){

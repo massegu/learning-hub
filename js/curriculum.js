@@ -16,7 +16,7 @@ function finish(item,age,domain,level,key,mechanic){
  const id=`curriculum-v2-${age}-${domain}-${level}-${key}`;
  const memoryMaterialKey=domain==='memory'?materialKey([item.recallSequence?'sequence':item.recallEvidence?.kind||'associations',item.stimulus]):null;
  const earlyMechanic=domain==='language'?'vocabulary':domain==='reading'?(item.responseType==='order'?'sequencing':'literal'):domain==='speedReasoning'?'speedCompare':domain==='memory'?(item.memoryResponse==='spatial'?'rememberPlace':'rememberOrder'):'planning';
- return {...item,...(item.speedTask?{speedRevision:3}:{}),id,contentKey:id,semanticKey:item.passageKey||memoryMaterialKey||id,...(memoryMaterialKey?{memoryMaterialKey}:{}),domain,level,mechanic,
+ return {...item,...(domain==='memory'?{lexicalSenses:{...item.lexicalSenses,banana:true}}:{}),...(item.speedTask?{speedRevision:3}:{}),id,contentKey:id,semanticKey:item.passageKey||memoryMaterialKey||id,...(memoryMaterialKey?{memoryMaterialKey}:{}),domain,level,mechanic,
   ...(age==='early'?{ageProfile:{id:'early',revision:1,context:'school',mechanic:earlyMechanic,family:`${domain}-${mechanic}`}}:{}),
   ...(age==='junior'?{juniorProfile:{route:age,level}}:{}),...(['primary','middle'].includes(age)?{schoolProfile:{route:age,level}}:{})};
 }
@@ -44,7 +44,7 @@ function reading(age,domain,level){
  return bank;
 }
 function documentWriting(age,domain,level){
- return Object.entries(docs.documents).filter(([,doc])=>doc.brief&&ages.indexOf(age)>=ages.indexOf(doc.minAge)).map(([id,doc],i)=>finish({type:'self',responseType:'written',requiresStimulus:true,assessment:'self',q:(age==='junior'?`Escribe dos o tres frases para una persona de tu clase: cuenta lo más importante de «${doc.title}» y usa un dato de la fuente.`:doc.brief)+(level===3?' Comprueba también que no atribuyes al documento algo que no dice.':''),stimulus:[T(`Fuente: ${doc.kind} de ${doc.country}.`),{type:'document',documentId:id}],sample:age==='junior'?doc.transcript.slice(0,3).map(b=>b.text).join(' '):doc.sample,writingPurpose:doc.kind,writingAudience:'La persona o el grupo indicado en la consigna',writingRubric:['Cumplo el propósito y el formato pedidos.','Uso datos exactos de la fuente sin inventar otros.','Adapto el mensaje a su destinatario y reviso claridad y signos.'],topic:'Lectura + Escritura · '+doc.title,currencyContext:'foreign',passageKey:'document:'+id},age,domain,level,'write-document-'+id,age==='junior'?'writing_summary':'writing_'+({'poster-mx':'invitation','ticket-es':'inquiry_email','menu-ar':'correct_claim','notice-cl':'public_notice','transport-co':'practical_message','infographic-cr':'caption_evidence','post-pa':'fact_inference_opinion','label-mx':'clear_instructions','form-es':'request_email','map-cl':'directions','schedule-ar':'recommendation','advert-co':'rewrite_advert','instructions-cr':'rewrite_instructions','news-pa':'compare_sources'}[id])));
+ return Object.entries(docs.documents).filter(([,doc])=>doc.brief&&ages.indexOf(age)>=ages.indexOf(doc.minAge)).map(([id,doc],i)=>finish({type:'self',responseType:'written',requiresStimulus:true,assessment:'self',q:(age==='junior'?`Escribe dos o tres frases para una persona de tu clase: cuenta lo más importante de «${doc.title}» y usa un dato de la fuente.`:doc.brief)+(level===3?' Comprueba también que no atribuyes al documento algo que no dice.':''),stimulus:[T(`Fuente: ${doc.kind} de ${doc.country}.`),{type:'document',documentId:id}],sample:age==='junior'?doc.transcript.slice(0,3).map(b=>b.text).join(' '):doc.sample,writingPurpose:doc.kind,writingAudience:'La persona o el grupo indicado en la consigna',writingRubric:id==='post-pa'?['Identifico por separado un hecho, una inferencia y una opinión.','Compruebo la fecha del intercambio sin confundirla con la publicación.','Uso datos del documento y reviso mi redacción.']:['Cumplo el propósito y el formato pedidos.','Uso datos exactos de la fuente sin inventar otros.','Adapto el mensaje a su destinatario y reviso claridad y signos.'],topic:'Lectura + Escritura · '+doc.title,currencyContext:'foreign',passageKey:'document:'+id},age,domain,level,'write-document-'+id,age==='junior'?'writing_summary':'writing_'+({'poster-mx':'invitation','ticket-es':'inquiry_email','menu-ar':'correct_claim','notice-cl':'public_notice','transport-co':'practical_message','infographic-cr':'caption_evidence','post-pa':'fact_inference_opinion','label-mx':'clear_instructions','form-es':'request_email','map-cl':'directions','schedule-ar':'recommendation','advert-co':'rewrite_advert','instructions-cr':'rewrite_instructions','news-pa':'compare_sources'}[id])));
 }
 // Authored lexical work belongs to Language, separate from composing a text.
 const lexicalCases={
@@ -65,11 +65,41 @@ function vocabulary(age,domain,level){
 const objects=['el libro','la pelota','el lápiz','la manzana','la botella','la gorra','el cuaderno','el regalo','la galleta','el oso de peluche','la muñeca','el coche de juguete'];
 const schoolObjects=[...objects,'la regla','las tijeras','el pegamento','la carpeta','la cartuchera','el mapa','el sobre','la linterna'];
 const functionalObjects=['la agenda','la tarjeta de transporte','el cargador','la carpeta','el recibo','el mapa','la calculadora','la botella','las llaves','el lápiz','el cuaderno','la regla','los auriculares','la cámara','el reloj','la memoria USB','el adaptador','el paraguas','el sobre','el libro','el estuche','el teléfono móvil','el cable','la tarjeta de acceso'];
+const memoryCategories=[
+ {name:'Animales',items:['el gato','el perro','el conejo','el pájaro']},
+ {name:'Alimentos',items:['la manzana','el plátano','el pan','la zanahoria']},
+ {name:'Transportes',items:['el autobús','el tren','el barco','la bicicleta']},
+ {name:'Herramientas',items:['el martillo','la llave inglesa','la sierra','la pala']},
+ {name:'Ciudades',items:['la plaza','el puente','los edificios','la calle']},
+ {name:'Naturaleza',items:['el árbol','la montaña','el río','la nube']},
+ {name:'Viaje',items:['la maleta','el pasaporte','la tienda de campaña','la brújula']},
+ {name:'Muebles',items:['la silla','la mesa','el sofá','la cama']},
+ {name:'Flores',items:['la rosa','el tulipán','el girasol','la margarita']}
+];
+const selectiveVocabulary=new Map();
+function validateSelectiveRecall(item){
+ const block=item.stimulus?.[0],e=item.selectiveRecall;
+ if(item.type!=='memoryReveal'||item.memoryResponse!=='multiple'||item.responseType!=='multiple'||block?.type!=='list'||!e||!['Animales','Alimentos'].includes(e.category))throw new Error('Recuerdo selectivo incompatible.');
+ const labels=memoryCategories.find(x=>x.name===e.category).items;
+ const local=root.LocaleContent||(typeof require==='function'&&require('./locale-content'));
+ let allowed=selectiveVocabulary.get(e.category);
+ if(!allowed){allowed=new Set(labels.flatMap(label=>[label,...Object.keys(local.labels).map(country=>local.text(label,country,{banana:true}))]));selectiveVocabulary.set(e.category,allowed);}
+ const indices=block.items.flatMap((value,i)=>allowed.has(value)?[i]:[]);
+ if(JSON.stringify(indices)!==JSON.stringify(e.indices))throw new Error('Las imágenes seleccionadas no pertenecen a la categoría pedida.');
+ // Locale adaptation may rename a material; the declared indices bind recall to
+ // the actual displayed entries, and duplicates/extra targets cannot pass.
+ if(!Array.isArray(e.indices)||e.indices.length<1||new Set(e.indices).size!==e.indices.length||e.indices.some(i=>!Number.isInteger(i)||i<0||i>=block.items.length))throw new Error('Categoría de recuerdo incompleta.');
+ const expected=e.indices.map(i=>block.items[i]);
+ if(!Array.isArray(item.answers)||new Set(item.answers).size!==expected.length||item.answers.length!==expected.length||!expected.every(x=>item.answers.includes(x))||!item.opts?.every(x=>typeof x==='string')||!item.answers.every(x=>item.opts.includes(x)))throw new Error('La respuesta no corresponde a las imágenes recordadas.');
+ return expected;
+}
 function spatialPositions(size){return Array.from({length:size*size},(_,i)=>`Fila ${Math.floor(i/size)+1}, columna ${i%size+1}`);}
 function memory(age,level){
  const rank=ages.indexOf(age),count=Math.min(8,rank+level+1),items=[];
  for(let v=0;v<72;v++){
-  const values=shuffled(rank===0?objects:rank===1?schoolObjects:functionalObjects,57+v).slice(0,count),reverse=level===3&&rank>=2,expected=reverse?[...values].reverse():values;
+  const materials=[...new Set([...memoryCategories[v%9].items,...memoryCategories[(v+3)%9].items,...(rank===0?objects:rank===1?schoolObjects:functionalObjects).slice(v%6,v%6+4)])];
+  const featured=memoryCategories[v%9].items[Math.floor(v/9)%4];
+  const values=shuffled([featured,...shuffled(materials.filter(x=>x!==featured),57+v).slice(0,count-1)],v+17),reverse=level===3&&rank>=2,expected=reverse?[...values].reverse():values;
   items.push(finish({type:'memoryReveal',responseType:'order',memoryResponse:'order',requiresStimulus:true,
    q:reverse?'Mira la secuencia. Después la repetirás desde el final.':'Mira la secuencia. Después repetirás el orden.',
    memoryQuestion:reverse?'Reproduce la secuencia en orden inverso.':'Reproduce la secuencia en el mismo orden.',
@@ -86,18 +116,29 @@ function memory(age,level){
   const a=dual?pos(places[0])+' → '+pos(places[1]):pos(places[0]);
   const opts=dual?[a,pos(places[1])+' → '+pos(places[0]),pos(places[0])+' → '+pos(places[2]),pos(places[2])+' → '+pos(places[1])]:spatialPositions(size);
   items.push(finish({type:'memoryReveal',responseType:'choice',memoryResponse:dual?'spatialPair':'spatial',requiresStimulus:true,
-   q:'Mira dónde está cada objeto. Después taparemos el cuadro.',memoryQuestion:dual?`¿Dónde estaban ${target} y ${target2}, en ese orden?`:`¿Dónde ${/^(los|las) /.test(target)?'estaban':'estaba'} ${target}?`,
+   q:'Mira dónde está cada imagen. Después taparemos el cuadro.',memoryQuestion:dual?`¿Dónde estaban ${target} y ${target2}, en ese orden?`:`¿Dónde ${/^(los|las) /.test(target)?'estaban':'estaba'} ${target}?`,
    stimulus:[{...R(grid),presentation:'spatial',label:'Filas de arriba abajo; columnas de izquierda a derecha.'}],memoryContent:marked.map(detail=>({detail})),
    a,opts,gridSize:size,revealMs:Math.max(6000,load*1800),recallEvidence:{kind:'spatial',block:0,targets:dual?[target,target2]:[target]},topic:'Memoria · posiciones',why:a},age,'memory',level,`spatial-${v}`,'memory_spatial'));
-  const unseen=(rank===0?objects:rank===1?schoolObjects:functionalObjects).find(x=>!values.includes(x));
-  items.push(finish({type:'memoryReveal',responseType:'choice',requiresStimulus:true,q:'Mira estos objetos. Después los taparemos.',memoryQuestion:'¿Qué objeto estaba en el grupo?',stimulus:[{type:'list',items:[...values],presentation:'cards'}],memoryContent:values.map(detail=>({detail})),a:values[v%values.length],opts:[values[v%values.length],unseen],revealMs:Math.max(6000,count*1300),answerEvidence:{type:'listItem',block:0,index:v%values.length},topic:'Memoria · reconocimiento'},age,'memory',level,`recognition-${v}`,'memory_recognition'));
+  const unseen=materials.find(x=>!values.includes(x));
+  items.push(finish({type:'memoryReveal',responseType:'choice',requiresStimulus:true,q:'Mira estas imágenes. Después las taparemos.',memoryQuestion:'¿Qué imagen estaba en el grupo?',stimulus:[{type:'list',items:[...values],presentation:'cards'}],memoryContent:values.map(detail=>({detail})),a:values[v%values.length],opts:[values[v%values.length],unseen],revealMs:Math.max(6000,count*1300),answerEvidence:{type:'listItem',block:0,index:v%values.length},topic:'Memoria · reconocimiento'},age,'memory',level,`recognition-${v}`,'memory_recognition'));
   if(rank>0){
    const takeLast=Math.min(values.length-1,level+1),answer=values.slice(-takeLast);
-   items.push(finish({type:'memoryReveal',responseType:'order',memoryResponse:'order',requiresStimulus:true,q:`Mira toda la secuencia. Después recordarás solo los últimos ${takeLast} objetos.`,memoryQuestion:`Reproduce solo los últimos ${takeLast} objetos en el mismo orden.`,stimulus:[L([...values])],memoryContent:values.map(detail=>({detail})),recallSequence:[...values],tokens:shuffled(answer,91+v),answer,revealMs:Math.max(6000,count*1400),sequenceStepMs:1400,recallEvidence:{kind:'sequence',block:0,takeLast,reverse:false},topic:'Memoria · actualizar lo reciente'},age,'memory',level,`recent-${v}`,'memory_recent'));
+   items.push(finish({type:'memoryReveal',responseType:'order',memoryResponse:'order',requiresStimulus:true,q:`Mira toda la secuencia. Después recordarás solo las últimas ${takeLast} imágenes.`,memoryQuestion:`Reproduce solo las últimas ${takeLast} imágenes en el mismo orden.`,stimulus:[L([...values])],memoryContent:values.map(detail=>({detail})),recallSequence:[...values],tokens:shuffled(answer,91+v),answer,revealMs:Math.max(6000,count*1400),sequenceStepMs:1400,recallEvidence:{kind:'sequence',block:0,takeLast,reverse:false},topic:'Memoria · actualizar lo reciente'},age,'memory',level,`recent-${v}`,'memory_recent'));
+  }
+  if(rank>0){
+   const category=memoryCategories[v%2],other=memoryCategories[1-v%2],n=level;
+   const targets=rotate(category.items,Math.floor(v/2)).slice(0,n),missing=category.items.find(x=>!targets.includes(x));
+   const shown=shuffled([...targets,...rotate(other.items,v).slice(0,rank===1?2:level+1)],v+41);
+   const answers=shown.filter(x=>targets.includes(x));
+   items.push(finish({type:'memoryReveal',responseType:'multiple',memoryResponse:'multiple',requiresStimulus:true,
+    q:'Mira todas las imágenes. Después recordarás solo una categoría.',memoryQuestion:`Categoría: ${category.name}. Selecciona todas las imágenes de esa categoría que estaban en el grupo.`,
+    stimulus:[{type:'list',presentation:'cards',items:shown}],memoryContent:shown.map(detail=>({detail})),answers,
+    opts:shuffled([...targets,missing,...other.items.slice(0,2)],v+17),selectiveRecall:{category:category.name,indices:shown.flatMap((x,i)=>targets.includes(x)?[i]:[])},
+    revealMs:Math.max(6000,shown.length*1500),topic:'Memoria · recuerdo por categoría',why:'De la categoría '+category.name+' aparecieron: '+answers.join(', ')+'. No basta con pertenecer a la categoría: la imagen también tenía que estar en el grupo.'},age,'memory',level,`category-${v}`,'memory_category'));
   }
   // Associations keep memory broader than the two new recall modes.
   const people=['Ana','Leo','Sol','Dani','Mar','Hugo','Lola','Nora'].slice(0,count),pairs=people.map((n,i)=>[n,values[i]]),ask=v%count;
-  items.push(finish({type:'memoryReveal',responseType:'choice',requiresStimulus:true,q:'Mira quién tiene cada objeto. Después lo taparemos.',memoryQuestion:`¿Qué tenía ${people[ask]}?`,stimulus:[{...R(pairs),presentation:'associations'}],memoryContent:pairs.map(([person,detail])=>({person,detail})),a:values[ask],opts:rotate(values,ask).slice(0,rank===0?Math.min(3,count):4),revealMs:Math.max(6000,count*1700),answerEvidence:{type:'tableCell',block:0,row:ask,column:1,subjectColumn:0},topic:'Memoria · personas y objetos'},age,'memory',level,`association-${v}`,'memory_association'));
+  items.push(finish({type:'memoryReveal',responseType:'choice',requiresStimulus:true,q:'Mira la imagen que acompaña a cada persona. Después la taparemos.',memoryQuestion:`¿Qué imagen acompañaba a ${people[ask]}?`,stimulus:[{...R(pairs),presentation:'associations'}],memoryContent:pairs.map(([person,detail])=>({person,detail})),a:values[ask],opts:rotate(values,ask).slice(0,rank===0?Math.min(3,count):4),revealMs:Math.max(6000,count*1700),answerEvidence:{type:'tableCell',block:0,row:ask,column:1,subjectColumn:0},topic:'Memoria · personas y objetos'},age,'memory',level,`association-${v}`,'memory_association'));
  }
  return items;
 }
@@ -283,7 +324,7 @@ const reviewCases={
   ]],
   ["Compartir una encuesta","El grupo quiere compartir los resultados de una encuesta. La tutoría ha fijado estas condiciones para proteger la información y explicar bien los datos.",[
    ["Identidad", "Publicar resultados sin nombres", "Publicar los nombres"],
-   ["Muestra", "Indicar quiénes respondieron", "Afirmar que respondió todo el centro"],
+   ["Personas participantes", "Indicar quiénes respondieron", "Afirmar que respondió todo el centro"],
    ["Resultado", "Separar datos y opiniones", "Presentar opiniones como datos"],
    ["Permiso", "Revisar antes de difundir", "Difundir sin revisión"],
    ["Archivo", "Compartir solo el resumen", "Compartir respuestas personales"],
@@ -348,9 +389,9 @@ const reviewCases={
    ["Incidencias", "Avisar al detectar un daño", "Esperar al final para avisar"],
   ]],
   ["Compartir un informe de resultados","El equipo debe entregar un informe breve para decidir si continúa una actividad. La coordinación quiere que se distingan claramente las observaciones de las conclusiones.",[
-   ["Muestra", "Indicar cuántas personas participaron", "Omitir el número de participantes"],
+   ["Personas participantes", "Indicar cuántas personas participaron", "Omitir el número de participantes"],
    ["Resultado", "Incluir resultados favorables y desfavorables", "Mostrar solo resultados favorables"],
-   ["Límite", "Explicar lo que aún no se sabe", "Presentar todo como demostrado"],
+   ["Qué falta por comprobar", "Explicar lo que aún no se sabe", "Presentar todo como demostrado"],
    ["Fuentes", "Separar encuesta y registro", "Mezclar las dos fuentes sin indicar cuál"],
    ["Propuesta", "Proponer una comprobación posterior", "Dar por cerrada la evaluación"],
    ["Versión", "Enviar el informe revisado", "Enviar notas sin revisar"],
@@ -370,8 +411,8 @@ function review(age,level){
   const load=level===1?3:level===2?4:checks.length;
   const count=level===1?1:level===2?2:age==='junior'?2:3;
   const rows=checks.slice(0,load).map(([label,expected,alternative],j)=>[label,expected,(j-i%load+load)%load<count?alternative:expected]);
-  const item=finish({type:'multiSelect',responseType:'multiple',requiresStimulus:true,q:'Marca todas las partes del plan que hay que corregir. Puede haber más de una.',
-   stimulus:[{...T(source),label:title},{type:'table',header:true,presentation:'reviewPlan',label:'Compara cada condición con el plan',rows:[['Comprobación','Lo pedido','Lo previsto'],...rows]}],
+  const item=finish({type:'multiSelect',responseType:'multiple',requiresStimulus:true,q:'Compara lo pedido con el plan. Marca todas las filas donde el plan hace algo distinto de lo que se exige.',
+   stimulus:[{...T(source),label:title},{type:'table',header:true,presentation:'reviewPlan',label:'Revisa cada fila antes de marcar',rows:[['Apartado','Condición obligatoria','Plan propuesto'],...rows]}],
    opts:rows.map(row=>row[0]),answers:rows.filter(row=>row[1]!==row[2]).map(row=>row[0]),reviewEvidence:{block:1},
    topic:'Funciones ejecutivas · revisar un plan',passageKey:'review-plan-'+age+'-'+i,
    why:rows.filter(row=>row[1]!==row[2]).map(row=>row[0]+': se pide «'+row[1]+'» y el plan propone «'+row[2]+'».').join(' ')},age,'executive',level,'review-plan-'+i,'executive_review_all');
@@ -446,6 +487,6 @@ function migrate(progress={},age){
   levels:{...progress.levels,executive:1,speedReasoning:1},_levelCheckpoints:{...progress._levelCheckpoints,executive:{attempt:progress.totalAttempts||0},speedReasoning:{attempt:progress.totalAttempts||0}}};
 }
 function speedSummary(history=[]){const rows=history.filter(x=>x.subject==='speedReasoning'&&x.timingValid&&Number.isFinite(x.responseMs));const correct=rows.filter(x=>x.correct).map(x=>x.responseMs).sort((a,b)=>a-b);return {attempts:rows.length,accuracy:rows.length?Math.round(rows.filter(x=>x.correct).length*100/rows.length):null,medianMs:correct.length?correct.length%2?correct[(correct.length-1)/2]:(correct[correct.length/2-1]+correct[correct.length/2])/2:null};}
-const api={validateReview,vocabulary,pool,generate,supports,visible,migrate,speedSummary,registerReasoning,registerWriting,spatialPositions};root.Curriculum=api;
+const api={memoryCategories,validateSelectiveRecall,validateReview,vocabulary,pool,generate,supports,visible,migrate,speedSummary,registerReasoning,registerWriting,spatialPositions};root.Curriculum=api;
 if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);
