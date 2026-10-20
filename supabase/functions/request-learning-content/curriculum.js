@@ -460,10 +460,10 @@ function executive(age,level){
  }
  return tasks.concat(review(age,level));
 }
-const cache=new Map();let reasoningProvider=null,writingProvider=null;
-function registerReasoning(provider){reasoningProvider=provider;for(const key of cache.keys())if(key.includes(':executive:'))cache.delete(key);}
+const cache=new Map(),generationGroups=new Map();let reasoningProvider=null,writingProvider=null;
+function registerReasoning(provider){reasoningProvider=provider;generationGroups.clear();for(const key of cache.keys())if(key.includes(':executive:'))cache.delete(key);}
 
-function registerWriting(provider){writingProvider=provider;cache.clear();}
+function registerWriting(provider){writingProvider=provider;cache.clear();generationGroups.clear();}
 function supports(age,domain){return ages.includes(age)&&(['executive','applied','memory','speedReasoning'].includes(domain)||(['early','junior'].includes(age)?domain==='reading':['primary','middle','teen'].includes(age)&&['literacy','reading','middleReading'].includes(domain)));}
 function pool(age,domain,level=1){
  if(!supports(age,domain))return [];
@@ -476,7 +476,24 @@ function pool(age,domain,level=1){
  }
  return structuredClone(cache.get(key)).map(it=>domain==='applied'?{...it,domain,...(age==='early'?{ageProfile:{...it.ageProfile,mechanic:'chooseObject'}}:{})}:it);
 }
-function generate(age,domain,level=1,focus=null){const actual=domain==='applied'?'executive':domain,key=[age,actual,level].join(':');if(!cache.has(key))pool(age,actual,level);let bank=cache.get(key)||[];if(focus)bank=bank.filter(x=>focus==='writing'?x.type==='self'||x.responseType==='written'||x.type==='order':x.type!=='self'&&x.responseType!=='written'&&x.type!=='order');const groups=[...new Set(bank.map(x=>x.mechanic))],family=groups[Math.floor(Math.random()*groups.length)];bank=bank.filter(x=>x.mechanic===family);const it=bank[Math.floor(Math.random()*bank.length)];return it?{...structuredClone(it),domain,...(age==='early'&&domain==='applied'?{ageProfile:{...it.ageProfile,mechanic:'chooseObject'}}:{})}:null;}
+function generate(age,domain,level=1,focus=null){
+ const actual=domain==='applied'?'executive':domain,key=[age,actual,level].join(':');
+ if(!cache.has(key))pool(age,actual,level);
+ const groupKey=key+':'+(focus||'all');
+ if(!generationGroups.has(groupKey)){
+  const grouped=new Map();
+  for(const item of cache.get(key)||[]){
+   const written=item.type==='self'||item.responseType==='written'||item.type==='order';
+   if(focus&&(focus==='writing'?!written:written))continue;
+   if(!grouped.has(item.mechanic))grouped.set(item.mechanic,[]);
+   grouped.get(item.mechanic).push(item);
+  }
+  generationGroups.set(groupKey,[...grouped.values()]);
+ }
+ const groups=generationGroups.get(groupKey),bank=groups[Math.floor(Math.random()*groups.length)]||[];
+ const it=bank[Math.floor(Math.random()*bank.length)];
+ return it?{...structuredClone(it),domain,...(age==='early'&&domain==='applied'?{ageProfile:{...it.ageProfile,mechanic:'chooseObject'}}:{})}:null;
+}
 function visible(domains,age){return domains.filter(d=>d!=='applied'&&!(age==='primary'&&d==='reading')&&!(age==='middle'&&d==='middleReading'));}
 function migrate(progress={},age){
  if(progress._curriculumRevision===2)return progress;

@@ -37,11 +37,23 @@ try:
     for label in it['answers']:page.get_by_role('button',name=label,exact=True).click()
     page.locator('#multiCheck').click();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
    page.evaluate('window.__current=null');page.locator('#documentModeSwitch [data-documents=false]').click();it=current();assert not any(b['type']=='document' for b in it.get('stimulus',[]))
+  # The reported attention source must remain four labelled facts after the
+  # answer buttons shuffle. Verify both grading and narrow-screen layout.
+  attention={'domain':'attention','id':'layout-regression','type':'standard','scenario':'A) azul-5 · B) rojo-6 · C) azul-6 · D) verde-7','q':'Elige la opción que es azul y tiene número par.','a':'C','opts':['A','B','C','D']}
+  def attention_override(route):route.fulfill(json={'status':200,'data':{'items':[attention],'usage':{'used':29,'limit':500}}})
+  page.route('**/__review/content',attention_override);open_area('attention')
+  for width in [1280,390]:
+   page.set_viewport_size({'width':width,'height':900})
+   assert page.locator('.attention-data tbody tr').all_text_contents()==['Aazul-5','Brojo-6','Cazul-6','Dverde-7']
+   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
+   page.locator('#exercise').screenshot(path=f'/tmp/attention-data-{width}.png')
+  page.locator('[data-answer=C]').click();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
+  page.unroute('**/__review/content',attention_override);page.set_viewport_size({'width':1280,'height':900})
   # Deliver a canonical selective-recall item through the actual API boundary.
   selected=page.evaluate('Curriculum.pool("teen","memory",3).find(x=>x.selectiveRecall)')
   def memory_override(route):route.fulfill(json={'status':200,'data':{'items':[selected],'usage':{'used':30,'limit':500}}})
   page.route('**/__review/content',memory_override);page.clock.install();it=open_area('memory')
-  assert page.locator('#exerciseVisual svg').count()==len(it['memoryContent']);assert page.locator('#multiCheck').count()==0
+  assert page.locator('#exerciseVisual svg').count()==len(it['memoryContent']);assert not any(label.startswith(('el ','la ','los ','las ')) for label in page.locator('.stimulus-unit > span:last-child').all_text_contents());assert page.locator('#multiCheck').count()==0
   page.clock.fast_forward(it['revealMs']+50);assert page.locator('#exerciseVisual').inner_text()=='';assert page.locator('.multi-option svg').count()==len(it['opts'])
   for label in it['answers']:page.get_by_role('button',name=label,exact=True).click()
   assert '/' not in page.locator('#multiCount').inner_text();page.locator('#multiCheck').click();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')

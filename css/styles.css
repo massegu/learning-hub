@@ -2857,3 +2857,9 @@ body {
 .document-mode-hint{margin:0 0 1rem;line-height:1.5}
 .multi-option .picture-icon{display:inline-flex;vertical-align:middle;margin-right:.6rem}
 .multi-option .picture-icon svg{width:2.7rem;height:2.7rem}
+
+/* Labelled attention data keep their source letters even when answers shuffle. */
+.reading-passage .attention-data {max-width:48rem;table-layout:fixed;border-collapse:separate;border-spacing:0 8px}
+.attention-data thead th {width:auto;background:transparent;text-align:left;font-size:.85rem;color:var(--muted);padding:4px 16px}
+.attention-data thead th:first-child {width:5rem}
+.attention-data td {overflow-wrap:anywhere;line-height:1.5}

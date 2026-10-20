@@ -12,10 +12,39 @@ with sync_playwright() as p:
  for i,(key,doc) in enumerate(documents.items()):
   if args.only and key!=args.only:continue
   color=colors[i%len(colors)];parts=['<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1536" viewBox="0 0 1024 1536"><rect width="1024" height="1536" fill="#faf7ef"/>',f'<rect x="42" y="42" width="940" height="1452" rx="24" fill="white" stroke="{color}" stroke-width="3"/>',f'<path d="M42 66q0-24 24-24h892q24 0 24 24v145H42Z" fill="{color}"/>']
-  def text(x,y,value,size=27,fill='#173326',weight='normal'):
-   parts.append(f'<text x="{x}" y="{y}" font-family="DejaVu Sans, sans-serif" font-size="{size}" font-weight="{weight}" fill="{fill}">{html.escape(value)}</text>')
+  def text(x,y,value,size=27,fill='#173326',weight='normal',right=960):
+   parts.append(f'<text x="{x}" y="{y}" data-right="{right}" font-family="DejaVu Sans, sans-serif" font-size="{size}" font-weight="{weight}" fill="{fill}">{html.escape(value)}</text>')
   text(80,100,doc['kind'].upper(),25,'white','bold');text(80,152,doc['country'],24,'white')
   y=270
+  business=key in ['invoice-co-v1','receipt-co-v1','catalogue-co-v1']
+  if business:
+   def wrapped(value,size=28,width=820,bold=False):
+    return page.evaluate(r'''({value,size,width,bold})=>{const c=document.createElement('canvas').getContext('2d');c.font=(bold?'bold ':'')+size+'px DejaVu Sans';let line='';const out=[];for(const word of value.split(/\s+/)){const next=line?line+' '+word:word;if(line&&c.measureText(next).width>width){out.push(line);line=word;}else line=next;}if(line)out.push(line);return out;}''',{'value':value,'size':size,'width':width,'bold':bold})
+   text(80,y,doc['title'],35,weight='bold');y+=55
+   for line in wrapped(doc['transcript'][0]['text']):text(80,y,line,28,'#53665f');y+=38
+   y+=35
+   rows=doc['transcript'][1]['rows'];columns=len(rows[0]);widths={2:[620,244],3:[450,180,234],4:[310,155,225,174]}[columns]
+   for rownum,row in enumerate(rows):
+    lines=[wrapped(value,25,widths[col]-30,rownum==0) for col,value in enumerate(row)]
+    height=max(map(len,lines))*36+26
+    parts.append(f'<rect x="80" y="{y-30}" width="864" height="{height}" rx="4" fill="{color if rownum==0 else ("#f0f5f2" if rownum%2 else "#ffffff")}"/>')
+    x=80
+    for col,values in enumerate(lines):
+     for n,line in enumerate(values):
+      if rownum>0 and col>0:
+       parts.append(f'<text x="{x+widths[col]-18}" y="{y+n*36}" text-anchor="end" font-family="DejaVu Sans, sans-serif" font-size="27" fill="#173326">{html.escape(line)}</text>')
+      else:text(x+14,y+n*36,line,25,'white' if rownum==0 else '#173326','bold' if rownum==0 else 'normal',right=x+widths[col]-14)
+     x+=widths[col]
+    y+=height
+   y+=30
+   # Keep the authored wording and numbers verbatim, splitting only at sentence
+   # boundaries (never thousands separators). Emphasize totals and package offers.
+   for sentence in re.split(r'(?<=\.)\s+(?=[A-ZÁÉÍÓÚ])',doc['transcript'][2]['text']):
+    lines=wrapped(sentence,30,800);height=len(lines)*42+30
+    emphasis=sentence.startswith(('TOTAL:','Paquete'))
+    parts.append(f'<rect x="80" y="{y-27}" width="864" height="{height}" rx="10" fill="{color if emphasis else "#f1f4f0"}"/>')
+    for line in lines:text(104,y+9,line,30,'white' if emphasis else '#173326','bold' if emphasis else 'normal');y+=42
+    y+=44
   if key=='map-cl':
    text(80,270,'CENTRO CULTURAL · Concepción',36,weight='bold')
    text(80,320,'Plano esquemático · sin escala',28)
@@ -34,7 +63,7 @@ with sync_playwright() as p:
    text(80,1235,'Taller: a la izquierda, por la escalera.',30)
    text(80,1290,'Sala de música: a la derecha del patio.',30)
    y=1330
-  for j,block in enumerate([] if key=='map-cl' else doc['transcript']):
+  for j,block in enumerate([] if key=='map-cl' or business else doc['transcript']):
    if block['type']=='table':
     columns=len(block['rows'][0]);width=864/columns
     for rownum,row in enumerate(block['rows']):
@@ -62,7 +91,7 @@ with sync_playwright() as p:
   text(80,y+30,'LEARNING LAB',20,color);parts.append('</svg>')
   height=int(y+110);dimensions[key]=height
   svg=''.join(parts).replace('height="1536"',f'height="{height}"').replace('0 0 1024 1536',f'0 0 1024 {height}').replace('height="1452"',f'height="{height-84}"')
-  bounds=page.evaluate('''({svg,height})=>{document.body.innerHTML=svg;return [...document.querySelectorAll('svg text')].map(el=>{const b=el.getBBox();return {text:el.textContent,right:b.x+b.width,bottom:b.y+b.height}}).filter(x=>x.right>960||x.bottom>height-50)}''',{'svg':svg,'height':height})
+  bounds=page.evaluate('''({svg,height})=>{document.body.innerHTML=svg;return [...document.querySelectorAll('svg text')].map(el=>{const b=el.getBBox();return {text:el.textContent,right:b.x+b.width,limit:Number(el.getAttribute('data-right')||960),bottom:b.y+b.height}}).filter(x=>x.right>x.limit||x.bottom>height-50)}''',{'svg':svg,'height':height})
   if bounds:raise RuntimeError(f'Clipped document {key}: {bounds}')
   target=ROOT/'assets/documents'/f'{key}.svg';target.write_text(svg)
   png=page.evaluate('''async svg=>{const url=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));const img=new Image();img.src=url;await img.decode();const c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;c.getContext('2d').drawImage(img,0,0);URL.revokeObjectURL(url);return c.toDataURL('image/png').split(',')[1]}''',svg)

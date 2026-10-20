@@ -1164,6 +1164,10 @@ function mechanicSignature(domain:string,item:any){
 
 
 function generatedItems(domain:string,n:number,recentEntries:string[],factory:()=>any){
+  // Candidates are immutable within a selection. Reuse their evidence-based
+  // signatures instead of serializing the same stimuli in every scoring pass.
+  const signatures=new WeakMap<object,string>();
+  const signature=(item:any)=>{if(!signatures.has(item))signatures.set(item,contentSignature(domain,item));return signatures.get(item)!;};
   const recentItems=new Set(recentEntries.filter((x:string)=>x.includes(":item:")).slice(-360));
   const mechanicHistory=recentEntries.filter((x:string)=>x.includes(":mechanic:")).slice(-360);
   const mechanicCounts=new Map<string,number>();
@@ -1175,7 +1179,7 @@ function generatedItems(domain:string,n:number,recentEntries:string[],factory:()
   for(let tries=0;tries<900;tries++){
     const cand=normalizeItem(factory());
     if(!validateItem(cand)) continue;
-    const sig=contentSignature(domain,cand);
+    const sig=signature(cand);
     if(seenPool.has(sig)) continue;
     seenPool.add(sig);
     pool.push(cand);
@@ -1188,28 +1192,29 @@ function generatedItems(domain:string,n:number,recentEntries:string[],factory:()
   for(let i=0;i<n;i++){
     // A recent-window rotation is only a fallback after the available pool has
     // no unseen source left. More documents must not cause earlier repeats.
-    const freshAvailable=pool.some(cand=>{const sig=contentSignature(domain,cand);return !localItems.has(sig)&&!recentItems.has(sig);});
+    const freshAvailable=pool.some(cand=>{const sig=signature(cand);return !localItems.has(sig)&&!recentItems.has(sig);});
     let best:any=null, bestScore=Infinity;
+    // History changes only after choosing an item, not for every candidate.
+    const passageHistory=[...recentEntries,...out.map((it:any)=>signature(it))].filter((x:string)=>x.includes(':item:passage:'));
+    const previousPassages=passageHistory.slice(-9),previousPassage=passageHistory.at(-1);
+    const readingDomain=['reading','middleReading','literacy'].includes(domain);
     for(const cand of pool){
-      const sig=contentSignature(domain,cand);
+      const sig=signature(cand);
       if(localItems.has(sig)) continue;
       const msig=mechanicSignature(domain,cand);
-      const previousPassages=[...recentEntries,...out.map((it:any)=>contentSignature(domain,it))].filter((x:string)=>x.includes(":item:passage:")).slice(-9);
       const itemPenalty=(recentItems.has(sig)&&(!cand.passageKey||freshAvailable)||cand.passageKey&&previousPassages.includes(sig))?100000:0;
       const recentPenalty=veryRecent.has(msig)?10000:0;
       const localPenalty=localMechanics.has(msig)?5000:0;
       const countPenalty=(mechanicCounts.get(msig)||0)*100;
       // Alternate text and visual sources where both are available. Fresh
       // sources and the nine-source recent window retain higher priority.
-      const previousPassage=[...recentEntries,...out.map((it:any)=>contentSignature(domain,it))].filter((x:string)=>x.includes(':item:passage:')).at(-1);
-      const readingDomain=['reading','middleReading','literacy'].includes(domain);
       const sameFormat=previousPassage&&previousPassage.includes(':passage:document:')===Boolean(cand.passageKey?.startsWith('document:'));
       const formatPenalty=readingDomain&&sameFormat?20000:0;
       const score=itemPenalty+formatPenalty+recentPenalty+localPenalty+countPenalty+Math.random();
       if(score<bestScore){best=cand;bestScore=score;}
     }
     if(!best) break;
-    const sig=contentSignature(domain,best), msig=mechanicSignature(domain,best);
+    const sig=signature(best), msig=mechanicSignature(domain,best);
     localItems.add(sig); localMechanics.add(msig);
     mechanicCounts.set(msig,(mechanicCounts.get(msig)||0)+1);
     out.push(best);

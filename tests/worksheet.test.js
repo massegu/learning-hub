@@ -41,7 +41,10 @@ function assertAnswerable(nodes, items, profile) {
     assert.ok(q>0,'question must follow stimulus');
     for(const stimulus of projection.stimulus) {
       const values=stimulus.type==='text'?[stimulus.text]:stimulus.type==='list'?stimulus.items:stimulus.rows.flat();
-      for(const value of values) assert.ok(block.slice(0,q).some(s=>s===value||/^\d+\. /.test(s)&&s.endsWith(value)),`missing stimulus: ${value}`);
+      for(const value of values) {
+        const visible=items[i].type==='memoryReveal'&&art.forLabel(value,items[i].lexicalSenses)?model.memoryLabel(value):value;
+        assert.ok(block.slice(0,q).some(s=>s===visible||/^\d+\. /.test(s)&&s.endsWith(visible)),`missing stimulus: ${value}`);
+      }
     }
     for(const option of projection.options) assert.ok(block.some(s=>s.endsWith(`. ${option}`)),`missing option: ${option}`);
     for(const token of projection.tokens) assert.ok(block.some(s=>/^\d+\. /.test(s)&&s.endsWith(token)),`missing order token: ${token}`);
@@ -268,4 +271,18 @@ test('mixed worksheets flow as ordinary body blocks without exercise-count page 
  const topLevelTitles=document.match(/<w:p><w:pPr><w:keepNext\/>[\s\S]*?<w:t[^>]*>ACTIVIDAD \d+<\/w:t>/g)||[];
  assert.equal(topLevelTitles.length,items.length);
  assertAnswerable(textNodes(document),items,{age_band:'teen'});
+});
+
+
+test('memory DOCX labels omit articles while image metadata retains canonical evidence',async()=>{
+ const {generator,downloads}=harness();
+ const item=require('../js/curriculum').pool('teen','memory',1).find(it=>it.mechanic==='memory_sequence');
+ const before=structuredClone(item);
+ await generator.generate([[item]],{age_band:'teen',progress:{ageRoute:'teen'}});
+ const source=await xml(downloads[0].blob),nodes=textNodes(source);
+ for(const value of item.stimulus.flatMap(b=>b.type==='list'?b.items:[])){
+  assert.ok(nodes.includes(model.memoryLabel(value)));
+  assert.ok(source.includes('description="'+value+'"')||source.includes('descr="'+value+'"'));
+ }
+ assert.deepEqual(item,before);
 });
