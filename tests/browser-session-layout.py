@@ -60,8 +60,8 @@ try:
    assert 'SITUACIÓN' not in page.locator('#exerciseVisual').inner_text()
    page.locator('#exerciseOptions').get_by_role('button',name='C',exact=True).click()
    page.locator('#navMenu [data-subject=executive]').click();page.wait_for_selector('#exercise[data-subject=executive] .stimulus-paragraph')
-   dimensions=page.locator('.stimulus-paragraph').evaluate('(e)=>({text:e.getBoundingClientRect().width,box:e.parentElement.clientWidth})')
-   assert abs(dimensions['text']-dimensions['box'])<50,dimensions
+   dimensions=page.locator('.stimulus-paragraph').evaluate('(e)=>({text:e.getBoundingClientRect().width,box:e.parentElement.clientWidth-parseFloat(getComputedStyle(e.parentElement).paddingLeft)-parseFloat(getComputedStyle(e.parentElement).paddingRight)})')
+   assert abs(dimensions['text']-dimensions['box'])<2,dimensions
    page.locator('#navMenu [data-subject=speedReasoning]').click();page.wait_for_selector('#startSpeedTrial')
    page.locator('#practiceSpeedTrial').click();page.wait_for_selector('.speed-choice')
    before=page.locator('.speed-choice').first.bounding_box()

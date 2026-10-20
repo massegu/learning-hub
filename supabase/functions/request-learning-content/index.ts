@@ -972,6 +972,7 @@ function socialExercise(level:number){
 
 function validateItem(item:any):boolean{
   if(!item||typeof item!=="object") return false;
+  if(item.type==="multiSelect"){try{(globalThis as any).Curriculum.validateReview(item);}catch(_){return false;}}
   try{(globalThis as any).LocaleContent.validateOptions(item);}catch(_){return false;}
   if(String(item.type||"").startsWith("memory") && (!Array.isArray(item.memoryContent)||!item.memoryContent.length)) return false;
   if(Array.isArray(item.opts)){

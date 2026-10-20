@@ -105,6 +105,7 @@
     if (item.stimulus !== undefined && (item.image || item.visual || item.rounds))
       fail('el componente adicional no tiene una representación imprimible.');
     if (policy.forProfile(profile)) policy.validateEarly(item);
+    if(item.type==='multiSelect')(root.Curriculum||(typeof require==='function'&&require('./curriculum'))).validateReview(item);
     const rawStimulus = item.stimulus === undefined ? legacyStimulus(item) : item.stimulus;
     const stimulus=Array.isArray(rawStimulus)&&item.writingRubric?.length?rawStimulus.filter(b=>!(b.type==='text'&&b.text==='Criterios de revisión')&&!(b.type==='list'&&JSON.stringify(b.items)===JSON.stringify(item.writingRubric))):rawStimulus;
     if (!Array.isArray(stimulus)) fail('falta la lista de estímulos.');
@@ -266,7 +267,7 @@
   }
   function forDelivery(item, profile, domain) {
     (root.LocaleContent||(typeof require==='function'&&require('./locale-content'))).validateOptions(item);
-    if (!policy.forProfile(profile)) return item;
+    if (!policy.forProfile(profile)){if(item.type==='multiSelect')printable(item,profile);return item;}
     if (domain && item?.domain !== domain) fail('el área recibida no coincide con la solicitada.');
     // Identical contract at the domain boundary, on screen and in the exporter.
     // This applies to local, remote and future cache sources alike.
@@ -300,6 +301,7 @@
         return `<div class="recall-grid" style="--grid-size:${block.rows[0].length}" role="table" aria-label="${escape(block.label||'Cuadrícula para recordar')}">${block.rows.map((row,r)=>`<div role="row">${row.map((x,c)=>`<div role="cell" aria-label="Fila ${r+1}, columna ${c+1}: ${escape(x)}">${visualLabel(x,options.senses)}</div>`).join('')}</div>`).join('')}</div>`;
       }
       if(block.presentation==='speedComparison')return `<div class="speed-comparison" role="group" aria-label="Dos series para comparar">${block.rows[0].map((series,i)=>`<div class="speed-series" aria-label="Serie ${i+1}">${series.split(' · ').map(x=>`<span class="speed-symbol">${visualLabel(x,options.senses)}</span>`).join('')}</div>`).join('')}</div>`;
+      if(block.presentation==='reviewPlan')return `${block.label?`<p class="stimulus-caption">${escape(block.label)}</p>`:''}<div class="stimulus-table-scroll" tabindex="0" role="region" aria-label="Compara las condiciones y el plan"><table class="structured-stimulus-table review-plan-table"><thead><tr>${block.rows[0].map(x=>`<th scope="col">${escape(x)}</th>`).join('')}</tr></thead><tbody>${block.rows.slice(1).map(row=>`<tr><th scope="row">${escape(row[0])}</th>${row.slice(1).map((value,i)=>`<td><span class="review-column-label" aria-hidden="true">${escape(block.rows[0][i+1])}</span>${escape(value)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
       if(block.presentation==='codeComparison')return `<table class="attention-comparison"><tbody>${block.rows.map(row=>`<tr><th scope="row">${escape(row[0])}</th><td><code>${escape(row[1])}</code></td></tr>`).join('')}</tbody></table>`;
       if(block.type==='text'&&block.presentation==='model'&&!options.illustrated)return `<div class="attention-model"><span>MODELO</span><code>${escape(block.text.slice(8))}</code></div>`;
       if(options.illustrated){
