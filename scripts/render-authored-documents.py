@@ -21,8 +21,21 @@ with sync_playwright() as p:
    def wrapped(value,size=28,width=820,bold=False):
     return page.evaluate(r'''({value,size,width,bold})=>{const c=document.createElement('canvas').getContext('2d');c.font=(bold?'bold ':'')+size+'px DejaVu Sans';let line='';const out=[];for(const word of value.split(/\s+/)){const next=line?line+' '+word:word;if(line&&c.measureText(next).width>width){out.push(line);line=word;}else line=next;}if(line)out.push(line);return out;}''',{'value':value,'size':size,'width':width,'bold':bold})
    text(80,y,doc['title'],35,weight='bold');y+=55
-   for line in wrapped(doc['transcript'][0]['text']):text(80,y,line,28,'#53665f');y+=38
-   y+=35
+   # Do not repeat the issuer/type as a subtitle. Present the unique facts as
+   # labelled fields, extracted verbatim from the canonical accessible source.
+   source=doc['transcript'][0]['text']
+   patterns={
+    'invoice-co-v1':[('Referencia',r'F-\d+'),('Fecha',r'\d{2}/\d{2}/\d{4}'),('Moneda',r'pesos colombianos \(COP\)')],
+    'receipt-co-v1':[('Referencia',r'R-\d+'),('Fecha',r'\d{2}/\d{2}/\d{4}'),('Hora',r'\d{2}:\d{2}'),('Moneda',r'pesos colombianos \(COP\)')],
+    'catalogue-co-v1':[('Válido hasta',r'\d{2}/\d{2}/\d{4}'),('Moneda',r'pesos colombianos \(COP\)')],
+   }
+   fields=[(label,re.search(pattern,source).group(0)) for label,pattern in patterns[key]]
+   for n,(label,value) in enumerate(fields):
+    col=n%2;row=n//2;x=80+col*444;yy=y+row*100
+    parts.append(f'<rect x="{x}" y="{yy-12}" width="420" height="84" rx="10" fill="#f0f5f2"/>')
+    text(x+18,yy+14,label.upper(),17,'#53665f',weight='bold',right=x+402)
+    text(x+18,yy+48,value,24,weight='normal',right=x+402)
+   y+=((len(fields)+1)//2)*100+28
    rows=doc['transcript'][1]['rows'];columns=len(rows[0]);widths={2:[620,244],3:[450,180,234],4:[310,155,225,174]}[columns]
    for rownum,row in enumerate(rows):
     lines=[wrapped(value,25,widths[col]-30,rownum==0) for col,value in enumerate(row)]

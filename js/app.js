@@ -1281,6 +1281,32 @@
   $("#heroStartBtn").onclick = () => {
     $("#recommendedBtn").click();
   };
+  function renderSpeedProgress() {
+    const container = $('#speedProgressChart');
+    const history = state.history.filter(x => x.subject === 'speedReasoning');
+    container.classList.toggle('hidden', !history.length);
+    if (!history.length) { container.innerHTML = ''; return; }
+    const names = {figures:'Figuras',objects:'Objetos',arrows:'Flechas',orientation:'Orientación',pictograms:'Pictogramas',characters:'Letras y números',mixed:'Series mixtas',category:'Categorías',key:'Clave de códigos',match:'Coincidencias',search:'Búsqueda visual',pairs:'Revisar parejas',flanker:'Ignorar distractores',translation:'Traducción de claves'};
+    const groups = new Map();
+    for (const row of history) {
+      if (!row.speedFamily) continue;
+      const key = JSON.stringify([row.speedFamily, row.level, row.speedRevision || 2]);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(row);
+    }
+    const rows = [...groups.values()].map(group => {
+      const sample = group.at(-1);
+      // Compare the same family, level and format. Invalid/background times
+      // and unmeasured practice do not contribute to either plotted metric.
+      const measured = group.slice(-20).filter(x => x.timingValid && Number.isFinite(x.responseMs) && x.responseMs >= 0);
+      const stats = window.Curriculum.speedSummary(measured);
+      return {...stats, family:sample.speedFamily, level:sample.level, revision:sample.speedRevision || 2};
+    }).filter(row => row.attempts);
+    const seconds = ms => (ms / 1000).toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2});
+    const label = row => `${names[row.family] || row.family} · nivel ${row.level}${row.revision !== 4 ? ' · formato anterior' : ''}`;
+    const maximum = Math.max(1, ...rows.map(row => (row.medianMs || 0) / 1000));
+    container.innerHTML = `<p class="eyebrow">VELOCIDAD DE PROCESAMIENTO</p><h3>Tiempo y precisión por reto</h3><p class="speed-timing-intro">Mediana del tiempo de las respuestas correctas, junto a sus aciertos. Compara siempre el mismo reto, nivel y formato: un tiempo menor es mejor si mantienes la precisión.</p>${rows.length ? `<div class="speed-timing-scale"><span>0 s</span><span>${seconds(maximum * 1000)} s</span></div><ul class="speed-timing-list">${rows.map(row => `<li class="speed-timing-row" data-family="${escapeHtml(row.family)}" data-level="${escapeHtml(row.level)}" data-revision="${row.revision}" data-median-ms="${row.medianMs === null ? '' : row.medianMs}"><div class="speed-timing-heading"><strong>${escapeHtml(label(row))}</strong><span class="speed-timing-value">${row.medianMs === null ? 'Sin aciertos medidos' : seconds(row.medianMs) + ' s'}</span></div><svg viewBox="0 0 600 24" preserveAspectRatio="none" aria-hidden="true"><rect width="600" height="24" rx="12" fill="#e9eee5"/>${row.medianMs === null ? '' : `<rect width="${600 * row.medianMs / 1000 / maximum}" height="24" rx="12" fill="#548c76"/>`}</svg><p><strong>${row.accuracy}% de aciertos</strong><span>${row.attempts} ${row.attempts === 1 ? 'respuesta medida' : 'respuestas medidas'}</span></p></li>`).join('')}</ul><p class="muted speed-timing-note">Hasta 20 intentos recientes por reto y nivel. La práctica sin cronómetro y los tiempos interrumpidos quedan excluidos. Sin aciertos medidos no se dibuja una barra de tiempo.</p><details class="progress-chart-data"><summary>Ver los datos de tiempos</summary><div class="speed-timing-table"><table><thead><tr><th>Reto y nivel</th><th>Mediana al acertar</th><th>Aciertos</th><th>Respuestas medidas</th></tr></thead><tbody>${rows.map(row => `<tr><th scope="row">${escapeHtml(label(row))}</th><td>${row.medianMs === null ? 'Sin aciertos medidos' : seconds(row.medianMs) + ' s'}</td><td>${row.accuracy}%</td><td>${row.attempts}</td></tr>`).join('')}</tbody></table></div></details>` : '<p class="muted">Todavía no hay respuestas con tiempos válidos. Completa un reto con cronómetro para ver la gráfica.</p>'}`;
+  }
   function renderProgress() {
     $("#progressProfileTitle").textContent = `Evolución de ${profile.name}`;
     $("#progressCards").innerHTML = ageData()
@@ -1288,13 +1314,10 @@
         const r = state.history.filter((x) => x.subject === s),
           c = r.filter((x) => x.correct).length,
           acc = r.length ? Math.round((c / r.length) * 100) : 0;
-        const timings=s==='speedReasoning'?[...new Set(r.filter(x=>x.speedFamily&&x.timingValid).map(x=>x.speedFamily+':'+x.level+':'+(x.speedRevision||2)))].map(key=>{
-          const [family,level,revision]=key.split(':'),stats=window.Curriculum.speedSummary(r.filter(x=>x.speedFamily===family&&String(x.level)===level&&String(x.speedRevision||2)===revision).slice(-20));
-          return `<p class="speed-progress-detail">${({figures:'Figuras',objects:'Objetos',arrows:'Flechas',orientation:'Orientación',pictograms:'Pictogramas',characters:'Letras y números',mixed:'Series mixtas',category:'Categorías',key:'Clave de códigos',match:'Coincidencias',search:'Búsqueda visual',pairs:'Revisar parejas',flanker:'Ignorar distractores',translation:'Traducción de claves'})[family]||escapeHtml(family)} · nivel ${escapeHtml(level)}${revision!=='4'?' · formato anterior':''}: ${stats.accuracy}% de aciertos en ${stats.attempts} respuestas medidas.${stats.medianMs===null?'':` Mediana al acertar: ${(stats.medianMs/1000).toFixed(2)} s.`}</p>`;
-        }).join(''):'';
-        return `<div class="progress-subject card"><small>${SUBJECT_META[s].name}</small><div class="accuracy-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="ring-track" cx="60" cy="60" r="49"/><circle class="ring-value" cx="60" cy="60" r="49" pathLength="100" stroke-opacity="${acc?1:0}" stroke-dasharray="${acc} 100"/></svg><div><strong>${r.length?acc+'%':'—'}</strong><span>${r.length?'de aciertos':'sin práctica'}</span></div></div><small>${r.length} ${r.length===1?'ejercicio':'ejercicios'} · nivel ${state.levels[s] || 1}</small>${timings}</div>`;
+        return `<div class="progress-subject card"><small>${SUBJECT_META[s].name}</small><div class="accuracy-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="ring-track" cx="60" cy="60" r="49"/><circle class="ring-value" cx="60" cy="60" r="49" pathLength="100" stroke-opacity="${acc?1:0}" stroke-dasharray="${acc} 100"/></svg><div><strong>${r.length?acc+'%':'—'}</strong><span>${r.length?'de aciertos':'sin práctica'}</span></div></div><small>${r.length} ${r.length===1?'ejercicio':'ejercicios'} · nivel ${state.levels[s] || 1}</small></div>`;
       })
       .join("");
+    renderSpeedProgress();
     $("#recentResults").innerHTML =
       state.history
         .slice(-12)

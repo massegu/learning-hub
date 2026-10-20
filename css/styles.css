@@ -2694,7 +2694,7 @@ body {
 .structured-stimulus-table th,.structured-stimulus-table td { padding:14px 18px; border:1px solid #bdcbd0; line-height:1.6; }
 .structured-stimulus-table th { background:#e7eef1; font-weight:700; }
 .structured-stimulus-table tr:nth-child(odd) td { background:#f7fafb; }
-.stimulus-paragraph { max-width:72ch; line-height:1.85; white-space:pre-line; overflow-wrap:anywhere; }
+.stimulus-paragraph { max-width:none; width:100%; line-height:1.85; white-space:pre-line; overflow-wrap:anywhere; }
 .scenario-card p { white-space:pre-line; }
 .table-scroll-hint { display:none; }
 #exercise:not(.early-primary) .exercise-layout.single { grid-template-columns:minmax(0,1fr); }
@@ -2886,6 +2886,20 @@ body {
 .accuracy-ring>div{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px}
 .accuracy-ring strong{font-size:2rem}.accuracy-ring span{font-size:.78rem;color:#60796a}
 .progress-subject{text-align:center;border-top:3px solid #adc7ad}
+.speed-timing-card{margin-top:20px}
+.speed-timing-card h3{margin:6px 0 12px}
+.speed-timing-intro,.speed-timing-note{line-height:1.65;color:#60796a}
+.speed-timing-scale{display:flex;justify-content:space-between;color:#60796a;font-size:.8rem;margin:24px 0 10px}
+.speed-timing-list{display:grid;gap:24px;margin:0;padding:0;list-style:none}
+.speed-timing-row{min-width:0}
+.speed-timing-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.speed-timing-heading strong{font-size:.95rem;overflow-wrap:anywhere}
+.speed-timing-value{color:#285143;font-size:1.2rem;font-weight:750;font-variant-numeric:tabular-nums}
+.speed-timing-row svg{display:block;width:100%;height:18px}
+.speed-timing-row p{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:8px 0 0;color:#60796a;font-size:.8rem}
+.speed-timing-row p strong{color:#285143}
+.speed-timing-table{overflow-x:auto}
+.speed-timing-table table{font-size:.85rem}
 .progress-chart-summary{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;color:#60796a}.progress-chart-summary strong{color:#285143;font-size:1.35rem}
 .evolution-chart{display:block;width:100%;height:auto;max-height:350px;margin-top:20px;background:linear-gradient(#fbfcf8,#fffdf7);border-radius:16px}
 .progress-chart-data table{width:100%;border-collapse:collapse;margin-top:12px}.progress-chart-data th,.progress-chart-data td{padding:10px;text-align:left;border-bottom:1px solid #e1e9de}
