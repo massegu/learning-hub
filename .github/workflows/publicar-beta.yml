@@ -33,6 +33,7 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install playwright==1.62.0
       - run: python -m playwright install --with-deps chromium
+      - run: python tests/browser-billing.py
       - run: python tests/browser-auth-account.py
       - run: python tests/browser-session-layout.py
       - run: python tests/browser-supervision.py

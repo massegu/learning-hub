@@ -30,8 +30,21 @@
   API.saveProgress=async(id,progress)=>{const {data:row}=await client.from('learner_profiles').select('progress').eq('id',id).single();const merged={...progress};if(row?.progress?._delivery)merged._delivery=row.progress._delivery;const {error}=await client.from('learner_profiles').update({progress:merged}).eq('id',id);if(error)throw error};
   API.saveResult=async(profile_id,row)=>{const {error}=await client.from('exercise_results').insert({profile_id,occurred_at:row.ts,session_id:row.sessionId,session_started_at:row.sessionStartedAt,subject:row.subject,level:row.level,correct:row.correct,points:row.points,item_id:row.itemId,detail:row.detail});if(error)console.warn('Result insert failed',error)};
   API.getAccount=async()=>{const {data,error}=await client.from('accounts').select('subscription_status,trial_started_at,trial_ends_at,current_period_end,content_locale').single();if(error)throw error;API.setContentLocale(data?.content_locale);return data};
-  API.openStripeCheckout=()=>{if(!cfg.stripePaymentLink||!API.user)return;const q=new URLSearchParams({client_reference_id:API.user.id,locked_prefilled_email:API.user.email||''});window.location.href=cfg.stripePaymentLink+'?'+q.toString()};
-  API.openBillingPortal=()=>{if(!cfg.stripePortalLink)return;const q=new URLSearchParams();if(API.user?.email)q.set('prefilled_email',API.user.email);window.location.href=cfg.stripePortalLink+(q.toString()?'?'+q.toString():'')};
+  async function openBilling(action){
+    if(!API.user)throw new Error('Inicia sesión para gestionar tu suscripción.');
+    const {data,error}=await client.functions.invoke('stripe-webhook',{body:{action,mode:cfg.stripeMode}});
+    if(error){
+      let message='No se ha podido abrir Stripe. Inténtalo de nuevo.';
+      try{const body=await error.context.clone().json();if(body?.error)message=body.error;}catch{}
+      throw new Error(message);
+    }
+    const expected=action==='checkout'?'checkout.stripe.com':'billing.stripe.com';
+    let url;try{url=new URL(data?.url);}catch{throw new Error('Stripe no ha devuelto una dirección válida.');}
+    if(url.protocol!=='https:'||url.hostname!==expected||url.username||url.password||data?.livemode!==(cfg.stripeMode==='live'))throw new Error('No se ha podido verificar el destino de pago.');
+    window.location.assign(url.href);
+  }
+  API.openStripeCheckout=()=>openBilling('checkout');
+  API.openBillingPortal=()=>openBilling('portal');
   API.requestContent=async(payload)=>{const {data,error}=await client.functions.invoke('request-learning-content',{body:payload});if(error){let msg=error.message||'No se pudo cargar el contenido.';try{const ctx=error.context;if(ctx&&typeof ctx.clone==='function'){const body=await ctx.clone().json();if(body?.error)msg=body.error;}else if(ctx?.body?.error)msg=ctx.body.error;}catch(_){}const e=new Error(msg);e.original=error;throw e;}return data};
   window.LearningAPI=API;
 })();
