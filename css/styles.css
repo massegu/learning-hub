@@ -2924,3 +2924,43 @@ body {
 .photo-hit.wrong{border-color:#bd4141;background:#df555540}
 .photo-hit.selected::after,.photo-hit.correct::after{content:'✓';position:absolute;right:0;top:0;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#285e50;color:#fff;font-size:16px;font-weight:800}
 .photo-mark-help{margin:12px 0 0;line-height:1.6;color:#526b5c;font-size:.9rem}
+
+/* A compact overview keeps all areas legible without oversized chart tiles. */
+#progressCards{grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-bottom:12px}
+#progressCards .progress-subject{display:grid;grid-template-columns:78px minmax(0,1fr);grid-template-rows:1fr 1fr;gap:4px 12px;align-items:center;min-height:110px;padding:12px;text-align:left;background:var(--progress-tint);border-top:3px solid var(--progress-color)}
+#progressCards .progress-subject>small:first-child{grid-column:2;grid-row:1;align-self:end;color:var(--progress-color);font-size:.85rem;font-weight:750;line-height:1.35;overflow-wrap:anywhere}
+#progressCards .progress-subject>small:last-child{grid-column:2;grid-row:2;align-self:start;font-size:.72rem;line-height:1.4}
+#progressCards .accuracy-ring{grid-column:1;grid-row:1/3;width:78px;height:78px;margin:0}
+#progressCards .accuracy-ring strong{font-size:1.2rem}
+#progressCards .accuracy-ring span{font-size:.55rem}
+#progressCards .accuracy-ring>div{gap:2px}
+#progressCards .ring-value{stroke:var(--progress-color)}
+.speed-timing-card{margin-top:12px;padding:18px}
+.speed-timing-card h3{font-size:1.2rem;margin:4px 0 8px}
+.speed-timing-intro{font-size:.85rem;margin:0}
+.speed-timing-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 28px}
+.speed-timing-heading{gap:6px;margin-bottom:6px}
+.speed-timing-heading strong{font-size:.8rem}
+.speed-timing-value{font-size:1rem}
+.speed-timing-row svg{height:12px}
+.speed-timing-row p{font-size:.7rem;margin-top:5px}
+.speed-timing-scale{margin-top:14px}
+.speed-timing-note{font-size:.75rem;margin:12px 0}
+.speed-timing-history{margin-top:14px}
+.speed-timing-history summary{cursor:pointer;color:#506b5e;margin-bottom:14px;font-size:.85rem;font-weight:650}
+#progress .section-intro{padding:18px 22px}
+#progress .section-intro h3{font-size:1.5rem}
+#progress .section-intro p{font-size:.85rem;line-height:1.5}
+@media(max-width:650px){#progressCards{grid-template-columns:repeat(2,minmax(0,1fr))}#progressCards .progress-subject{grid-template-columns:1fr;text-align:center;gap:5px;min-height:155px;padding:10px}#progressCards .progress-subject>small:first-child{grid-column:1;grid-row:1;align-self:center}#progressCards .accuracy-ring{grid-column:1;grid-row:2;margin:auto;width:70px;height:70px}#progressCards .progress-subject>small:last-child{grid-column:1;grid-row:3}.speed-timing-list{grid-template-columns:1fr;gap:16px}.speed-timing-card{padding:14px}}
+
+/* Original storybook medallions: decorative area art, independent of answer icons. */
+#exerciseHeading::before{content:'';display:inline-block;flex:0 0 58px;width:58px;height:58px;background-image:url('../assets/icons/adventure-areas.png');background-size:400% 200%;background-repeat:no-repeat;background-position:0 0}
+#exerciseHeading{display:flex;align-items:center;gap:12px;min-width:0}
+#exercise[data-subject='division'] #exerciseHeading::before,#exercise[data-subject='middleMath'] #exerciseHeading::before,#exercise[data-subject='teenMath'] #exerciseHeading::before,#exercise[data-subject='geometry'] #exerciseHeading::before{background-position:33.333333% 0}
+#exercise[data-subject='reading'] #exerciseHeading::before,#exercise[data-subject='literacy'] #exerciseHeading::before{background-position:66.666667% 0}
+#exercise[data-subject='attention'] #exerciseHeading::before{background-position:100% 0}
+#exercise[data-subject='executive'] #exerciseHeading::before{background-position:0 100%}
+#exercise[data-subject='memory'] #exerciseHeading::before{background-position:33.333333% 100%}
+#exercise[data-subject='speedReasoning'] #exerciseHeading::before{background-position:66.666667% 100%}
+#exercise[data-subject='english'] #exerciseHeading::before,#exercise[data-subject='social'] #exerciseHeading::before,#exercise[data-subject='applied'] #exerciseHeading::before{background-position:100% 100%}
+@media(max-width:650px){#exerciseHeading::before{flex-basis:46px;width:46px;height:46px}#exerciseHeading{gap:8px}}
