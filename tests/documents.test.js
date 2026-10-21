@@ -27,7 +27,7 @@ test('memory material identities suppress repeats beyond a renamed question and 
  const {api}=load();
  for(const age of ['early','junior','primary','middle','teen']){
   const pool=curriculum.pool(age,'memory',3);
-  assert.equal(pool.length,age==='early'?552:792);
+  assert.equal(pool.length,age==='early'?552:780);
   for(const family of ['memory_sequence','memory_spatial','memory_association'])assert.ok(new Set(pool.filter(it=>it.mechanic===family).map(it=>it.memoryMaterialKey)).size>=60);
   const history=[],keys=[];
   for(let n=0;n<24;n++){

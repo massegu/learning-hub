@@ -69,6 +69,19 @@
         }
       }
     }
+    const photoImages=new Map();
+    for(const model of models)for(const block of model.stimulus){
+      const pair=block.type==='photoPair'?window.PhotoLibrary.pairs[block.pairId]:null;
+      const source=block.type==='photo'||pair?window.PhotoLibrary.scenes[pair?.sceneId||block.photoId]:null;
+      if(!source)continue;
+      for(const path of pair?[source.path,pair.path]:[source.path]){
+        if(photoImages.has(path))continue;
+        const response=await fetch(path);if(!response.ok)throw new Error('No se pudo cargar la fotografía para la ficha.');
+        const bytes=new Uint8Array(await response.arrayBuffer());
+        if(bytes.length<24||[137,80,78,71,13,10,26,10].some((b,i)=>bytes[i]!==b))throw new Error('La fotografía no es un PNG válido.');
+        photoImages.set(path,bytes);
+      }
+    }
     const documentImages=new Map();
     const ids=[...new Set(models.flatMap(m=>m.stimulus.filter(b=>b.type==='document').map(b=>b.documentId)))];
     for(const id of ids){
@@ -96,6 +109,14 @@
       return new Paragraph({spacing:{line:360,after:90},children:[...prefix,...picture,new TextRun({text:key&&item.type==='memoryReveal'?window.ActivityModel.memoryLabel(value):value,size:textSize,color:ink,font:'Aptos'})]});
     }
     function renderMaterial(material,item){
+      if(material.type==='photo'||material.type==='photoPair'){
+        const pair=material.type==='photoPair'?window.PhotoLibrary.pairs[material.pairId]:null;
+        const source=window.PhotoLibrary.scenes[pair?.sceneId||material.photoId];
+        return (pair?[source.path,pair.path]:[source.path]).flatMap((path,i)=>[
+          ...(pair?[paragraph(i===0?'Imagen A':'Imagen B')]:[]),
+          new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({data:photoImages.get(path),transformation:{width:400,height:Math.round(400*source.height/source.width)},altText:{name:source.title,title:source.title,description:'Escena cotidiana para observar.'}})]})
+        ]);
+      }
       const heading=material.label?[paragraph(material.label)]:[];
       const scene=sceneImages.get(JSON.stringify(material));
       if(scene)heading.push(new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({data:scene.bytes,transformation:{width:340,height:Math.round(scene.height*340/scene.width)},altText:{name:material.presentation==='routeMap'?'Mapa del recorrido':'Escena para recordar',title:'Estímulo de memoria',description:JSON.stringify(material.items||material.rows)}})]}));

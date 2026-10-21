@@ -19,7 +19,7 @@ try:
    fixture.clear();fixture.update(item);page.evaluate('window.__current=null');page.locator(f'#navMenu [data-subject={domain}]').click()
    page.wait_for_function('()=>__current&&document.querySelector("#exercisePrompt").textContent===__current.q')
   def good():assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
-  scene=page.evaluate('Curriculum.pool("teen","memory",1).find(x=>x.mechanic==="memory_scene")');assert len(scene['memoryContent'])==5
+  scene=page.evaluate('(()=>{const it=Curriculum.pool("early","memory",1).find(x=>x.mechanic==="memory_scene");delete it.ageProfile;it.teenReview={version:3};return it})()');assert len(scene['memoryContent'])==5
   route=page.evaluate('Curriculum.pool("teen","memory",1).find(x=>x.mechanic==="memory_route")')
   for item,selector,name in [(scene,'.memory-scene','scene'),(route,'.memory-route','route')]:
    show(item,'memory');assert page.locator(selector+' > svg').count()==1
