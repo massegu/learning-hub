@@ -38,6 +38,7 @@ jobs:
       - run: python tests/browser-supervision.py
       - run: python tests/browser-practice-documents-memory.py
       - run: python tests/browser-varied-mechanics.py
+      - run: python tests/browser-presentation.py
   publicar:
     needs: comprobar
     if: github.event_name != 'pull_request' && !inputs.verificar_solo && github.ref == 'refs/heads/desarrollo'
