@@ -34,3 +34,24 @@ test('legacy code filtering material becomes separate cards without altering the
  const blocks=model.comparisonStimulus('A7   B3   B8   C6');assert.deepEqual(blocks,[{type:'list',items:['A7','B3','B8','C6'],presentation:'cards'}]);
  const html=model.interactiveStimulus(blocks,{structured:true});for(const code of ['A7','B3','B8','C6'])assert.ok(html.includes(code));assert.equal(model.comparisonStimulus('A7 B3 B8'),null);
 });
+
+test('six everyday settings have genuinely graded recall: one, two and three independent observations',()=>{
+ assert.equal(Object.keys(photo.scenes).length,6);assert.equal(Object.keys(photo.pairs).length,6);
+ for(const age of ['junior','primary','middle','teen'])for(const level of [1,2,3]){
+  const bank=photo.pool(age,'memory',level);
+  for(const id of Object.keys(photo.scenes)){
+   const tasks=bank.filter(it=>it.photoTask.sceneId===id);assert.ok(tasks.length>=4);
+   for(const it of tasks){
+    if(level===1){assert.equal(it.photoTask.evidence,undefined);continue;}
+    const evidence=it.photoTask.evidence;assert.equal(evidence.length,level);assert.equal(new Set(evidence).size,level);
+    const source=evidence.map(index=>photo.scenes[id].facts[index]);
+    assert.equal(it.a,source.map(f=>f.a).join(' → '));assert.equal(new Set(it.opts).size,it.opts.length);
+    assert.equal(it.opts.length,level+1);
+    for(const alternative of it.opts.filter(x=>x!==it.a))assert.equal(alternative.split(' → ').filter((v,i)=>v!==source[i].a).length,1);
+    const altered=structuredClone(it);altered.photoTask.evidence.reverse();assert.throws(()=>photo.validate(altered));
+   }
+  }
+  const differences=photo.pool(age,'attention',level);assert.equal(differences.length,6);
+  for(const it of differences){assert.equal(it.answers.length,level===1?1:3);assert.equal(new Set(it.opts).size,it.opts.length);}
+ }
+});

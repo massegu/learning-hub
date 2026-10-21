@@ -52,6 +52,19 @@ try:
      assert len(images)>=2
      source=ROOT/page.evaluate('(id)=>PhotoLibrary.scenes[id].path',memory['photoTask']['sceneId']);assert source.read_bytes() in images
      pair=page.evaluate('(id)=>PhotoLibrary.pairs[id]',difference['photoTask']['pairId']);base=page.evaluate('(id)=>PhotoLibrary.scenes[id].path',pair['sceneId']);assert (ROOT/base).read_bytes() in images;assert (ROOT/pair['path']).read_bytes() in images
+  page.set_viewport_size({'width':1360,'height':1000})
+  page.locator('#navMenu [data-subject=memory]').click();page.locator('#exerciseLevelSelect').select_option('3')
+  page.wait_for_function('()=>__current?.domain==="memory"&&__current?.level===3&&__current?.photoTask?.evidence?.length===3')
+  advanced=page.evaluate('__current');page.locator('#showMemoryPhoto').click();page.wait_for_selector('.everyday-photo img')
+  page.clock.run_for(advanced['revealMs']+100)
+  assert page.locator('#exerciseVisual img').count()==0
+  assert page.locator('#exercisePrompt').inner_text()==advanced['memoryQuestion']
+  page.locator('#exerciseOptions [data-answer]').evaluate_all('(els,a)=>els.find(e=>e.dataset.answer===a).click()',advanced['a'])
+  assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
+  badge=page.locator('#exerciseHeading').evaluate("e=>({image:getComputedStyle(e,'::before').backgroundImage,position:getComputedStyle(e,'::before').backgroundPosition})")
+  assert 'adventure-areas.png' in badge['image'] and '100%' in badge['position'],badge
+  assert page.evaluate("Array.from(document.images).every(i=>!i.src.includes('adventure-areas')||i.complete)")
+  page.locator('#exercise').screenshot(path='/tmp/advanced-memory-and-badge.png')
   assert not errors,errors
   print('PASS: real photo-only delivery, explicit start, full viewing period, photograph and answers never coexist, recall scoring, A/B comparison, wrong/correct selections, mobile and 2 DOCX embedding source photographs; direct image marking and accessible button selection stay synchronized')
   browser.close()

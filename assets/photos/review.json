@@ -3,6 +3,22 @@
   "review": "Each source and edit visually inspected against js/photo-library.js. Difference tasks intentionally ask only about colour changes, not incidental texture or lighting variations.",
   "images": [
     {
+      "file": "desk-a.png",
+      "sha256": "b6007981e971135295de1b6aaeeaf6bec1138cc9499df34305fe17acf9f6b839"
+    },
+    {
+      "file": "desk-b.png",
+      "sha256": "95d244f13dde26a33f8392e83e5180abfa0be51f42d2022efa162cf383916f42"
+    },
+    {
+      "file": "entry-a.png",
+      "sha256": "f0ae1628be809b3019bdf7592f72d7cbbc56b43fc7b2e45177f2e323b04de360"
+    },
+    {
+      "file": "entry-b.png",
+      "sha256": "74d8c3efa373fb1870ca0998cda5e4ebde2bed8e00b4fc7a90eef6ee44115d1f"
+    },
+    {
       "file": "kitchen-a.png",
       "sha256": "7f2dc018b52c9939865db63568586af3df0478187eeaedb58d9f75cd98de5aad"
     },
@@ -17,6 +33,22 @@
     {
       "file": "living-b.png",
       "sha256": "e8095180a2a4f8e21eb2cb4cd93ed2e29a7b6e0616bec9e47dc85e3b42b79a89"
+    },
+    {
+      "file": "market-a.png",
+      "sha256": "a880ee63c4088d67f18b3a5f31e4490f4ec1af2c7f7f7c42ceb7ad65d4cce891"
+    },
+    {
+      "file": "market-b.png",
+      "sha256": "3d4f763cec9eb59ef5c21270a7aa563bc0326e127e8f5327af5918d6d34fe40c"
+    },
+    {
+      "file": "picnic-a.png",
+      "sha256": "a07b89f56678b3a0a0983de923876684da930fa5ade263a5fe0240f610788bed"
+    },
+    {
+      "file": "picnic-b.png",
+      "sha256": "83b932a902db9b92ed89783fb17a05115cc01e80d66313653c8470f409bf57e9"
     }
   ]
 }

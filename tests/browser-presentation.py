@@ -41,10 +41,21 @@ try:
   failed=chart.locator('[data-family=search]');assert failed.get_attribute('data-median-ms')=='';assert failed.locator('svg rect').count()==1;assert '0% de aciertos' in failed.inner_text()
   recent=chart.locator('[data-family=characters]');assert recent.get_attribute('data-median-ms')=='15500';assert '20 respuestas medidas' in recent.inner_text()
   assert page.locator('.accuracy-ring').count()>0;assert page.locator('#sessionEvolution .evolution-chart').count()==1
+  cards=page.locator('#progressCards')
+  assert cards.bounding_box()['height']<400,cards.bounding_box()
+  assert len(set(cards.locator('.progress-subject').evaluate_all("els=>els.map(e=>getComputedStyle(e).getPropertyValue('--progress-color'))")))>=6
+  cards.screenshot(path='/tmp/compact-progress-desktop.png')
+  page.evaluate("__profiles.find(x=>x.id==='teen').progress.history.push(...Array.from({length:9},(_,i)=>({subject:'speedReasoning',speedFamily:'pairs',level:10+i,speedRevision:4,correct:true,responseMs:1000+i*100,timingValid:true,points:10,ts:'2026-10-21T12:00:00Z'})))")
+  page.locator('#profileSelect').select_option('junior');page.locator('#profileSelect').select_option('teen');page.locator('#navMenu [data-section=progress]').click()
+  assert chart.locator('.speed-timing-row:visible').count()==6
+  chart.locator('.speed-timing-history summary').click()
+  assert chart.locator('.speed-timing-row:visible').count()==14
+  chart.locator('.speed-timing-history summary').click()
+
   for width in [1440,390]:
    page.set_viewport_size({'width':width,'height':1000});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
    chart.screenshot(path=f'/tmp/presentation-speed-chart-{width}.png')
-  chart.locator('summary').click();assert chart.locator('tbody tr').count()==5
+  chart.locator('.progress-chart-data summary').click();assert chart.locator('tbody tr').count()==14
   page.evaluate("__profiles.find(x=>x.id==='teen').progress.history=[]")
   page.locator('#profileSelect').select_option('junior');page.locator('#profileSelect').select_option('teen');page.locator('#navMenu [data-section=progress]').click();assert chart.is_hidden()
   page.evaluate("__profiles.find(x=>x.id==='teen').progress.history=[{subject:'speedReasoning',speedFamily:'pairs',level:1,speedRevision:4,correct:true,responseMs:1000,timingValid:false}]")

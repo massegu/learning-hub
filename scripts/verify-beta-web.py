@@ -17,7 +17,9 @@ FILES = ['index.html', 'js/app.js', 'js/api.js', 'js/auth-account.js',
          'assets/documents/receipt-co-v1.png',
          'assets/documents/catalogue-co-v1.png',
          'assets/photos/kitchen-a.png', 'assets/photos/kitchen-b.png',
-         'assets/photos/living-a.png', 'assets/photos/living-b.png']
+         'assets/photos/living-a.png', 'assets/photos/living-b.png',
+         *[f'assets/photos/{name}-{variant}.png' for name in ['desk','picnic','market','entry'] for variant in ['a','b']],
+         'assets/icons/adventure-areas.png']
 
 
 def fingerprint(data):
