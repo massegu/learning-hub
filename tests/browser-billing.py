@@ -38,7 +38,7 @@ try:
   page.route('https://checkout.stripe.com/**',lambda route:route.fulfill(body='<p>Checkout simulado</p>',content_type='text/html'))
   page.route('https://billing.stripe.com/**',lambda route:route.fulfill(body='<p>Portal simulado</p>',content_type='text/html'))
   origin=f'http://127.0.0.1:{server.server_port}'
-  page.goto(origin,wait_until='networkidle');page.locator('#subscribeBtn').wait_for(state='visible');assert page.locator('#subscribeBtn').inner_text()=='Probar pago · 25 €/mes'
+  page.goto(origin,wait_until='networkidle');page.locator('#subscribeBtn').wait_for(state='visible');assert page.locator('#subscribeBtn').inner_text()=='Probar pago · 19,99 €/mes'
   page.evaluate('__billingFail=true');page.locator('#subscribeBtn').click()
   page.wait_for_function('()=>document.querySelector("#billingMessage").textContent.includes("recuperable")')
   assert page.locator('#subscribeBtn').is_enabled();assert page.evaluate('__billing[0]')=={'action':'checkout','mode':'test'}

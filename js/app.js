@@ -604,8 +604,9 @@
     if (sub) {
       sub.textContent =
         window.LH_CONFIG?.stripeMode === "test"
-          ? "Probar pago · 25 €/mes"
-          : "Suscribirme · 25 €/mes";
+          ? "Probar pago · 19,99 €/mes"
+          : "Suscribirme · 19,99 €/mes";
+      sub.title = "Precio final: 19,99 € al mes, impuestos incluidos.";
       const canSubscribe = ["trial", "cancelled", "complimentary"].includes(st);
       sub.classList.toggle("hidden", !canSubscribe);
     }

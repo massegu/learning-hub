@@ -67,7 +67,7 @@ async function checkout(admin: any,cfg: ReturnType<typeof config>,user: any) {
   if(!account)fail(404,'Cuenta no encontrada.');
   if(['active','past_due'].includes(account.subscription_status))fail(409,'Ya tienes una suscripción. Utiliza Gestionar suscripción.');
   const plan=await stripe(cfg,'prices/'+encodeURIComponent(cfg.price));sameMode(plan,cfg);
-  if(plan.id!==cfg.price||!plan.active||plan.type!=='recurring'||plan.currency!=='eur'||plan.unit_amount!==2500||plan.recurring?.interval!=='month'||plan.recurring?.interval_count!==1)fail(409,'El precio no coincide con el plan de 25 EUR al mes de Learning Hub.');
+  if(plan.id!==cfg.price||!plan.active||plan.type!=='recurring'||plan.currency!=='eur'||plan.unit_amount!==1999||plan.tax_behavior!=='inclusive'||plan.recurring?.interval!=='month'||plan.recurring?.interval_count!==1)fail(409,'El precio no coincide con el plan de 19,99 EUR al mes con impuestos incluidos de Learning Hub.');
   const attempt=await rpc(admin,'billing_prepare_checkout',{p_user_id:user.id,p_livemode:cfg.live,p_price_id:cfg.price});
   let customer=attempt.account_customer_id;
   if(customer){const record=await stripe(cfg,'customers/'+encodeURIComponent(customer));sameMode(record,cfg);if(record.deleted)fail(409,'El cliente de Stripe necesita revisión.');}
@@ -82,11 +82,12 @@ async function checkout(admin: any,cfg: ReturnType<typeof config>,user: any) {
     mode:'subscription',customer,'line_items[0][price]':cfg.price,'line_items[0][quantity]':'1',
     client_reference_id:attempt.id,'metadata[learning_hub_attempt]':attempt.id,
     'subscription_data[metadata][learning_hub_attempt]':attempt.id,
-    'payment_method_types[0]':'card',success_url:cfg.app+'?pago=pendiente',cancel_url:cfg.app+'?pago=cancelado',
+    'payment_method_types[0]':'card','adaptive_pricing[enabled]':'false',success_url:cfg.app+'?pago=pendiente',cancel_url:cfg.app+'?pago=cancelado',
     expires_at:String(Math.floor(new Date(attempt.expires_at).getTime()/1000))
   },'lh:checkout:'+attempt.id);
   sameMode(session,cfg);
   if(ref(session.customer)!==customer||session.mode!=='subscription'||session.client_reference_id!==attempt.id)fail(409,'La sesión de pago no corresponde a esta cuenta.');
+  if(session.currency!=='eur'||session.amount_total!==1999)fail(409,'El total de Checkout debe ser exactamente 19,99 EUR.');
   if(session.status!=='open'||!session.url)fail(409,'Este pago ya finalizó o caducó. Actualiza Learning Hub para comprobar tu suscripción.');
   await rpc(admin,'billing_bind_checkout',{p_attempt_id:attempt.id,p_customer_id:customer,p_session_id:session.id});
   return {url:session.url,livemode:cfg.live};

@@ -27,7 +27,7 @@ async function fixture({bound=true,status='active',customer='cus_A',env={}}={}){
  await db.query('insert into auth.users(id) values($1),($2)',[USER,OTHER]);
  await db.query('insert into accounts(user_id,subscription_status,stripe_customer_id,stripe_subscription_id) values($1,$2,$3,$4),($5,\'trial\',\'cus_B\',null)',[USER,status,customer,bound?'sub_A':null,OTHER]);
  const cfg={SUPABASE_URL:'https://db.invalid',SUPABASE_SERVICE_ROLE_KEY:'server-only-fixture',STRIPE_MODE:'test',STRIPE_SECRET_KEY:'sk_test_offline',STRIPE_PRICE_ID:price,BILLING_APP_URL:app,STRIPE_WEBHOOK_SECRET:secret,...env};
- const objects=new Map([['prices/'+price,{id:price,livemode:false,active:true,type:'recurring',currency:'eur',unit_amount:2500,recurring:{interval:'month',interval_count:1}}],['subscriptions/sub_A',sub()],['customers/cus_A',{id:'cus_A',livemode:false}],['customers/cus_B',{id:'cus_B',livemode:false}]]),requests=[],idem=new Map();let failRPC=null,failFetch=null,gate=null;
+ const objects=new Map([['prices/'+price,{id:price,livemode:false,active:true,type:'recurring',currency:'eur',unit_amount:1999,tax_behavior:'inclusive',recurring:{interval:'month',interval_count:1}}],['subscriptions/sub_A',sub()],['customers/cus_A',{id:'cus_A',livemode:false}],['customers/cus_B',{id:'cus_B',livemode:false}]]),requests=[],idem=new Map();let failRPC=null,failFetch=null,gate=null;
  objects.set('subscriptions',{has_more:false,data:bound?[objects.get('subscriptions/sub_A')]:[]});
  async function callRPC(name,args){const keys=Object.keys(args),sql=`select public.${name}(${keys.map((k,i)=>k+'=> $'+(i+1)).join(',')}) as value`;return (await db.query(sql,Object.values(args))).rows[0].value;}
  const admin={auth:{getUser:async token=>token==='userA'?{data:{user:{id:USER,email:'a@example.invalid'}}}:token==='userB'?{data:{user:{id:OTHER,email:'b@example.invalid'}}}:{error:{message:'invalid'}}},
@@ -42,7 +42,7 @@ async function fixture({bound=true,status='active',customer='cus_A',env={}}={}){
   let value;
   if(options.method==='POST'&&path==='customers'){value={id:'cus_new',livemode:false};objects.set('customers/cus_new',value);}
   else if(options.method==='POST'&&path==='checkout/sessions'){
-   value={id:'cs_new',livemode:false,mode:body.mode,status:'open',client_reference_id:body.client_reference_id,customer:body.customer,url:'https://checkout.stripe.com/c/pay/offline',metadata:{learning_hub_attempt:body['metadata[learning_hub_attempt]']}};
+   value={id:'cs_new',livemode:false,currency:'eur',amount_total:1999,mode:body.mode,status:'open',client_reference_id:body.client_reference_id,customer:body.customer,url:'https://checkout.stripe.com/c/pay/offline',metadata:{learning_hub_attempt:body['metadata[learning_hub_attempt]']}};
    objects.set('checkout/sessions/cs_new',value);
   }else if(options.method==='POST'&&path==='billing_portal/sessions')value={url:'https://billing.stripe.com/p/session/offline'};
   else value=objects.get(path);
@@ -82,7 +82,7 @@ test('authenticated checkout fixes identity, price, quantity and return URL on t
  assert.equal((await f.action('checkout','userA',{},'https://evil.invalid')).status,403);
  assert.equal((await f.action('checkout','userA',{mode:'live'})).status,409);assert.equal(f.requests.length,0);
  const first=await f.action('checkout','userA',{user_id:OTHER,price:'price_attacker',return_url:'https://evil.invalid'});assert.equal(first.status,200);assert.equal(first.data.livemode,false);
- const call=f.requests.find(r=>r.path==='checkout/sessions'&&r.body);assert.equal(call.body['line_items[0][price]'],price);assert.equal(call.body['line_items[0][quantity]'],'1');assert.equal(call.body.success_url,app+'?pago=pendiente');assert.equal(call.body.customer,'cus_new');
+ const call=f.requests.find(r=>r.path==='checkout/sessions'&&r.body);assert.equal(call.body['line_items[0][price]'],price);assert.equal(call.body['line_items[0][quantity]'],'1');assert.equal(call.body.success_url,app+'?pago=pendiente');assert.equal(call.body.customer,'cus_new');assert.equal(call.body['adaptive_pricing[enabled]'],'false');
  const attempts=(await db.query('select * from billing_checkout_attempts')).rows;assert.equal(attempts.length,1);assert.equal(attempts[0].user_id,USER);assert.equal(attempts[0].checkout_session_id,'cs_new');assert.equal((await f.account()).subscription_status,'trial');
  assert.deepEqual(await f.action('checkout'),first);assert.equal(f.requests.filter(r=>r.path==='checkout/sessions'&&r.body).length,1);
 });
@@ -165,7 +165,7 @@ test('legacy invoice/subscription period fields remain readable; cross-customer 
 });
 
 test('a wrong amount or interval is rejected before a Checkout session is created',async()=>{
- for(const wrong of [{unit_amount:1999},{unit_amount:999},{recurring:{interval:'year',interval_count:1}}]){
+ for(const wrong of [{unit_amount:2500},{unit_amount:999},{tax_behavior:'exclusive'},{tax_behavior:'unspecified'},{recurring:{interval:'year',interval_count:1}}]){
  const f=await fixture({bound:false,status:'trial'});Object.assign(f.objects.get('prices/'+price),wrong);
  assert.equal((await f.action('checkout')).status,409);
  assert.equal(f.requests.some(r=>r.path==='checkout/sessions'),false);
@@ -190,4 +190,12 @@ test('a paid Stripe subscription blocks a second Checkout even if the database h
  assert.equal((await f.action('checkout')).status,409);
  assert.equal(f.requests.some(r=>r.path==='checkout/sessions'&&r.body),false);
  assert.equal((await f.account()).subscription_status,'trial');
+});
+test('a reopened Checkout with an unexpected total or currency is not returned to the browser',async()=>{
+ for(const change of [{amount_total:2500},{currency:'usd'}]){
+  const f=await fixture({bound:false,status:'trial'});assert.equal((await f.action('checkout')).status,200);
+  Object.assign(f.objects.get('checkout/sessions/cs_new'),change);
+  const blocked=await f.action('checkout');assert.equal(blocked.status,409);assert.equal(blocked.data.url,undefined);
+  assert.equal((await f.account()).subscription_status,'trial');
+ }
 });

@@ -5,7 +5,7 @@ Base: `desarrollo` (`00ce974`, PR #12 ya fusionada). Rama: `fix/stripe-payment-i
 ## Resultado preparado
 
 - Webhook autónomo, acciones autenticadas Checkout/portal y migración SQL transaccional, basados en el código, esquema y permisos proporcionados por el propietario.
-- Precio fijo y validado en servidor: 25 EUR/mes, cantidad uno. Cuenta y cliente fijados por identidad autenticada; el navegador no decide el destinatario del pago ni la URL de retorno.
+- Precio fijo y validado en servidor: 19,99 EUR/mes finales, impuestos incluidos (`tax_behavior=inclusive`), cantidad uno. Se rechazan precios con impuestos exclusivos/no definidos y totales distintos; se desactiva la conversión adaptativa de moneda. Cuenta y cliente fijados por identidad autenticada; el navegador no decide el destinatario del pago ni la URL de retorno.
 - Lectura de referencias y periodos compatible con la API del destino (`2026-08-26.dahlia`) y formas anteriores. Solo el estado actual de Stripe, con factura pagada y periodo vigente, concede acceso completo.
 - Intentos de checkout reutilizables, comprobación de suscripciones en Stripe antes de ofrecer otro cobro, bloqueo por cuenta con caducidad y recibos de notificación guardados de forma atómica con el estado de acceso.
 - Errores de proveedor o persistencia no se confirman como éxito. Reenvíos, notificaciones atrasadas y recuperaciones no recrean estados antiguos. Los eventos de una suscripción anterior no sustituyen una nueva.
@@ -13,7 +13,7 @@ Base: `desarrollo` (`00ce974`, PR #12 ya fusionada). Rama: `fix/stripe-payment-i
 
 ## Evidencia local
 
-Las 155 pruebas previas de contenido/exportación pasan en la batería general, junto con los casos de facturación incluidos en esa ejecución. Los 15 casos finales de facturación pasan también de forma dirigida contra la función real y PostgreSQL embebido (PGlite): permisos, Checkout, portal, firmas, entorno, factura moderna anterior a Checkout, identidad manipulada, factura no pagada, estados fuera de orden, periodos, precio, error SQL con rollback, duplicados, bloqueo/caducidad, fallo Stripe, referencias antiguas, cancelación y nueva suscripción, y prevención de doble cobro con base de datos atrasada.
+Las 155 pruebas previas de contenido/exportación pasan en la batería general, junto con los casos de facturación incluidos en esa ejecución. Los 16 casos finales de facturación pasan también de forma dirigida contra la función real y PostgreSQL embebido (PGlite): permisos, Checkout, portal, firmas, entorno, factura moderna anterior a Checkout, identidad manipulada, factura no pagada, estados fuera de orden, periodos, precio, error SQL con rollback, duplicados, bloqueo/caducidad, fallo Stripe, referencias antiguas, cancelación y nueva suscripción, y prevención de doble cobro con base de datos atrasada.
 
 Nueve pruebas Python y ocho recorridos Chromium pasan, incluidos facturación, cuenta, sesiones, supervisión, práctica/documentos/memoria, variedad, presentación y fotografías. En el recorrido de facturación solo se interceptan páginas Stripe simuladas; no se envía una tarjeta ni se contacta con Stripe real.
 

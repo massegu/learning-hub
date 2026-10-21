@@ -17,7 +17,7 @@ Single-file function, ready for the Supabase Code editor: `index.ts`.
 | `STRIPE_PRICE_ID` | Approved recurring price ID `price_…` from THIS sandbox. |
 | `BILLING_APP_URL` | Exact full HTTPS address of the app, e.g. `https://pruebas.learning-hub-5n9.pages.dev/`. It fixes return URLs and the allowed browser origin. |
 
-Supabase supplies `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. Do not replace them. The plan is currently pinned to the price shown by the app: **25 EUR, monthly, quantity one**. Checkout verifies the Price object before creating a session. A different amount/currency/interval requires a reviewed plan/UI change, not just a new environment variable.
+Supabase supplies `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. Do not replace them. The plan is currently pinned to the price shown by the app: **19.99 EUR final monthly price, inclusive tax behaviour, quantity one**. Checkout verifies the Price object before creating a session, rejects exclusive/unspecified tax behaviour and unexpected totals, and disables adaptive currency pricing to keep the charge in EUR. This does not configure tax registrations/rates or enable Stripe Tax: the applicable treatment and receipt breakdown must still be configured and tested before live billing. A different amount/currency/interval requires a reviewed plan/UI change, not just a new environment variable.
 
 API requests explicitly use `2026-08-26.dahlia`, matching the destination supplied by the owner. New invoice references use `parent.subscription_details.subscription`; subscription periods use the matched subscription item's `current_period_end`. Older shapes remain readable for existing data.
 
