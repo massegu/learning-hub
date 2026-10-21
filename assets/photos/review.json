@@ -1,0 +1,22 @@
+{
+  "origin": "AI-generated photorealistic scenes using image_gen; not photographs of actual users or their homes.",
+  "review": "Each source and edit visually inspected against js/photo-library.js. Difference tasks intentionally ask only about colour changes, not incidental texture or lighting variations.",
+  "images": [
+    {
+      "file": "kitchen-a.png",
+      "sha256": "7f2dc018b52c9939865db63568586af3df0478187eeaedb58d9f75cd98de5aad"
+    },
+    {
+      "file": "kitchen-b.png",
+      "sha256": "c8ed4f6d571838c64a117f8d46305eb85daa483daf8c3858cce073ee53e01ed0"
+    },
+    {
+      "file": "living-a.png",
+      "sha256": "3a0a1b3874d548737bf671a1aa69285241d4918d5c80831960ea9d0c286dacf9"
+    },
+    {
+      "file": "living-b.png",
+      "sha256": "e8095180a2a4f8e21eb2cb4cd93ed2e29a7b6e0616bec9e47dc85e3b42b79a89"
+    }
+  ]
+}

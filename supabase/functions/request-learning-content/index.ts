@@ -9,6 +9,7 @@ await import("./middle-content.js");
 await import("./teen-review.js");
 await import("./document-library.js");
 await import("./reading-library.js");
+await import("./photo-library.js");
 await import("./curriculum.js");
 await import("./data/primary.js");
 await import("./data/middle.js");
@@ -972,6 +973,7 @@ function socialExercise(level:number){
 
 function validateItem(item:any):boolean{
   try{
+    if(item?.photoTask||item?.stimulus?.some((b:any)=>['photo','photoPair'].includes(b?.type)))(globalThis as any).PhotoLibrary.validate(item);
     if(item?.speedEvidence)(globalThis as any).Curriculum.validateSpeed(item);
     if(item?.planEvidence)(globalThis as any).Curriculum.validatePlan(item);
     if(item?.mathEvidence)(globalThis as any).Curriculum.validateMath(item);
@@ -2298,7 +2300,11 @@ function matrixApplied20(age:string,level:number,v:number){
     opts:easy?opt4("El parque","La estación","La tienda","No se sabe"):opt4("La presencia de escaleras además de la distancia","Solo el color del mapa","Solo el nombre de la calle","Nada"),a:easy?"El parque":"La presencia de escaleras además de la distancia"},age,"applied",level,v);
 }
 
-function variantExercise(age:string,domain:string,level:number,subdomain:string|null=null,documentsOnly:boolean|null=null){
+function variantExercise(age:string,domain:string,level:number,subdomain:string|null=null,documentsOnly:boolean|null=null,photosOnly:boolean=false){
+  const photos=(globalThis as any).PhotoLibrary;
+  const photo=()=>{const item=photos.generate(age,domain,level);return item?{...item,id:age+'-photo-'+crypto.randomUUID()}:null;};
+  if(photosOnly)return photo();
+  if(domain==="attention"&&documentsOnly!==true&&photos.supports(age,domain)&&Math.random()<.3)return photo();
   const academic=(globalThis as any).Curriculum.generateAcademic(age,domain,level,subdomain||'grammar');
   if(academic)return {...academic,id:age+'-academic-'+crypto.randomUUID()};
   if(documentsOnly&&subdomain==='writing'&&(globalThis as any).DocumentLibrary.supports(age,domain)){const bank=(globalThis as any).Curriculum.pool(age,domain,level).filter((it:any)=>it.stimulus?.some((b:any)=>b.type==='document'));return {...pick(bank),id:age+'-document-writing-'+crypto.randomUUID()};}
@@ -2381,10 +2387,11 @@ Deno.serve(async (req:Request)=>{
   const requestedDomains=kind==="worksheet" ? (Array.isArray(body.domains)&&body.domains.length?body.domains:(globalThis as any).Curriculum.visible(SUBJECTS[age]||[],age)) : [body.domain];
   if(!SUBJECTS[age] || !Number.isInteger(level) || (kind!=="game" && (!Array.isArray(requestedDomains)||!requestedDomains.length||requestedDomains.some((d:any)=>!SUBJECTS[age].includes(d)))))
     return new Response(JSON.stringify({error:"Área o nivel no permitido para este perfil."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
-  if(body.client_revision!==undefined&&![1,2].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.client_revision!==undefined&&![1,2,3].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   // Existing tabs must never receive an interaction they cannot score. Old
   // clients retain established tasks; the new document audit requests a refresh.
-  if(kind==='exercise'&&body.client_revision!==2&&body.domain==='executive'&&body.documents_only===true&&level>=2)return new Response(JSON.stringify({error:'Actualiza la página para abrir las nuevas actividades con documentos.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.photos_only&&Number(body.client_revision||1)<3)return new Response(JSON.stringify({error:'Actualiza la página para abrir las escenas cotidianas.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(kind==='exercise'&&Number(body.client_revision||1)<2&&body.domain==='executive'&&body.documents_only===true&&level>=2)return new Response(JSON.stringify({error:'Actualiza la página para abrir las nuevas actividades con documentos.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.documents_only!==undefined&&(typeof body.documents_only!=="boolean"||body.documents_only&&!((globalThis as any).DocumentLibrary.supports(age,body.domain))))return new Response(JSON.stringify({error:"Los documentos no están disponibles para esta área."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
   if(kind==='exercise'&&['reading','middleReading','literacy'].includes(body.domain)&&body.subdomain&&!['reading','writing'].includes(body.subdomain))return new Response(JSON.stringify({error:'Modalidad de Lectura + Escritura no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(kind==='exercise'&&['language','middleLanguage','teenLanguage'].includes(body.domain)&&body.subdomain==='writing')return new Response(JSON.stringify({error:'Escritura está en Lectura + Escritura.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -2422,6 +2429,7 @@ Deno.serve(async (req:Request)=>{
       const recent=recentByDomain.get(domain)||new Set<string>();
       for(let tries=0;tries<220;tries++){
         const cand=regionalCandidate(normalizeItem(ensureWorksheetMemoryCoherence(worksheetTask(age,domain,level))),locale,domain,age);
+        if(cand?.photoTask&&Number(body.client_revision||1)<3)continue;
         if(!validateItem(cand)) continue;
         const sig=contentSignature(domain,cand);
         if(!fallback&&!localSeen.has(sig)) fallback=cand;
@@ -2458,8 +2466,8 @@ Deno.serve(async (req:Request)=>{
       if(row.mechanic_signature) recentEntries.push(row.mechanic_signature);
     }
     const compatibleExercise=()=>{
-      const item=variantExercise(age,domain,level,subdomain,typeof body.documents_only==='boolean'?body.documents_only:null);
-      if(!item||body.client_revision!==2&&(item.type==='documentReview'||item.selectiveRecall))return null;
+      const item=variantExercise(age,domain,level,subdomain,typeof body.documents_only==='boolean'?body.documents_only:null,body.photos_only===true);
+      if(!item||Number(body.client_revision||1)<2&&(item.type==='documentReview'||item.selectiveRecall)||Number(body.client_revision||1)<3&&item.photoTask)return null;
       return regionalCandidate(item,locale,domain,age);
     };
     if(domain==="attention"){

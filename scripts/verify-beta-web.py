@@ -10,12 +10,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FILES = ['index.html', 'js/app.js', 'js/api.js', 'js/auth-account.js',
          'js/document-library.js', 'js/curriculum.js', 'js/docx.js',
-         'js/activity-model.js', 'js/content-policy.js',
+         'js/activity-model.js', 'js/content-policy.js', 'js/photo-library.js',
          'js/stimulus-art.js', 'js/stimulus-art-png.js',
          'js/config.js', 'css/styles.css', 'assets/documents/map-cl.png',
          'assets/documents/invoice-co-v1.png',
          'assets/documents/receipt-co-v1.png',
-         'assets/documents/catalogue-co-v1.png']
+         'assets/documents/catalogue-co-v1.png',
+         'assets/photos/kitchen-a.png', 'assets/photos/kitchen-b.png',
+         'assets/photos/living-a.png', 'assets/photos/living-b.png']
 
 
 def fingerprint(data):

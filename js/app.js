@@ -144,6 +144,7 @@
     subject = null,
     mode = "grammar",
     documentOnly = false,
+    photoOnly = false,
     currentItem = null,
     counter = 0,
     requestGeneration = 0,
@@ -219,6 +220,22 @@
     visual.innerHTML = targetPair + cards;
   }
   function renderMemoryExercise(it) {
+    if(it.photoTask?.kind==='recall'){
+      const visual=$('#exerciseVisual'),area=$('#exerciseOptions');
+      visual.innerHTML='<p class="photo-ready">Cuando estés preparado, muestra la imagen. Después se ocultará y aparecerá una pregunta sobre sus detalles.</p>';
+      area.innerHTML='<button id="showMemoryPhoto" class="primary-btn">Mostrar imagen</button>';
+      $('#showMemoryPhoto').onclick=async()=>{
+        const button=$('#showMemoryPhoto');button.disabled=true;button.textContent='Preparando imagen…';
+        try{
+          const holder=document.createElement('div');holder.innerHTML=window.ActivityModel.interactiveStimulus(it.stimulus);
+          await Promise.all([...holder.querySelectorAll('img')].map(img=>img.decode()));
+          if(currentItem!==it)return;
+          visual.replaceChildren(holder);area.innerHTML='';
+          const notice=document.createElement('p');notice.className='memory-timer';notice.textContent=`Observa la imagen durante ${Math.round(it.revealMs/1000)} segundos.`;visual.append(notice);holder.querySelector('img').scrollIntoView({block:'center',behavior:'instant'});
+          setTimeout(()=>{if(currentItem!==it)return;visual.innerHTML='';$('#exercisePrompt').textContent=it.memoryQuestion;renderOptions(it);$('#exercisePrompt').scrollIntoView({block:'center',behavior:'instant'});},it.revealMs);
+        }catch(error){if(currentItem!==it)return;button.disabled=false;button.textContent='Volver a cargar la imagen';visual.innerHTML='<p>No se pudo cargar la imagen. Inténtalo de nuevo.</p>';}
+      };return;
+    }
     const visual = $("#exerciseVisual"),
       area = $("#exerciseOptions");
     const cards = it.stimulus
@@ -299,7 +316,30 @@
     const selected = new Set();
     const opts = shuffle(it.opts || []);
     $("#exerciseOptions").innerHTML =
-      `<div class="multi-select-grid">${opts.map((o) => `<button class="option-btn multi-option" data-value="${escapeHtml(o)}" aria-label="${escapeHtml(o)}" aria-pressed="false">${it.memoryResponse==='multiple'?window.ActivityModel.visualLabel(o,{...it.lexicalSenses,memory:subject==='memory'}):escapeHtml(o)}</button>`).join("")}</div><div class="multi-actions"><span id="multiCount" role="status">${(['multiSelect','documentReview'].includes(it.type)||it.memoryResponse==='multiple')?'0 seleccionadas':`0/${(it.answers || []).length} seleccionados`}</span><button id="multiCheck" class="primary-btn" ${(['multiSelect','documentReview'].includes(it.type)||it.memoryResponse==='multiple')?'disabled':''}>Comprobar selección</button></div>`;
+      `<div class="multi-select-grid">${opts.map((o) => `<button class="option-btn multi-option" data-value="${escapeHtml(o)}" aria-label="${escapeHtml(o)}" aria-pressed="false">${it.memoryResponse==='multiple'?window.ActivityModel.visualLabel(o,{...it.lexicalSenses,memory:subject==='memory'}):escapeHtml(o)}</button>`).join("")}</div><div class="multi-actions"><span id="multiCount" role="status">${(['multiSelect','documentReview','photoDifference'].includes(it.type)||it.memoryResponse==='multiple')?'0 seleccionadas':`0/${(it.answers || []).length} seleccionados`}</span><button id="multiCheck" class="primary-btn" ${(['multiSelect','documentReview','photoDifference'].includes(it.type)||it.memoryResponse==='multiple')?'disabled':''}>Comprobar selección</button></div>`;
+    const photoMarks=[];
+    function syncPhotoMarks(){
+      for(const {mark,option} of photoMarks){
+        mark.setAttribute('aria-pressed',option.getAttribute('aria-pressed'));
+        for(const name of ['selected','correct','wrong'])mark.classList.toggle(name,option.classList.contains(name));
+        mark.disabled=option.disabled;
+      }
+    }
+    if(it.type==='photoDifference'&&it.level<3){
+      const image=$('.photo-comparison figure:nth-child(2) img');
+      if(image){
+        const holder=document.createElement('div');holder.className='photo-hit-image';image.before(holder);holder.append(image);
+        const regions=window.PhotoLibrary.pairs[it.photoTask.pairId].regions;
+        for(const [object,box] of Object.entries(regions)){
+          const value=window.LocaleContent.text(object,API.effectiveLocale(profile));
+          const option=$$('#exerciseOptions .multi-option').find(b=>b.dataset.value===value);if(!option)continue;
+          const mark=document.createElement('button');mark.type='button';mark.className='photo-hit';mark.dataset.value=value;mark.setAttribute('aria-label','Señalar: '+value);mark.setAttribute('aria-pressed','false');
+          const [left,top,width,height]=box;Object.assign(mark.style,{left:left+'%',top:top+'%',width:width+'%',height:height+'%'});
+          mark.onclick=()=>option.click();holder.append(mark);photoMarks.push({mark,option});
+        }
+        const help=document.createElement('p');help.className='photo-mark-help';help.textContent='Marca los objetos directamente en la imagen B o utiliza los botones de abajo.';$('.photo-comparison').after(help);
+      }
+    }
     $$("#exerciseOptions .multi-option").forEach(
       (b) =>
         (b.onclick = () => {
@@ -312,8 +352,9 @@
             b.classList.add("selected");
           }
           b.setAttribute('aria-pressed',String(selected.has(v)));
-          $("#multiCount").textContent = (['multiSelect','documentReview'].includes(it.type)||it.memoryResponse==='multiple')?`${selected.size} ${selected.size===1?'seleccionada':'seleccionadas'}`:`${selected.size}/${(it.answers || []).length} seleccionados`;
-          if((['multiSelect','documentReview'].includes(it.type)||it.memoryResponse==='multiple'))$('#multiCheck').disabled=!selected.size;
+          syncPhotoMarks();
+          $("#multiCount").textContent = (['multiSelect','documentReview','photoDifference'].includes(it.type)||it.memoryResponse==='multiple')?`${selected.size} ${selected.size===1?'seleccionada':'seleccionadas'}`:`${selected.size}/${(it.answers || []).length} seleccionados`;
+          if((['multiSelect','documentReview','photoDifference'].includes(it.type)||it.memoryResponse==='multiple'))$('#multiCheck').disabled=!selected.size;
         }),
     );
     $("#multiCheck").onclick = () => {
@@ -327,10 +368,11 @@
         else if (selected.has(b.dataset.value)) b.classList.add("wrong");
       });
       $("#multiCheck").disabled = true;
+      syncPhotoMarks();
       showFeedback(
         ok,
         saveResult(subject, ok, it.id, it.type),
-        (['multiSelect','documentReview'].includes(it.type)||it.memoryResponse==='multiple')?it.why:ok
+        (['multiSelect','documentReview','photoDifference'].includes(it.type)||it.memoryResponse==='multiple')?it.why:ok
           ? "Has reconocido correctamente todos los elementos."
           : "Revisa los elementos marcados en verde.",
       );
@@ -608,6 +650,7 @@
     const p = profiles.find((x) => x.id === id);
     if (!p) return;
     profile = p;
+    photoOnly = false;
     guidedSession=null;
     hideGuidedBar();
     $('#appShell').classList.toggle('early-experience',Boolean(window.ContentPolicy.forProfile(p)));
@@ -717,20 +760,33 @@
     $("#languageModeSwitch").classList.toggle("hidden", !isLang&&!isReading);
     const documentSupport=window.DocumentLibrary?.supports(window.AgeStages.route(profile),subject);
     if(!documentSupport||isReading)documentOnly=false;
+    const photoSupport=window.PhotoLibrary.supports(window.AgeStages.route(profile),subject);
+    if(!photoSupport)photoOnly=false;
+    $('#photoModeSwitch').classList.toggle('hidden',!photoSupport||subject!=='memory');
+    $('#attentionPhotos').classList.toggle('hidden',!photoSupport||subject!=='attention');
+    $('#attentionPhotos').setAttribute('aria-pressed',String(photoOnly));
+    $('#photoModeSwitch [data-photos=true]').textContent=subject==='attention'?'Encuentra las diferencias':'Escenas cotidianas';
+    $$('#photoModeSwitch button').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.photos==='true')===photoOnly)));
+
     $('#documentModeSwitch').classList.toggle('hidden',!documentSupport||isReading);
     $('#documentModeHint').classList.toggle('hidden',!documentSupport||isReading);
-    $('#documentModeHint').textContent=subject==='executive'?(documentOnly?'Usa el documento para organizar acciones y corregir un plan.':'Ordena acciones, aplica reglas y revisa decisiones.'):(documentOnly?'Localiza y contrasta los datos del documento.':'Compara figuras, códigos y listas.');
-    $$('#documentModeSwitch button').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.documents==='true')===documentOnly)));
+    $('#documentModeHint').textContent=photoOnly?'Compara las dos escenas y busca los cambios de color.':subject==='executive'?(documentOnly?'Usa el documento para organizar acciones y corregir un plan.':'Ordena acciones, aplica reglas y revisa decisiones.'):(documentOnly?'Localiza y contrasta los datos del documento.':'Compara figuras, códigos y listas.');
+    $$('#documentModeSwitch [data-documents]').forEach(b=>b.setAttribute('aria-pressed',String(!photoOnly&&(b.dataset.documents==='true')===documentOnly)));
     counter = 0;
     renderEarlyTaskGuide();
     renderSchoolTaskGuide();
     newExercise();
   }
   $('#documentModeSwitch').addEventListener('click',event=>{
-    const button=event.target.closest('button[data-documents]');
+    const button=event.target.closest('button[data-documents],#attentionPhotos');
     if(!button)return;
-    documentOnly=button.dataset.documents==='true';
+    photoOnly=button.id==='attentionPhotos';
+    documentOnly=!photoOnly&&button.dataset.documents==='true';
     setupExercise();
+  });
+  $('#photoModeSwitch').addEventListener('click',event=>{
+    const button=event.target.closest('button[data-photos]');if(!button)return;
+    photoOnly=button.dataset.photos==='true';documentOnly=false;setupExercise();
   });
   async function requestForProfile(payload, targetProfile = profile) {
     if (!targetProfile?.id) throw new Error('Selecciona o crea un perfil para empezar.');
@@ -738,7 +794,7 @@
     const localeRevision = API.localeRevision;
     const res = await API.requestContent({
       ...payload,
-      client_revision:2,
+      client_revision:3,
       profile_id: targetProfile.id,
       locale,
     });
@@ -772,6 +828,7 @@
       ...(kind==='exercise'&&['attention','executive'].includes(domain)&&window.DocumentLibrary?.supports(window.AgeStages.route(profile),domain)?{documents_only:documentOnly}:{}),
       kind,
       domain,
+      ...(window.PhotoLibrary.supports(window.AgeStages.route(profile),domain)?{photos_only:photoOnly}:{}),
       subdomain: ["language","middleLanguage","teenLanguage"].includes(domain) ? mode : ["reading","middleReading","literacy"].includes(domain)?(mode==='writing'?'writing':'reading'):null,
       level: state.levels[domain] || 1,
       count: 1,
@@ -779,7 +836,7 @@
     });
     if (res?.usage) {
       $("#usageHint").textContent =
-        `Uso hoy: ${res.usage.used}/${res.usage.limit} ${kind === "worksheet" ? "fichas" : kind === "game" ? "juegos" : "ejercicios"}`;
+        `Límite diario: ${res.usage.used} de ${res.usage.limit} ${kind === "worksheet" ? "fichas" : kind === "game" ? "juegos" : "ejercicios"}`;
     }
     return res?.items?.[0] || null;
   }
@@ -905,7 +962,7 @@
         `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus,{heading:it.topic||it.theme,rubric:it.writingRubric,illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:!window.ContentPolicy.forProfile(profile),senses:it.lexicalSenses})}</div>`;
     $("#exercisePrompt").textContent = it.q || "Actividad";
     if(it.speedTask){renderSpeedExercise(it);return;}
-    if(['multiSelect','documentReview'].includes(it.type)){renderMultiSelect(it);return;}
+    if(['multiSelect','documentReview','photoDifference'].includes(it.type)){renderMultiSelect(it);return;}
     if (it.type === "memoryReveal" || it.type === "memoryMulti") {
       renderMemoryExercise(it);
       return;

@@ -1,0 +1,63 @@
+{
+  "method": "Distinct stimulus + question + correct response in visible known banks; IDs, distractors, topics and explanations excluded. Same activity across levels is counted once per age. Legacy random attention excluded, so this is a lower bound.",
+  "ages": [
+    {
+      "age": "early",
+      "distinctActivities": 2120,
+      "byDomain": {
+        "memory": 1651,
+        "executive": 29,
+        "speedReasoning": 418,
+        "reading": 22
+      }
+    },
+    {
+      "age": "junior",
+      "distinctActivities": 4409,
+      "byDomain": {
+        "memory": 2287,
+        "executive": 563,
+        "speedReasoning": 912,
+        "reading": 88,
+        "language": 148,
+        "division": 411
+      }
+    },
+    {
+      "age": "primary",
+      "distinctActivities": 4472,
+      "byDomain": {
+        "memory": 2290,
+        "executive": 572,
+        "speedReasoning": 880,
+        "literacy": 97,
+        "language": 144,
+        "division": 489
+      }
+    },
+    {
+      "age": "middle",
+      "distinctActivities": 4655,
+      "byDomain": {
+        "memory": 2290,
+        "executive": 574,
+        "speedReasoning": 1012,
+        "literacy": 112,
+        "middleLanguage": 148,
+        "middleMath": 519
+      }
+    },
+    {
+      "age": "teen",
+      "distinctActivities": 4623,
+      "byDomain": {
+        "memory": 2290,
+        "executive": 573,
+        "speedReasoning": 983,
+        "literacy": 110,
+        "teenLanguage": 148,
+        "teenMath": 519
+      }
+    }
+  ]
+}

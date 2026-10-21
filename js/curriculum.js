@@ -145,7 +145,7 @@ function memory(age,level){
   }
   if(v<36){
    const spots=['la mesa','el estante','la alfombra','la ventana','el banco','la silla','el armario','la puerta','el rincón'],sceneValues=rotate(values,v%values.length),scene=spots.slice(0,count).map((place,i)=>[place,sceneValues[i]]),ask=v%scene.length;
-   items.push(finish({type:'memoryReveal',responseType:'choice',requiresStimulus:true,q:'Observa la escena. Después desaparecerá.',memoryQuestion:`¿Qué imagen estaba en ${scene[ask][0]}?`,stimulus:[{type:'table',rows:scene,presentation:'memoryScene'}],memoryContent:sceneValues.map(detail=>({detail})),a:scene[ask][1],opts:rotate(sceneValues,ask).slice(0,rank===0?3:4),revealMs:count*1800,answerEvidence:{type:'tableCell',block:0,row:ask,column:1,subjectColumn:0},topic:'Memoria · escena del estudio',why:scene[ask][0]+': '+scene[ask][1]+'.'},age,'memory',level,`scene-${v}`,'memory_scene'));
+   if(rank===0)items.push(finish({type:'memoryReveal',responseType:'choice',requiresStimulus:true,q:'Observa la escena. Después desaparecerá.',memoryQuestion:`¿Qué imagen estaba en ${scene[ask][0]}?`,stimulus:[{type:'table',rows:scene,presentation:'memoryScene'}],memoryContent:sceneValues.map(detail=>({detail})),a:scene[ask][1],opts:rotate(sceneValues,ask).slice(0,rank===0?3:4),revealMs:count*1800,answerEvidence:{type:'tableCell',block:0,row:ask,column:1,subjectColumn:0},topic:'Memoria · escena del estudio',why:scene[ask][0]+': '+scene[ask][1]+'.'},age,'memory',level,`scene-${v}`,'memory_scene'));
    // Navigating a map has a different load from recalling isolated icons.
    // Limit visits separately; the icon sequence progression stays unchanged.
    const routeCount=(rank>=3?[3,4,6]:[3,4,5])[level-1];
@@ -156,6 +156,8 @@ function memory(age,level){
   const people=['Ana','Leo','Sol','Dani','Mar','Hugo','Lola','Nora','Eva'].slice(0,count),pairs=people.map((n,i)=>[n,values[i]]),ask=v%count;
   items.push(finish({type:'memoryReveal',responseType:'choice',requiresStimulus:true,q:'Mira la imagen que acompaña a cada persona. Después la taparemos.',memoryQuestion:`¿Qué imagen acompañaba a ${people[ask]}?`,stimulus:[{...R(pairs),presentation:'associations'}],memoryContent:pairs.map(([person,detail])=>({person,detail})),a:values[ask],opts:rotate(values,ask).slice(0,rank===0?Math.min(3,count):4),revealMs:Math.max(6000,count*1700),answerEvidence:{type:'tableCell',block:0,row:ask,column:1,subjectColumn:0},topic:'Memoria · personas y objetos'},age,'memory',level,`association-${v}`,'memory_association'));
  }
+ const photos=root.PhotoLibrary || (typeof require==='function'&&require('./photo-library'));
+ if(photos?.supports(age,'memory'))items.push(...photos.pool(age,'memory',level));
  return items;
 }
 function speed(age,level){

@@ -3,6 +3,7 @@
   const documents=root.DocumentLibrary || (typeof require==='function'&&require('./document-library.js'));
   const policy = root.ContentPolicy || (typeof require === 'function' && require('./content-policy.js'));
   const art=root.StimulusArt || (typeof require==='function'&&require('./stimulus-art.js'));
+  const photos=root.PhotoLibrary || (typeof require==='function'&&require('./photo-library.js'));
   const icons = { book:'libro', pencil:'lápiz', backpack:'mochila', bottle:'botella', notebook:'cuaderno', apple:'manzana', banana:'plátano', bread:'pan', cookie:'galleta', ball:'pelota', doll:'muñeca', bear:'oso de peluche', car:'coche de juguete', cap:'gorra', gift:'regalo' };
   const hasText = value => typeof value === 'string' && value.trim().length > 0;
   const choiceKey = value => String(value).normalize('NFKC').trim().toLocaleLowerCase('es').replace(/\s+/g,' ').replace(/[.!?]+$/,'').replace(/^(?:el|la|los|las|un|una|unos|unas)\s+/,'');
@@ -15,6 +16,8 @@
     } else if (block.type === 'table') {
       if (!Array.isArray(block.rows) || !block.rows.length || !block.rows.every(r => Array.isArray(r) && r.length && r.every(hasText)) || !block.rows.every(r => r.length === block.rows[0].length)) fail('la tabla está incompleta.');
     } else if(block.type==='document'){if(!documents?.get(block.documentId))fail('documento visual desconocido.');}
+    else if(block.type==='photo'){if(!photos?.scenes[block.photoId])fail('fotografía desconocida.');}
+    else if(block.type==='photoPair'){if(!photos?.pairs[block.pairId])fail('pareja de fotografías desconocida.');}
     else fail('el tipo de estímulo no tiene un renderizador compatible.');
     if(block.presentation==='memoryScene'&&(block.type!=='table'||block.rows.length>9||block.rows.some(row=>row.length!==2)||new Set(block.rows.map(row=>row[0])).size!==block.rows.length))fail('la escena no declara zonas únicas.');
     if(block.presentation==='routeMap'&&(block.type!=='list'||block.items.length>9||new Set(block.items).size!==block.items.length||block.positions!==undefined&&(!Array.isArray(block.positions)||block.positions.length!==block.items.length||new Set(block.positions).size!==block.positions.length||block.positions.some(n=>!Number.isInteger(n)||n<0||n>8))))fail('el mapa no declara posiciones distintas y válidas.');
@@ -22,6 +25,8 @@
   }
   function comparisonStimulus(value){
     if(typeof value!=='string')return null;
+    const codes=value.trim().split(/\s+/);
+    if(codes.length===4&&new Set(codes).size===4&&codes.every(x=>/^[A-Z]\d+$/u.test(x)))return [{type:'list',items:codes,presentation:'cards'}];
     // Recognize a complete authored model + four labels, never infer missing
     // fields or the answer. Unknown prose stays untouched.
     const match=value.match(/^\s*MODELO:\s*(\S+)\s+A:\s*(\S+)\s+B:\s*(\S+)\s+C:\s*(\S+)\s+D:\s*(\S+)\s*$/iu);
@@ -105,6 +110,7 @@
     return blocks;
   }
   function printable(item, profile) {
+    if(item?.photoTask||item?.stimulus?.some(b=>['photo','photoPair'].includes(b?.type)))photos.validate(item);
     if (!item || typeof item !== 'object') fail('falta la actividad.');
     if (item.stimulus !== undefined && (item.image || item.visual || item.rounds))
       fail('el componente adicional no tiene una representación imprimible.');
@@ -276,7 +282,7 @@
   }
   function forDelivery(item, profile, domain) {
     (root.LocaleContent||(typeof require==='function'&&require('./locale-content'))).validateOptions(item);
-    if (!policy.forProfile(profile)){if(item.type==='multiSelect'||item.type==='documentReview'||item.documentPlan||item.memoryResponse==='multiple'||item.selectiveRecall||item.speedEvidence||item.planEvidence||item.mathEvidence||item.type==='memoryReveal'&&item.answerEvidence)printable(item,profile);return item;}
+    if (!policy.forProfile(profile)){if(item.photoTask||item.stimulus?.some(b=>['photo','photoPair'].includes(b?.type))||item.type==='multiSelect'||item.type==='documentReview'||item.documentPlan||item.memoryResponse==='multiple'||item.selectiveRecall||item.speedEvidence||item.planEvidence||item.mathEvidence||item.type==='memoryReveal'&&item.answerEvidence)printable(item,profile);return item;}
     if (domain && item?.domain !== domain) fail('el área recibida no coincide con la solicitada.');
     // Identical contract at the domain boundary, on screen and in the exporter.
     // This applies to local, remote and future cache sources alike.
@@ -310,6 +316,12 @@
     const redundantSources=new Set(visibleBlocks.filter(b=>b.type==='document').map(b=>{const doc=documents.get(b.documentId);return `Fuente: ${doc.kind} de ${doc.country}.`;}));
     return visibleBlocks.filter(b=>!(b.type==='text'&&redundantSources.has(b.text))).filter(b=>!options.rubric?.length||(!(b.type==='text'&&b.text==='Criterios de revisión')&&!(b.type==='list'&&JSON.stringify(b.items)===JSON.stringify(options.rubric)))).map(block => {
       blockValid(block);
+      if(block.type==='photo'||block.type==='photoPair'){
+        const pair=block.type==='photoPair'?photos.pairs[block.pairId]:null;
+        const source=photos.scenes[pair?.sceneId||block.photoId];
+        const picture=(path,label)=>`<figure><img src="${escape(path)}" width="${source.width}" height="${source.height}" alt="${escape(source.title)}${label?' · imagen '+label:''}" loading="eager" decoding="async">${label?`<figcaption>Imagen ${label}</figcaption>`:''}</figure>`;
+        return pair?`<div class="photo-comparison">${picture(source.path,'A')}${picture(pair.path,'B')}</div>`:`<div class="everyday-photo">${picture(source.path,'')}</div>`;
+      }
       if(block.type==='document'){
         const doc=documents.get(block.documentId);
         return `<figure class="practice-document"><img src="${escape(doc.path)}" width="${doc.width}" height="${doc.height}" alt="${escape(doc.title)}" loading="eager"><figcaption><a href="${escape(doc.path)}" target="_blank" rel="noopener">Ampliar documento</a></figcaption></figure><details class="document-transcript"><summary>Ver versión en texto</summary>${interactiveStimulus(doc.transcript,{structured:true})}</details>`;
