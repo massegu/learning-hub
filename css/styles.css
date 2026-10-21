@@ -2964,3 +2964,6 @@ body {
 #exercise[data-subject='speedReasoning'] #exerciseHeading::before{background-position:66.666667% 100%}
 #exercise[data-subject='english'] #exerciseHeading::before,#exercise[data-subject='social'] #exerciseHeading::before,#exercise[data-subject='applied'] #exerciseHeading::before{background-position:100% 100%}
 @media(max-width:650px){#exerciseHeading::before{flex-basis:46px;width:46px;height:46px}#exerciseHeading{gap:8px}}
+
+#billingMessage{margin:0;padding:12px 20px;background:#eef5e9;color:#244f40;border-bottom:1px solid #d4dfd2;line-height:1.5}
+#billingMessage:empty{display:none}

@@ -559,6 +559,7 @@
     profiles = await API.listProfiles();
     hideAuth();
     renderAccountStatus();
+    checkBillingReturn();
     if (!profiles.length) {
       profile = null;
       currentItem = null;
@@ -604,7 +605,8 @@
       sub.textContent =
         window.LH_CONFIG?.stripeMode === "test"
           ? "Probar pago · 19,99 €/mes"
-          : "Suscribirme · 19.99 €/mes";
+          : "Suscribirme · 19,99 €/mes";
+      sub.title = "Precio final: 19,99 € al mes, impuestos incluidos.";
       const canSubscribe = ["trial", "cancelled", "complimentary"].includes(st);
       sub.classList.toggle("hidden", !canSubscribe);
     }
@@ -1630,10 +1632,40 @@
       updateGlobalUI();
     }
   };
-  if ($("#subscribeBtn"))
-    $("#subscribeBtn").onclick = () => API.openStripeCheckout();
-  if ($("#billingPortalBtn"))
-    $("#billingPortalBtn").onclick = () => API.openBillingPortal();
+  let billingReturnStarted=false;
+  function checkBillingReturn(){
+    const url=new URL(location.href),result=url.searchParams.get('pago');
+    if(billingReturnStarted||!['pendiente','cancelado'].includes(result))return;
+    billingReturnStarted=true;url.searchParams.delete('pago');history.replaceState(null,'',url.pathname+url.search+url.hash);
+    if(result==='cancelado'){billingMessage('Has vuelto sin completar el pago.');return;}
+    const userId=API.user?.id;
+    billingMessage('Estamos comprobando tu suscripción…');
+    let remaining=6;
+    const refresh=async()=>{
+      if(API.user?.id!==userId)return;
+      try{
+        const updated=await API.getAccount();if(API.user?.id!==userId)return;
+        account=updated;renderAccountStatus();
+        if(account.subscription_status==='active'){billingMessage('Suscripción activa. Ya puedes continuar.');return;}
+      }catch{/* Do not infer payment success from a redirect or a failed refresh. */}
+      if(--remaining>0)setTimeout(refresh,5000);
+      else billingMessage('El pago aún no se ha confirmado en Learning Hub. Puedes volver a entrar más tarde; si ya pagaste, evita repetir el pago mientras lo comprobamos.');
+    };
+    refresh();
+  }
+  function billingMessage(text){
+    let message=$('#billingMessage');
+    if(!message){message=document.createElement('p');message.id='billingMessage';message.setAttribute('role','status');message.setAttribute('aria-live','polite');$('.main-content').prepend(message);}
+    message.textContent=text;
+  }
+  async function openBilling(button,action){
+    if(button.disabled)return;button.disabled=true;
+    billingMessage('Abriendo Stripe…');
+    try{await action();}catch(error){billingMessage(error.message||'No se ha podido abrir Stripe. Inténtalo de nuevo.');}
+    finally{button.disabled=false;}
+  }
+  if ($('#subscribeBtn'))$('#subscribeBtn').onclick=()=>openBilling($('#subscribeBtn'),()=>API.openStripeCheckout());
+  if ($('#billingPortalBtn'))$('#billingPortalBtn').onclick=()=>openBilling($('#billingPortalBtn'),()=>API.openBillingPortal());
   $("#authSignIn").onclick = async () => {
     try {
       await API.signIn($("#authEmail").value.trim(), $("#authPassword").value);

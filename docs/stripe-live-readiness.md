@@ -2,11 +2,11 @@
 
 ## Estado comprobado en el repositorio
 
-`js/config.js` contiene `stripeMode: "test"`, un Payment Link que empieza por `https://buy.stripe.com/test_` y un portal `.../test_...`. Estos enlaces permiten simular pagos; no cobran dinero real.
+La rama de corrección mantiene `stripeMode: "test"` en `js/config.js` y reemplaza los Payment Links públicos por acciones autenticadas de servidor. `supabase/functions/stripe-webhook/index.ts` contiene el webhook y las acciones Checkout/portal. La migración añade intentos de pago, recibos de eventos y bloqueos de procesamiento privados.
 
-La guía de operación menciona una función Supabase `stripe-webhook`, pero su código no está en este checkout. No se ha inspeccionado su versión desplegada, su firma, sus secretos ni su comportamiento. Por tanto, no se puede afirmar que la integración completa esté lista para cobrar. Las pruebas de Auth y cuentas que ejecutamos localmente simulan una suscripción activa: no prueban el cobro ni el webhook de Stripe.
+El propietario facilitó el código remoto anterior, la estructura de `accounts`, sus políticas y permisos efectivos: los usuarios solo pueden actualizar `content_locale`. El destino Stripe de sandbox escucha cinco eventos y usa API `2026-08-26.dahlia`. El código corregido se ha preparado a partir de esos datos; **no se ha desplegado ni probado todavía en el Stripe/Supabase remoto**.
 
-El flujo automatizado actual publica `request-learning-content`; no despliega ni cambia el webhook de Stripe. No se ha activado el modo real ni se ha realizado ningún cobro.
+Las pruebas locales ejecutan la función real con respuestas Stripe simuladas y sus transacciones SQL contra PostgreSQL embebido. No acreditan un cobro ni la configuración del proveedor. El flujo automatizado de GitHub publica únicamente `request-learning-content`; no aplica la migración, instala el webhook ni activa live. Seguir primero [la instalación guiada](stripe-test-installation.md), antes de fusionar la nueva web.
 
 ## Pruebas necesarias en modo de prueba
 
@@ -29,7 +29,7 @@ Registrar para cada caso el usuario, la sesión/factura/evento de Stripe, el est
 
 Para suscripciones, una sesión de checkout completada no equivale siempre a una factura pagada, especialmente con métodos de pago diferidos. El webhook debe reflejar los estados reales de la suscripción y las facturas según el circuito elegido.
 
-En la revisión del código del webhook hay que comprobar la relación entre cuenta de Learning Hub, cliente y suscripción de Stripe. La web actual incorpora `client_reference_id` al Payment Link, pero un parámetro del navegador por sí solo no sustituye la validación del servidor. Una opción es crear Checkout Sessions desde una función autenticada con el precio y la identidad fijados en el servidor.
+La corrección crea Checkout Sessions desde una función autenticada, con precio y cuenta fijados en el servidor. El `client_reference_id` es ahora un intento de pago guardado en una tabla privada, no una identidad elegida por el navegador. Debe comprobarse la vinculación completa durante las pruebas remotas y verificar que los Payment Links antiguos no activan cuentas nuevas.
 
 Tarjetas de prueba habituales (solo en el entorno de prueba):
 
