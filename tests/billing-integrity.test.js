@@ -27,7 +27,7 @@ async function fixture({bound=true,status='active',customer='cus_A',env={}}={}){
  await db.query('insert into auth.users(id) values($1),($2)',[USER,OTHER]);
  await db.query('insert into accounts(user_id,subscription_status,stripe_customer_id,stripe_subscription_id) values($1,$2,$3,$4),($5,\'trial\',\'cus_B\',null)',[USER,status,customer,bound?'sub_A':null,OTHER]);
  const cfg={SUPABASE_URL:'https://db.invalid',SUPABASE_SERVICE_ROLE_KEY:'server-only-fixture',STRIPE_MODE:'test',STRIPE_SECRET_KEY:'sk_test_offline',STRIPE_PRICE_ID:price,BILLING_APP_URL:app,STRIPE_WEBHOOK_SECRET:secret,...env};
- const objects=new Map([['prices/'+price,{id:price,livemode:false,active:true,type:'recurring',currency:'eur',unit_amount:1999,recurring:{interval:'month',interval_count:1}}],['subscriptions/sub_A',sub()],['customers/cus_A',{id:'cus_A',livemode:false}],['customers/cus_B',{id:'cus_B',livemode:false}]]),requests=[],idem=new Map();let failRPC=null,failFetch=null,gate=null;
+ const objects=new Map([['prices/'+price,{id:price,livemode:false,active:true,type:'recurring',currency:'eur',unit_amount:2500,recurring:{interval:'month',interval_count:1}}],['subscriptions/sub_A',sub()],['customers/cus_A',{id:'cus_A',livemode:false}],['customers/cus_B',{id:'cus_B',livemode:false}]]),requests=[],idem=new Map();let failRPC=null,failFetch=null,gate=null;
  objects.set('subscriptions',{has_more:false,data:bound?[objects.get('subscriptions/sub_A')]:[]});
  async function callRPC(name,args){const keys=Object.keys(args),sql=`select public.${name}(${keys.map((k,i)=>k+'=> $'+(i+1)).join(',')}) as value`;return (await db.query(sql,Object.values(args))).rows[0].value;}
  const admin={auth:{getUser:async token=>token==='userA'?{data:{user:{id:USER,email:'a@example.invalid'}}}:token==='userB'?{data:{user:{id:OTHER,email:'b@example.invalid'}}}:{error:{message:'invalid'}}},
@@ -165,9 +165,11 @@ test('legacy invoice/subscription period fields remain readable; cross-customer 
 });
 
 test('a wrong amount or interval is rejected before a Checkout session is created',async()=>{
- const f=await fixture({bound:false,status:'trial'});f.objects.get('prices/'+price).unit_amount=999;
+ for(const wrong of [{unit_amount:1999},{unit_amount:999},{recurring:{interval:'year',interval_count:1}}]){
+ const f=await fixture({bound:false,status:'trial'});Object.assign(f.objects.get('prices/'+price),wrong);
  assert.equal((await f.action('checkout')).status,409);
  assert.equal(f.requests.some(r=>r.path==='checkout/sessions'),false);
+ }
 });
 test('a newly paid subscription can replace a canceled one, while old deletion events cannot restore the previous binding',async()=>{
  for(const terminal of ['canceled','incomplete_expired']){

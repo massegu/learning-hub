@@ -5,7 +5,7 @@ Base: `desarrollo` (`00ce974`, PR #12 ya fusionada). Rama: `fix/stripe-payment-i
 ## Resultado preparado
 
 - Webhook autónomo, acciones autenticadas Checkout/portal y migración SQL transaccional, basados en el código, esquema y permisos proporcionados por el propietario.
-- Precio fijo y validado en servidor: 19,99 EUR/mes, cantidad uno. Cuenta y cliente fijados por identidad autenticada; el navegador no decide el destinatario del pago ni la URL de retorno.
+- Precio fijo y validado en servidor: 25 EUR/mes, cantidad uno. Cuenta y cliente fijados por identidad autenticada; el navegador no decide el destinatario del pago ni la URL de retorno.
 - Lectura de referencias y periodos compatible con la API del destino (`2026-08-26.dahlia`) y formas anteriores. Solo el estado actual de Stripe, con factura pagada y periodo vigente, concede acceso completo.
 - Intentos de checkout reutilizables, comprobación de suscripciones en Stripe antes de ofrecer otro cobro, bloqueo por cuenta con caducidad y recibos de notificación guardados de forma atómica con el estado de acceso.
 - Errores de proveedor o persistencia no se confirman como éxito. Reenvíos, notificaciones atrasadas y recuperaciones no recrean estados antiguos. Los eventos de una suscripción anterior no sustituyen una nueva.

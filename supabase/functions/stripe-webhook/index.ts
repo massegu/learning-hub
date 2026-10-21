@@ -67,7 +67,7 @@ async function checkout(admin: any,cfg: ReturnType<typeof config>,user: any) {
   if(!account)fail(404,'Cuenta no encontrada.');
   if(['active','past_due'].includes(account.subscription_status))fail(409,'Ya tienes una suscripción. Utiliza Gestionar suscripción.');
   const plan=await stripe(cfg,'prices/'+encodeURIComponent(cfg.price));sameMode(plan,cfg);
-  if(plan.id!==cfg.price||!plan.active||plan.type!=='recurring'||plan.currency!=='eur'||plan.unit_amount!==1999||plan.recurring?.interval!=='month'||plan.recurring?.interval_count!==1)fail(409,'El precio no coincide con el plan de 19,99 EUR al mes de Learning Hub.');
+  if(plan.id!==cfg.price||!plan.active||plan.type!=='recurring'||plan.currency!=='eur'||plan.unit_amount!==2500||plan.recurring?.interval!=='month'||plan.recurring?.interval_count!==1)fail(409,'El precio no coincide con el plan de 25 EUR al mes de Learning Hub.');
   const attempt=await rpc(admin,'billing_prepare_checkout',{p_user_id:user.id,p_livemode:cfg.live,p_price_id:cfg.price});
   let customer=attempt.account_customer_id;
   if(customer){const record=await stripe(cfg,'customers/'+encodeURIComponent(customer));sameMode(record,cfg);if(record.deleted)fail(409,'El cliente de Stripe necesita revisión.');}
