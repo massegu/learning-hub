@@ -42,6 +42,9 @@ async function fixture({bound=true,status='active',customer='cus_A',env={}}={}){
   let value;
   if(options.method==='POST'&&path==='customers'){value={id:'cus_new',livemode:false};objects.set('customers/cus_new',value);}
   else if(options.method==='POST'&&path==='checkout/sessions'){
+   // Stripe accounts may enable Managed Payments by default. The previous request
+   // was rejected, and replaying its idempotency key returns that stored failure.
+   if(body['managed_payments[enabled]']!=='false'||!key?.startsWith('lh:checkout:v2:'))return Response.json({error:{message:'Unsupported parameter: payment_method_types. Managed Payments is enabled by default.'}},{status:400});
    value={id:'cs_new',livemode:false,currency:'eur',amount_total:1999,mode:body.mode,status:'open',client_reference_id:body.client_reference_id,customer:body.customer,url:'https://checkout.stripe.com/c/pay/offline',metadata:{learning_hub_attempt:body['metadata[learning_hub_attempt]']}};
    objects.set('checkout/sessions/cs_new',value);
   }else if(options.method==='POST'&&path==='billing_portal/sessions')value={url:'https://billing.stripe.com/p/session/offline'};
@@ -83,7 +86,9 @@ test('authenticated checkout fixes identity, price, quantity and return URL on t
  assert.equal((await f.action('checkout','userA',{mode:'live'})).status,409);assert.equal(f.requests.length,0);
  const first=await f.action('checkout','userA',{user_id:OTHER,price:'price_attacker',return_url:'https://evil.invalid'});assert.equal(first.status,200);assert.equal(first.data.livemode,false);
  const call=f.requests.find(r=>r.path==='checkout/sessions'&&r.body);assert.equal(call.body['line_items[0][price]'],price);assert.equal(call.body['line_items[0][quantity]'],'1');assert.equal(call.body.success_url,app+'?pago=pendiente');assert.equal(call.body.customer,'cus_new');assert.equal(call.body['adaptive_pricing[enabled]'],'false');
+ assert.equal(call.body['managed_payments[enabled]'],'false');assert.equal(call.body['payment_method_types[0]'],'card');
  const attempts=(await db.query('select * from billing_checkout_attempts')).rows;assert.equal(attempts.length,1);assert.equal(attempts[0].user_id,USER);assert.equal(attempts[0].checkout_session_id,'cs_new');assert.equal((await f.account()).subscription_status,'trial');
+ assert.equal(call.headers['Idempotency-Key'],'lh:checkout:v2:'+attempts[0].id);
  assert.deepEqual(await f.action('checkout'),first);assert.equal(f.requests.filter(r=>r.path==='checkout/sessions'&&r.body).length,1);
 });
 test('existing subscriptions use the customer-bound portal, never an email or browser-supplied customer',async()=>{

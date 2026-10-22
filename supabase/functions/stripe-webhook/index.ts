@@ -82,9 +82,11 @@ async function checkout(admin: any,cfg: ReturnType<typeof config>,user: any) {
     mode:'subscription',customer,'line_items[0][price]':cfg.price,'line_items[0][quantity]':'1',
     client_reference_id:attempt.id,'metadata[learning_hub_attempt]':attempt.id,
     'subscription_data[metadata][learning_hub_attempt]':attempt.id,
-    'payment_method_types[0]':'card','adaptive_pricing[enabled]':'false',success_url:cfg.app+'?pago=pendiente',cancel_url:cfg.app+'?pago=cancelado',
+    // Keep this integration's direct subscription flow even when the account defaults to Managed Payments.
+    'managed_payments[enabled]':'false','payment_method_types[0]':'card','adaptive_pricing[enabled]':'false',success_url:cfg.app+'?pago=pendiente',cancel_url:cfg.app+'?pago=cancelado',
     expires_at:String(Math.floor(new Date(attempt.expires_at).getTime()/1000))
-  },'lh:checkout:'+attempt.id);
+  // A new request version avoids replaying the cached rejection of the previous parameters.
+  },'lh:checkout:v2:'+attempt.id);
   sameMode(session,cfg);
   if(ref(session.customer)!==customer||session.mode!=='subscription'||session.client_reference_id!==attempt.id)fail(409,'La sesión de pago no corresponde a esta cuenta.');
   if(session.currency!=='eur'||session.amount_total!==1999)fail(409,'El total de Checkout debe ser exactamente 19,99 EUR.');
