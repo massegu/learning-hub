@@ -25,8 +25,8 @@ test('Language has no default writing, Reading owns composition and legacy writi
   for(let n=0;n<10;n++){const it=api.variantExercise(age,reading,2,'writing');assert.ok(it.type==='self'||it.responseType==='written'||it.languageFocus==='writing',age);}
  }
 });
-test('eighteen authored document types retain exact transcripts, multiple purposes and explicit international country context',()=>{
- assert.equal(Object.keys(documents.documents).length,18);assert.equal(new Set(Object.values(documents.documents).map(x=>x.kind)).size,18);
+test('twenty-two authored document types retain exact transcripts, multiple purposes and explicit international country context',()=>{
+ assert.equal(Object.keys(documents.documents).length,22);assert.equal(new Set(Object.values(documents.documents).map(x=>x.kind)).size,22);
  for(const [id,doc] of Object.entries(documents.documents)){
   assert.equal(new Set(doc.questions.map(q=>q[0])).size,3,id);assert.equal(new Set(doc.questions.map(q=>q[1])).size,3,id);
   const markup=model.interactiveStimulus([{type:'document',documentId:id}],{structured:true});assert.match(markup,/Ver versión en texto/);assert.ok(!/<details[^>]*\sopen/.test(markup));assert.match(markup,/<figcaption><a[^>]+>Ampliar documento<\/a><\/figcaption>/);

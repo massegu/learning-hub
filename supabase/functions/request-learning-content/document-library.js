@@ -627,6 +627,21 @@ for(const [id,title,kind,country,lines,questions,brief,sample] of authoredDocume
 }
 // Executive tasks ask the learner to apply conditions and review a proposed plan.
 // Attention and literacy retain locating and interpreting source information.
+const screenDocuments={
+ 'boarding-es-v2':{title:'Tarjeta de embarque a Bilbao',kind:'Tarjeta de embarque',country:'España',minAge:'primary',layout:'boarding',width:1200,height:700,path:'assets/documents/boarding-es-v2.png',
+  transcript:[text('AIRE NORTE · TARJETA DE EMBARQUE. Pasajero: Alex Ruiz. Vuelo AN204. Fecha: 24/10/2026.'),text('MAD · Madrid → BIO · Bilbao. Embarque: 10:00. Cierre de puerta: 10:20. Salida: 10:35. Llegada: 11:45. Puerta: B12. Asiento: 14A. Grupo: 2.'),text('Equipaje incluido: 1 bolsa de 40 × 30 × 20 cm bajo el asiento. Presenta tu documento de identidad y esta tarjeta. Los horarios son locales.')],
+  questions:[['¿Cuál es la puerta de embarque?','B12',['14A','AN204','Grupo 2']],['¿Qué dos datos indican cuándo empieza el embarque y cuándo cierra la puerta?','10:00 y 10:20',['10:20 y 10:35','10:00 y 11:45','10:35 y 11:45']],['Alex llega a la puerta a las 10:25. ¿Qué condición de la tarjeta ya no cumple?','La puerta cierra a las 10:20',['El avión sale a las 11:45','El embarque empieza a las 10:35','El grupo 2 no puede llevar bolsa']]]},
+ 'email-es-v2':{title:'Un cambio en la salida al museo',kind:'Correo en pantalla',country:'España',minAge:'primary',layout:'email',width:1200,height:860,path:'assets/documents/email-es-v2.png',
+  transcript:[text('Bandeja de entrada · Mensaje seleccionado. De: Aula de ciencias <aula@colegio.example>. Para: Grupo de ciencias. Fecha: 22/10/2026, 16:10. Asunto: Cambio de punto de encuentro.'),text('La salida al museo es el sábado 24 de octubre. Nos reunimos a las 09:15 en la entrada norte, en lugar de la puerta principal. El autobús sale a las 09:30. La hora de regreso sigue siendo las 13:00.'),text('Trae una botella de agua y la autorización firmada. Confirma tu asistencia respondiendo a este mensaje antes del viernes 23 a las 18:00. Archivo adjunto: autorizacion.pdf. Un borrador guardado no cuenta como respuesta enviada.')],
+  questions:[['¿Dónde se reúne ahora el grupo?','En la entrada norte',['En la puerta principal','En el museo','En la parada del centro']],['¿Qué hora corresponde al encuentro y cuál a la salida del autobús?','09:15 y 09:30',['09:30 y 13:00','09:15 y 13:00','16:10 y 18:00']],['¿Qué combinación coincide con el mensaje?','Confirmar antes del viernes a las 18:00 y llevar la autorización firmada',['Confirmar el sábado y llevar la autorización firmada','Guardar un borrador y llevar solo agua','Responder antes de las 18:00 y reunirse en la puerta principal']]]},
+ 'booking-es-v2':{title:'Reserva de salas en pantalla',kind:'Panel de reservas',country:'España',minAge:'primary',layout:'booking',width:1200,height:850,path:'assets/documents/booking-es-v2.png',
+  transcript:[text('BIBLIOTECA ABIERTA · Reservas del 24/10/2026. Sesión de lectura para 6 personas, de 10:00 a 11:00. Se necesita acceso sin escalones.'),table([['Sala','Plazas','10:00–11:00','Acceso'],['Roble','6','Libre','Sin escalones'],['Pino','8','Ocupada','Sin escalones'],['Olmo','4','Libre','Sin escalones'],['Abedul','8','Libre','Solo escalera']]),text('Elige una sala y pulsa Confirmar reserva. Una selección sin confirmar no guarda la reserva. Las reservas se cancelan desde Mis reservas.')],
+  questions:[['¿Qué sala está ocupada de 10:00 a 11:00?','Pino',['Roble','Olmo','Abedul']],['¿Qué sala está libre, admite a seis personas y tiene acceso sin escalones?','Roble',['Pino','Olmo','Abedul']],['¿Qué par de datos corresponde a Abedul?','8 plazas y acceso solo por escalera',['8 plazas y acceso sin escalones','4 plazas y acceso solo por escalera','6 plazas y acceso sin escalones']]]},
+ 'orders-es-v2':{title:'Preparación de pedidos en pantalla',kind:'Panel de pedidos',country:'España',minAge:'middle',layout:'orders',width:1200,height:850,path:'assets/documents/orders-es-v2.png',
+  transcript:[text('TALLER DE BICICLETAS · Pedidos de hoy, 22/10/2026. Hora actual: 15:00. Para salir hoy, un pedido debe estar revisado y tener el pago confirmado. El transporte admite hasta 8 cajas por pedido.'),table([['Pedido','Revisión','Pago','Cajas'],['P-104','Terminada','Confirmado','6'],['P-105','Pendiente','Confirmado','4'],['P-106','Terminada','Pendiente','3'],['P-107','Terminada','Confirmado','9']]),text('Hora límite de recogida: 16:30. Marca Preparado y después Solicitar recogida. Guardar una nota interna no solicita el transporte.')],
+  questions:[['¿Cuántas cajas tiene el pedido P-107?','9',['6','4','3']],['¿Qué pedido puede salir hoy con las condiciones del panel?','P-104',['P-105','P-106','P-107']],['¿Qué combinación coincide con P-105?','Revisión pendiente, pago confirmado y 4 cajas',['Revisión terminada, pago pendiente y 4 cajas','Revisión pendiente, pago confirmado y 6 cajas','Revisión terminada, pago confirmado y 9 cajas']]]}
+};
+Object.assign(documents,screenDocuments);
 const documentPlans={
  "invoice-co-v1": {
   "goal": "organizar el pago completo de la factura",
@@ -849,6 +864,12 @@ const documentPlans={
   ]
  }
 };
+Object.assign(documentPlans,{
+ 'boarding-es-v2':{goal:'preparar el embarque sin confundir horarios',steps:['Comprobar puerta, grupo y equipaje','Llegar al embarque con documento y tarjeta','Subir cuando llamen al grupo indicado'],checks:[['Puerta','B12','14A'],['Inicio del embarque','10:00','10:35'],['Cierre de puerta','10:20','10:35'],['Grupo','2','1']]},
+ 'email-es-v2':{goal:'confirmar y preparar la salida al museo',steps:['Leer el cambio y descargar la autorización','Enviar la confirmación antes del plazo','Acudir a la entrada norte con agua y autorización'],checks:[['Punto de encuentro','entrada norte','puerta principal'],['Hora de encuentro','09:15','09:30'],['Regreso','13:00','16:10'],['Confirmación','respondiendo a este mensaje','Un borrador guardado']]},
+ 'booking-es-v2':{goal:'reservar una sala para el grupo',steps:['Comparar plazas, horario y acceso de las salas','Seleccionar la sala Roble','Pulsar Confirmar reserva'],checks:[['Personas','6','8'],['Horario','10:00 a 11:00','11:00 a 12:00'],['Acceso necesario','sin escalones','Solo escalera'],['Cierre de la reserva','Confirmar reserva','Elegir sin confirmar']]},
+ 'orders-es-v2':{goal:'preparar y solicitar la recogida de un pedido válido',steps:['Comprobar revisión, pago y número de cajas','Marcar el pedido P-104 como Preparado','Pulsar Solicitar recogida antes de las 16:30'],checks:[['Pago','confirmado','Pendiente'],['Máximo de cajas','8','9'],['Hora límite','16:30','17:00'],['Acción final','Solicitar recogida','Guardar una nota interna']]}
+});
 function executiveTask(age,level,id){
  const doc=get(id),plan=documentPlans[id];
  const base={id:`document-plan-${age}-${level}-${id}`,contentKey:`document-plan-v2:${age}:${level}:${id}`,passageKey:`document:${id}`,domain:'executive',level,requiresStimulus:true,currencyContext:'foreign',documentPlan:{age,id,level},topic:'Funciones ejecutivas · '+doc.kind,
@@ -878,6 +899,12 @@ function validateExecutiveTask(item){
 // Generated document dimensions.
 const documentHeights={"advert-co": 1020, "brochure-co-v1": 1040, "catalogue-co-v1": 1161, "form-es": 1070, "infographic-cr": 1240, "instructions-cr": 1105, "invoice-co-v1": 1321, "label-mx": 920, "map-cl": 1440, "menu-ar": 1020, "news-pa": 1020, "notice-cl": 935, "post-pa": 1020, "poster-mx": 785, "receipt-co-v1": 1285, "schedule-ar": 955, "ticket-es": 820, "transport-co": 920};
 for(const [id,height] of Object.entries(documentHeights))documents[id].height=height;
+// Realistic document dimensions.
+documents["receipt-co-v1"].width=650;documents["receipt-co-v1"].height=1120;
+documents["boarding-es-v2"].width=1200;documents["boarding-es-v2"].height=700;
+documents["email-es-v2"].width=1200;documents["email-es-v2"].height=860;
+documents["booking-es-v2"].width=1200;documents["booking-es-v2"].height=850;
+documents["orders-es-v2"].width=1200;documents["orders-es-v2"].height=850;
 const attentionAdvanced={
  'invoice-co-v1':['¿Qué combinación coincide con el subtotal y la entrega, en ese orden?','22.000 COP y 3.000 COP',['25.000 COP y 3.000 COP','22.000 COP y 6.000 COP','12.000 COP y 4.000 COP']],
  'receipt-co-v1':['¿Qué combinación coincide con el total y el cambio, en ese orden?','19.000 COP y 1.000 COP',['20.000 COP y 1.000 COP','19.000 COP y 2.000 COP','8.000 COP y 6.000 COP']],
@@ -1354,6 +1381,12 @@ const readingQuestions={
   ]
  ]
 };
+Object.assign(readingQuestions,{
+ 'boarding-es-v2':[['¿Para qué sirve esta tarjeta?','Para identificar el vuelo y organizar el embarque',['Para reservar un hotel','Para consultar todas las salidas del aeropuerto']],['¿Por qué conviene mirar el cierre de puerta además de la salida?','Porque la puerta cierra antes de que salga el avión',['Porque ambas horas son iguales','Porque la llegada indica cuándo embarcar']],['¿Qué afirmación no permite asegurar la tarjeta?','Que se puede llevar una maleta grande en la bodega sin pagar',['Que el vuelo llega a Bilbao','Que hay que presentar un documento de identidad']]],
+ 'email-es-v2':[['¿Cuál es la novedad principal del correo?','Cambia el punto de encuentro de la salida',['Se cancela la visita','Cambia la hora de regreso']],['¿Por qué guardar un borrador no basta para confirmar?','Porque la confirmación tiene que enviarse como respuesta',['Porque hay que comprar un billete','Porque la autorización sustituye a la respuesta']],['¿Qué información no aparece en el mensaje?','El precio de la entrada al museo',['La hora de regreso','El lugar de encuentro']]],
+ 'booking-es-v2':[['¿Qué permite hacer esta pantalla?','Consultar y reservar salas',['Comprar libros','Cambiar la hora del reloj']],['¿Por qué no basta con elegir la sala con más plazas?','También debe estar libre y tener el acceso necesario',['Todas las salas tienen seis plazas','La capacidad no aparece en la pantalla']],['¿Qué no puede afirmarse con este panel?','Que Roble estará libre también de 11:00 a 12:00',['Que Pino está ocupada de 10:00 a 11:00','Que Olmo tiene cuatro plazas']]],
+ 'orders-es-v2':[['¿Para qué sirve el panel?','Para comprobar qué pedidos pueden enviarse',['Para diseñar una bicicleta','Para publicar una oferta']],['¿Por qué P-107 no puede enviarse en este transporte?','Porque supera el máximo de ocho cajas',['Porque el pago está pendiente','Porque falta revisar el pedido']],['¿Qué afirmación exige consultar otros datos?','Que P-104 llegará mañana a su destino',['Que P-104 tiene seis cajas','Que la recogida tiene una hora límite']]]
+});
 function get(id){return documents[id]||null;}
 function supports(age,domain){return ['junior','primary','middle','teen'].includes(age)&&['attention','executive','literacy','reading','middleReading'].includes(domain)&&!(age==='junior'&&domain==='literacy');}
 function pool(age,domain,level=1){

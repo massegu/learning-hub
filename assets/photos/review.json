@@ -1,7 +1,23 @@
 {
-  "origin": "AI-generated photorealistic scenes using image_gen; not photographs of actual users or their homes.",
+  "origin": "AI-generated photorealistic scenes using image_gen; not photographs of actual customers, their homes or workplaces.",
   "review": "Each source and edit visually inspected against js/photo-library.js. Difference tasks intentionally ask only about colour changes, not incidental texture or lighting variations.",
   "images": [
+    {
+      "file": "bus-a.png",
+      "sha256": "207ae47ea4a394c729871dd83b4d77c9a9abdf9bf4688ae916f10123d74a4f1b"
+    },
+    {
+      "file": "bus-b.png",
+      "sha256": "902d65858d393aad7eaad20dc9754be25c2a2bc41c278d9bc17474f693c57417"
+    },
+    {
+      "file": "city-a.png",
+      "sha256": "64c6f8a0f33e2fd56ecf41f934451b32499ced5b0b688ef9ca6b6797116baf2e"
+    },
+    {
+      "file": "city-b.png",
+      "sha256": "9d37a5ac737bc78b556c2f25b9421d51974e2a6de964b6bac9e1f635f5283534"
+    },
     {
       "file": "desk-a.png",
       "sha256": "b6007981e971135295de1b6aaeeaf6bec1138cc9499df34305fe17acf9f6b839"
@@ -17,6 +33,14 @@
     {
       "file": "entry-b.png",
       "sha256": "74d8c3efa373fb1870ca0998cda5e4ebde2bed8e00b4fc7a90eef6ee44115d1f"
+    },
+    {
+      "file": "factory-a.png",
+      "sha256": "ca3d93df03eb063c79465d70603db82a806e7a43dfeff48f8d93544a79411430"
+    },
+    {
+      "file": "factory-b.png",
+      "sha256": "6e09f32140c1831cae1f0994a0e48fccb45ead8b670d533f4935ac2919608608"
     },
     {
       "file": "kitchen-a.png",
@@ -43,12 +67,36 @@
       "sha256": "3d4f763cec9eb59ef5c21270a7aa563bc0326e127e8f5327af5918d6d34fe40c"
     },
     {
+      "file": "nature-a.png",
+      "sha256": "6c672c4c796b2ef308514d760b63b6352eb68f65381610b3476c1ee44a4c762f"
+    },
+    {
+      "file": "nature-b.png",
+      "sha256": "446fb5d4a6abb85f76a23a01867656e65eac1bf86c1feff8216ba51fa213ee73"
+    },
+    {
+      "file": "park-a.png",
+      "sha256": "d9ac11aad18ec4efccec9d72587413894a17220c6d91bf3103013baf8e562db9"
+    },
+    {
+      "file": "park-b.png",
+      "sha256": "976bcc156a8857d87f0a4e021e90ae62bbaa7e09c295c7e819d6f9d7de6345d1"
+    },
+    {
       "file": "picnic-a.png",
       "sha256": "a07b89f56678b3a0a0983de923876684da930fa5ade263a5fe0240f610788bed"
     },
     {
       "file": "picnic-b.png",
       "sha256": "83b932a902db9b92ed89783fb17a05115cc01e80d66313653c8470f409bf57e9"
+    },
+    {
+      "file": "street-a.png",
+      "sha256": "c7db7f3e53d685444961704b5c1e445e4d395e55aa4ddf8622977411a67784e4"
+    },
+    {
+      "file": "street-b.png",
+      "sha256": "b90c1a518beb5d7dcb9d56c6dba6a31f8c0e9def16d4ff535faa29dc5821e693"
     }
   ]
 }

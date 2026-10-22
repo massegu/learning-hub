@@ -32,7 +32,8 @@ try:
     for n in range(1 if age=='junior' else 4):
      doc=next(b['documentId'] for b in it['stimulus'] if b['type']=='document');seen.append(doc)
      assert page.evaluate('__requests.at(-1).documents_only') is True
-     page.wait_for_function('()=>document.querySelector(".practice-document img")?.naturalWidth===1024')
+     expected_width=page.evaluate('(id)=>DocumentLibrary.get(id).width',doc)
+     page.wait_for_function('(width)=>document.querySelector(".practice-document img")?.naturalWidth===width',arg=expected_width)
      if domain=='attention' and age=='teen':
       screenshot(doc);page.locator('.document-transcript summary').click();assert page.locator('.document-transcript').get_attribute('open') is not None
       assert 'Documento ficticio' not in page.locator('.document-transcript').inner_text();assert len(page.locator('.document-transcript').inner_text())>50
@@ -56,13 +57,19 @@ try:
   page.evaluate('window.__current=null');page.locator('#exerciseLevelSelect').select_option('3');it=current()
   for n in range(12):
    if it['mechanic']=='memory_association':break
-   if it.get('recallSequence'):
+   if it.get('photoTask',{}).get('kind')=='recall':
+    page.locator('#showMemoryPhoto').click();page.wait_for_selector('.everyday-photo img');page.clock.run_for(it['revealMs']+50)
+    page.locator('#exerciseOptions').get_by_role('button',name=it['a'],exact=True).click()
+   elif it.get('recallSequence'):
     page.locator('#startMemorySequence').click();page.clock.run_for(len(it['recallSequence'])*(it['sequenceStepMs']+250)+50)
     for token in it['answer']:page.locator('#exerciseOptions').get_by_role('button',name=token,exact=True).click()
     page.locator('#orderCheck').click()
    else:
     page.clock.fast_forward(it['revealMs']+50)
-    if it.get('answers'):
+    if it.get('answer') and it.get('memoryResponse')=='order':
+     for token in it['answer']:page.locator('#exerciseOptions').get_by_role('button',name=token,exact=True).click()
+     page.locator('#orderCheck').click()
+    elif it.get('answers'):
      for label in it['answers']:page.locator('#exerciseOptions').get_by_role('button',name=label,exact=True).click()
      page.locator('#multiCheck').click()
     else:page.locator('#exerciseOptions').get_by_role('button',name=it['a'],exact=True).click()
@@ -76,6 +83,6 @@ try:
   assert page.locator('#writingCriteria li').count()==len(it['writingRubric'])
   assert 'Criterios de revisión' not in page.locator('#exerciseVisual').inner_text();screenshot('writing-criteria-once')
   assert not errors,errors
-  print(f'PASS: {count} answered document activities across four ages, source rotation, Colombian mode, desktop/mobile, real DOCX with all 18 exact original PNGs, association table; no page errors',flush=True)
+  print(f'PASS: {count} answered document activities across four ages, source rotation, Colombian mode, desktop/mobile, real DOCX with all 22 exact original PNGs, association table; no page errors',flush=True)
   browser.close()
 finally:server.shutdown();server.server_close()

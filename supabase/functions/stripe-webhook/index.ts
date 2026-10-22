@@ -13,11 +13,13 @@ const invoiceSubscription = (invoice: any): string | null => ref(invoice?.parent
 function config() {
   const env=(key: string)=>Deno.env.get(key)||'';
   const mode=env('STRIPE_MODE'), secret=env('STRIPE_SECRET_KEY'),price=env('STRIPE_PRICE_ID');
+  const automaticTax=env('STRIPE_AUTOMATIC_TAX')||'disabled';
+  if(!['disabled','enabled'].includes(automaticTax))fail(503,'La configuración fiscal necesita revisión.');
   if(!env('STRIPE_WEBHOOK_SECRET').startsWith('whsec_'))fail(503,'Falta la configuración de firma.');
   if(!['test','live'].includes(mode)||!new RegExp(`^(sk|rk)_${mode}_`).test(secret)||!/^price_[A-Za-z0-9]+$/.test(price))fail(503,'Configuración de pagos incompleta.');
   let app: URL;try{app=new URL(env('BILLING_APP_URL'));}catch{fail(503,'Falta la dirección de Learning Hub.');}
   if(app!.protocol!=='https:'||app!.username||app!.password||app!.search||app!.hash)fail(503,'Dirección de Learning Hub no válida.');
-  return {live:mode==='live',secret,price,app:app!.href,origin:app!.origin,webhook:env('STRIPE_WEBHOOK_SECRET')};
+  return {live:mode==='live',secret,price,app:app!.href,origin:app!.origin,webhook:env('STRIPE_WEBHOOK_SECRET'),automaticTax:automaticTax==='enabled'};
 }
 async function signature(payload: string, header: string | null, secret: string) {
   if(!header||!secret)return false;
@@ -82,13 +84,15 @@ async function checkout(admin: any,cfg: ReturnType<typeof config>,user: any) {
     mode:'subscription',customer,'line_items[0][price]':cfg.price,'line_items[0][quantity]':'1',
     client_reference_id:attempt.id,'metadata[learning_hub_attempt]':attempt.id,
     'subscription_data[metadata][learning_hub_attempt]':attempt.id,
+    ...(cfg.automaticTax?{'automatic_tax[enabled]':'true',billing_address_collection:'required','customer_update[address]':'auto'}:{}),
     // Keep this integration's direct subscription flow even when the account defaults to Managed Payments.
     'managed_payments[enabled]':'false','payment_method_types[0]':'card','adaptive_pricing[enabled]':'false',success_url:cfg.app+'?pago=pendiente',cancel_url:cfg.app+'?pago=cancelado',
     expires_at:String(Math.floor(new Date(attempt.expires_at).getTime()/1000))
   // A new request version avoids replaying the cached rejection of the previous parameters.
-  },'lh:checkout:v2:'+attempt.id);
+  },'lh:checkout:v2:'+(cfg.automaticTax?'tax:':'')+attempt.id);
   sameMode(session,cfg);
   if(ref(session.customer)!==customer||session.mode!=='subscription'||session.client_reference_id!==attempt.id)fail(409,'La sesión de pago no corresponde a esta cuenta.');
+  if(cfg.automaticTax&&!session.automatic_tax?.enabled)fail(409,'Esta sesión se abrió antes de activar el cálculo fiscal. Revisa o caduca esa sesión en Stripe antes de iniciar otra prueba.');
   if(session.currency!=='eur'||session.amount_total!==1999)fail(409,'El total de Checkout debe ser exactamente 19,99 EUR.');
   if(session.status!=='open'||!session.url)fail(409,'Este pago ya finalizó o caducó. Actualiza Learning Hub para comprobar tu suscripción.');
   await rpc(admin,'billing_bind_checkout',{p_attempt_id:attempt.id,p_customer_id:customer,p_session_id:session.id});
