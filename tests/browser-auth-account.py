@@ -13,7 +13,7 @@ client.auth.signInWithPassword=async()=>{window.__signedIn=true;return {data:{se
 client.auth.signUp=async({email,password})=>{
  __registrations.push({email,password});
  if(window.__signupHold)await new Promise(resolve=>{window.__releaseSignup=resolve});
- if(window.__signupFail)return {error:{message:'Registro de prueba rechazado'}};
+ if(window.__signupFail)return {error:{message:'Registro de prueba rechazado',code:window.__signupFailCode}};
  if(!email)return {error:{message:'Anonymous sign ins are disabled'}};
  return {data:{session:null,user:{id:'pending-user',email}}};
 };
@@ -61,9 +61,12 @@ try:
   assert 'email' in direct;assert page.evaluate('__registrations.length')==0
   page.locator('#authPassword').fill('Registro123!');page.evaluate('window.__signupFail=true');page.locator('#authSignUp').click()
   page.wait_for_function('()=>document.querySelector("#authMessage").textContent.includes("rechazado")');assert page.locator('#authSignUp').is_enabled()
+  page.evaluate('window.__signupFailCode="over_email_send_rate_limit"');page.locator('#authSignUp').click()
+  page.wait_for_function('()=>document.querySelector("#authMessage").textContent.includes("límite de envío de correos")')
+  assert 'spam' in page.locator('#authMessage').inner_text();assert page.locator('#authSignUp').is_enabled()
   page.evaluate('window.__signupFail=false;window.__signupHold=true');page.locator('#authSignUp').click()
   page.wait_for_function('()=>typeof __releaseSignup==="function"');assert page.locator('#authSignIn').is_disabled();assert page.locator('#authSignUp').is_disabled()
-  assert page.evaluate('__registrations.length')==2
+  assert page.evaluate('__registrations.length')==3
   page.evaluate('__releaseSignup()');page.wait_for_function('()=>document.querySelector("#authMessage").textContent.includes("confirmar el registro")')
   assert page.locator('#authGate').is_visible();assert page.locator('#appShell').is_hidden()
   assert page.evaluate('LearningAPI.session===null&&LearningAPI.user===null')

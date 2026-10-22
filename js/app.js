@@ -1686,7 +1686,11 @@
         await API.signIn(email.value,password.value);
         await loadWorkspace();
       }
-    }catch(error){message.textContent=error.message||'No se ha podido completar la solicitud. Inténtalo de nuevo.';}
+    }catch(error){
+      message.textContent=error.code==='over_email_send_rate_limit'
+        ?'Se ha alcanzado el límite de envío de correos. Revisa tu bandeja de entrada y spam por si ya tienes la confirmación, y espera antes de solicitar otro mensaje.'
+        :error.message||'No se ha podido completar la solicitud. Inténtalo de nuevo.';
+    }
     finally{authPending=false;$('#authSignIn').disabled=false;$('#authSignUp').disabled=false;}
   }
   $('#authSignIn').onclick=()=>submitAuth(false);
