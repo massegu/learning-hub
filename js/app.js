@@ -1666,28 +1666,31 @@
   }
   if ($('#subscribeBtn'))$('#subscribeBtn').onclick=()=>openBilling($('#subscribeBtn'),()=>API.openStripeCheckout());
   if ($('#billingPortalBtn'))$('#billingPortalBtn').onclick=()=>openBilling($('#billingPortalBtn'),()=>API.openBillingPortal());
-  $("#authSignIn").onclick = async () => {
-    try {
-      await API.signIn($("#authEmail").value.trim(), $("#authPassword").value);
-      await loadWorkspace();
-    } catch (e) {
-      $("#authMessage").textContent = e.message;
-    }
-  };
-  $("#authSignUp").onclick = async () => {
-    try {
-      const d = await API.signUp(
-        $("#authEmail").value.trim(),
-        $("#authPassword").value,
-      );
-      if (d.session) await loadWorkspace();
-      else
-        $("#authMessage").textContent =
-          "Cuenta creada. Revisa tu correo para confirmar el registro.";
-    } catch (e) {
-      $("#authMessage").textContent = e.message;
-    }
-  };
+  let authPending=false;
+  async function submitAuth(signup){
+    if(authPending)return;
+    const email=$('#authEmail'),password=$('#authPassword'),message=$('#authMessage');
+    email.value=email.value.trim();
+    if(!email.value){message.textContent='Escribe tu email para continuar.';email.focus();return;}
+    if(!email.checkValidity()){message.textContent='Escribe una dirección de email válida.';email.focus();return;}
+    if(!password.value){message.textContent='Escribe tu contraseña para continuar.';password.focus();return;}
+    authPending=true;
+    $('#authSignIn').disabled=true;$('#authSignUp').disabled=true;
+    message.textContent=signup?'Creando tu cuenta…':'Entrando…';
+    try{
+      if(signup){
+        const result=await API.signUp(email.value,password.value);
+        if(result.session)await loadWorkspace();
+        else{password.value='';message.textContent='Revisa tu correo para confirmar el registro. Después podrás entrar con tu email y contraseña.';}
+      }else{
+        await API.signIn(email.value,password.value);
+        await loadWorkspace();
+      }
+    }catch(error){message.textContent=error.message||'No se ha podido completar la solicitud. Inténtalo de nuevo.';}
+    finally{authPending=false;$('#authSignIn').disabled=false;$('#authSignUp').disabled=false;}
+  }
+  $('#authSignIn').onclick=()=>submitAuth(false);
+  $('#authSignUp').onclick=()=>submitAuth(true);
   $("#signOutBtn").onclick = async () => {
     await API.signOut();
     profile = null;

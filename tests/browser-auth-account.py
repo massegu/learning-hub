@@ -5,11 +5,18 @@ from playwright.sync_api import sync_playwright
 from browser_support import ROOT,SDK
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');preview=importlib.util.module_from_spec(spec);spec.loader.exec_module(preview)
 AUTH=r'''
-window.__authEvents=[];window.__changes=[];window.__resets=[];
+window.__authEvents=[];window.__changes=[];window.__resets=[];window.__registrations=[];
 client.auth.getSession=async()=>({data:{session:window.__signedIn===false?null:{user:{id:'account',email:'review@example.invalid'}}}});
 client.auth.onAuthStateChange=callback=>{__authEvents.push(callback);return {data:{subscription:{unsubscribe(){}}}}};
 client.auth.signOut=async()=>{window.__signedIn=false};
 client.auth.signInWithPassword=async()=>{window.__signedIn=true;return {data:{session:{user:{id:'account'}},user:{id:'account'}}}};
+client.auth.signUp=async({email,password})=>{
+ __registrations.push({email,password});
+ if(window.__signupHold)await new Promise(resolve=>{window.__releaseSignup=resolve});
+ if(window.__signupFail)return {error:{message:'Registro de prueba rechazado'}};
+ if(!email)return {error:{message:'Anonymous sign ins are disabled'}};
+ return {data:{session:null,user:{id:'pending-user',email}}};
+};
 client.auth.updateUser=async({password})=>{if(window.__updateFail)return {error:{message:'Error de prueba recuperable'}};__changes.push(password);return {data:{user:{id:'account'}}}};
 client.auth.resetPasswordForEmail=async(email,options)=>{__resets.push({email,...options});return {data:{}}};
 return client;
@@ -43,6 +50,25 @@ try:
   page.evaluate('window.__updateFail=false');page.locator('#savePassword').click();page.wait_for_function('__changes.length===1')
   assert 'actualizada' in page.locator('#passwordMessage').inner_text();assert page.locator('#newPassword').input_value()==''
   page.locator('#closePassword').click();page.locator('#signOutBtn').click();page.wait_for_selector('#authForgotPassword')
+  # Empty credentials never reach Supabase; confirmation-required signup stays signed out.
+  page.locator('#authEmail').fill('');page.locator('#authPassword').fill('');page.locator('#authSignUp').click()
+  assert 'Escribe tu email' in page.locator('#authMessage').inner_text();assert page.evaluate('__registrations.length')==0
+  page.locator('#authEmail').fill('not-an-email');page.locator('#authPassword').fill('Registro123!');page.locator('#authSignUp').click()
+  assert 'email válida' in page.locator('#authMessage').inner_text();assert page.evaluate('__registrations.length')==0
+  page.locator('#authEmail').fill('new@example.invalid');page.locator('#authPassword').fill('');page.locator('#authSignUp').click()
+  assert 'contraseña' in page.locator('#authMessage').inner_text();assert page.evaluate('__registrations.length')==0
+  direct=page.evaluate("async()=>{try{await LearningAPI.signUp('', 'Registro123!')}catch(e){return e.message}}")
+  assert 'email' in direct;assert page.evaluate('__registrations.length')==0
+  page.locator('#authPassword').fill('Registro123!');page.evaluate('window.__signupFail=true');page.locator('#authSignUp').click()
+  page.wait_for_function('()=>document.querySelector("#authMessage").textContent.includes("rechazado")');assert page.locator('#authSignUp').is_enabled()
+  page.evaluate('window.__signupFail=false;window.__signupHold=true');page.locator('#authSignUp').click()
+  page.wait_for_function('()=>typeof __releaseSignup==="function"');assert page.locator('#authSignIn').is_disabled();assert page.locator('#authSignUp').is_disabled()
+  assert page.evaluate('__registrations.length')==2
+  page.evaluate('__releaseSignup()');page.wait_for_function('()=>document.querySelector("#authMessage").textContent.includes("confirmar el registro")')
+  assert page.locator('#authGate').is_visible();assert page.locator('#appShell').is_hidden()
+  assert page.evaluate('LearningAPI.session===null&&LearningAPI.user===null')
+  assert page.locator('#authPassword').input_value()==''
+  assert page.locator('#authSignUp').is_enabled();assert page.locator('#authSignIn').is_enabled()
   # Sign in with a different owned profile list in the same tab. Previously
   # the old navigation stayed visible with profile=null and every area failed.
   page.evaluate("__profiles=__profiles.map(p=>({...p,id:'another-'+p.id}))")
@@ -83,6 +109,6 @@ try:
   page.locator('#navMenu [data-subject=teenLanguage]').click();page.wait_for_selector('#exerciseOptions .option-btn')
   assert page.evaluate('__requests.at(-1).profile_id')=='created'
   assert not errors,errors
-  print('PASS: unavailable remembered profile, account switch with four working areas, owned request IDs, password mismatch, error/retry, update, recovery and mobile; no real emails sent')
+  print('PASS: empty/invalid signup blocked before API, backend guard, error retry, duplicate prevention and confirmation without authentication; unavailable remembered profile, account switch with four working areas, owned request IDs, password mismatch, error/retry, update, recovery and mobile; no real emails sent')
   browser.close()
 finally:server.shutdown();server.server_close()
