@@ -150,6 +150,14 @@
     requestGeneration = 0,
     guidedSession = null;
   const API = window.LearningAPI;
+  const supportEmail=String(window.LH_CONFIG?.supportEmail||'').trim();
+  if(/^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(supportEmail)){
+    $$('[data-support-link]').forEach(link=>{link.href='mailto:'+encodeURIComponent(supportEmail);link.textContent='Ayuda y contacto: '+supportEmail;link.closest('.support-contact').classList.remove('hidden');});
+  }
+  let memoryCountdown = null, memoryExposureVersion = 0;
+  function stopMemoryCountdown() {
+    clearTimeout(memoryCountdown);memoryCountdown=null;memoryExposureVersion++;
+  }
   const ICONS = {
     book: "📘",
     pencil: "✏️",
@@ -225,15 +233,23 @@
       visual.innerHTML='<p class="photo-ready">Cuando estés preparado, muestra la imagen. Después se ocultará y aparecerá una pregunta sobre sus detalles.</p>';
       area.innerHTML='<button id="showMemoryPhoto" class="primary-btn">Mostrar imagen</button>';
       $('#showMemoryPhoto').onclick=async()=>{
+        stopMemoryCountdown();const exposureVersion=memoryExposureVersion;
         const button=$('#showMemoryPhoto');button.disabled=true;button.textContent='Preparando imagen…';
         try{
           const holder=document.createElement('div');holder.innerHTML=window.ActivityModel.interactiveStimulus(it.stimulus);
           await Promise.all([...holder.querySelectorAll('img')].map(img=>img.decode()));
-          if(currentItem!==it)return;
+          if(currentItem!==it||exposureVersion!==memoryExposureVersion)return;
           visual.replaceChildren(holder);area.innerHTML='';
-          const notice=document.createElement('p');notice.className='memory-timer';notice.textContent=`Observa la imagen durante ${Math.round(it.revealMs/1000)} segundos.`;visual.append(notice);holder.querySelector('img').scrollIntoView({block:'center',behavior:'instant'});
-          setTimeout(()=>{if(currentItem!==it)return;visual.innerHTML='';$('#exercisePrompt').textContent=it.memoryQuestion;renderOptions(it);$('#exercisePrompt').scrollIntoView({block:'center',behavior:'instant'});},it.revealMs);
-        }catch(error){if(currentItem!==it)return;button.disabled=false;button.textContent='Volver a cargar la imagen';visual.innerHTML='<p>No se pudo cargar la imagen. Inténtalo de nuevo.</p>';}
+          const notice=document.createElement('p');notice.className='memory-timer';notice.setAttribute('role','timer');notice.setAttribute('aria-live','off');visual.append(notice);holder.querySelector('img').scrollIntoView({block:'center',behavior:'instant'});
+          const deadline=Date.now()+it.revealMs;
+          const tick=()=>{
+            if(currentItem!==it||exposureVersion!==memoryExposureVersion)return;
+            const remaining=Math.max(0,deadline-Date.now());
+            if(!remaining){stopMemoryCountdown();visual.innerHTML='';$('#exercisePrompt').textContent=it.memoryQuestion;renderOptions(it);$('#exercisePrompt').scrollIntoView({block:'center',behavior:'instant'});return;}
+            const seconds=Math.ceil(remaining/1000);notice.textContent=`Tiempo para observar: ${seconds} ${seconds===1?'segundo':'segundos'}.`;
+            memoryCountdown=setTimeout(tick,Math.min(250,remaining));
+          };tick();
+        }catch(error){if(currentItem!==it||exposureVersion!==memoryExposureVersion)return;button.disabled=false;button.textContent='Volver a cargar la imagen';visual.innerHTML='<p>No se pudo cargar la imagen. Inténtalo de nuevo.</p>';}
       };return;
     }
     const visual = $("#exerciseVisual"),
@@ -531,6 +547,7 @@
     return pts;
   }
   function showAuth(msg = "") {
+    stopMemoryCountdown();
     $("#authGate").classList.remove("hidden");
     $("#appShell").classList.add("hidden");
     $("#authMessage").textContent = msg;
@@ -649,6 +666,7 @@
     }
   }
   function activateProfile(id) {
+    stopMemoryCountdown();
     const p = profiles.find((x) => x.id === id);
     if (!p) return;
     profile = p;
@@ -713,6 +731,7 @@
     homework: "Fichas para casa",
   };
   function switchSection(id) {
+    if(id!=='exercise')stopMemoryCountdown();
     $$(".section").forEach((s) => s.classList.remove("active-section"));
     $("#" + id).classList.add("active-section");
     $$(".nav-item").forEach((b) =>
@@ -771,6 +790,9 @@
     $$('#photoModeSwitch button').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.photos==='true')===photoOnly)));
 
     $('#documentModeSwitch').classList.toggle('hidden',!documentSupport||isReading);
+    $('#documentModeSwitch [data-documents=false]').textContent=subject==='executive'?'Planifica y decide':'Busca y compara';
+    $('#documentModeSwitch [data-documents=true]').textContent=subject==='executive'?'Resuelve con documentos':'Explora documentos';
+    $('#photoModeSwitch [data-photos=false]').textContent='Recuerda imágenes y secuencias';
     $('#documentModeHint').classList.toggle('hidden',!documentSupport||isReading);
     $('#documentModeHint').textContent=photoOnly?'Compara las dos escenas y busca los cambios de color.':subject==='executive'?(documentOnly?'Usa el documento para organizar acciones y corregir un plan.':'Ordena acciones, aplica reglas y revisa decisiones.'):(documentOnly?'Localiza y contrasta los datos del documento.':'Compara figuras, códigos y listas.');
     $$('#documentModeSwitch [data-documents]').forEach(b=>b.setAttribute('aria-pressed',String(!photoOnly&&(b.dataset.documents==='true')===documentOnly)));
@@ -843,6 +865,7 @@
     return res?.items?.[0] || null;
   }
   async function newExercise() {
+    stopMemoryCountdown();
     $('#exercise').classList.remove('speed-active');
     renderEarlyTaskGuide(false);
     $('#exerciseLevelSelect').value=String(state.levels[subject]||1);

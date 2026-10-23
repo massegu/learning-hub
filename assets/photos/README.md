@@ -1,6 +1,19 @@
 # Escenas cotidianas de aspecto fotográfico
 
-Imágenes generadas con IA para estas actividades, sin fotos de usuarios reales, personas, marcas o textos. Las fuentes y sus ediciones se inspeccionaron visualmente antes de escribir las preguntas. `review.json` identifica los PNG revisados mediante SHA-256.
+Imágenes generadas con IA para estas actividades, sin fotografías de usuarios reales ni de sus casas o lugares de trabajo. Las personas de las nuevas escenas también son generadas. Las fuentes y sus ediciones se inspeccionaron visualmente antes de escribir las preguntas. `review.json` identifica los PNG revisados mediante SHA-256.
+
+## Ampliación: paseos, ciudad, trabajo y naturaleza
+
+El banco tiene ahora doce escenas y doce pares A/B (24 PNG). Se conservan las seis anteriores.
+
+- Calle A: dos personas con chaqueta roja/mochila azul y abrigo amarillo; coche rojo, bicicleta azul y toldo verde/blanco. B: chaqueta morada, abrigo verde y coche azul.
+- Parque A: persona sentada con jersey amarillo, mochila verde junto al banco, bicicleta roja, botella azul y pelota naranja; dos personas pasean al fondo con chaquetas roja y azul. B: jersey morado, bicicleta azul y botella roja.
+- Autobús A: mochila roja en el asiento izquierdo, barras amarillas, tapicería azul, paraguas verde y bufanda amarilla a la derecha. B: mochila morada, paraguas azul y bufanda roja.
+- Taller A: caja de herramientas roja a la izquierda, bicicleta azul en soporte, dos ruedas en la pared, trabajador a la derecha con casco azul y chaleco amarillo. B: caja verde, cuadro de bicicleta rojo y casco naranja.
+- Naturaleza A: tienda amarilla, mochila roja y botella azul delante, puente de madera a la derecha sobre un arroyo y montañas detrás del bosque. B: tienda azul, mochila verde y botella roja.
+- Plaza A: sombrilla roja a la izquierda, bolsa azul sobre banco verde, fuente central, reloj en el edificio y furgoneta amarilla a la derecha. B: sombrilla azul, bolsa morada y furgoneta roja.
+
+Las preguntas se basan en lo visible, no en el prompt de generación. No se pregunta por matrículas, hora del reloj ni marcas. Las diferencias se limitan expresamente a los tres cambios de color revisados en cada par. Se mantiene la progresión de una observación en nivel 1 y combinaciones de dos/tres en niveles 2/3.
 
 - Cocina A: taza roja, cuaderno azul cerrado, mochila amarilla en la silla, tres manzanas verdes en un plato, cuchara y planta en la ventana.
 - Cocina B: taza verde, cuaderno naranja y mochila morada; las preguntas de diferencias se limitan a esos cambios de color.

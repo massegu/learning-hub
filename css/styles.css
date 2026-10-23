@@ -2754,6 +2754,8 @@ body {
 :is(#documentModeSwitch,#photoModeSwitch){width:fit-content;max-width:100%;flex-wrap:wrap;gap:.35rem;margin-bottom:1rem;padding:.5rem}
 :is(#documentModeSwitch,#photoModeSwitch) button[aria-pressed="true"]{background:var(--green,#2f7d4a);color:white}
 .practice-document{margin:1rem auto;max-width:540px}
+.practice-document.landscape-document{width:100%;max-width:1050px}
+.practice-document.receipt-document{max-width:430px}
 .practice-document img{display:block;width:100%;height:auto;background:white;border:1px solid #dce5df;box-shadow:0 6px 22px #17332615;border-radius:8px}
 .practice-document figcaption{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;font-size:.9rem;color:#52675b;padding:.7rem 0}
 .document-transcript{max-width:48rem;margin:1rem auto;padding:.8rem 1rem;border:1px solid #dce5df;border-radius:10px;background:#fff}
@@ -2967,3 +2969,6 @@ body {
 
 #billingMessage{margin:0;padding:12px 20px;background:#eef5e9;color:#244f40;border-bottom:1px solid #d4dfd2;line-height:1.5}
 #billingMessage:empty{display:none}
+/* Support stays available on the sign-in screen and in the workspace. */
+.support-contact { margin: 1rem .5rem; font-size: .85rem; overflow-wrap: anywhere; }
+.support-contact a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }

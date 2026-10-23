@@ -27,7 +27,7 @@ try:
   for domain in ['attention','executive']:
    it=open_area(domain);assert page.evaluate('__requests.at(-1).documents_only') is False;assert not any(b['type']=='document' for b in it.get('stimulus',[]))
    page.evaluate('window.__current=null');page.locator('#documentModeSwitch [data-documents=true]').click();it=current()
-   assert any(b['type']=='document' for b in it['stimulus']);page.wait_for_function('()=>document.querySelector(".practice-document img")?.naturalWidth===1024')
+   assert any(b['type']=='document' for b in it['stimulus']);page.wait_for_function('()=>{const img=document.querySelector(".practice-document img");return img?.naturalWidth>0&&img.naturalWidth===Number(img.getAttribute("width"))}')
    if domain=='attention':assert it['type']=='standard'
    else:
     assert it['type']=='order'

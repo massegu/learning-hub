@@ -45,7 +45,7 @@ async function fixture({bound=true,status='active',customer='cus_A',env={}}={}){
    // Stripe accounts may enable Managed Payments by default. The previous request
    // was rejected, and replaying its idempotency key returns that stored failure.
    if(body['managed_payments[enabled]']!=='false'||!key?.startsWith('lh:checkout:v2:'))return Response.json({error:{message:'Unsupported parameter: payment_method_types. Managed Payments is enabled by default.'}},{status:400});
-   value={id:'cs_new',livemode:false,currency:'eur',amount_total:1999,mode:body.mode,status:'open',client_reference_id:body.client_reference_id,customer:body.customer,url:'https://checkout.stripe.com/c/pay/offline',metadata:{learning_hub_attempt:body['metadata[learning_hub_attempt]']}};
+   value={id:'cs_new',livemode:false,currency:'eur',amount_total:1999,mode:body.mode,status:'open',client_reference_id:body.client_reference_id,customer:body.customer,url:'https://checkout.stripe.com/c/pay/offline',automatic_tax:{enabled:body['automatic_tax[enabled]']==='true'},metadata:{learning_hub_attempt:body['metadata[learning_hub_attempt]']}};
    objects.set('checkout/sessions/cs_new',value);
   }else if(options.method==='POST'&&path==='billing_portal/sessions')value={url:'https://billing.stripe.com/p/session/offline'};
   else value=objects.get(path);
@@ -95,6 +95,19 @@ test('existing subscriptions use the customer-bound portal, never an email or br
  const f=await fixture();assert.equal((await f.action('checkout')).status,409);
  assert.equal((await f.action('portal','userB',{customer:'cus_A'})).status,200);
  const call=f.requests.find(r=>r.path==='billing_portal/sessions');assert.equal(call.body.customer,'cus_B');assert.equal(call.body.return_url,app);
+});
+test('automatic tax is opt-in, collects billing address and keeps the inclusive 19.99 EUR total',async()=>{
+ const f=await fixture({bound:false,status:'trial',customer:null,env:{STRIPE_AUTOMATIC_TAX:'enabled'}});
+ const first=await f.action('checkout');assert.equal(first.status,200);
+ const call=f.requests.find(r=>r.path==='checkout/sessions'&&r.body);
+ assert.equal(call.body['automatic_tax[enabled]'],'true');assert.equal(call.body.billing_address_collection,'required');assert.equal(call.body['customer_update[address]'],'auto');
+ assert.match(call.headers['Idempotency-Key'],/^lh:checkout:v2:tax:/);
+ assert.equal(f.objects.get('checkout/sessions/cs_new').amount_total,1999);
+ assert.deepEqual(await f.action('checkout'),first);
+ f.objects.get('checkout/sessions/cs_new').automatic_tax.enabled=false;
+ assert.equal((await f.action('checkout')).status,409);
+ assert.equal(f.requests.filter(r=>r.path==='checkout/sessions'&&r.body).length,1);
+ const bad=await fixture({env:{STRIPE_AUTOMATIC_TAX:'maybe'}});assert.equal((await bad.action('checkout')).status,503);assert.equal(bad.requests.length,0);
 });
 test('bad, expired or altered signatures and wrong environments never change an account',async()=>{
  const f=await fixture();

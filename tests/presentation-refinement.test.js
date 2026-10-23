@@ -20,7 +20,7 @@ test('commercial document artwork keeps reference, dates, currency and amounts w
   const doc=docs.get(id),svg=fs.readFileSync(doc.path.replace('.png','.svg'),'utf8'),text=[...svg.matchAll(/<text\b[^>]*>(.*?)<\/text>/g)].map(x=>x[1]).join(' ');
   assert.equal(text.split(doc.kind.toUpperCase()).length-1,1);
   assert.ok(text.includes('pesos colombianos (COP)'));for(const value of fields)assert.ok(text.includes(value),id+': '+value);
-  assert.ok(text.includes(doc.title));
+  if(id==='receipt-co-v1')assert.ok(text.includes('TIENDA BARRIO VERDE'));else assert.ok(text.includes(doc.title));
   assert.ok(!text.includes('Tienda Barrio Verde · RECIBO DE COMPRA'));
  }
 });

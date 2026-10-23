@@ -82,11 +82,81 @@ Object.assign(scenes,{
   fact('¿De qué color era el cuenco de las llaves?','Verde',['Naranja','Rojo','Azul'],'El cuenco de las llaves era verde.')
  ]}
 });
+// Additional sources were visually inspected after generation; questions refer
+// only to objects and relations visible in the actual final photographs.
+Object.assign(scenes,{
+ street:{title:'Un paseo por una calle',width:1448,height:1086,path:'assets/photos/street-a.png',facts:[
+  fact('¿De qué color era la chaqueta de la persona con mochila?','Roja',['Azul','Verde','Morada'],'La persona con mochila llevaba una chaqueta roja.'),
+  fact('¿De qué color era la mochila?','Azul',['Roja','Amarilla','Verde'],'La mochila era azul.'),
+  fact('¿De qué color era el abrigo de la otra persona?','Amarillo',['Verde','Rojo','Morado'],'La otra persona llevaba un abrigo amarillo.'),
+  fact('¿De qué color era el coche aparcado?','Rojo',['Azul','Verde','Blanco'],'El coche aparcado era rojo.'),
+  fact('¿Dónde estaba la bicicleta?','Junto a la tienda, a la derecha',['En el centro de la calle','Detrás de las dos personas','En la acera izquierda'],'La bicicleta estaba junto a la tienda, a la derecha.'),
+  fact('¿Qué colores tenía el toldo?','Verde y blanco',['Rojo y blanco','Azul y amarillo','Verde y rojo'],'El toldo tenía rayas verdes y blancas.'),
+  fact('¿Cuántas personas caminaban juntas en primer plano?','Dos',['Tres','Una','Cuatro'],'Dos personas caminaban juntas por la acera izquierda.'),
+  fact('¿Qué había en el escaparate de la derecha?','Pan',['Libros','Zapatos','Herramientas'],'En el escaparate de la derecha había pan.')
+ ]},
+ park:{title:'Una tarde en el parque',width:1448,height:1086,path:'assets/photos/park-a.png',facts:[
+  fact('¿De qué color era el jersey de la persona sentada?','Amarillo',['Rojo','Verde','Morado'],'La persona sentada llevaba un jersey amarillo.'),
+  fact('¿De qué color era la bicicleta?','Roja',['Azul','Amarilla','Verde'],'La bicicleta era roja.'),
+  fact('¿De qué color era la botella del primer plano?','Azul',['Roja','Verde','Morada'],'La botella del primer plano era azul.'),
+  fact('¿Dónde estaba la mochila verde?','En el suelo junto al banco',['Sobre la bicicleta','En el camino del fondo','Sobre el árbol'],'La mochila verde estaba en el suelo junto al banco.'),
+  fact('¿Cuántas personas paseaban juntas al fondo?','Dos',['Una','Tres','Cuatro'],'Dos personas paseaban juntas al fondo.'),
+  fact('¿De qué color era la pelota?','Naranja',['Azul','Roja','Verde'],'La pelota del primer plano era naranja.'),
+  fact('¿Dónde estaba la bicicleta respecto al banco?','A la derecha',['A la izquierda','Debajo','Encima'],'La bicicleta estaba a la derecha del banco.'),
+  fact('¿Qué prendas llevaban las dos personas del fondo?','Una chaqueta roja y una azul',['Dos chaquetas rojas','Una chaqueta amarilla y una verde','Dos chaquetas azules'],'Las dos personas del fondo llevaban una chaqueta roja y otra azul.')
+ ]},
+ bus:{title:'El interior de un autobús',width:1448,height:1086,path:'assets/photos/bus-a.png',facts:[
+  fact('¿De qué color era la mochila?','Roja',['Morada','Azul','Amarilla'],'La mochila era roja.'),
+  fact('¿De qué color eran las barras para agarrarse?','Amarillas',['Rojas','Azules','Verdes'],'Las barras para agarrarse eran amarillas.'),
+  fact('¿De qué color era el paraguas?','Verde',['Azul','Rojo','Amarillo'],'El paraguas era verde.'),
+  fact('¿Dónde estaba la mochila?','En el asiento de la izquierda',['En el asiento de la derecha','En el pasillo','En el exterior'],'La mochila estaba en el asiento de la izquierda.'),
+  fact('¿De qué color era la bufanda?','Amarilla',['Roja','Azul','Morada'],'La bufanda era amarilla.'),
+  fact('¿Qué había junto a la bufanda?','Un paraguas',['Una mochila','Un balón','Una maleta'],'Había un paraguas junto a la bufanda.'),
+  fact('¿De qué color era la tapicería de los asientos?','Azul',['Roja','Verde','Gris'],'La tapicería de los asientos era azul.'),
+  fact('¿Qué se veía por las ventanas laterales?','Árboles',['Una playa','Un túnel','Montañas nevadas'],'Se veían árboles por las ventanas laterales.')
+ ]},
+ factory:{title:'Un taller de bicicletas',width:1448,height:1086,path:'assets/photos/factory-a.png',facts:[
+  fact('¿De qué color era la caja de herramientas?','Roja',['Verde','Azul','Amarilla'],'La caja de herramientas era roja.'),
+  fact('¿De qué color era el cuadro de la bicicleta?','Azul',['Rojo','Verde','Amarillo'],'El cuadro de la bicicleta era azul.'),
+  fact('¿De qué color era el casco del trabajador?','Azul',['Naranja','Rojo','Verde'],'El casco del trabajador era azul.'),
+  fact('¿Cuántas ruedas había colgadas en la pared?','Dos',['Una','Tres','Cuatro'],'Había dos ruedas colgadas en la pared.'),
+  fact('¿De qué color era el chaleco del trabajador?','Amarillo',['Rojo','Azul','Morado'],'El chaleco del trabajador era amarillo.'),
+  fact('¿Dónde estaban las cajas de cartón?','A la derecha del trabajador',['Sobre la bicicleta','Bajo las ruedas de la pared','Sobre la caja de herramientas'],'Las cajas de cartón estaban a la derecha del trabajador.'),
+  fact('¿Qué sostenía el trabajador?','Una carpeta con pinza',['Una rueda','Un casco','Una caja roja'],'El trabajador sostenía una carpeta con pinza.'),
+  fact('¿Dónde estaba la caja de herramientas?','Sobre la mesa de la izquierda',['En el suelo a la derecha','Sobre una silla','En la bicicleta'],'La caja de herramientas estaba sobre la mesa de la izquierda.')
+ ]},
+ nature:{title:'Un campamento en la montaña',width:1448,height:1086,path:'assets/photos/nature-a.png',facts:[
+  fact('¿De qué color era la tienda de campaña?','Amarilla',['Azul','Roja','Verde'],'La tienda de campaña era amarilla.'),
+  fact('¿De qué color era la mochila?','Roja',['Verde','Azul','Morada'],'La mochila era roja.'),
+  fact('¿De qué color era la botella?','Azul',['Roja','Verde','Amarilla'],'La botella era azul.'),
+  fact('¿Dónde estaba el puente respecto a la tienda?','A la derecha',['A la izquierda','Dentro','Encima'],'El puente estaba a la derecha de la tienda.'),
+  fact('¿Qué pasaba por debajo del puente?','Un arroyo',['Una carretera','Una vía de tren','Un sendero seco'],'Un arroyo pasaba por debajo del puente.'),
+  fact('¿Qué había detrás del bosque?','Montañas',['Edificios','Una playa','Un aeropuerto'],'Había montañas detrás del bosque.'),
+  fact('¿Dónde estaba la mochila respecto a la tienda?','Delante',['Detrás','Dentro','Encima'],'La mochila estaba delante de la tienda.'),
+  fact('¿De qué material era el puente?','Madera',['Metal','Piedra','Cuerda'],'El puente era de madera.')
+ ]},
+ city:{title:'Una plaza de la ciudad',width:1448,height:1086,path:'assets/photos/city-a.png',facts:[
+  fact('¿De qué color era la sombrilla de la cafetería?','Roja',['Azul','Verde','Amarilla'],'La sombrilla de la cafetería era roja.'),
+  fact('¿De qué color era la furgoneta?','Amarilla',['Roja','Azul','Verde'],'La furgoneta era amarilla.'),
+  fact('¿De qué color era la bolsa del banco?','Azul',['Morada','Roja','Amarilla'],'La bolsa del banco era azul.'),
+  fact('¿Dónde estaba la fuente?','En el centro de la plaza',['Dentro de la cafetería','Sobre el banco','En la furgoneta'],'La fuente estaba en el centro de la plaza.'),
+  fact('¿Qué había en lo alto del edificio del fondo?','Un reloj redondo',['Una pantalla','Un cartel rojo','Una bandera azul'],'En lo alto del edificio del fondo había un reloj redondo.'),
+  fact('¿Dónde estaba la furgoneta respecto a la fuente?','A la derecha',['A la izquierda','Dentro','Encima'],'La furgoneta estaba a la derecha de la fuente.'),
+  fact('¿De qué color era el banco de la bolsa?','Verde',['Rojo','Azul','Amarillo'],'El banco de la bolsa era verde.'),
+  fact('¿Dónde estaba la bolsa?','Sobre el banco de la izquierda',['Dentro de la fuente','Junto al reloj','En una mesa de la cafetería'],'La bolsa estaba sobre el banco de la izquierda.')
+ ]}
+});
 const newPairs={
  desk:{regions:{'El estuche':[7,59,27,23],'El cuaderno':[37,65,27,17],'La mochila':[35,35,26,29],'Los lápices':[70,48,13,28],'Las llaves':[44,83,18,12],'El reloj':[51,1,18,21]},changes:[['El estuche','De rojo a morado'],['El cuaderno','De verde a naranja'],['La mochila','De azul a rojo']],unchanged:['Los lápices','Las llaves','El reloj']},
  picnic:{regions:{'La botella':[14,35,16,33],'La manta':[4,83,18,15],'La fiambrera':[69,34,20,20],'Las naranjas':[70,59,23,21],'La cesta':[34,30,32,42],'Las gafas':[39,75,23,13]},changes:[['La botella','De azul a verde'],['La manta','De roja a azul'],['La fiambrera','De amarilla a morada']],unchanged:['Las naranjas','La cesta','Las gafas']},
  market:{regions:{'La bolsa':[39,25,25,39],'El monedero':[40,66,20,12],'Los pimientos':[7,46,25,25],'Las manzanas':[71,46,25,25],'El toldo':[2,0,96,18]},changes:[['La bolsa','De amarilla a morada'],['El monedero','De azul a rojo'],['Los pimientos','De rojos a amarillos']],unchanged:['Las manzanas','El toldo']},
- entry:{regions:{'La mochila':[26,26,19,28],'El paraguas':[86,24,9,25],'El cuenco':[13,20,10,6],'Las zapatillas':[75,65,13,12],'El espejo':[32,0,37,21],'El banco':[24,53,49,9]},changes:[['La mochila','De azul a roja'],['El paraguas','De amarillo a morado'],['El cuenco','De verde a naranja']],unchanged:['Las zapatillas','El espejo','El banco']}
+ entry:{regions:{'La mochila':[26,26,19,28],'El paraguas':[86,24,9,25],'El cuenco':[13,20,10,6],'Las zapatillas':[75,65,13,12],'El espejo':[32,0,37,21],'El banco':[24,53,49,9]},changes:[['La mochila','De azul a roja'],['El paraguas','De amarillo a morado'],['El cuenco','De verde a naranja']],unchanged:['Las zapatillas','El espejo','El banco']},
+ street:{regions:{'La chaqueta de la persona con mochila':[6,45,10,19],'El abrigo de la otra persona':[14,48,9,19],'El coche':[49,50,24,20],'El árbol':[33,3,27,35],'El toldo':[64,18,35,24],'La bicicleta':[84,54,16,26]},changes:[['La chaqueta de la persona con mochila','De roja a morada'],['El abrigo de la otra persona','De amarillo a verde'],['El coche','De rojo a azul']],unchanged:['El árbol','El toldo','La bicicleta']},
+ park:{regions:{'El jersey de la persona sentada':[0,24,25,14],'La bicicleta':[75,20,25,57],'La botella':[49,65,7,22],'La mochila':[19,47,16,22],'La pelota':[54,77,8,11],'Las chaquetas del fondo':[58,23,18,20]},changes:[['El jersey de la persona sentada','De amarillo a morado'],['La bicicleta','De roja a azul'],['La botella','De azul a roja']],unchanged:['La mochila','La pelota','Las chaquetas del fondo']},
+ bus:{regions:{'La mochila':[0,40,27,34],'La bufanda':[79,62,21,30],'El paraguas':[69,31,12,66],'Los asientos':[2,76,26,17],'Las barras':[20,0,8,28],'Los árboles':[0,0,19,22]},changes:[['La mochila','De roja a morada'],['La bufanda','De amarilla a roja'],['El paraguas','De verde a azul']],unchanged:['Los asientos','Las barras','Los árboles']},
+ factory:{regions:{'La caja de herramientas':[1,38,18,13],'El cuadro de la bicicleta':[32,30,31,22],'El casco':[76,7,11,12],'Las ruedas de la pared':[0,0,32,29],'El chaleco':[76,21,16,35],'Las cajas de cartón':[91,54,9,29]},changes:[['La caja de herramientas','De roja a verde'],['El cuadro de la bicicleta','De azul a rojo'],['El casco','De azul a naranja']],unchanged:['Las ruedas de la pared','El chaleco','Las cajas de cartón']},
+ nature:{regions:{'La tienda de campaña':[0,40,45,37],'La mochila':[13,61,14,23],'La botella':[26,68,4,13],'El puente':[48,42,48,16],'Las montañas':[2,7,84,31],'El arroyo':[53,60,46,30]},changes:[['La tienda de campaña','De amarilla a azul'],['La mochila','De roja a verde'],['La botella','De azul a roja']],unchanged:['El puente','Las montañas','El arroyo']},
+ city:{regions:{'La sombrilla':[2,12,34,17],'La furgoneta':[81,31,19,24],'La bolsa':[11,62,13,23],'El banco':[0,86,35,13],'La fuente':[37,24,45,42],'El reloj':[62,0,9,12]},changes:[['La sombrilla','De roja a azul'],['La furgoneta','De amarilla a roja'],['La bolsa','De azul a morada']],unchanged:['El banco','La fuente','El reloj']}
 };
 for(const [id,pair] of Object.entries(newPairs))pairs[id]={...pair,sceneId:id,path:`assets/photos/${id}-b.png`};
 // Each harder question reconstructs two or three independent facts from the SAME image.
@@ -97,7 +167,13 @@ const challenges={
  desk:[[0,2,4],[1,5,6],[3,7,5],[6,4,1]],
  picnic:[[0,2,3],[1,4,5],[6,7,2],[5,3,4]],
  market:[[0,1,2],[3,4,6],[5,2,7],[1,6,3]],
- entry:[[0,1,2],[3,4,5],[6,7,2],[1,5,3]]
+ entry:[[0,1,2],[3,4,5],[6,7,2],[1,5,3]],
+ street:[[0,1,2],[3,4,5],[6,7,1],[2,5,4]],
+ park:[[0,1,2],[3,4,5],[6,7,2],[1,5,3]],
+ bus:[[0,1,2],[3,4,5],[6,7,2],[1,5,3]],
+ factory:[[0,1,3],[2,4,5],[6,7,3],[1,5,4]],
+ nature:[[0,1,2],[3,4,5],[6,7,2],[1,5,3]],
+ city:[[0,1,2],[3,4,5],[6,7,2],[1,5,6]]
 };
 function questions(sceneId,level){
  const scene=scenes[sceneId];

@@ -20,11 +20,19 @@ try:
   assert page.locator('.everyday-photo img').evaluate('(e)=>{const b=e.getBoundingClientRect();return b.top>=0&&b.bottom<=innerHeight+1}')
   assert page.locator('#exerciseOptions [data-answer]').count()==0
   assert page.locator('#exerciseVisual').inner_text().find(memory['why'])==-1
+  seconds=memory['revealMs']//1000
+  assert page.locator('[role=timer]').inner_text()==f'Tiempo para observar: {seconds} segundos.'
+  page.clock.run_for(2100)
+  assert page.locator('[role=timer]').inner_text()==f'Tiempo para observar: {seconds-2} segundos.'
   page.locator('#exercise').screenshot(path='/tmp/photo-memory-desktop.png')
-  page.clock.run_for(memory['revealMs']+100)
+  page.clock.run_for(memory['revealMs']-2000)
   assert page.locator('#exerciseVisual img').count()==0;assert page.locator('#exercisePrompt').inner_text()==memory['memoryQuestion']
   page.locator('#exerciseOptions [data-answer]').evaluate_all('(els,a)=>els.find(e=>e.dataset.answer===a).click()',memory['a'])
   assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
+  page.locator('#exerciseNext').click();page.wait_for_selector('#showMemoryPhoto');page.locator('#showMemoryPhoto').click();page.wait_for_selector('[role=timer]')
+  page.locator('#navMenu [data-section=home]').click();prompt=page.locator('#exercisePrompt').inner_text();page.clock.run_for(17000)
+  assert page.locator('#home').evaluate("e=>e.classList.contains('active-section')")
+  assert page.locator('#exercisePrompt').inner_text()==prompt
   page.locator('#navMenu [data-subject=attention]').click();page.locator('#attentionPhotos').click();page.wait_for_selector('.photo-comparison img')
   page.locator('#exerciseLevelSelect').select_option('2');page.wait_for_function('()=>__current?.level===2&&__current?.photoTask?.kind==="differences"');
   difference=page.evaluate('__current');assert difference['photoTask']['kind']=='differences'
@@ -65,6 +73,17 @@ try:
   assert 'adventure-areas.png' in badge['image'] and '100%' in badge['position'],badge
   assert page.evaluate("Array.from(document.images).every(i=>!i.src.includes('adventure-areas')||i.complete)")
   page.locator('#exercise').screenshot(path='/tmp/advanced-memory-and-badge.png')
+  # Exercise every new photograph's actual hit regions, including small or
+  # nested objects: an unchanged background must not cover a changed target.
+  fixture={}
+  def override(route):route.fulfill(json={'status':200,'data':{'items':[fixture],'usage':{'used':1,'limit':500}}})
+  page.route('**/__review/content',override)
+  new_pairs=page.evaluate('PhotoLibrary.pool("teen","attention",2).filter(x=>["street","park","bus","factory","nature","city"].includes(x.photoTask.pairId))')
+  for task in new_pairs:
+   fixture.clear();fixture.update(task);page.locator('#navMenu [data-subject=attention]').click()
+   page.wait_for_function('(id)=>__current?.id===id&&document.querySelectorAll(".photo-comparison img").length===2',arg=task['id'])
+   for label in task['answers']:page.get_by_role('button',name='Señalar: '+label,exact=True).click()
+   page.locator('#multiCheck').click();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class'),task['photoTask']['pairId']
   assert not errors,errors
   print('PASS: real photo-only delivery, explicit start, full viewing period, photograph and answers never coexist, recall scoring, A/B comparison, wrong/correct selections, mobile and 2 DOCX embedding source photographs; direct image marking and accessible button selection stay synchronized')
   browser.close()
