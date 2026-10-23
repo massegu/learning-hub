@@ -442,13 +442,12 @@
       $('#saveRoomObservation').onclick=()=>{const text=$('#roomDescription').value.trim();if(text.length<10){$('#roomResponseMessage').textContent='Escribe qué has encontrado y qué característica cumple.';return;}recordObservation('described',text);};
       $('#roomNotFound').onclick=()=>recordObservation('not_found',$('#roomDescription').value.trim());return;
     }
-    let trial=0,correctTrials=0,noGoErrors=0;const reports=[];
+    let trial=0,correctTrials=0,noGoErrors=0;
     const rulesTable=rules=>window.ActivityModel.interactiveStimulus([{type:'table',header:true,rows:[['Tarjeta','Qué tienes que hacer'],...rules.map(r=>[t.kind==='symbols'?r.symbol+' · '+local(r.label):r.label,r.target<0?'Espera sin hacer nada':local(t.actions[r.target])])]}],{structured:true});
     const introduction=it.stimulus[0].text;
     visual.innerHTML=`<div class="interactive-rules"><p>${escapeHtml(introduction)}</p>${rulesTable(t.rules)}${t.secondRules?`<p>Después de la tarjeta ${t.rules.length} cambiarán las reglas. Te avisaremos para que puedas leer la tabla nueva.</p>`:''}<p>${t.kind==='movement'?'La pantalla marca la espera. Tú o la persona que te acompaña indicáis si la habéis respetado.':'En las tarjetas de espera no pulses ningún botón. La barra te indicará cuándo termina el turno.'}</p></div>`;
     area.innerHTML='<button id="startInteractive" class="primary-btn">Empezar las tarjetas</button>';
     const finish=()=>{
-      if(t.kind==='movement'){recordObservation({trials:reports});return;}
       it._interactionSummary={trials:t.trials.length,correctTrials,noGoErrors};
       const ok=correctTrials/t.trials.length>=.8&&noGoErrors===0;
       showFeedback(ok,saveResult(subject,ok,it.id,'symbol_rules'),`${correctTrials} de ${t.trials.length} tarjetas correctas. ${noGoErrors?'En '+noGoErrors+' tarjetas de espera pulsaste antes de tiempo.':'Has respetado todas las tarjetas de espera.'}`);
@@ -470,19 +469,14 @@
       const close=(ok,report)=>{
         if(!live()||answered)return;answered=true;clearTimeout(interactionTimer);interactionTimer=null;
         if(ok)correctTrials++;if(rule.target<0&&!ok)noGoErrors++;
-        if(report)reports.push({trial:trial+1,report});
         trial++;$$('#exerciseOptions button').forEach(b=>b.disabled=true);
-        $('#interactiveTrialFeedback').textContent=t.kind==='movement'?'Observación anotada.':ok?'Bien. Has seguido la regla.':rule.target<0?'En esta tarjeta había que esperar sin pulsar.':'La regla indicaba: '+local(t.actions[rule.target])+'.';
+        $('#interactiveTrialFeedback').textContent=ok?'Bien. Has seguido la regla.':rule.target<0?'En esta tarjeta había que esperar sin pulsar.':'La regla indicaba: '+local(t.actions[rule.target])+'.';
         interactionTimer=setTimeout(next,650);
       };
       visual.innerHTML=`<div class="interactive-trial"><p class="eyebrow">Tarjeta ${trial+1} de ${t.trials.length}</p><div class="interactive-card" aria-label="${escapeHtml(rule.label)}">${t.kind==='symbols'?`<strong aria-hidden="true">${rule.symbol}</strong><span>${escapeHtml(local(rule.label))}</span>`:`<strong class="word-cue">${escapeHtml(rule.label)}</strong>`}</div><p id="interactiveTrialFeedback" role="status"></p><div id="interactiveWait" class="interactive-wait hidden"><p id="interactiveSeconds" role="timer" aria-live="off"></p><progress id="interactiveWaitBar" max="${t.waitMs}" value="0"></progress></div><details class="interactive-rule-help"><summary>Consultar las reglas</summary>${rulesTable(activeRules)}</details></div>`;
-      if(t.kind==='symbols'){
-        area.innerHTML=t.actions.map((label,i)=>`<button class="option-btn interaction-action" data-action="${i}">${escapeHtml(local(label))}</button>`).join('');
-        $$('.interaction-action').forEach(b=>b.onclick=()=>close(Number(b.dataset.action)===rule.target));
-        if(rule.target>=0)return;
-      }else{
-        area.innerHTML='<p>Espera a que termine la cuenta antes de hacer el gesto.</p><button id="reportWaited" class="primary-btn" disabled>He respetado la espera</button><button id="reportEarly" class="secondary-btn" disabled>Me he adelantado</button><button id="reportSkipped" class="secondary-btn" disabled>No he practicado esta tarjeta</button>';
-      }
+      area.innerHTML=t.actions.map((label,i)=>`<button class="option-btn interaction-action" data-action="${i}">${escapeHtml(local(label))}</button>`).join('');
+      $$('.interaction-action').forEach(b=>b.onclick=()=>close(Number(b.dataset.action)===rule.target));
+      if(rule.target>=0)return;
       $('#interactiveWait').classList.remove('hidden');const started=Date.now(),deadline=started+t.waitMs;
       const tick=()=>{
         if(!live()||answered)return;
@@ -490,10 +484,7 @@
         $('#interactiveSeconds').textContent=remaining?`Espera: ${Math.ceil(remaining/1000)} ${remaining<=1000?'segundo':'segundos'}.`:'La espera ha terminado.';
         if(remaining){interactionTimer=setTimeout(tick,Math.min(100,remaining));return;}
         interactionTimer=null;
-        if(t.kind==='symbols'){close(true);return;}
-        $('#interactiveTrialFeedback').textContent=rule.target<0?'Esta tarjeta es PAUSA: no hagas ningún gesto.':local(t.actions[rule.target])+'. Ahora puedes hacerlo.';
-        $('#reportWaited').disabled=false;$('#reportEarly').disabled=false;$('#reportSkipped').disabled=false;
-        $('#reportWaited').onclick=()=>close(true,'waited');$('#reportEarly').onclick=()=>close(false,'early');$('#reportSkipped').onclick=()=>close(false,'skipped');
+        close(true);
       };tick();
     };
     $('#startInteractive').onclick=next;
@@ -1602,6 +1593,7 @@
     if(!observations){observations=document.createElement('details');observations.id='interactiveObservations';observations.className='card interactive-observations';$('#speedProgressChart').after(observations);}
     const entries=profile.progress?.interactiveObservations||[];
     const observationText=entry=>{
+      if(entry.report?.completion){const labels={completed:'Práctica realizada según la valoración final.',difficult:'Se han indicado dificultades en la valoración final.',skipped:'Práctica no realizada según la valoración final.'};return (labels[entry.report.completion]||'Práctica finalizada.')+' Los gestos no se han comprobado automáticamente. Adelantos o confusiones marcados: '+(entry.report.trials||[]).filter(x=>x.report==='early').length+'.';}
       if(entry.description)return entry.description;
       if(entry.report==='not_found')return 'No se ha encontrado un objeto adecuado.';
       const trials=entry.report?.trials;

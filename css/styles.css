@@ -3011,7 +3011,7 @@ body {
 .listening-samples{display:flex;gap:.5rem;flex-wrap:wrap;margin:1rem 0}.listening-rules #listeningStatus{min-height:3em}
 
 /* Compact, high-contrast location recall keeps the same grid geometry. */
-.recall-grid,.spatial-answer-grid{max-width:24rem;gap:.5rem}
+.recall-grid,.spatial-answer-grid{max-width:360px;gap:.5rem}
 .spatial-answer-grid .option-btn,.spatial-answer-grid .option-btn:has(>span:only-child){min-height:4.5rem;aspect-ratio:1.35;border:2px solid #476c75;background:#e5f0f5;color:#173e4b;box-shadow:0 2px 0 #bacdd4}
 .spatial-answer-grid .option-btn:hover,.spatial-answer-grid .option-btn:focus-visible{background:#cde6ef;border-color:#12495e;outline:3px solid #e6b959;outline-offset:2px}
 .recall-grid [role=cell]{min-height:4.5rem;border-color:#476c75;background:#edf4f8}

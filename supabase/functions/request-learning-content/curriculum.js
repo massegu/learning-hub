@@ -114,7 +114,7 @@ function validateSelectiveRecall(item){
 }
 function spatialPositions(size){return Array.from({length:size*size},(_,i)=>`Fila ${Math.floor(i/size)+1}, columna ${i%size+1}`);}
 function memory(age,level){
- const rank=ages.indexOf(age),count=rank===0?[2,3,4][level-1]:rank===1?[3,4,5][level-1]:5+(level-1)*2,items=[];
+ const rank=ages.indexOf(age),count=rank===0?[2,3,4][level-1]:5+(level-1)*(rank<2?1:2),items=[];
  for(let v=0;v<120;v++){
   const materials=[...new Set([...memoryCategories[v%memoryCategories.length].items,...memoryCategories[(v+3)%memoryCategories.length].items,...(rank===0?objects:rank===1?schoolObjects:functionalObjects).slice(v%6,v%6+4)])];
   const featured=memoryCategories[v%memoryCategories.length].items[Math.floor(v/memoryCategories.length)%4];
@@ -157,7 +157,7 @@ function memory(age,level){
   }
   if(v<36){
    const spots=['la mesa','el estante','la alfombra','la ventana','el banco','la silla','el armario','la puerta','el rincón'],sceneValues=rotate(values,v%values.length),scene=spots.slice(0,count).map((place,i)=>[place,sceneValues[i]]),ask=v%scene.length;
-   if(rank===0)items.push(finish({type:'memoryReveal',responseType:'choice',requiresStimulus:true,q:'Observa la escena. Después desaparecerá.',memoryQuestion:`¿Qué imagen estaba en ${scene[ask][0]}?`,stimulus:[{type:'table',rows:scene,presentation:'memoryScene'}],memoryContent:sceneValues.map(detail=>({detail})),a:scene[ask][1],opts:rotate(sceneValues,ask).slice(0,rank===0?3:4),revealMs:count*1800,answerEvidence:{type:'tableCell',block:0,row:ask,column:1,subjectColumn:0},topic:'Memoria · escena del estudio',why:scene[ask][0]+': '+scene[ask][1]+'.'},age,'memory',level,`scene-${v}`,'memory_scene'));
+   if(rank===0)items.push(finish({type:'memoryReveal',responseType:'choice',requiresStimulus:true,q:'Observa la escena. Después desaparecerá.',memoryQuestion:`¿Qué imagen estaba en ${scene[ask][0]}?`,stimulus:[{type:'table',rows:scene,presentation:'memoryScene'}],memoryContent:sceneValues.map(detail=>({detail})),a:scene[ask][1],opts:rotate(sceneValues,ask).slice(0,rank===0?3:4),revealMs:Math.max(6000,count*1800),answerEvidence:{type:'tableCell',block:0,row:ask,column:1,subjectColumn:0},topic:'Memoria · escena del estudio',why:scene[ask][0]+': '+scene[ask][1]+'.'},age,'memory',level,`scene-${v}`,'memory_scene'));
    // Navigating a map has a different load from recalling isolated icons.
    // Limit visits separately; the icon sequence progression stays unchanged.
    const routeCount=(rank>=3?[3,4,6]:[3,4,5])[level-1];

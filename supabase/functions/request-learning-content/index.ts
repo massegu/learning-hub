@@ -1140,6 +1140,7 @@ function contentSignature(domain:string,item:any){
   // Text identity survives a changed question or level. Ten sources rotate before reuse.
   if(item.passageKey)return domain+":item:passage:"+item.passageKey;
   if(item.memoryMaterialKey)return domain+":item:memory:"+item.memoryMaterialKey;
+  if(item.photoTask?.kind==='differences')return domain+":item:photo-pair:"+item.photoTask.pairId;
   const norm=(v:any):any=>{
     if(Array.isArray(v)) return v.map(norm);
     if(v&&typeof v==="object"){
@@ -1172,6 +1173,9 @@ function mechanicSignature(domain:string,item:any){
 }
 
 
+function photoQuestionSignature(domain:string,item:any){
+  const t=item.photoTask;return t?domain+':question:'+t.kind+':'+(t.sceneId||t.pairId)+':'+item.level+':'+(t.index??t.variant??0):null;
+}
 function generatedItems(domain:string,n:number,recentEntries:string[],factory:()=>any,candidates:any[]|null=null){
   // Candidates are immutable within a selection. Reuse their evidence-based
   // signatures instead of serializing the same stimuli in every scoring pass.
@@ -1189,9 +1193,10 @@ function generatedItems(domain:string,n:number,recentEntries:string[],factory:()
     const cand=normalizeItem(candidates?candidates[tries]:factory());
     if(!cand)continue;
     const sig=signature(cand);
-    if(seenPool.has(sig)) continue;
+    const poolKey=photoQuestionSignature(domain,cand)||sig;
+    if(seenPool.has(poolKey)) continue;
     if(!validateItem(cand)) continue;
-    seenPool.add(sig);
+    seenPool.add(poolKey);
     pool.push(cand);
   }
 
@@ -1221,7 +1226,8 @@ function generatedItems(domain:string,n:number,recentEntries:string[],factory:()
       // sources and the nine-source recent window retain higher priority.
       const sameFormat=previousPassage&&previousPassage.includes(':passage:document:')===Boolean(cand.passageKey?.startsWith('document:'));
       const formatPenalty=readingDomain&&sameFormat?20000:0;
-      const score=itemPenalty+formatPenalty+recentPenalty+localPenalty+countPenalty+Math.random();
+      const question=photoQuestionSignature(domain,cand),questionPenalty=question&&recentEntries.includes(question)?10:0;
+      const score=itemPenalty+formatPenalty+recentPenalty+localPenalty+countPenalty+questionPenalty+Math.random();
       if(score<bestScore){best=cand;bestScore=score;}
     }
     if(!best) break;
@@ -2504,6 +2510,7 @@ Deno.serve(async (req:Request)=>{
       const sig=generated?contentSignature(domain,it):keyOf(domain,subdomain,it);
       delivery.seen[domain].push(sig);
       if(generated) delivery.seen[domain].push(mechanicSignature(domain,it));
+      const question=photoQuestionSignature(domain,it);if(question)delivery.seen[domain].push(question);
     }
     delivery.seen[domain]=delivery.seen[domain].slice(-450);
     const seenInsert=items.map((it:any)=>{
