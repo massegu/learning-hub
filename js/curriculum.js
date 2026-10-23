@@ -55,11 +55,23 @@ const lexicalCases={
  middle:[['El mensaje es ambiguo: permite dos interpretaciones distintas.','ambiguo','poco claro','inequívoco'],['La participación fue voluntaria; nadie estaba obligado.','voluntaria','opcional','obligatoria'],['Se omitió la fecha, por lo que no se sabe cuándo ocurrió.','omitió','dejó fuera','incluyó'],['El proyecto es viable: dispone de tiempo y recursos suficientes.','viable','realizable','inviable'],['La evidencia es insuficiente: aún no permite decidir.','insuficiente','escasa','suficiente'],['La portavoz matizó su frase para limitarla a los casos estudiados.','matizó','precisó','generalizó']],
  teen:[['Bajaron el volumen para mitigar las molestias, aunque no desaparecieron.','mitigar','reducir','agravar'],['La nueva grabación corrobora la hora indicada en el registro.','corrobora','confirma','refuta'],['La fuente ofrece una estimación, no una cifra medida con exactitud.','estimación','aproximación','medición exacta'],['La autorización es revocable: se puede retirar más adelante.','revocable','anulable','irrevocable'],['El acuerdo es vinculante: las partes deben cumplirlo.','vinculante','obligatorio','opcional'],['La propuesta es inviable porque requiere recursos que no existen.','inviable','irrealizable','viable']]
 };
+const schoolLexicalLevels={
+ junior:[
+  [['Vamos a comenzar el juego cuando llegue Ana.','comenzar','empezar','terminar'],['El cajón está lleno; no cabe otro juguete.','lleno','repleto','vacío'],['Este puzle es sencillo: lo he resuelto sin ayuda.','sencillo','fácil','difícil'],['Leo corre rápido y llega antes que yo.','rápido','deprisa','despacio'],['La toalla está seca porque ya no tiene agua.','seca','sin humedad','mojada'],['El patio está limpio: hemos recogido todos los papeles.','limpio','sin suciedad','sucio']],
+  [['El cuento es breve: solo ocupa una página.','breve','corto','largo'],['Quiero conservar este dibujo y guardarlo en mi carpeta.','conservar','guardar','tirar'],['La figura de cristal es frágil; puede romperse si cae.','frágil','delicada','resistente'],['En este juego es obligatorio esperar el turno.','obligatorio','necesario','opcional'],['La señal es visible desde la puerta: se ve muy bien.','visible','fácil de ver','oculta'],['La clase está ordenada: cada cosa está en su sitio.','ordenada','organizada','desordenada']]
+ ],
+ primary:[
+  [['La mochila es ligera; pesa poco.','ligera','de poco peso','pesada'],['Hay que repartir las cartas entre todos los jugadores.','repartir','distribuir','reunir'],['Para que quepamos todos, vamos a ampliar el círculo.','ampliar','agrandar','reducir'],['Podemos unir estas dos piezas para formar una más larga.','unir','juntar','separar'],['El sendero es estrecho: solo podemos pasar de uno en uno.','estrecho','poco ancho','ancho'],['El agua del vaso es transparente y deja ver el fondo.','transparente','clara','opaca']],
+  [['El testigo dio un dato preciso: recordó la hora exacta.','preciso','exacto','impreciso'],['La biblioteca es un espacio común: podemos usarla todos.','común','compartido','privado'],['Esta fuente es fiable: sus datos se han comprobado.','fiable','de confianza','poco fiable'],['Decidieron aplazar la excursión hasta el viernes.','aplazar','dejar para después','adelantar'],['Se puede reutilizar el tarro para guardar los lápices.','reutilizar','volver a usar','desechar'],['El cambio es temporal: durará solo esta semana.','temporal','provisional','permanente']]
+ ]
+};
 function vocabulary(age,domain,level){
  const tasks=[];
- lexicalCases[age].forEach(([source,word,meaning,opposite],i)=>{
-  tasks.push(finish(choice(level===3?`Alguien interpreta «${word}» como «${opposite}». ¿Qué significado corrige esa interpretación?`:`¿Qué significa «${word}» aquí?`,[T(source)],meaning,[opposite,...(age==='early'?[]:['No se puede saber'])],{languageFocus:'vocabulary',...(age==='teen'?{teenReview:{version:2,context:'lexical'}}:{}),topic:'Lenguaje · significado en contexto',why:'El significado debe encajar en la situación.'}),age,domain,level,'lexical-context-'+i,'vocabulary_context'));
-  tasks.push(finish(choice(`¿Qué palabra o expresión indica lo contrario de «${word}»?`,[T(source)],opposite,[meaning,...(age==='early'?[]:['Tiene el mismo significado'])],{languageFocus:'vocabulary',...(age==='teen'?{teenReview:{version:2,context:'lexical'}}:{}),topic:'Lenguaje · contraste de significado',why:'Busca el significado contrario, sin cambiar el contexto de la palabra.'}),age,domain,level,'lexical-contrast-'+i,'vocabulary_contrast'));
+ const cases=schoolLexicalLevels[age]?.[level-1]||lexicalCases[age];
+ cases.forEach(([source,word,meaning,opposite],i)=>{
+  const other=cases[(i+1)%cases.length][2];
+  tasks.push(finish(choice(level===3?`En esta frase, ¿qué significa «${word}»? Fíjate en la información que la acompaña.`:`¿Qué significa «${word}» en esta frase?`,[T(source)],meaning,[opposite,...(age==='early'?[]:[other])],{languageFocus:'vocabulary',...(age==='teen'?{teenReview:{version:2,context:'lexical'}}:{}),topic:'Lenguaje · significado de palabras',why:`Aquí, «${word}» significa «${meaning}».`}),age,domain,level,'lexical-context-'+i,'vocabulary_context'));
+  tasks.push(finish(choice(`Elige la palabra o expresión contraria a «${word}».`,[T(source)],opposite,[meaning,...(age==='early'?[]:[other])],{languageFocus:'vocabulary',...(age==='teen'?{teenReview:{version:2,context:'lexical'}}:{}),topic:'Lenguaje · palabras contrarias',why:`En esta frase, lo contrario de «${word}» es «${opposite}».`}),age,domain,level,'lexical-contrast-'+i,'vocabulary_contrast'));
  });
  return tasks;
 }
@@ -610,7 +622,7 @@ function advancedGrammar(age,domain,level){
   ['No publicaremos el vídeo a menos que todas las personas ___ permiso.','den','dan','darán']
  ];
  const cases=level===1?rows[age]:level===2?[...rows[age],...(['middle','teen'].includes(age)?high.slice(0,3):rows.primary)]:[...rows[age],...(['middle','teen'].includes(age)?high:rows.middle.slice(0,2))];
- return cases.map(([source,a,...wrong],i)=>({...finish(choice(source.includes('___')?'Completa la frase respetando su sentido y su estructura.':'Elige la interpretación gramatical correcta.',[T(source)],a,wrong,{languageFocus:'grammar',topic:'Gramática · estructura y sentido',why:'Relee la frase completa con la opción elegida.'}),age,domain,level,'grammar-structure-'+i,'grammar_structure'),...(age==='teen'?{teenReview:{version:3,context:'grammar-structure'}}:{})}));
+ return cases.map(([source,a,...wrong],i)=>({...finish(choice(source.includes('___')?(['junior','primary'].includes(age)?'Elige la palabra que falta. Lee después la frase completa.':'Completa la frase respetando su sentido y su estructura.'):['junior','primary'].includes(age)?'Lee la frase y elige la respuesta correcta.':'Elige la interpretación gramatical correcta.',[T(source)],a,wrong,{languageFocus:'grammar',topic:'Gramática · estructura y sentido',why:'Relee la frase completa con la opción elegida.'}),age,domain,level,'grammar-structure-'+i,'grammar_structure'),...(age==='teen'?{teenReview:{version:3,context:'grammar-structure'}}:{})}));
 }
 
 function grammarExpansion(age,domain,level){
@@ -621,17 +633,18 @@ function grammarExpansion(age,domain,level){
   const intro=rank>=3?'Aunque el ensayo fue largo, ':'';
   const source=`${intro}${intro?subject[0].toLowerCase()+subject.slice(1):subject} ___ en el taller${level===3?' que prepararon ayer':''}.`;
   const add=(it,key,mechanic)=>tasks.push({...finish({...it,languageFocus:'grammar'},age,domain,level,`grammar-${key}-${i}`,mechanic),...(age==='teen'?{teenReview:{version:3,context:'grammar-'+i}}:{})});
-  add(choice(rank<3?'Elige la palabra que completa bien la frase. Fíjate en quién realiza la acción.':'Completa con el verbo que concuerda con el sujeto.',[T(source)],correct,[incorrect,'trabajar'],{topic:rank<3?'Gramática · completar una frase':'Gramática · concordancia verbal',why:`Con «${subject}» usamos «${correct}».`}), 'agreement','grammar_agreement');
+  add(choice(rank<3?'Elige el verbo que completa la frase. Fíjate en cómo empieza.':'Completa con el verbo que concuerda con el sujeto.',[T(source)],correct,[incorrect,'trabajar'],{topic:rank<3?'Gramática · completar una frase':'Gramática · concordancia verbal',why:`Con «${subject}» usamos «${correct}».`}), 'agreement','grammar_agreement');
   const tokens=[subject,correct,...(level>=2?['con atención']:[]),...(level===3?['cada tarde']:[]),'en el taller'];
-  add({type:'order',responseType:'order',requiresStimulus:true,q:'Ordena según este esquema: quién → acción → cómo → cuándo → dónde. Usa solo los fragmentos disponibles.',stimulus:[T(`Quién: ${subject}. Acción: ${correct}. ${level>=2?'Cómo: con atención. ':''}${level===3?'Cuándo: cada tarde. ':''}Dónde: en el taller.`)],tokens:shuffled(tokens,i+37),answer:tokens,topic:'Gramática · construir una oración'},'order','grammar_order');
+  add({type:'order',responseType:'order',requiresStimulus:true,q:'Ordena los fragmentos para formar una frase. Sigue el orden de las pistas.',stimulus:[T(`Comienzo: ${subject}. Acción: ${correct}. ${level>=2?'Cómo: con atención. ':''}${level===3?'Cuándo: cada tarde. ':''}Dónde: en el taller.`)],tokens:shuffled(tokens,i+37),answer:tokens,topic:'Gramática · construir una oración'},'order','grammar_order');
   const adj=level===1?adjective:adjectives,wrong=level===1?adjectives:adjective;
-  add(choice(rank<3?'Elige la palabra que completa bien la frase. Fíjate en si habla de una persona o de varias.':'Completa el adjetivo respetando el género y el número.',[T(`${subject} está${level===1?'':'n'} ___.`)],adj,[wrong,gender==='femenino'?'cansados':'cansadas'],{topic:rank<3?'Gramática · describir personas':'Gramática · concordancia del adjetivo',why:`Con «${subject}» usamos «${adj}».`}), 'adjective','grammar_adjective');
+  const trait=[1,2,6,7,10].includes(i),copula=trait?(level===1?'es':'son'):(level===1?'está':'están');
+  add(choice(rank<3?'Completa la frase. Fíjate en si habla de uno o de varios.':'Completa el adjetivo respetando el género y el número.',[T(`${subject} ${copula} ___.`)],adj,[wrong,gender==='femenino'?'cansados':'cansadas'],{topic:rank<3?'Gramática · completar una descripción':'Gramática · concordancia del adjetivo',why:`La frase completa es: «${subject} ${copula} ${adj}».`}), 'adjective','grammar_adjective');
   const tense=[['Ayer','terminamos','terminaremos','terminamos'],['Ahora','revisamos','revisaremos','revisamos'],['Mañana','prepararemos','preparamos','prepararemos']][i%3];
   add(choice(i%3===0?'Usa el verbo en pasado para «nosotros».':i%3===1?'Usa el verbo en presente para «nosotros».':'Usa el verbo en futuro simple para «nosotros».',[T(`${tense[0]} nosotros ___ ${['un cómic','una partida','un vídeo','una canción'][i%4]}.`)],tense[1],[tense[2],i%3===0?'terminan':i%3===1?'revisan':'prepararon'],{topic:'Gramática · tiempo y persona',why:`La frase habla de «nosotros» y empieza por «${tense[0]}».`}), 'tense','grammar_tense');
   const objects=[['el mapa','lo'],['la cámara','la'],['los dibujos','los'],['las tarjetas','las']][i%4];
-  add(choice(`¿A qué se refiere «${objects[1]}» en la segunda oración?`,[T(`${one} guarda ${objects[0]}. Después ${objects[1]} lleva al taller.`)],objects[0],[one,'el taller'],{topic:'Gramática · referencias',why:`El pronombre sustituye a «${objects[0]}».`}), 'reference','grammar_reference');
+  add(choice(`¿A qué se refiere «${objects[1]}» en la segunda oración?`,[T(`${one} guarda ${objects[0]}. Después ${objects[1]} lleva al taller.`)],objects[0],[one,'el taller'],{topic:'Gramática · referencias',why:`«${objects[1]}» se refiere a «${objects[0]}».`}), 'reference','grammar_reference');
   const repair=`${many} ${verbs} en el taller.`,bad=`${many} ${verb} en el taller.`;
-  add(choice(rank<3?'La frase habla de varias personas. Corrige la palabra que indica qué hacen, sin cambiar el resto.':'Corrige solo la concordancia. Mantén el significado de la frase.',[T(bad)],repair,[`${one} no ${verb} en el taller.`,`${many} ${verb} en el parque.`],{topic:'Gramática · revisar una frase',why:'Como hay varias personas, cambiamos la palabra que indica qué hacen. El resto de la frase queda igual.'}), 'repair','grammar_repair');
+  add(choice(rank<3?'Corrige el verbo para que encaje con el comienzo de la frase. No cambies el resto.':'Corrige solo la concordancia. Mantén el significado de la frase.',[T(bad)],repair,[`${one} no ${verb} en el taller.`,`${many} ${verb} en el parque.`],{topic:'Gramática · revisar una frase',why:`Hablamos de varios: «${many}». Por eso decimos «${verbs}».`}), 'repair','grammar_repair');
  });
  const links=[['El equipo practicó varias veces. ___, pudo completar la prueba.','Por eso','Sin embargo','Mientras'],['La ruta era corta. ___, tenía varias subidas difíciles.','Sin embargo','Por eso','Además de'],['Prepararon el material ___ empezara el taller.','antes de que','porque','aunque no'],['No salimos al patio ___ estaba lloviendo.','porque','aunque','para que'],['Revisa el audio ___ publicarlo.','antes de','a pesar de','en cambio'],['El equipo entrenó mucho ___ no ganó el torneo.','pero','por eso','porque']];
  links.forEach(([text,a,...wrong],i)=>tasks.push(finish(choice('Completa con el enlace que conserva la relación entre las ideas.',[T(text)],a,wrong,{languageFocus:'grammar',topic:'Gramática · enlazar ideas',why:'Lee las dos ideas y comprueba qué relación expresan juntas.'}),age,domain,level,'grammar-link-'+i,'grammar_connectors')));
@@ -710,6 +723,59 @@ function generateAcademic(age,domain,level,focus){
  return structuredClone(family[Math.floor(Math.random()*family.length)]);
 }
 
+const interactionCache=new Map();
+function interactiveTemplates(age,domain,level=1){
+ if(!['junior','primary','middle','teen'].includes(age)||!['attention','executive'].includes(domain)||![1,2,3].includes(level))return [];
+ const key=[age,domain,level].join(':');if(interactionCache.has(key))return interactionCache.get(key);
+ const out=[],count=[3,4,age==='junior'?5:6][level-1];
+ for(let variant=0;variant<8;variant++){
+  if(domain==='attention'){
+   const clues=[
+    ['un objeto redondo','un objeto rojo','un objeto de papel','un objeto suave','un objeto azul','un objeto alargado','un objeto que tenga letras','un objeto de madera'],
+    ['un objeto rojo y pequeño','un objeto redondo y de plástico','un objeto de papel que tenga letras','un objeto alargado que sirva para escribir','un objeto azul y de tela','un objeto rectangular que se pueda abrir','un objeto transparente y de plástico','un objeto pequeño que tenga números'],
+    ['un objeto que tenga letras, que puedas coger con una mano y que no sea un libro','un objeto redondo que no sea de papel y que esté sobre una mesa','un objeto que sirva para guardar cosas, que puedas mover y que no sea una mochila','un objeto con dos colores que no sea un libro ni una prenda de ropa','un objeto transparente que sirva para guardar algo y que no sea de cristal','un objeto que tenga números, que puedas mover y que no sea un teléfono','un objeto de tela que puedas doblar y que no sea una prenda de ropa','un objeto alargado que sirva para escribir y que no escriba con tinta']
+   ][level-1];
+   const clue=clues[variant],q=`Busca a tu alrededor ${clue}.`;
+   out.push(finish({type:'self',responseType:'written',assessment:'observation',q,topic:'Atención · busca en la sala',
+    stimulus:[T('Mira los objetos que tienes cerca. Puedes hacer la actividad desde tu sitio. No hace falta usar cámara ni micrófono.'),T(level===1?'Di qué objeto has encontrado y qué característica cumple.':level===2?'Describe el objeto y explica cómo cumple las dos condiciones.':'Describe el objeto y comprueba cada condición. Después explica por qué otro objeto parecido no serviría.'),T('Si no encuentras ninguno, puedes indicarlo. No se cuenta como un error.')],
+    sample:'Respuesta abierta: comprobar las características indicadas con la persona que acompaña la actividad. Si no hay un objeto adecuado, registrar que no se ha encontrado.',
+    interactionTask:{kind:'room',age,level,variant,clue,conditions:level},requiresStimulus:true},age,domain,level,'room-'+variant,'attention_room_search'));
+   continue;
+  }
+  for(const kind of ['symbols','movement']){
+   const symbols=['★','●','■','▲','◆','✚'].slice(0,count),names=['estrella','círculo','cuadrado','triángulo','rombo','cruz'].slice(0,count);
+   const actions=kind==='symbols'?Array.from({length:count-1},(_,i)=>'Pulsa '+String.fromCharCode(65+i)):
+    ['Da una palmada suave','Tócate el hombro','Levanta una mano','Toca un lápiz que tengas a mano','Ponte de pie o levanta las dos manos sin levantarte'].slice(0,count-1);
+   const words=[...['SOL','LUNA','ESTRELLA','NUBE','ÁRBOL'].slice(0,count-1),'PAUSA'];
+   const rules=symbols.map((symbol,i)=>({symbol,label:kind==='symbols'?names[i]:words[i],target:i===count-1?-1:(i+variant)%(count-1)}));
+   const secondRules=level===3&&kind==='symbols'?rules.map((rule,i)=>{const shifted=(i+1)%count;return {...rule,target:shifted===count-1?-1:(shifted+variant)%(count-1)};}):null;
+   const indices=Array.from({length:count},(_,i)=>i),trials=[...shuffled(indices,variant+11),...shuffled(indices,variant+51)];
+   const waitMs=kind==='movement'?5000:1500+(level-1)*250;
+   const action=target=>target<0?'Espera sin hacer nada':actions[target];
+   const ruleTable=rs=>({type:'table',header:true,rows:[['Tarjeta','Qué tienes que hacer'],...rs.map(r=>[kind==='symbols'?r.symbol+' · '+r.label:r.label,action(r.target)])]});
+   const stimulus=[T(kind==='symbols'?'Mira las reglas. Después verás una tarjeta cada vez. Pulsa el botón que le corresponde. Si la regla dice esperar, no pulses ningún botón hasta que termine la barra.':'Lee las reglas y elige una postura cómoda. En cada tarjeta, espera cinco segundos antes de hacer el gesto. Sigue la cuenta de la pantalla. En PAUSA, espera y no hagas ningún gesto. Puedes practicar con una persona que te acompañe.'),ruleTable(rules),
+    ...(secondRules?[T('A mitad de la actividad cambiarán las reglas. Lee la nueva tabla antes de continuar.'),ruleTable(secondRules)]:[]),
+    {type:'list',presentation:'sequence',items:trials.map(i=>kind==='symbols'?rules[i].symbol+' · '+rules[i].label:rules[i].label)}];
+   const answers=trials.map((index,i)=>action((secondRules&&i>=count?secondRules:rules)[index].target));
+   out.push(finish({type:'self',responseType:'written',assessment:kind==='symbols'?'performance':'observation',requiresStimulus:true,
+    q:kind==='symbols'?'Mira la tarjeta y sigue su regla.':'Espera, piensa y haz el gesto.',topic:kind==='symbols'?'Funciones ejecutivas · tarjetas con reglas':'Funciones ejecutivas · espera antes de actuar',stimulus,
+    sample:kind==='symbols'?answers.map((a,i)=>`${i+1}. ${a}`).join(' · '):'Práctica de observación: anotar si se ha respetado la espera antes de cada gesto. La pantalla no puede comprobar el movimiento.',
+    interactionTask:{kind,age,level,variant,rules,secondRules,actions,trials,waitMs}},age,domain,level,kind+'-'+variant,'executive_interactive_'+kind));
+  }
+ }
+ interactionCache.set(key,out);return out;
+}
+function interactivePool(age,domain,level=1){return structuredClone(interactiveTemplates(age,domain,level));}
+function generateInteractive(age,domain,level=1,kind=null){const bank=interactiveTemplates(age,domain,level).filter(it=>!kind||it.interactionTask.kind===kind);return bank.length?structuredClone(bank[Math.floor(Math.random()*bank.length)]):null;}
+function validateInteraction(item){
+ const t=item.interactionTask;
+ if(!t||!Number.isInteger(t.variant)||t.variant<0||t.variant>7)throw new Error('La actividad interactiva no identifica sus reglas.');
+ let expected=interactiveTemplates(t.age,item.domain,t.level).find(it=>it.interactionTask.kind===t.kind&&it.interactionTask.variant===t.variant);
+ if(!expected||item.level!==t.level)throw new Error('La actividad interactiva no corresponde al área o nivel.');
+ if(item.localization)expected=(root.LocaleContent||(typeof require==='function'&&require('./locale-content'))).localizeItem(expected,item.localization.locale,item.domain);
+ for(const field of ['interactionTask','type','responseType','assessment','q','stimulus','sample'])if(JSON.stringify(item[field])!==JSON.stringify(expected[field]))throw new Error('Las reglas, tarjetas o instrucciones se han alterado.');
+ return true;
+}
 const cache=new Map(),generationGroups=new Map();let reasoningProvider=null,writingProvider=null;
 function registerReasoning(provider){reasoningProvider=provider;generationGroups.clear();for(const key of cache.keys())if(key.includes(':executive:'))cache.delete(key);}
 
@@ -754,6 +820,6 @@ function migrate(progress={},age){
   levels:{...progress.levels,executive:1,speedReasoning:1},_levelCheckpoints:{...progress._levelCheckpoints,executive:{attempt:progress.totalAttempts||0},speedReasoning:{attempt:progress.totalAttempts||0}}};
 }
 function speedSummary(history=[]){const rows=history.filter(x=>x.subject==='speedReasoning'&&x.timingValid&&Number.isFinite(x.responseMs));const correct=rows.filter(x=>x.correct).map(x=>x.responseMs).sort((a,b)=>a-b);return {attempts:rows.length,accuracy:rows.length?Math.round(rows.filter(x=>x.correct).length*100/rows.length):null,medianMs:correct.length?correct.length%2?correct[(correct.length-1)/2]:(correct[correct.length/2-1]+correct[correct.length/2])/2:null};}
-const api={academic,generateAcademic,validateMath,validateSpeed,validatePlan,memoryCategories,validateSelectiveRecall,validateReview,vocabulary,pool,generate,supports,visible,migrate,speedSummary,registerReasoning,registerWriting,spatialPositions};root.Curriculum=api;
+const api={academic,generateAcademic,validateMath,validateSpeed,validatePlan,memoryCategories,validateSelectiveRecall,validateReview,vocabulary,interactivePool,generateInteractive,validateInteraction,pool,generate,supports,visible,migrate,speedSummary,registerReasoning,registerWriting,spatialPositions};root.Curriculum=api;
 if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);

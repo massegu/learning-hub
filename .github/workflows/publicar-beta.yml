@@ -41,6 +41,7 @@ jobs:
       - run: python tests/browser-varied-mechanics.py
       - run: python tests/browser-presentation.py
       - run: python tests/browser-photo-scenes.py
+      - run: python tests/browser-interactive-activities.py
   publicar:
     needs: comprobar
     if: github.event_name != 'pull_request' && !inputs.verificar_solo && github.ref == 'refs/heads/desarrollo'

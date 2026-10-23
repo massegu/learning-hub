@@ -123,7 +123,7 @@
       if(material.type==='document'){
         const source=window.DocumentLibrary.get(material.documentId);
         const description=source.transcript.map(b=>b.type==='text'?b.text:b.rows.map(r=>r.join(' · ')).join('; ')).join(' ');
-        const scale=Math.min((source.layout?560:340)/source.width,510/source.height);
+        const scale=Math.min((source.width>=source.height?560:340)/source.width,510/source.height);
         return [new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({data:documentImages.get(material.documentId),transformation:{width:Math.round(source.width*scale),height:Math.round(source.height*scale)},altText:{name:source.title,title:source.title,description}})]}),paragraph('Contenido del documento visual:'),...source.transcript.flatMap(block=>renderMaterial(block,item))];
       }
       if(material.type==='text') return [...heading,paragraph(material.text)];

@@ -12,15 +12,12 @@ FILES = ['index.html', 'js/app.js', 'js/api.js', 'js/auth-account.js',
          'js/document-library.js', 'js/curriculum.js', 'js/docx.js',
          'js/activity-model.js', 'js/content-policy.js', 'js/photo-library.js',
          'js/stimulus-art.js', 'js/stimulus-art-png.js',
-         'js/config.js', 'css/styles.css', 'assets/documents/map-cl.png',
-         'assets/documents/invoice-co-v1.png',
-         'assets/documents/receipt-co-v1.png',
-         'assets/documents/catalogue-co-v1.png',
+         'js/config.js', 'css/styles.css',
+         *sorted(p.relative_to(ROOT).as_posix() for p in (ROOT/'assets/documents').glob('*.png')),
          'assets/photos/kitchen-a.png', 'assets/photos/kitchen-b.png',
          'assets/photos/living-a.png', 'assets/photos/living-b.png',
          *[f'assets/photos/{name}-{variant}.png' for name in ['desk','picnic','market','entry'] for variant in ['a','b']],
          *[f'assets/photos/{name}-{variant}.png' for name in ['street','park','bus','factory','nature','city'] for variant in ['a','b']],
-         *[f'assets/documents/{name}.png' for name in ['boarding-es-v2','email-es-v2','booking-es-v2','orders-es-v2']],
          'assets/icons/adventure-areas.png']
 
 

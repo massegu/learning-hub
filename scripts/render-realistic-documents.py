@@ -1,6 +1,7 @@
 """Render distinct everyday document formats from the canonical, accessible sources."""
 import base64
 import html
+import re
 import json
 import subprocess
 from pathlib import Path
@@ -143,7 +144,9 @@ with sync_playwright() as p:
 section = '// Realistic document dimensions.\n'+''.join(f'documents[{json.dumps(key)}].width={w};documents[{json.dumps(key)}].height={h};\n' for key,(w,h) in dimensions.items())
 target = ROOT/'js/document-library.js'; source = target.read_text(); marker = 'const attentionAdvanced={'
 if '// Realistic document dimensions.' in source:
-    source = source[:source.index('// Realistic document dimensions.')]+source[source.index(marker):]
-source = source.replace(marker, section+marker); target.write_text(source)
+    source = re.sub(r'// Realistic document dimensions\.\n(?:documents\[[^\n]+\n)*', section, source)
+else:
+    source = source.replace(marker, section+marker)
+target.write_text(source)
 (ROOT/'supabase/functions/request-learning-content/document-library.js').write_text(source)
 print('Rendered', len(dimensions), 'distinct document designs with text bounds checked')

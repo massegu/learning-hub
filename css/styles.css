@@ -2751,8 +2751,8 @@ body {
 @media(max-width:600px){#exercise .memory-associations tbody th,#exercise .memory-associations tbody td{padding:.65rem .75rem;font-size:1rem}.person-initial{margin-right:.45rem;width:1.7rem;height:1.7rem}.memory-order-workspace .sequence-slots{grid-template-columns:1fr}}
 
 /* Legible original documents, shared with the printable source. */
-:is(#documentModeSwitch,#photoModeSwitch){width:fit-content;max-width:100%;flex-wrap:wrap;gap:.35rem;margin-bottom:1rem;padding:.5rem}
-:is(#documentModeSwitch,#photoModeSwitch) button[aria-pressed="true"]{background:var(--green,#2f7d4a);color:white}
+:is(#documentModeSwitch,#photoModeSwitch,#interactionKindSwitch){width:fit-content;max-width:100%;flex-wrap:wrap;gap:.35rem;margin-bottom:1rem;padding:.5rem}
+:is(#documentModeSwitch,#photoModeSwitch,#interactionKindSwitch) button[aria-pressed="true"]{background:var(--green,#2f7d4a);color:white}
 .practice-document{margin:1rem auto;max-width:540px}
 .practice-document.landscape-document{width:100%;max-width:1050px}
 .practice-document.receipt-document{max-width:430px}
@@ -2761,9 +2761,9 @@ body {
 .document-transcript{max-width:48rem;margin:1rem auto;padding:.8rem 1rem;border:1px solid #dce5df;border-radius:10px;background:#fff}
 .document-transcript summary{cursor:pointer;font-weight:700;color:#215a3a}
 .document-transcript[open] summary{margin-bottom:1rem}
-:is(#documentModeSwitch,#photoModeSwitch) button{border:0;background:transparent;border-radius:7px;padding:.75rem 1rem;min-height:44px;font:inherit;font-weight:750;color:var(--muted,#52675b);cursor:pointer;flex:1 1 auto}
-:is(#documentModeSwitch,#photoModeSwitch) button[aria-pressed="true"]{background:#1e4d33;color:#fff;box-shadow:0 2px 0 #133523}
-:is(#documentModeSwitch,#photoModeSwitch) button:focus-visible{outline:3px solid #d9b74c;outline-offset:2px}
+:is(#documentModeSwitch,#photoModeSwitch,#interactionKindSwitch) button{border:0;background:transparent;border-radius:7px;padding:.75rem 1rem;min-height:44px;font:inherit;font-weight:750;color:var(--muted,#52675b);cursor:pointer;flex:1 1 auto}
+:is(#documentModeSwitch,#photoModeSwitch,#interactionKindSwitch) button[aria-pressed="true"]{background:#1e4d33;color:#fff;box-shadow:0 2px 0 #133523}
+:is(#documentModeSwitch,#photoModeSwitch,#interactionKindSwitch) button:focus-visible{outline:3px solid #d9b74c;outline-offset:2px}
 
 .auth-link{display:block;margin:1rem auto 0;border:0;background:transparent;color:#215a3a;text-decoration:underline;font:inherit;cursor:pointer;padding:.5rem}
 .password-dialog{border:1px solid #dce5df;border-radius:16px;padding:1.8rem;max-width:30rem;width:calc(100% - 2rem);color:#173326;background:#fffdf8;box-shadow:0 20px 60px #17332633}
@@ -2972,3 +2972,23 @@ body {
 /* Support stays available on the sign-in screen and in the workspace. */
 .support-contact { margin: 1rem .5rem; font-size: .85rem; overflow-wrap: anywhere; }
 .support-contact a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.interactive-rules,.interactive-trial,.room-response{max-width:850px;margin:0 auto;width:100%}
+.interactive-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;min-height:180px;width:min(280px,100%);margin:1rem auto;padding:1.2rem;border:2px solid #c4d8d0;border-radius:24px;background:linear-gradient(135deg,#fffdf4,#eaf3f8);box-shadow:0 8px 22px #244c4310}
+.interactive-card strong{font-family:'DejaVu Sans',sans-serif;font-size:5rem;color:#285c65;line-height:1.2}
+.interactive-card strong.word-cue{font-size:2rem}
+.interactive-card span{text-transform:capitalize;font-weight:700}
+.interactive-wait{padding:1rem;border-radius:12px;background:#fff5dc;text-align:center}
+.interactive-wait progress{width:min(420px,100%);height:15px;accent-color:#287869}
+.interactive-rule-help{margin-top:1rem}
+.interactive-rule-help summary{cursor:pointer;font-weight:700}
+.room-response{display:flex;flex-wrap:wrap;gap:1rem}
+.room-response label,.room-response textarea,.room-response p{width:100%}
+.room-response textarea{min-height:130px;font:inherit;padding:1rem;border:1px solid #b7cec5;border-radius:12px}
+.single-selection .multi-option::before{border-radius:50%}
+.interactive-observations{margin:1rem 0;padding:1rem}
+.interactive-observations summary{cursor:pointer;font-weight:700}
+.interactive-observations li{padding:.5rem 0;overflow-wrap:anywhere}
+
+#interactionKindSwitch{display:flex;width:fit-content;max-width:100%;flex-wrap:wrap}
+
+.practice-document.editorial-document{width:100%;max-width:850px}
