@@ -3009,3 +3009,5 @@ body {
 #exercise[data-subject='applied'] #exerciseHeading::before,.nav-item[data-subject='applied'] .nav-area-icon,[data-area='applied'] .area-illustration{background-position:66.666667% 100%}
 @media(max-width:650px){#exerciseHeading::before{width:48px;height:48px;flex-basis:48px}.nav-area-icon{width:28px;height:28px}[data-area] .area-illustration{width:52px;height:52px}}
 .listening-samples{display:flex;gap:.5rem;flex-wrap:wrap;margin:1rem 0}.listening-rules #listeningStatus{min-height:3em}
+
+.privacy-panel{font-size:.8rem}.privacy-panel p{line-height:1.5;color:#d4e3d8}.privacy-panel .ghost-btn{margin-top:.5rem}#privacyDialog{max-height:calc(100dvh - 2rem);overflow-y:auto}#privacyDialog .auth-actions{flex-direction:column}#privacyDialog button{white-space:normal;overflow-wrap:anywhere}

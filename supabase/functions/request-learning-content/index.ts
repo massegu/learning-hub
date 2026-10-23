@@ -2377,7 +2377,10 @@ Deno.serve(async (req:Request)=>{
   if(ae||!account) return new Response(JSON.stringify({error:"Account not found"}),{status:404,headers:{...corsHeaders,"Content-Type":"application/json"}});
   if(account.subscription_status==="trial" && new Date(account.trial_ends_at)<=new Date()) return new Response(JSON.stringify({error:"Trial expired"}),{status:403,headers:{...corsHeaders,"Content-Type":"application/json"}});
   const limit=(LIMITS[account.subscription_status]||LIMITS.trial)[kind];
-  const progress=profile.progress||{};
+  if(body.session_only!==undefined&&typeof body.session_only!=='boolean')return new Response(JSON.stringify({error:'Modalidad de sesión no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  const sessionOnly=body.session_only===true;
+  if(sessionOnly&&Number(body.client_revision||1)<6)return new Response(JSON.stringify({error:'Actualiza la página para abrir sesiones independientes.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  const progress=sessionOnly?{ageRoute:profile.progress?.ageRoute}:profile.progress||{};
   const date=todayUTC();
   const delivery=progress._delivery?.date===date ? progress._delivery : {date,seen:{}};
   const cost=kind==="worksheet"?1:Math.max(1,Math.min(Number(body.count||1),kind==="exercise"?10:1));
@@ -2391,7 +2394,7 @@ Deno.serve(async (req:Request)=>{
   const requestedDomains=kind==="worksheet" ? (Array.isArray(body.domains)&&body.domains.length?body.domains:(globalThis as any).Curriculum.visible(SUBJECTS[age]||[],age)) : [body.domain];
   if(!SUBJECTS[age] || !Number.isInteger(level) || (kind!=="game" && (!Array.isArray(requestedDomains)||!requestedDomains.length||requestedDomains.some((d:any)=>!SUBJECTS[age].includes(d)))))
     return new Response(JSON.stringify({error:"Área o nivel no permitido para este perfil."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
-  if(body.client_revision!==undefined&&![1,2,3,4,5].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.client_revision!==undefined&&![1,2,3,4,5,6].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.interaction_only!==undefined&&(typeof body.interaction_only!=='boolean'||body.interaction_only&&(kind!=='exercise'||!['junior','primary','middle','teen'].includes(age)||!['attention','executive'].includes(body.domain)||body.documents_only||body.photos_only)))return new Response(JSON.stringify({error:'Modalidad interactiva no disponible para esta petición.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.interaction_only&&Number(body.client_revision||1)<4)return new Response(JSON.stringify({error:'Actualiza la página para abrir las actividades interactivas.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.interaction_kind==='auditory'&&Number(body.client_revision||1)<5)return new Response(JSON.stringify({error:'Actualiza la página para abrir las actividades con audio.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -2412,7 +2415,7 @@ Deno.serve(async (req:Request)=>{
   } else if(kind==="worksheet"){
     const qn=Math.max(6,Math.min(account.subscription_status==="trial"?15:20,Number(body.questions||12)));
     const domains=(Array.isArray(body.domains)&&body.domains.length?body.domains:(globalThis as any).Curriculum.visible(SUBJECTS[age]||[],age).filter((x:string)=>x!=="games")).filter((x:string)=>x!=="games");
-    const {data:wsSeenRows}=await admin.from("content_seen")
+    const {data:wsSeenRows}=sessionOnly?{data:[]}:await admin.from("content_seen")
       .select("domain,item_signature,mechanic_signature")
       .eq("user_id",user.id)
       .eq("profile_id",profileId)
@@ -2456,12 +2459,12 @@ Deno.serve(async (req:Request)=>{
         mechanic_signature:mechanicSignature(domain,item)
       });
     }
-    if(wsRows.length) await admin.from("content_seen").insert(wsRows);
+    if(!sessionOnly&&wsRows.length) await admin.from("content_seen").insert(wsRows);
   } else {
     const domain=body.domain;
     const subdomain=body.subdomain||null;
     const n=Math.max(1,Math.min(10,Number(body.count||1)));
-    const {data:seenRows}=await admin.from("content_seen")
+    const {data:seenRows}=sessionOnly?{data:[]}:await admin.from("content_seen")
       .select("item_signature,mechanic_signature")
       .eq("user_id",user.id)
       .eq("profile_id",profileId)
@@ -2510,7 +2513,7 @@ Deno.serve(async (req:Request)=>{
         mechanic_signature:generated?mechanicSignature(domain,it):null
       };
     });
-    if(seenInsert.length) await admin.from("content_seen").insert(seenInsert);
+    if(!sessionOnly&&seenInsert.length) await admin.from("content_seen").insert(seenInsert);
   }
   items=items.map(normalizeItem).filter(validateItem);
   if(age!=="early")items=localizeValue(items,locale);
@@ -2518,6 +2521,6 @@ Deno.serve(async (req:Request)=>{
   const nextUsed=usedNow+cost;
   await admin.from("content_usage").upsert({user_id:user.id,usage_date:date,kind,used:nextUsed,updated_at:new Date().toISOString()},{onConflict:"user_id,usage_date,kind"});
   const nextProgress={...progress,_delivery:delivery};
-  await admin.from("learner_profiles").update({progress:nextProgress}).eq("id",profileId);
+  if(!sessionOnly)await admin.from("learner_profiles").update({progress:nextProgress}).eq("id",profileId);
   return new Response(JSON.stringify({items,usage:{kind,used:nextUsed,limit},subjects:(globalThis as any).Curriculum.visible(SUBJECTS[age]||[],age)}),{headers:{...corsHeaders,"Content-Type":"application/json"}});
 });

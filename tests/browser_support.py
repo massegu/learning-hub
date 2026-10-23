@@ -34,7 +34,17 @@ window.supabase={createClient(){
    });
    if(__bodyError)return {data:{items,error:'Trial expired'},error:null};
    return {data:{items,usage:{used:__requests.length,limit:50}},error:null};
- }},from(table){
+ }},rpc:async(name,args)=>{
+   if(window.__privacyFail)return {error:{message:'offline privacy failure'}};
+   const profile=__profiles.find(p=>p.id===args.p_profile);
+   if(!profile)return {error:{message:'Profile not found'}};
+   window.__privacyEvents=window.__privacyEvents||[];__privacyEvents.push({action:args.p_action,id:profile.id});
+   if(args.p_action==='open')return {data:{review_at:profile.privacy_review_at||null}};
+   if(args.p_action==='settings'){profile.name=args.p_alias;profile.privacy_review_at=args.p_review_at;return {data:structuredClone(profile)}};
+   if(args.p_action==='export')return {data:{version:1,profile:structuredClone(profile),results:profile.progress.history||[],content_history:[],privacy_events:__privacyEvents.filter(x=>x.id===profile.id)}};
+   if(args.p_action==='delete'){__profiles=__profiles.filter(p=>p.id!==profile.id);localStorage.setItem('__mock_profiles',JSON.stringify(__profiles));return {data:{deleted:true}}};
+   return {error:{message:'Unknown privacy action'}};
+ },from(table){
    let filter,operation,values;
    const q={select(){return q},order(){return q},eq(k,v){filter=v;return q},insert(v){operation='insert';values=v;return q},update(v){operation='update';values=v;return q},delete(){return q},single(){return Promise.resolve(result(true))},then(a,b){return Promise.resolve(result(false)).then(a,b)}};
    function result(single){

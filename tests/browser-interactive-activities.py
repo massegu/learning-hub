@@ -46,7 +46,8 @@ try:
   page.locator('#saveRoomObservation').click();assert 'Escribe' in page.locator('#roomResponseMessage').inner_text()
   page.locator('#roomDescription').fill('He encontrado una caja pequeña. Voy a comprobar las características con mi acompañante.');page.mouse.move(1,1);page.clock.run_for(200);page.locator('#saveRoomObservation').click()
   assert len(history())==old_attempts;page.locator('#navMenu [data-section=progress]').click();assert page.locator('#interactiveObservations').is_visible();assert '2 registros' in page.locator('#interactiveObservations summary').inner_text()
-  page.locator('#interactiveObservations summary').click();assert 'caja pequeña' in page.locator('#interactiveObservations').inner_text()
+  page.locator('#interactiveObservations summary').click();assert 'caja pequeña' not in page.locator('#interactiveObservations').inner_text()
+  observations=page.evaluate('__profiles.find(p=>p.id==="primary").progress.interactiveObservations');assert all('description' not in entry for entry in observations);assert observations[-1]['report']=='described'
   # Level 1: choosing the single valid difference scores once and reveals Next.
   page.locator('#navMenu [data-subject=attention]').click();page.locator('#attentionPhotos').click();page.locator('#exerciseLevelSelect').select_option('1')
   page.wait_for_function('()=>__current?.photoTask?.kind==="differences"&&__current?.level===1');photo=page.evaluate('__current');assert page.locator('#multiCheck').is_hidden()
