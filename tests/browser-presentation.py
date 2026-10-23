@@ -22,15 +22,15 @@ try:
    assert abs(size['text']-size['box'])<2,size
    assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
    page.locator('#exercise').screenshot(path=f'/tmp/presentation-reading-{width}.png')
-  for doc_id in ['boarding-es-v2','email-es-v2','booking-es-v2','orders-es-v2']:
+  for doc_id in ['boarding-es-v2','email-es-v2','booking-es-v2','orders-es-v2','ticket-es','menu-ar','form-es','schedule-ar','invoice-co-v1']:
    item=page.evaluate('(id)=>DocumentLibrary.pool("teen","attention",2).find(x=>x.stimulus.some(b=>b.documentId===id))',doc_id)
    for width in [1440,390]:
     page.set_viewport_size({'width':width,'height':1000});show(item,'attention')
     if page.locator('#documentModeSwitch [data-documents=true]').get_attribute('aria-pressed')!='true':
      page.locator('#documentModeSwitch [data-documents=true]').click()
-     page.wait_for_function('()=>document.querySelector(".landscape-document img")')
-    image=page.locator('.landscape-document img');image.wait_for()
-    page.wait_for_function('()=>document.querySelector(".landscape-document img")?.complete')
+     page.wait_for_function('()=>document.querySelector(".practice-document img")')
+    image=page.locator('.practice-document img');image.wait_for()
+    page.wait_for_function('()=>document.querySelector(".practice-document img")?.complete')
     assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
     if width==1440:assert image.bounding_box()['width']>700
     page.locator('.document-transcript summary').click();assert page.locator('.document-transcript').get_attribute('open') is not None

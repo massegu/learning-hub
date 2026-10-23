@@ -110,6 +110,7 @@
     return blocks;
   }
   function printable(item, profile) {
+    if(item?.interactionTask||/^executive_interactive_|^attention_room_search$/.test(item?.mechanic||''))(root.Curriculum||(typeof require==='function'&&require('./curriculum'))).validateInteraction(item);
     if(item?.photoTask||item?.stimulus?.some(b=>['photo','photoPair'].includes(b?.type)))photos.validate(item);
     if (!item || typeof item !== 'object') fail('falta la actividad.');
     if (item.stimulus !== undefined && (item.image || item.visual || item.rounds))
@@ -324,7 +325,7 @@
       }
       if(block.type==='document'){
         const doc=documents.get(block.documentId);
-        return `<figure class="practice-document${doc.layout?' landscape-document':doc.kind==='Recibo de compra'?' receipt-document':''}"><img src="${escape(doc.path)}" width="${doc.width}" height="${doc.height}" alt="${escape(doc.title)}" loading="eager"><figcaption><a href="${escape(doc.path)}" target="_blank" rel="noopener">Ampliar documento</a></figcaption></figure><details class="document-transcript"><summary>Ver versión en texto</summary>${interactiveStimulus(doc.transcript,{structured:true})}</details>`;
+        return `<figure class="practice-document${doc.design?' editorial-document':''}${doc.width>=doc.height?' landscape-document':doc.kind==='Recibo de compra'?' receipt-document':''}"><img src="${escape(doc.path)}" width="${doc.width}" height="${doc.height}" alt="${escape(doc.title)}" loading="eager"><figcaption><a href="${escape(doc.path)}" target="_blank" rel="noopener">Ampliar documento</a></figcaption></figure><details class="document-transcript"><summary>Ver versión en texto</summary>${interactiveStimulus(doc.transcript,{structured:true})}</details>`;
       }
       if(block.presentation==='memoryScene'){
         const positions=[[130,140],[360,140],[590,140],[130,370],[360,370],[590,370],[130,600],[360,600],[590,600]],height=block.rows.length>6?720:490;

@@ -11,7 +11,7 @@ with sync_playwright() as p:
  browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);page=browser.new_page()
  for i,(key,doc) in enumerate(documents.items()):
   if args.only and key!=args.only:continue
-  if doc.get('layout') or key=='receipt-co-v1':continue
+  if doc.get('layout') or doc.get('design') or key=='receipt-co-v1':continue
   color=colors[i%len(colors)];parts=['<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1536" viewBox="0 0 1024 1536"><rect width="1024" height="1536" fill="#faf7ef"/>',f'<rect x="42" y="42" width="940" height="1452" rx="24" fill="white" stroke="{color}" stroke-width="3"/>',f'<path d="M42 66q0-24 24-24h892q24 0 24 24v145H42Z" fill="{color}"/>']
   def text(x,y,value,size=27,fill='#173326',weight='normal',right=960):
    parts.append(f'<text x="{x}" y="{y}" data-right="{right}" font-family="DejaVu Sans, sans-serif" font-size="{size}" font-weight="{weight}" fill="{fill}">{html.escape(value)}</text>')
@@ -125,3 +125,4 @@ for filename in ['js/document-library.js','supabase/functions/request-learning-c
  target.write_text(source)
 print('Rendered',len(dimensions),'authored SVG/PNG documents')
 subprocess.run([sys.executable,str(ROOT/'scripts/render-realistic-documents.py')],check=True)
+subprocess.run([sys.executable,str(ROOT/'scripts/render-editorial-documents.py')],check=True)

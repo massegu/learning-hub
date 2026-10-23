@@ -905,6 +905,23 @@ documents["boarding-es-v2"].width=1200;documents["boarding-es-v2"].height=700;
 documents["email-es-v2"].width=1200;documents["email-es-v2"].height=860;
 documents["booking-es-v2"].width=1200;documents["booking-es-v2"].height=850;
 documents["orders-es-v2"].width=1200;documents["orders-es-v2"].height=850;
+// Editorial document dimensions.
+documents["invoice-co-v1"].width=1000;documents["invoice-co-v1"].height=1000;documents["invoice-co-v1"].design="editorial";
+documents["catalogue-co-v1"].width=1000;documents["catalogue-co-v1"].height=1040;documents["catalogue-co-v1"].design="editorial";
+documents["brochure-co-v1"].width=1000;documents["brochure-co-v1"].height=900;documents["brochure-co-v1"].design="editorial";
+documents["poster-mx"].width=1000;documents["poster-mx"].height=950;documents["poster-mx"].design="editorial";
+documents["ticket-es"].width=1200;documents["ticket-es"].height=590;documents["ticket-es"].design="editorial";
+documents["menu-ar"].width=900;documents["menu-ar"].height=1000;documents["menu-ar"].design="editorial";
+documents["notice-cl"].width=1000;documents["notice-cl"].height=830;documents["notice-cl"].design="editorial";
+documents["transport-co"].width=1200;documents["transport-co"].height=740;documents["transport-co"].design="editorial";
+documents["infographic-cr"].width=1100;documents["infographic-cr"].height=920;documents["infographic-cr"].design="editorial";
+documents["post-pa"].width=1000;documents["post-pa"].height=920;documents["post-pa"].design="editorial";
+documents["label-mx"].width=850;documents["label-mx"].height=1060;documents["label-mx"].design="editorial";
+documents["form-es"].width=1100;documents["form-es"].height=960;documents["form-es"].design="editorial";
+documents["schedule-ar"].width=1200;documents["schedule-ar"].height=800;documents["schedule-ar"].design="editorial";
+documents["advert-co"].width=1000;documents["advert-co"].height=880;documents["advert-co"].design="editorial";
+documents["instructions-cr"].width=1100;documents["instructions-cr"].height=920;documents["instructions-cr"].design="editorial";
+documents["news-pa"].width=1200;documents["news-pa"].height=980;documents["news-pa"].design="editorial";
 const attentionAdvanced={
  'invoice-co-v1':['¿Qué combinación coincide con el subtotal y la entrega, en ese orden?','22.000 COP y 3.000 COP',['25.000 COP y 3.000 COP','22.000 COP y 6.000 COP','12.000 COP y 4.000 COP']],
  'receipt-co-v1':['¿Qué combinación coincide con el total y el cambio, en ese orden?','19.000 COP y 1.000 COP',['20.000 COP y 1.000 COP','19.000 COP y 2.000 COP','8.000 COP y 6.000 COP']],

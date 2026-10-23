@@ -972,6 +972,7 @@ function socialExercise(level:number){
 }
 
 function validateItem(item:any):boolean{
+  if(item?.interactionTask||/^executive_interactive_|^attention_room_search$/.test(item?.mechanic||'')){try{(globalThis as any).Curriculum.validateInteraction(item);}catch(_){return false;}}
   try{
     if(item?.photoTask||item?.stimulus?.some((b:any)=>['photo','photoPair'].includes(b?.type)))(globalThis as any).PhotoLibrary.validate(item);
     if(item?.speedEvidence)(globalThis as any).Curriculum.validateSpeed(item);
@@ -2300,7 +2301,8 @@ function matrixApplied20(age:string,level:number,v:number){
     opts:easy?opt4("El parque","La estación","La tienda","No se sabe"):opt4("La presencia de escaleras además de la distancia","Solo el color del mapa","Solo el nombre de la calle","Nada"),a:easy?"El parque":"La presencia de escaleras además de la distancia"},age,"applied",level,v);
 }
 
-function variantExercise(age:string,domain:string,level:number,subdomain:string|null=null,documentsOnly:boolean|null=null,photosOnly:boolean=false){
+function variantExercise(age:string,domain:string,level:number,subdomain:string|null=null,documentsOnly:boolean|null=null,photosOnly:boolean=false,interactionOnly:boolean=false,interactionKind:string|null=null){
+  if(interactionOnly){const item=(globalThis as any).Curriculum.generateInteractive(age,domain,level,interactionKind);return item?{...item,id:age+'-interactive-'+crypto.randomUUID()}:null;}
   const photos=(globalThis as any).PhotoLibrary;
   const photo=()=>{const item=photos.generate(age,domain,level);return item?{...item,id:age+'-photo-'+crypto.randomUUID()}:null;};
   if(photosOnly)return photo();
@@ -2387,7 +2389,10 @@ Deno.serve(async (req:Request)=>{
   const requestedDomains=kind==="worksheet" ? (Array.isArray(body.domains)&&body.domains.length?body.domains:(globalThis as any).Curriculum.visible(SUBJECTS[age]||[],age)) : [body.domain];
   if(!SUBJECTS[age] || !Number.isInteger(level) || (kind!=="game" && (!Array.isArray(requestedDomains)||!requestedDomains.length||requestedDomains.some((d:any)=>!SUBJECTS[age].includes(d)))))
     return new Response(JSON.stringify({error:"Área o nivel no permitido para este perfil."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
-  if(body.client_revision!==undefined&&![1,2,3].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.client_revision!==undefined&&![1,2,3,4].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.interaction_only!==undefined&&(typeof body.interaction_only!=='boolean'||body.interaction_only&&(kind!=='exercise'||!['junior','primary','middle','teen'].includes(age)||!['attention','executive'].includes(body.domain)||body.documents_only||body.photos_only)))return new Response(JSON.stringify({error:'Modalidad interactiva no disponible para esta petición.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.interaction_only&&Number(body.client_revision||1)<4)return new Response(JSON.stringify({error:'Actualiza la página para abrir las actividades interactivas.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.interaction_kind!==undefined&&(!body.interaction_only||!(body.domain==='attention'?['room']:['symbols','movement']).includes(body.interaction_kind)))return new Response(JSON.stringify({error:'Tipo de actividad interactiva no válido.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   // Existing tabs must never receive an interaction they cannot score. Old
   // clients retain established tasks; the new document audit requests a refresh.
   if(body.photos_only&&Number(body.client_revision||1)<3)return new Response(JSON.stringify({error:'Actualiza la página para abrir las escenas cotidianas.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -2466,7 +2471,7 @@ Deno.serve(async (req:Request)=>{
       if(row.mechanic_signature) recentEntries.push(row.mechanic_signature);
     }
     const compatibleExercise=()=>{
-      const item=variantExercise(age,domain,level,subdomain,typeof body.documents_only==='boolean'?body.documents_only:null,body.photos_only===true);
+      const item=variantExercise(age,domain,level,subdomain,typeof body.documents_only==='boolean'?body.documents_only:null,body.photos_only===true,body.interaction_only===true,body.interaction_kind||null);
       if(!item||Number(body.client_revision||1)<2&&(item.type==='documentReview'||item.selectiveRecall)||Number(body.client_revision||1)<3&&item.photoTask)return null;
       return regionalCandidate(item,locale,domain,age);
     };
