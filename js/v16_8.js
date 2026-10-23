@@ -54,6 +54,8 @@
     $$("#navMenu .nav-item[data-subject]").forEach(b=>{
       const s=b.dataset.subject;
       if(!map[s]) return;
+      const caption=b.querySelector('.nav-area-label');
+      if(caption){if(caption.textContent!==map[s])caption.textContent=map[s];return;}
       const icon=(b.textContent||"").trim().split(/\s+/)[0];
       b.textContent=`${icon} ${map[s]}`;
     });

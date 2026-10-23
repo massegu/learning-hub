@@ -67,7 +67,24 @@ try:
   page.locator('#closePassword').click();page.wait_for_selector('#appShell:not(.hidden)');assert 'recuperar=' not in page.url
   # SDK recovery events are handled without awaiting Auth inside its callback.
   page.evaluate('__authEvents.forEach(callback=>callback("PASSWORD_RECOVERY"))');page.wait_for_selector('#passwordDialog[open]')
-  page.set_viewport_size({'width':390,'height':844});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
+  areas=page.locator('#navMenu [data-subject]').count()
+  assert page.locator('#navMenu [data-subject] .nav-area-label').count()==areas
+  assert page.locator('#navMenu [data-subject] .nav-area-icon').count()==areas
+  # Recovery can open over the workspace. Its inactive navigation must fit
+  # too: icon + an anonymous flex text item used to widen both mobile columns.
+  for font,family in [('', ''), ('20px', ''), ('', 'monospace')]:
+   page.evaluate('(font)=>document.documentElement.style.fontSize=font',font)
+   page.evaluate('(family)=>document.querySelector("#navMenu").style.fontFamily=family',family)
+   for width in [320,360,390,412]:
+    page.set_viewport_size({'width':width,'height':844})
+    layout=page.evaluate("""()=>({viewport:innerWidth,width:document.documentElement.scrollWidth,
+     overflow:[...document.querySelectorAll('#navMenu button,#passwordDialog,#passwordDialog input')]
+      .filter(e=>{const r=e.getBoundingClientRect();return r.width>0&&(r.right>innerWidth+1||r.left< -1)})
+      .map(e=>({id:e.id,text:e.textContent.trim(),right:e.getBoundingClientRect().right}))})""")
+    assert layout['width']<=layout['viewport']+1,(font,width,layout)
+    assert not layout['overflow'],(font,width,layout)
+  page.evaluate("document.documentElement.style.fontSize='';document.querySelector('#navMenu').style.fontFamily=''")
+  page.set_viewport_size({'width':390,'height':844})
   page.screenshot(path='/tmp/password-dialog-mobile.png');page.locator('#closePassword').click();page.wait_for_selector('#authGate:not(.hidden)')
   page.add_init_script('window.__signedIn=false');page.goto(origin+'/?recuperar=1',wait_until='networkidle');page.wait_for_selector('#authGate:not(.hidden)')
   assert 'caducado' in page.locator('#authMessage').inner_text();assert page.locator('#passwordDialog').is_hidden()

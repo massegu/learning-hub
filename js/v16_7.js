@@ -85,11 +85,13 @@
 
   function patchNavigation(route){
     if(!['early','junior'].includes(route)) return;
-    const allowed=new Set(AGE_ROUTES[route].allowed);
+    const allowed=new Set(window.ContentPolicy?.early?.subjects||AGE_ROUTES[route].allowed);
     $$('#navMenu .nav-item[data-subject]').forEach(b=>{
       const s=b.dataset.subject, hide=!allowed.has(s); b.hidden=hide; if(hide) return;
       const labelMap={language:`Lenguaje ${AGE_ROUTES[route].label.replace(' años','')}`,division:`Matemáticas ${AGE_ROUTES[route].label.replace(' años','')}`,reading:`Lectura + Escritura ${AGE_ROUTES[route].label.replace(' años','')}`};
       if(labelMap[s]){
+        const caption=b.querySelector('.nav-area-label');
+        if(caption){if(caption.textContent!==labelMap[s])caption.textContent=labelMap[s];return;}
         const icon=(b.textContent||'').trim().split(/\s+/)[0],desired=`${icon} ${labelMap[s]}`;
         if(b.textContent.trim()!==desired) b.textContent=desired;
       }
