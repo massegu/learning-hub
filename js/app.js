@@ -436,6 +436,7 @@
       $('#exerciseNext').classList.remove('hidden');$$('#exerciseOptions button').forEach(b=>b.disabled=true);
     };
     if(t.kind==='auditory'){renderListeningExercise(it,{live,local,recordObservation});return;}
+    if(t.kind==='movement'){renderMovementExercise(it,{live,local,recordObservation});return;}
     if(t.kind==='room'){
       area.innerHTML='<div class="room-response"><label for="roomDescription">Describe el objeto y explica por qué cumple la consigna.</label><textarea id="roomDescription" rows="4" maxlength="700" placeholder="He encontrado… Cumple la consigna porque…"></textarea><p id="roomResponseMessage" role="status"></p><button id="saveRoomObservation" class="primary-btn">Guardar descripción</button><button id="roomNotFound" class="secondary-btn">No encuentro un objeto que cumpla la consigna</button></div>';
       $('#saveRoomObservation').onclick=()=>{const text=$('#roomDescription').value.trim();if(text.length<10){$('#roomResponseMessage').textContent='Escribe qué has encontrado y qué característica cumple.';return;}recordObservation('described',text);};
@@ -472,7 +473,7 @@
         if(report)reports.push({trial:trial+1,report});
         trial++;$$('#exerciseOptions button').forEach(b=>b.disabled=true);
         $('#interactiveTrialFeedback').textContent=t.kind==='movement'?'Observación anotada.':ok?'Bien. Has seguido la regla.':rule.target<0?'En esta tarjeta había que esperar sin pulsar.':'La regla indicaba: '+local(t.actions[rule.target])+'.';
-        const button=document.createElement('button');button.id='nextInteractiveCard';button.className='primary-btn';button.textContent=trial===t.trials.length?'Terminar actividad':'Otra tarjeta';button.onclick=next;area.append(button);button.focus();
+        interactionTimer=setTimeout(next,650);
       };
       visual.innerHTML=`<div class="interactive-trial"><p class="eyebrow">Tarjeta ${trial+1} de ${t.trials.length}</p><div class="interactive-card" aria-label="${escapeHtml(rule.label)}">${t.kind==='symbols'?`<strong aria-hidden="true">${rule.symbol}</strong><span>${escapeHtml(local(rule.label))}</span>`:`<strong class="word-cue">${escapeHtml(rule.label)}</strong>`}</div><p id="interactiveTrialFeedback" role="status"></p><div id="interactiveWait" class="interactive-wait hidden"><p id="interactiveSeconds" role="timer" aria-live="off"></p><progress id="interactiveWaitBar" max="${t.waitMs}" value="0"></progress></div><details class="interactive-rule-help"><summary>Consultar las reglas</summary>${rulesTable(activeRules)}</details></div>`;
       if(t.kind==='symbols'){
@@ -496,6 +497,36 @@
       };tick();
     };
     $('#startInteractive').onclick=next;
+  }
+  function interruptPractice(it){
+    stopInteraction();
+    $('#exerciseVisual').innerHTML='<p>Práctica detenida. Puedes volver a empezar cuando quieras.</p>';
+    $('#exerciseOptions').innerHTML='<button id="restartInteraction" class="primary-btn">Volver a empezar</button>';
+    $('#restartInteraction').onclick=()=>renderInteractiveExercise(it);
+  }
+  function finishObservedPractice(it,reports,recordObservation){
+    $('#exerciseVisual').innerHTML='<div class="interactive-trial"><h4>Has terminado la ronda</h4><p>La pantalla ha presentado las señales, pero no comprueba los gestos. Indica cómo ha ido la práctica.</p></div>';
+    $('#exerciseOptions').innerHTML='<button id="practiceCompleted" class="primary-btn">He realizado la práctica</button><button id="practiceDifficult" class="secondary-btn">He tenido dificultades</button><button id="practiceSkipped" class="secondary-btn">No he realizado la práctica</button>';
+    for(const [id,completion] of [['practiceCompleted','completed'],['practiceDifficult','difficult'],['practiceSkipped','skipped']])$('#'+id).onclick=()=>recordObservation({trials:reports,completion,...(it.interactionTask.audioMode?{audioMode:it.interactionTask.audioMode}:{})});
+  }
+  function renderMovementExercise(it,{live,local,recordObservation}){
+    const t=it.interactionTask,visual=$('#exerciseVisual'),area=$('#exerciseOptions'),reports=[];let trial=0;
+    visual.innerHTML='<div class="interactive-rules">'+window.ActivityModel.interactiveStimulus(it.stimulus.slice(0,2),{structured:true})+'<p>Las tarjetas avanzan solas: espera cinco segundos y después tendrás cuatro segundos para hacer el gesto. No necesitas confirmar cada tarjeta. Al final indicarás cómo ha ido.</p></div>';
+    area.innerHTML='<button id="startInteractive" class="primary-btn">Empezar las tarjetas</button>';
+    const next=()=>{
+      if(!live())return;if(trial>=t.trials.length){finishObservedPractice(it,reports,recordObservation);return;}
+      const rule=t.rules[t.trials[trial]],entry={trial:trial+1,report:'unverified'};reports.push(entry);
+      const deadline=Date.now()+t.waitMs,finishAt=deadline+4000;
+      visual.innerHTML=`<div class="interactive-trial"><p class="eyebrow">Tarjeta ${trial+1} de ${t.trials.length}</p><div class="interactive-card"><strong class="word-cue">${escapeHtml(rule.label)}</strong></div><p id="movementAction">Espera antes de hacer el gesto.</p><p id="interactiveSeconds" role="timer" aria-live="off"></p><progress id="interactiveWaitBar" max="${t.waitMs}" value="0"></progress></div>`;
+      area.innerHTML='<button id="movementEarly" class="secondary-btn">Marcar un adelanto o una confusión</button><button id="stopPractice" class="secondary-btn">Detener práctica</button>';
+      $('#movementEarly').onclick=()=>{entry.report='early';$('#movementEarly').disabled=true;};$('#stopPractice').onclick=()=>interruptPractice(it);
+      const tick=()=>{
+        if(!live())return;const now=Date.now(),remaining=Math.max(0,deadline-now);$('#interactiveWaitBar').value=t.waitMs-remaining;
+        $('#interactiveSeconds').textContent=remaining?`Espera: ${Math.ceil(remaining/1000)} segundos.`:`Siguiente tarjeta en ${Math.max(0,Math.ceil((finishAt-now)/1000))} segundos.`;
+        if(!remaining)$('#movementAction').textContent=rule.target<0?'PAUSA: sigue sin hacer ningún gesto.':local(t.actions[rule.target])+'. Ahora.';
+        if(now>=finishAt){trial++;next();return;}interactionTimer=setTimeout(tick,100);
+      };tick();
+    };$('#startInteractive').onclick=next;
   }
   function renderListeningExercise(it,{live,local,recordObservation}){
     const t=it.interactionTask,visual=$('#exerciseVisual'),area=$('#exerciseOptions');
@@ -532,27 +563,27 @@
       if(t.audioMode==='tones'&&!interactionAudio){const Audio=window.AudioContext||window.webkitAudioContext;interactionAudio=new Audio();}return interactionAudio?.resume().catch(()=>{});
     };
     const intro=()=>{
-      visual.innerHTML=`<div class="interactive-rules listening-rules"><p>${escapeHtml(it.stimulus[0].text)}</p><p><strong>${t.audioMode==='words'?'Señales habladas':'Señales de sonido'}</strong>. El sonido empieza únicamente al pulsar los botones. Usa un volumen cómodo.</p>${window.ActivityModel.interactiveStimulus([it.stimulus[1]],{structured:true})}<div class="listening-samples">${t.rules.map((r,i)=>`<button class="secondary-btn sample-cue" data-cue="${i}">Escuchar: ${escapeHtml(r.label)}</button>`).join('')}</div><p id="listeningStatus" role="status">${supported?'Prueba al menos una señal antes de empezar.':'Este navegador no dispone del audio necesario. Elige otra actividad o un navegador con sonido.'}</p></div>`;
+      visual.innerHTML=`<div class="interactive-rules listening-rules"><p>${escapeHtml(it.stimulus[0].text)}</p><p><strong>${t.audioMode==='words'?'Señales habladas':'Señales de sonido'}</strong>. Prueba el audio con los botones. Al empezar, las señales avanzarán solas. Usa un volumen cómodo.</p>${window.ActivityModel.interactiveStimulus([it.stimulus[1]],{structured:true})}<div class="listening-samples">${t.rules.map((r,i)=>`<button class="secondary-btn sample-cue" data-cue="${i}">Escuchar: ${escapeHtml(r.label)}</button>`).join('')}</div><p id="listeningStatus" role="status">${supported?'Prueba al menos una señal antes de empezar.':'Este navegador no dispone del audio necesario. Elige otra actividad o un navegador con sonido.'}</p></div>`;
       area.innerHTML='<button id="startListening" class="primary-btn" disabled>He oído las señales. Empezar</button>';
       $$('.sample-cue').forEach(button=>{button.disabled=!supported;button.onclick=()=>{if(busy)return;try{unlock();play(Number(button.dataset.cue),()=>{message('Señal reproducida. Repasa las demás antes de empezar si lo necesitas.');$('#startListening').disabled=false;});}catch(_){message('No se ha podido iniciar el sonido. Prueba otra actividad.');}};});
       $('#startListening').onclick=()=>{if(!busy)next();};
     };
     const next=()=>{
       if(!live())return;
-      if(trial>=t.trials.length){recordObservation({trials:reports,audioMode:t.audioMode});return;}
-      ready=false;const index=t.trials[trial],rule=t.rules[index];
-      visual.innerHTML=`<div class="interactive-trial"><p class="eyebrow">Señal ${trial+1} de ${t.trials.length}</p><div class="interactive-card"><strong aria-hidden="true">♪</strong><span>Escucha con atención</span></div><p id="listeningStatus" role="status">Espera a oír la señal completa antes de hacer ningún gesto.</p><p>La palabra o el patrón de sonido no se muestra antes de escucharlo.</p></div>`;
-      area.innerHTML='<button id="listeningActed" class="primary-btn" disabled>He seguido la regla</button><button id="listeningEarly" class="secondary-btn" disabled>Me he adelantado o confundido</button><button id="listeningSkipped" class="secondary-btn" disabled>No he practicado esta señal</button><button id="retryListening" class="secondary-btn hidden">Volver a escuchar la señal</button><button id="skipListeningAudio" class="secondary-btn">No oigo el audio: omitir sin puntuar</button>';
-      const emit=()=>play(index,()=>{ready=true;message(rule.target<0?'La señal ha terminado. En esta regla tenías que esperar sin hacer ningún gesto.':'La señal ha terminado. Sigue la regla que has aprendido.');for(const id of ['listeningActed','listeningEarly','listeningSkipped'])$('#'+id).disabled=false;});
+      if(trial>=t.trials.length){finishObservedPractice(it,reports,recordObservation);return;}
+      ready=false;let advanced=false;const index=t.trials[trial],rule=t.rules[index],entry={trial:trial+1,report:'unverified'};
+      visual.innerHTML=`<div class="interactive-trial"><p class="eyebrow">Señal ${trial+1} de ${t.trials.length}</p><div class="interactive-card"><strong aria-hidden="true">♪</strong><span>Escucha con atención</span></div><p id="listeningStatus" role="status">Espera a oír la señal completa antes de hacer ningún gesto.</p><p>Las señales avanzan solas. Al final indicarás cómo ha ido la práctica.</p></div>`;
+      area.innerHTML='<button id="listeningEarly" class="secondary-btn" disabled>Marcar un adelanto o una confusión</button><button id="retryListening" class="secondary-btn hidden">Volver a escuchar la señal</button><button id="skipListeningAudio" class="secondary-btn">No oigo el audio: omitir sin puntuar</button><button id="stopPractice" class="secondary-btn">Detener práctica</button>';
+      const advance=()=>{if(!live()||advanced)return;advanced=true;reports.push(entry);trial++;next();};
+      const emit=()=>play(index,()=>{ready=true;message(rule.target<0?'La señal ha terminado. Espera sin hacer ningún gesto.':'La señal ha terminado. Haz el gesto de la regla. La próxima señal llegará automáticamente.');$('#listeningEarly').disabled=false;interactionTimer=setTimeout(advance,4000);});
       $('#retryListening').onclick=()=>{if(interactionVoice){interactionVoice.onend=null;interactionVoice.onerror=null;window.speechSynthesis?.cancel();}busy=false;$('#retryListening').classList.add('hidden');emit();};
-      const report=(value,force=false)=>{
-        if(!live()||(!ready&&!force))return;ready=false;playVersion++;clearTimeout(interactionTimer);
+      $('#listeningEarly').onclick=()=>{entry.report='early';$('#listeningEarly').disabled=true;};
+      $('#skipListeningAudio').onclick=()=>{
+        if(!live()||advanced)return;entry.report='audio_unavailable';playVersion++;clearTimeout(interactionTimer);
         if(interactionVoice){interactionVoice.onend=null;interactionVoice.onerror=null;window.speechSynthesis?.cancel();}busy=false;
-        reports.push({trial:trial+1,report:value});trial++;
-        message('Observación anotada. La pantalla no comprueba el gesto físico.');
-        area.innerHTML='<button id="nextListening" class="primary-btn">'+(trial===t.trials.length?'Terminar actividad':'Otra señal')+'</button>';$('#nextListening').onclick=next;
+        interactionTimer=setTimeout(advance,250);
       };
-      $('#listeningActed').onclick=()=>report('waited');$('#listeningEarly').onclick=()=>report('early');$('#listeningSkipped').onclick=()=>report('skipped');$('#skipListeningAudio').onclick=()=>report('audio_unavailable',true);
+      $('#stopPractice').onclick=()=>interruptPractice(it);
       interactionTimer=setTimeout(emit,t.delays[trial]);
     };
     intro();

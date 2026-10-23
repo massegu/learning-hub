@@ -15,7 +15,7 @@ function materialKey(value){
 function finish(item,age,domain,level,key,mechanic){
  const id=`curriculum-v2-${age}-${domain}-${level}-${key}`;
  const memoryMaterialKey=domain==='memory'?materialKey([item.recallSequence?'sequence':item.recallEvidence?.kind||'associations',item.stimulus]):null;
- const earlyMechanic=domain==='language'?'vocabulary':domain==='social'?'inference':domain==='reading'?(item.responseType==='order'?'sequencing':'literal'):domain==='speedReasoning'?'speedCompare':domain==='memory'?(item.memoryResponse==='spatial'?'rememberPlace':'rememberOrder'):'planning';
+ const earlyMechanic=domain==='language'?'vocabulary':domain==='attention'?'matching':domain==='social'?'inference':domain==='reading'?(item.responseType==='order'?'sequencing':'literal'):domain==='speedReasoning'?'speedCompare':domain==='memory'?(item.memoryResponse==='spatial'?'rememberPlace':'rememberOrder'):'planning';
  return {...item,...(domain==='memory'?{lexicalSenses:{...item.lexicalSenses,banana:true}}:{}),...(item.speedTask?{speedRevision:4}:{}),id,contentKey:id,semanticKey:item.passageKey||memoryMaterialKey||id,...(memoryMaterialKey?{memoryMaterialKey}:{}),domain,level,mechanic,
   ...(age==='early'?{ageProfile:{id:'early',revision:1,context:'school',mechanic:earlyMechanic,family:`${domain}-${mechanic}`}}:{}),
   ...(age==='teen'?{teenReview:{version:3,context:mechanic}}:{}),
@@ -114,7 +114,7 @@ function validateSelectiveRecall(item){
 }
 function spatialPositions(size){return Array.from({length:size*size},(_,i)=>`Fila ${Math.floor(i/size)+1}, columna ${i%size+1}`);}
 function memory(age,level){
- const rank=ages.indexOf(age),count=5+(level-1)*(rank<2?1:2),items=[];
+ const rank=ages.indexOf(age),count=rank===0?[2,3,4][level-1]:rank===1?[3,4,5][level-1]:5+(level-1)*2,items=[];
  for(let v=0;v<120;v++){
   const materials=[...new Set([...memoryCategories[v%memoryCategories.length].items,...memoryCategories[(v+3)%memoryCategories.length].items,...(rank===0?objects:rank===1?schoolObjects:functionalObjects).slice(v%6,v%6+4)])];
   const featured=memoryCategories[v%memoryCategories.length].items[Math.floor(v/memoryCategories.length)%4];
@@ -860,6 +860,83 @@ function validateInteraction(item){
  for(const field of ['interactionTask','type','responseType','assessment','q','stimulus','sample'])if(JSON.stringify(item[field])!==JSON.stringify(expected[field]))throw new Error('Las reglas, tarjetas o instrucciones se han alterado.');
  return true;
 }
+// Authored situations: each plan has its own meaningful actions, not renamed IDs.
+const practiceContexts={
+ early:[
+  ['preparar una maceta',['Poner tierra en la maceta','Plantar la semilla','Regar la tierra']],
+  ['pintar con acuarelas',['Proteger la mesa','Pintar el dibujo','Lavar los pinceles']],
+  ['preparar una brocheta de fruta',['Lavar la fruta','Colocar los trozos','Servir la brocheta']],
+  ['guardar un juego de piezas',['Recoger las piezas','Meterlas en la caja','Cerrar la caja']],
+  ['hacer una tarjeta de cumpleaños',['Doblar el papel','Dibujar la portada','Escribir la felicitación']],
+  ['dar agua a una mascota',['Lavar el cuenco','Llenarlo de agua','Dejarlo en su sitio']],
+  ['escuchar un cuento',['Elegir el cuento','Escuchar la historia','Contar cómo termina']],
+  ['preparar una salida al patio',['Ponerse la chaqueta','Salir con el grupo','Volver con el grupo']]
+ ],
+ junior:[
+  ['crear un cómic',['Inventar los personajes','Dibujar las viñetas','Añadir los bocadillos']],
+  ['preparar un partido',['Acordar los equipos','Jugar el partido','Anotar el resultado']],
+  ['construir un puente de bloques',['Elegir las piezas','Montar el puente','Probar si aguanta']],
+  ['hacer un marcapáginas',['Medir la cartulina','Recortarla','Decorar el marcapáginas']],
+  ['organizar un intercambio de cromos',['Separar los repetidos','Acordar el intercambio','Guardar los cromos nuevos']],
+  ['preparar una búsqueda del tesoro',['Elegir el escondite','Preparar las pistas','Probar el recorrido']],
+  ['grabar una historia inventada',['Escribir el final','Grabar la narración','Escuchar la grabación']],
+  ['preparar una ensalada',['Lavar las verduras','Mezclar los ingredientes','Servir la ensalada']]
+ ],
+ primary:[
+  ['construir una casa en Minecraft',['Dibujar el plano','Construir las paredes','Comprobar las entradas']],
+  ['crear un vídeo de trucos de fútbol',['Elegir el truco','Grabar la demostración','Revisar el vídeo']],
+  ['preparar una reseña de un anime',['Ver el capítulo','Seleccionar las ideas','Redactar la reseña']],
+  ['organizar una colección de Pokémon',['Revisar las cartas','Separarlas por tipo','Guardar cada grupo']],
+  ['crear una coreografía de pop coreano',['Elegir un fragmento musical','Ensayar los pasos','Grabar el ensayo']],
+  ['preparar un experimento de germinación',['Etiquetar los vasos','Plantar las semillas','Anotar cuándo se riegan']],
+  ['montar una exposición de dibujos',['Elegir las obras','Preparar las etiquetas','Colgar las obras']],
+  ['preparar un episodio de radio escolar',['Acordar el tema','Grabar la conversación','Revisar el sonido']]
+ ],
+ middle:[
+  ['editar un tutorial para YouTube',['Probar los pasos','Grabar el tutorial','Comprobar que se entienden']],
+  ['organizar una partida de Fortnite',['Acordar el horario','Confirmar el equipo','Empezar la partida']],
+  ['preparar un vídeo corto de ciencia',['Comprobar la explicación','Grabar la demostración','Añadir la fuente consultada']],
+  ['crear un club de anime',['Elegir una propuesta','Consultar la disponibilidad','Confirmar el primer encuentro']],
+  ['diseñar una encuesta musical',['Redactar las preguntas','Probar si se entienden','Compartir la encuesta']],
+  ['organizar una ruta en bicicleta',['Comprobar el recorrido','Revisar las bicicletas','Confirmar la hora de salida']],
+  ['crear un mapa de un videojuego',['Marcar las zonas','Conectar los caminos','Comprobar que se puede terminar']],
+  ['preparar una entrevista deportiva',['Investigar el tema','Preparar las preguntas','Grabar la entrevista']]
+ ],
+ teen:[
+  ['preparar una retransmisión en Twitch',['Comprobar los permisos del contenido','Probar el sonido','Iniciar la retransmisión']],
+  ['enviar una candidatura de prácticas',['Revisar los requisitos','Adaptar la candidatura','Guardar el justificante de envío']],
+  ['publicar un podcast',['Revisar las autorizaciones','Editar el episodio','Programar la publicación']],
+  ['organizar un concierto escolar',['Confirmar el espacio','Acordar el programa','Publicar la convocatoria']],
+  ['comparar dos ofertas de formación',['Comprobar el precio completo','Comparar lo que incluyen','Justificar la elección']],
+  ['reservar un viaje de grupo',['Confirmar los participantes','Comprobar las condiciones','Guardar la reserva']],
+  ['revisar un trabajo colaborativo',['Integrar las aportaciones','Comprobar las fuentes','Entregar la versión final']],
+  ['organizar un torneo de videojuegos',['Revisar las reglas','Confirmar las inscripciones','Publicar los emparejamientos']]
+ ]
+};
+function practice(age,domain,level=1){
+ if(!practiceContexts[age]||!['executive','attention','memory'].includes(domain))return [];
+ const rank=ages.indexOf(age),out=[];
+ for(const [index,[goal,steps]] of practiceContexts[age].entries()){
+  const context=rank===0?`Vas a ${goal}.`: `Tu grupo se prepara para ${goal}.`;
+  const intro=`${context} Estos son los pasos. ${steps.join('. ')}.`;
+  const mk=(it,key,mechanic)=>out.push(finish(it,age,domain,level,'practice-'+index+'-'+key,mechanic));
+  if(domain==='executive'){
+   const answer=rank===0&&level===1?steps.slice(0,2):steps;
+   mk({type:'order',responseType:'order',requiresStimulus:true,q:rank===0?'Pon los pasos en orden.':'Organiza el plan antes de empezar.',stimulus:[T(context+' Primero hay que '+answer[0].toLowerCase()+'. Después toca '+answer[1].toLowerCase()+'.'+(answer[2]?' Por último, hay que '+answer[2].toLowerCase()+'.':''))],tokens:[...answer].reverse(),answer:[...answer],topic:'Funciones ejecutivas · un plan completo',why:answer.join(' → ')},'order','executive_complete_plan');
+   const done=level===1?0:1,answerNext=steps[done+1];
+   mk(choice(rank===0?'¿Qué paso toca ahora?':'¿Cómo continuarías el plan sin repetir lo que ya está hecho?',[T(intro),T(`Ya has terminado: ${steps.slice(0,done+1).join(' y ').toLowerCase()}. Aún no has hecho los demás pasos.`)],answerNext,steps.filter(x=>x!==answerNext),{topic:'Funciones ejecutivas · retomar una tarea',why:'El siguiente paso pendiente es: '+answerNext.toLowerCase()+'.'}),'resume','executive_resume_plan');
+  }else if(domain==='attention'){
+   const target=steps[level===1?0:1],irrelevant=rank===0?'Elegir una canción':'Elegir el color de la carpeta';
+   mk(choice(rank===0?'¿Qué tarea falta en la lista?':'Compara el plan con la lista preparada. ¿Qué tarea falta?',[T(intro),{type:'list',presentation:'cards',items:steps.filter(x=>x!==target)}],target,rank===0?steps.filter(x=>x!==target):[...steps.filter(x=>x!==target),irrelevant],{topic:'Atención · detectar una omisión',why:'En la lista falta: '+target.toLowerCase()+'.'}),'omission','attention_plan_omission');
+   mk(choice('¿Qué tarea se ha colado y no pertenece al plan?',[T(rank===0?`${context} Estos son los pasos. ${steps.slice(0,2).join('. ')}.`:intro),{type:'list',presentation:'cards',items:rank===0?[steps[0],irrelevant,steps[1]]:[steps[0],irrelevant,steps[1],steps[2]]}],irrelevant,rank===0?steps.slice(0,2):steps,{topic:'Atención · revisar una lista',why:'Esta tarea no aparece en el plan: '+irrelevant.toLowerCase()+'.'}),'intruder','attention_plan_intruder');
+  }else{
+   const shown=rank===0?steps.slice(0,level===1?2:3):steps,ask=level===1?0:level===2?1:2;
+   mk({type:'memoryReveal',responseType:'choice',requiresStimulus:true,q:rank===0?'Recuerda estos pasos. Después los taparemos.':'Recuerda el plan. Después desaparecerá.',stimulus:rank===0?[L([...shown])]:[T(context),L([...shown])],memoryContent:shown.map(detail=>({detail})),memoryQuestion:ask===0?'¿Cuál era el primer paso?':ask===1?'¿Qué paso iba en segundo lugar?':'¿Qué paso cerraba el plan?',a:shown[ask],opts:[...shown],revealMs:level===1?10000:level===2?9000:8000,topic:'Memoria · recordar un encargo',why:shown[ask],answerEvidence:{type:'listItem',block:rank===0?0:1,index:ask}},'recall-plan','memory_plan_recall');
+  }
+ }
+ return out;
+}
+
 const cache=new Map(),generationGroups=new Map();let reasoningProvider=null,writingProvider=null;
 function registerReasoning(provider){reasoningProvider=provider;generationGroups.clear();for(const key of cache.keys())if(key.includes(':executive:'))cache.delete(key);}
 
@@ -872,6 +949,7 @@ function pool(age,domain,level=1){
   const bank=actual==='social'?social(age,level):readingDomain?reading(age,actual,level):actual==='memory'?memory(age,level):actual==='speedReasoning'?speed(age,level):executive(age,level);
   if(readingDomain&&writingProvider&&['junior','primary','middle'].includes(age))bank.push(...writingProvider(age,level).map(it=>({...it,domain:actual,originalDomain:it.domain,passageKey:'writing-legacy:'+age+':'+(it.juniorProfile?.context||it.schoolProfile?.context)})));
   if(actual==='executive'&&reasoningProvider&&age!=='early')bank.push(...reasoningProvider(age,level).map(it=>({...it,domain:'executive',topic:'Funciones ejecutivas · razonamiento',mechanic:'executive_reasoning_'+it.mechanic,contentKey:'merged-'+it.contentKey})));
+  bank.push(...practice(age,actual,level));
   cache.set(key,bank);
  }
  return structuredClone(cache.get(key)).map(it=>domain==='applied'?{...it,domain,...(age==='early'?{ageProfile:{...it.ageProfile,mechanic:'chooseObject'}}:{})}:it);
@@ -904,6 +982,6 @@ function migrate(progress={},age){
   levels:{...progress.levels,executive:1,speedReasoning:1},_levelCheckpoints:{...progress._levelCheckpoints,executive:{attempt:progress.totalAttempts||0},speedReasoning:{attempt:progress.totalAttempts||0}}};
 }
 function speedSummary(history=[]){const rows=history.filter(x=>x.subject==='speedReasoning'&&x.timingValid&&Number.isFinite(x.responseMs));const correct=rows.filter(x=>x.correct).map(x=>x.responseMs).sort((a,b)=>a-b);return {attempts:rows.length,accuracy:rows.length?Math.round(rows.filter(x=>x.correct).length*100/rows.length):null,medianMs:correct.length?correct.length%2?correct[(correct.length-1)/2]:(correct[correct.length/2-1]+correct[correct.length/2])/2:null};}
-const api={social,validateSocial,academic,generateAcademic,validateMath,validateSpeed,validatePlan,memoryCategories,validateSelectiveRecall,validateReview,vocabulary,interactivePool,generateInteractive,validateInteraction,pool,generate,supports,visible,migrate,speedSummary,registerReasoning,registerWriting,spatialPositions};root.Curriculum=api;
+const api={practice,social,validateSocial,academic,generateAcademic,validateMath,validateSpeed,validatePlan,memoryCategories,validateSelectiveRecall,validateReview,vocabulary,interactivePool,generateInteractive,validateInteraction,pool,generate,supports,visible,migrate,speedSummary,registerReasoning,registerWriting,spatialPositions};root.Curriculum=api;
 if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);

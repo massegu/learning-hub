@@ -1172,7 +1172,7 @@ function mechanicSignature(domain:string,item:any){
 }
 
 
-function generatedItems(domain:string,n:number,recentEntries:string[],factory:()=>any){
+function generatedItems(domain:string,n:number,recentEntries:string[],factory:()=>any,candidates:any[]|null=null){
   // Candidates are immutable within a selection. Reuse their evidence-based
   // signatures instead of serializing the same stimuli in every scoring pass.
   const signatures=new WeakMap<object,string>();
@@ -1185,11 +1185,12 @@ function generatedItems(domain:string,n:number,recentEntries:string[],factory:()
 
   const pool:any[]=[];
   const seenPool=new Set<string>();
-  for(let tries=0;tries<900;tries++){
-    const cand=normalizeItem(factory());
-    if(!validateItem(cand)) continue;
+  for(let tries=0;tries<(candidates?candidates.length:900);tries++){
+    const cand=normalizeItem(candidates?candidates[tries]:factory());
+    if(!cand)continue;
     const sig=signature(cand);
     if(seenPool.has(sig)) continue;
+    if(!validateItem(cand)) continue;
     seenPool.add(sig);
     pool.push(cand);
   }
@@ -1211,7 +1212,8 @@ function generatedItems(domain:string,n:number,recentEntries:string[],factory:()
       const sig=signature(cand);
       if(localItems.has(sig)) continue;
       const msig=mechanicSignature(domain,cand);
-      const itemPenalty=(recentItems.has(sig)&&(!cand.passageKey||freshAvailable)||cand.passageKey&&previousPassages.includes(sig))?100000:0;
+      const repeated=recentItems.has(sig)&&(!cand.passageKey||freshAvailable)||cand.passageKey&&previousPassages.includes(sig);
+      const itemPenalty=repeated?100000+recentEntries.lastIndexOf(sig)*100:0;
       const recentPenalty=veryRecent.has(msig)?10000:0;
       const localPenalty=localMechanics.has(msig)?5000:0;
       const countPenalty=(mechanicCounts.get(msig)||0)*100;
@@ -2309,6 +2311,7 @@ function variantExercise(age:string,domain:string,level:number,subdomain:string|
   if(photosOnly)return photo();
   if(domain==='social'&&age==='teen'&&Math.random()<.5)return {...matrixSocial18(age,domain,level,Math.floor(Math.random()*360)),domain};
   if(domain==="attention"&&documentsOnly!==true&&photos.supports(age,domain)&&Math.random()<.3)return photo();
+  if(domain==='attention'&&documentsOnly!==true&&Math.random()<.3){const bank=(globalThis as any).Curriculum.practice(age,domain,level);if(bank.length)return {...pick(bank),id:age+'-practice-'+crypto.randomUUID()};}
   const academic=(globalThis as any).Curriculum.generateAcademic(age,domain,level,subdomain||'grammar');
   if(academic)return {...academic,id:age+'-academic-'+crypto.randomUUID()};
   if(documentsOnly&&subdomain==='writing'&&(globalThis as any).DocumentLibrary.supports(age,domain)){const bank=(globalThis as any).Curriculum.pool(age,domain,level).filter((it:any)=>it.stimulus?.some((b:any)=>b.type==='document'));return {...pick(bank),id:age+'-document-writing-'+crypto.randomUUID()};}
@@ -2379,7 +2382,7 @@ Deno.serve(async (req:Request)=>{
   const limit=(LIMITS[account.subscription_status]||LIMITS.trial)[kind];
   const progress=profile.progress||{};
   const date=todayUTC();
-  const delivery=progress._delivery?.date===date ? progress._delivery : {date,seen:{}};
+  const delivery=progress._delivery?.seen ? {...progress._delivery,date} : {date,seen:{}};
   const cost=kind==="worksheet"?1:Math.max(1,Math.min(Number(body.count||1),kind==="exercise"?10:1));
   const {data:usageRow}=await admin.from("content_usage").select("used").eq("user_id",user.id).eq("usage_date",date).eq("kind",kind).maybeSingle();
   const usedNow=Number(usageRow?.used||0);
@@ -2461,14 +2464,15 @@ Deno.serve(async (req:Request)=>{
     const domain=body.domain;
     const subdomain=body.subdomain||null;
     const n=Math.max(1,Math.min(10,Number(body.count||1)));
-    const {data:seenRows}=await admin.from("content_seen")
+    const {data:seenRows,error:seenError}=await admin.from("content_seen")
       .select("item_signature,mechanic_signature")
       .eq("user_id",user.id)
       .eq("profile_id",profileId)
       .eq("domain",domain)
       .order("created_at",{ascending:false})
       .limit(450);
-    const recentEntries:string[]=[];
+    const recentEntries:string[]=[...(delivery.seen?.[domain]||[])];
+    if(seenError)console.warn('Content history unavailable; using profile delivery history.');
     for(const row of (seenRows||[]).reverse()){
       if(row.item_signature) recentEntries.push(row.item_signature);
       if(row.mechanic_signature) recentEntries.push(row.mechanic_signature);
@@ -2478,7 +2482,10 @@ Deno.serve(async (req:Request)=>{
       if(!item||Number(body.client_revision||1)<2&&(item.type==='documentReview'||item.selectiveRecall)||Number(body.client_revision||1)<3&&item.photoTask)return null;
       return regionalCandidate(item,locale,domain,age);
     };
-    if(domain==="attention"){
+    if(body.photos_only===true){
+      const bank=(globalThis as any).PhotoLibrary.pool(age,domain,level).map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
+      items=generatedItems(domain,n,recentEntries,compatibleExercise,bank);
+    }else if(domain==="attention"){
       items=generatedItems(domain,n,recentEntries,compatibleExercise);
     } else if(["executive","memory","speedReasoning","applied","social","language","middleLanguage","teenLanguage","division","geometry","middleMath","teenMath","reading","middleReading","english","literacy"].includes(domain)){
       items=generatedItems(domain,n,recentEntries,compatibleExercise);

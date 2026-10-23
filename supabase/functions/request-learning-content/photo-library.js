@@ -221,13 +221,15 @@ function questions(sceneId,level){
  });
 }
 const supports=(age,domain)=>['junior','primary','middle','teen'].includes(age)&&['memory','attention'].includes(domain);
-function pool(age,domain,level=1){
+const bankCache=new Map();
+function templates(age,domain,level=1){
+ const key=[age,domain,level].join(':');if(bankCache.has(key))return bankCache.get(key);
  if(!supports(age,domain))return [];
  const meta={domain,level,requiresStimulus:true,...(age==='teen'?{teenReview:{version:3}}:age==='junior'?{juniorProfile:{route:age,level}}:{schoolProfile:{route:age,level}})};
  const out=[];
  if(domain==='memory')for(const [sceneId,scene] of Object.entries(scenes))questions(sceneId,level).forEach((f,index)=>{
   const id=`photo-v1:${age}:${domain}:${level}:${sceneId}:${index}`;
-  out.push({...meta,id,contentKey:id,mechanic:'memory_photo',memoryMaterialKey:'photo:'+sceneId,type:'memoryReveal',responseType:'choice',topic:'Memoria · escena cotidiana',q:'Observa la imagen. Después desaparecerá y responderás una pregunta.',memoryQuestion:f.q,stimulus:[{type:'photo',photoId:sceneId}],memoryContent:[{detail:scene.title}],a:f.a,opts:f.opts.slice(0,level===1?3:4),why:f.detail,revealMs:[16000,12000,9000][level-1],photoTask:{kind:'recall',sceneId,index,...(f.evidence?{evidence:f.evidence}:{})}});
+  out.push({...meta,id,contentKey:id,mechanic:'memory_photo',memoryMaterialKey:'photo:'+sceneId,type:'memoryReveal',responseType:'choice',topic:'Memoria · escena cotidiana',q:'Observa la imagen. Después desaparecerá y responderás una pregunta.',memoryQuestion:f.q,stimulus:[{type:'photo',photoId:sceneId}],memoryContent:[{detail:scene.title}],a:f.a,opts:f.opts.slice(0,level===1?3:4),why:f.detail,revealMs:[10000,12000,9000][level-1],photoTask:{kind:'recall',sceneId,index,...(f.evidence?{evidence:f.evidence}:{})}});
  });
  else for(const [pairId,pair] of Object.entries(pairs)){
   for(const variant of level===1&&pair.varied?[0,1,2]:[0]){
@@ -237,12 +239,13 @@ function pool(age,domain,level=1){
   out.push({...meta,id,contentKey:id,mechanic:'attention_photo_differences',type:'photoDifference',responseType:'multiple',topic:'Atención · encuentra las diferencias',q:level===1?(pair.varied?`En la imagen B, marca este cambio: ${pair.changes[variant][1].toLowerCase()}.`:`Marca el objeto que cambia ${pair.changes[0][1].toLowerCase()}.`):pair.varied?(exact?'Compara A con B. Marca las descripciones que indican cómo era cada objeto antes y cómo es después. Fíjate en los objetos, su posición, su cantidad y su estado.':'Marca los elementos que han cambiado entre A y B. Puede haber cambios de cantidad, posición, presencia o tipo de objeto.'):exact?'Compara A con B. Marca solo las descripciones que indican correctamente el color inicial y el final. Las descripciones con el orden invertido no son válidas.':'Marca todos los objetos que cambian de color entre A y B.',stimulus:[{type:'photoPair',pairId}],answers,opts,why:pair.changes.map(([object,change])=>object+': '+change.toLowerCase()+'.').join(' '),photoTask:{kind:'differences',pairId,...(pair.varied?{variant}:{})}});
   }
  }
- return structuredClone(out);
+ bankCache.set(key,out);return out;
 }
+function pool(age,domain,level=1){return structuredClone(templates(age,domain,level));}
 function validate(item){
  const task=item.photoTask,age=item.teenReview?'teen':item.juniorProfile?.route||item.schoolProfile?.route;
  if(!task||!supports(age,item.domain)||![1,2,3].includes(item.level))throw new Error('Escena o nivel no válido.');
- const expected=pool(age,item.domain,item.level).find(x=>task.kind==='recall'?x.photoTask.sceneId===task.sceneId&&x.photoTask.index===task.index:x.photoTask.pairId===task.pairId&&(x.photoTask.variant||0)===(task.variant||0));
+ const expected=templates(age,item.domain,item.level).find(x=>task.kind==='recall'?x.photoTask.sceneId===task.sceneId&&x.photoTask.index===task.index:x.photoTask.pairId===task.pairId&&(x.photoTask.variant||0)===(task.variant||0));
  if(!expected)throw new Error('La pregunta no pertenece a la escena revisada.');
  const locale=root.LocaleContent||(typeof require==='function'&&require('./locale-content'));
  const adapted=locale.localizeItem(expected,item.localization?.locale||'es_intl',item.domain);
@@ -250,6 +253,6 @@ function validate(item){
  for(const field of ['opts','answers'])if(JSON.stringify([...(item[field]||[])].sort())!==JSON.stringify([...(adapted[field]||[])].sort()))throw new Error('Las respuestas no corresponden a los datos visibles.');
  return true;
 }
-function generate(age,domain,level){const bank=pool(age,domain,level);return bank[Math.floor(Math.random()*bank.length)]||null;}
+function generate(age,domain,level){const bank=templates(age,domain,level);return structuredClone(bank[Math.floor(Math.random()*bank.length)]||null);}
 const api={scenes,pairs,supports,pool,validate,generate};root.PhotoLibrary=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);
