@@ -871,7 +871,7 @@
     nav.innerHTML = items
       .map(
         (x, i) =>
-          `<button class="nav-item ${i === 0 ? "active" : ""}" data-section="${x[0]}" ${x[3] ? `data-subject="${x[3]}"` : ""}>${x[3]?`<span class="nav-area-icon" aria-hidden="true"></span>`:x[1]} ${x[3]?subjectLabel(x[3]):x[2]}</button>`,
+          `<button class="nav-item ${i === 0 ? "active" : ""}" data-section="${x[0]}" ${x[3] ? `data-subject="${x[3]}"` : ""}>${x[3]?`<span class="nav-area-icon" aria-hidden="true"></span>`:x[1]} ${x[3]?`<span class="nav-area-label">${subjectLabel(x[3])}</span>`:x[2]}</button>`,
       )
       .join("");
     $$(".nav-item").forEach(

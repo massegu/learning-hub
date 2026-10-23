@@ -23,6 +23,7 @@ try:
   page.evaluate('''()=>{const fn=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return fn(it,...args)}}''')
   for age in ['early','junior','primary','middle','teen']:
    page.locator('#profileSelect').select_option(age);assert page.locator('#navMenu [data-subject=social]').is_visible();page.locator('#navMenu [data-subject=social]').click();page.wait_for_selector('#exerciseOptions .option-btn');assert page.locator('#exercisePrompt').inner_text()
+   assert not page.locator('#navMenu [data-subject=social]').evaluate('e=>e.hidden')
    page.locator('#exerciseOptions [data-answer]').evaluate_all('(els,a)=>els.find(e=>e.dataset.answer===a).click()',page.evaluate('__current.a'));assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
   page.locator('#profileSelect').select_option('primary');page.locator('#navMenu [data-section=home]').click();assert 'learning-areas-3d.png' in page.locator('[data-school-area=social] .area-illustration').evaluate('e=>getComputedStyle(e).backgroundImage');page.locator('#schoolHub').screenshot(path='/tmp/new-area-icons.png')
   page.clock.install();page.clock.pause_at(page.evaluate('Date.now()+1000'));page.add_style_tag(content='*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}')
