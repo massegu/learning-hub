@@ -1,6 +1,6 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
 const curriculum=require('../js/curriculum'),model=require('../js/activity-model'),art=require('../js/stimulus-art'),docs=require('../js/document-library');
-test('map recall has its own graduated visit load without reducing icon sequences or categories',()=>{
+test('map recall keeps its visit progression while youngest icon loads are reduced',()=>{
  const ages=['early','junior','primary','middle','teen'];assert.equal(curriculum.memoryCategories.length,15);
  for(const age of ages)for(const level of [1,2,3]){
   const bank=curriculum.pool(age,'memory',level),routes=bank.filter(x=>x.mechanic==='memory_route');assert.equal(routes.length,36);
@@ -11,7 +11,7 @@ test('map recall has its own graduated visit load without reducing icon sequence
    assert.deepEqual(it.answer,it.recallEvidence.reverse?[...it.stimulus[0].items].reverse():it.stimulus[0].items);
    assert.ok(it.revealMs>=visits*2500);assert.doesNotThrow(()=>model.printable(it,{age_band:age,progress:{ageRoute:age}}));
   }
-  if(level===1)assert.equal(bank.find(x=>x.mechanic==='memory_sequence').recallSequence.length,5);
+  if(level===1)assert.equal(bank.find(x=>x.mechanic==='memory_sequence').recallSequence.length,age==='early'?2:5);
  }
  assert.equal(fs.readFileSync('js/curriculum.js','utf8'),fs.readFileSync('supabase/functions/request-learning-content/curriculum.js','utf8'));
 });

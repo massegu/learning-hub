@@ -1,10 +1,10 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const curriculum=require('../js/curriculum'),model=require('../js/activity-model'),locale=require('../js/locale-content'),art=require('../js/stimulus-art'),load=require('./edge-harness');
 const ages=['early','junior','primary','middle','teen'],profile=age=>({age_band:age==='early'?'primary':age,progress:{ageRoute:age}});
-test('memory starts with five stimuli, adds source-bound scenes/routes and both positional answers across ages',()=>{
+test('memory uses age-specific loads and source-bound scenes/routes with both positional answers',()=>{
  for(const age of ages)for(const level of [1,2,3]){
   const bank=curriculum.pool(age,'memory',level),sequence=bank.find(x=>x.mechanic==='memory_sequence');
-  assert.equal(sequence.recallSequence.length,5+(level-1)*(['early','junior'].includes(age)?1:2));
+  assert.equal(sequence.recallSequence.length,age==='early'?level+1:5+(level-1)*(age==='junior'?1:2));
   for(const family of ['memory_scene','memory_route'])for(const it of bank.filter(x=>x.mechanic===family)){
    for(const country of Object.keys(locale.labels))assert.doesNotThrow(()=>model.printable(locale.localizeItem(it,country,'memory'),profile(age)));
    if(family==='memory_route'){const broken=structuredClone(it);broken.stimulus[0].positions[0]=99;assert.throws(()=>model.printable(broken,profile(age)));assert.equal(it.stimulus[0].positions.length,it.answer.length);assert.equal(new Set(it.stimulus[0].positions).size,it.answer.length);const corrupt=structuredClone(it);corrupt.answer.reverse();assert.throws(()=>model.printable(corrupt,profile(age)));}

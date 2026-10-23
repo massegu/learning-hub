@@ -27,7 +27,7 @@ try:
      if fail_wait and not missed:page.keyboard.press('a');missed=True
      else:page.clock.run_for(t['waitMs']+100)
     else:page.keyboard.press(chr(97+target))
-    page.locator('#nextInteractiveCard').click()
+    page.clock.run_for(650)
    return item
   symbol=play_symbols();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class');assert history()[-1]['interactionSummary']['correctTrials']==len(symbol['interactionTask']['trials'])
   page.locator('#exerciseLevelSelect').select_option('3');page.wait_for_function('()=>__current?.interactionTask?.level===3');advanced=play_symbols(True)
@@ -35,13 +35,15 @@ try:
   old_attempts=len(history());page.locator('[data-interaction-kind=movement]').click();page.wait_for_selector('#startInteractive');movement=page.evaluate('__current');assert movement['interactionTask']['kind']=='movement'
   page.locator('#startInteractive').click()
   for n in range(len(movement['interactionTask']['trials'])):
-   assert page.locator('#reportWaited').is_disabled();page.clock.run_for(4900);assert page.locator('#reportWaited').is_disabled()
-   if n==0:page.locator('#exercise').screenshot(path='/tmp/interactive-movement-wait.png')
-   page.clock.run_for(200);page.locator('#reportEarly' if n==0 else '#reportWaited').click();page.locator('#nextInteractiveCard').click()
+   assert 'Espera:' in page.locator('#interactiveSeconds').inner_text();page.clock.run_for(4900);assert 'Espera:' in page.locator('#interactiveSeconds').inner_text()
+   if n==0:page.locator('#exercise').screenshot(path='/tmp/interactive-movement-wait.png');page.locator('#movementEarly').click()
+   page.clock.run_for(4100)
+  assert page.locator('#practiceCompleted').is_visible();assert page.evaluate('__profiles.find(p=>p.id==="primary").progress.interactiveObservations?.length||0')==0
+  page.locator('#practiceCompleted').click()
   assert len(history())==old_attempts
   page.wait_for_function('()=>__profiles.find(p=>p.id==="primary").progress.interactiveObservations?.length===1')
   reports=page.evaluate('__profiles.find(p=>p.id==="primary").progress.interactiveObservations[0].report.trials')
-  assert len(reports)==len(movement['interactionTask']['trials']);assert sum(r['report']=='early' for r in reports)==1
+  assert len(reports)==len(movement['interactionTask']['trials']);assert sum(r['report']=='early' for r in reports)==1;assert sum(r['report']=='unverified' for r in reports)==len(reports)-1
   page.locator('#navMenu [data-subject=attention]').click();page.wait_for_selector('#roomDescription');room=page.evaluate('__current');assert room['interactionTask']['kind']=='room'
   page.locator('#saveRoomObservation').click();assert 'Escribe' in page.locator('#roomResponseMessage').inner_text()
   page.locator('#roomDescription').fill('He encontrado una caja pequeña. Voy a comprobar las características con mi acompañante.');page.mouse.move(1,1);page.clock.run_for(200);page.locator('#saveRoomObservation').click()

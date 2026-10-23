@@ -40,12 +40,13 @@ try:
     page.set_viewport_size({'width':width,'height':1000});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1');page.locator('#exercise').screenshot(path=f'/tmp/listening-{mode}-{width}.png')
    page.locator('#startListening').click()
    for n,index in enumerate(t['trials']):
-    assert page.locator('#listeningActed').is_disabled();visible=page.locator('#exerciseVisual').inner_text();assert t['rules'][index]['label'] not in visible
+    assert page.locator('#listeningEarly').is_disabled();visible=page.locator('#exerciseVisual').inner_text();assert t['rules'][index]['label'] not in visible
     count_before=page.evaluate('__spoken.length+__tones.length');page.clock.run_for(t['delays'][n]-1);assert page.evaluate('__spoken.length+__tones.length')==count_before
-    page.clock.run_for(2500);assert not page.locator('#listeningActed').is_disabled()
+    page.clock.run_for((200 if mode=='words' else t['signals'][index]['beeps']*400+100)+1);assert not page.locator('#listeningEarly').is_disabled()
     if mode=='words':assert page.evaluate('__spoken.at(-1)')==t['rules'][index]['label'],(n,index,t['rules'][index],page.evaluate('({spoken:__spoken,current:__current?.interactionTask})'))
     else:assert page.evaluate('__tones.at(-1)')==t['signals'][index]['frequency']
-    page.locator('#listeningActed').click();page.locator('#nextListening').click()
+    page.clock.run_for(4000)
+   assert page.locator('#practiceCompleted').is_visible();page.locator('#practiceCompleted').click()
    assert 'no modifica' in page.locator('#exerciseFeedback').inner_text()
   assert page.evaluate('(__profiles.find(p=>p.id==="primary").progress.history||[]).length')==baseline
   records=page.evaluate('__profiles.find(p=>p.id==="primary").progress.interactiveObservations');assert len([r for r in records if r['kind']=='auditory'])==2
@@ -58,9 +59,10 @@ try:
   page.evaluate('()=>{AudioContext.prototype.resume=function(){return Promise.reject(new Error("audio unavailable"))}}')
   page.locator('.sample-cue').first.click();page.wait_for_function('()=>document.querySelector("#listeningStatus").textContent.includes("No se ha podido")');assert page.locator('#startListening').is_disabled()
   page.evaluate('()=>{AudioContext.prototype.resume=function(){return Promise.resolve()}}');page.locator('.sample-cue').first.click();page.clock.run_for(2000);page.locator('#startListening').click()
-  page.evaluate('()=>{AudioContext.prototype.resume=function(){return Promise.reject(new Error("audio unavailable"))}}');page.clock.run_for(5000);page.wait_for_selector('#retryListening:not(.hidden)');assert page.locator('#listeningActed').is_disabled()
+  page.evaluate('()=>{AudioContext.prototype.resume=function(){return Promise.reject(new Error("audio unavailable"))}}');page.clock.run_for(5000);page.wait_for_selector('#retryListening:not(.hidden)');assert page.locator('#listeningEarly').is_disabled()
   for _ in chosen['interactionTask']['trials']:
-   page.locator('#skipListeningAudio').click();page.locator('#nextListening').click()
+   page.locator('#skipListeningAudio').click();page.clock.run_for(250)
+  page.locator('#practiceSkipped').click()
   latest=page.evaluate('__profiles.find(p=>p.id==="primary").progress.interactiveObservations.at(-1)');assert all(r['report']=='audio_unavailable' for r in latest['report']['trials'])
   assert page.evaluate('(__profiles.find(p=>p.id==="primary").progress.history||[]).length')==baseline
   assert not errors,errors;browser.close();print('PASS: Social Lab delivery and scoring in 5 ages; explicit audio start, spoken/tonal cue timing, no visual answer cue, unscored observation, interruption cleanup, audio-error recovery/omission and mobile layout')
