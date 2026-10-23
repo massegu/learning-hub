@@ -159,9 +159,44 @@ const newPairs={
  city:{regions:{'La sombrilla':[2,12,34,17],'La furgoneta':[81,31,19,24],'La bolsa':[11,62,13,23],'El banco':[0,86,35,13],'La fuente':[37,24,45,42],'El reloj':[62,0,9,12]},changes:[['La sombrilla','De roja a azul'],['La furgoneta','De amarilla a roja'],['La bolsa','De azul a morada']],unchanged:['El banco','La fuente','El reloj']}
 };
 for(const [id,pair] of Object.entries(newPairs))pairs[id]={...pair,sceneId:id,path:`assets/photos/${id}-b.png`};
+// Reviewed October 2026: quantity, presence, orientation, object identity and state.
+Object.assign(scenes,{
+ cafe:{title:'Una pausa en una cafetería',width:1448,height:1086,path:'assets/photos/cafe-a.png',facts:[
+  fact('¿Cuántas galletas había en el plato?','Tres',['Dos','Cuatro','Una'],'Había tres galletas en el plato blanco.'),
+  fact('¿Sobre qué objeto estaban las gafas?','Sobre el libro',['Sobre la taza','Sobre el plato','Sobre una silla'],'Las gafas estaban sobre el libro amarillo.'),
+  fact('¿Hacia qué lado apuntaba el asa de la taza?','Hacia la derecha',['Hacia la izquierda','Hacia delante','Hacia atrás'],'El asa apuntaba hacia la derecha.'),
+  fact('¿Qué había detrás de la taza?','Una planta',['Una mochila','Un balón','Un teléfono'],'Había una planta detrás de la taza.'),
+  fact('¿Dónde estaba la cuchara?','Delante de la taza y a la derecha del plato',['Dentro de la taza','Sobre el libro','Detrás de la planta'],'La cuchara estaba sobre la mesa, delante de la taza y a la derecha del plato.'),
+  fact('¿Estaba abierto o cerrado el libro?','Cerrado',['Abierto por la mitad','Abierto por la primera página','No había libro'],'El libro amarillo estaba cerrado.'),
+  fact('¿Qué había dentro de la taza?','Una bebida oscura',['Lápices','Galletas','Nada'],'Se veía una bebida oscura dentro de la taza.'),
+  fact('¿Cómo estaba colocada la cuchara?','En diagonal',['Vertical en la imagen','Dentro de la taza','Sobre las gafas'],'La cuchara estaba en diagonal sobre la mesa.'),
+  fact('¿De qué color era el libro?','Amarillo',['Verde','Azul','Rojo'],'El libro era amarillo.'),
+  fact('¿Qué había a la izquierda de la taza?','El plato de galletas',['El libro','Las gafas','Un balón'],'El plato de galletas estaba a la izquierda de la taza.'),
+  fact('¿De qué material parecía ser la mesa?','Madera',['Cristal','Metal','Plástico'],'La mesa tenía una superficie de madera.'),
+  fact('¿Había alguien sentado en las sillas del fondo?','No, estaban vacías',['Sí, una persona','Sí, dos personas','Sí, tres personas'],'Las sillas visibles del fondo estaban vacías.')
+ ]},
+ sports:{title:'Preparados para hacer deporte',width:1448,height:1086,path:'assets/photos/sports-a.png',facts:[
+  fact('¿Qué tipo de balón había sobre el banco?','Un balón de fútbol',['Un balón de baloncesto','Una pelota de tenis','Un balón de rugby'],'Había un balón de fútbol sobre el banco.'),
+  fact('¿Dónde estaba el silbato?','Sobre la toalla',['Dentro de una zapatilla','En el reloj','Sobre el balón'],'El silbato naranja estaba sobre la toalla azul.'),
+  fact('¿Estaba abierta o cerrada la bolsa roja?','Cerrada',['Abierta','No había bolsa','Tapada con la toalla'],'La bolsa roja estaba cerrada.'),
+  fact('¿Dónde estaban las zapatillas?','En el suelo, a la izquierda',['Sobre el banco','Dentro de la bolsa','Colgadas en la pared'],'Las zapatillas estaban en el suelo, a la izquierda.'),
+  fact('¿Qué había entre la botella y la toalla?','El balón',['La bolsa','Un cuaderno','Las zapatillas'],'El balón estaba entre la botella y la toalla.'),
+  fact('¿Qué objeto estaba en la parte alta de la pared?','Un reloj redondo',['Un espejo cuadrado','Una pantalla','Un cartel rojo'],'Había un reloj redondo en la parte alta de la pared.'),
+  fact('¿De qué color era la botella del banco?','Verde',['Azul','Roja','Amarilla'],'La botella del banco era verde.'),
+  fact('¿Qué había en el hueco de arriba a la derecha?','Una mochila negra',['Un balón rojo','Una planta','Una taza'],'Había una mochila negra en el hueco alto de la derecha.'),
+  fact('¿Dónde estaba la bolsa respecto al balón?','Más abajo y a la derecha',['Encima del balón','A la izquierda y sobre el banco','Dentro del balón'],'La bolsa estaba más abajo y a la derecha que el balón.'),
+  fact('¿Cuántas zapatillas había en el suelo?','Dos',['Una','Tres','Cuatro'],'Había dos zapatillas blancas en el suelo.'),
+  fact('¿De qué color era la toalla del banco?','Azul',['Verde','Roja','Amarilla'],'La toalla del banco era azul.'),
+  fact('¿Qué dos objetos estaban en el suelo?','Las zapatillas y la bolsa',['La botella y el balón','El silbato y la toalla','El reloj y la mochila'],'En el suelo estaban las zapatillas y la bolsa roja.')
+ ]}
+});
+pairs.cafe={sceneId:'cafe',path:'assets/photos/cafe-b.png',varied:true,regions:{'Las galletas':[7,49,30,25],'Las gafas':[70,43,26,22],'La cuchara':[57,59,11,36],'La planta':[43,0,26,32],'La taza':[41,31,25,28]},changes:[['Las galletas','De tres galletas a dos galletas'],['Las gafas','De estar sobre el libro a no estar en la mesa'],['La cuchara','De una posición diagonal a una posición vertical']],unchanged:['La planta','La taza']};
+pairs.sports={sceneId:'sports',path:'assets/photos/sports-b.png',varied:true,regions:{'El balón':[43,32,17,21],'El silbato':[77,43,9,7],'La bolsa':[58,62,40,32],'Las zapatillas':[10,74,25,20],'La botella del banco':[18,26,8,26],'El reloj':[76,0,12,15]},changes:[['El balón','De un balón de fútbol a un balón de baloncesto'],['El silbato','De estar sobre la toalla a no estar en el banco'],['La bolsa','De estar cerrada a estar abierta']],unchanged:['Las zapatillas','La botella del banco','El reloj']};
+
 // Each harder question reconstructs two or three independent facts from the SAME image.
 // Distractors differ in exactly one component; colour alone cannot solve the task.
 const challenges={
+ cafe:[[0,1,2],[3,4,5],[6,7,8],[9,10,11]],sports:[[0,1,2],[3,4,5],[6,7,8],[9,10,11]],
  kitchen:[[1,3,5],[11,9,10],[2,6,7],[4,8,5]],
  living:[[1,2,4],[0,7,8],[3,5,11],[6,9,10]],
  desk:[[0,2,4],[1,5,6],[3,7,5],[6,4,1]],
@@ -195,17 +230,19 @@ function pool(age,domain,level=1){
   out.push({...meta,id,contentKey:id,mechanic:'memory_photo',memoryMaterialKey:'photo:'+sceneId,type:'memoryReveal',responseType:'choice',topic:'Memoria · escena cotidiana',q:'Observa la imagen. Después desaparecerá y responderás una pregunta.',memoryQuestion:f.q,stimulus:[{type:'photo',photoId:sceneId}],memoryContent:[{detail:scene.title}],a:f.a,opts:f.opts.slice(0,level===1?3:4),why:f.detail,revealMs:[16000,12000,9000][level-1],photoTask:{kind:'recall',sceneId,index,...(f.evidence?{evidence:f.evidence}:{})}});
  });
  else for(const [pairId,pair] of Object.entries(pairs)){
-  const id=`photo-v1:${age}:${domain}:${level}:${pairId}`,exact=level===3;
-  const answers=level===1?[pair.changes[0][0]]:pair.changes.map(([object,change])=>exact?object+': '+change:object);
+  for(const variant of level===1&&pair.varied?[0,1,2]:[0]){
+  const id=`photo-v1:${age}:${domain}:${level}:${pairId}${variant?':'+variant:''}`,exact=level===3;
+  const answers=level===1?[pair.changes[variant][0]]:pair.changes.map(([object,change])=>exact?object+': '+change:object);
   const opts=level===1?[answers[0],...pair.unchanged.slice(0,2)]:[...answers,...(exact?pair.changes.map(([object,change])=>object+': '+change.replace(/^De (.+) a (.+)$/, 'De $2 a $1')):pair.unchanged)];
-  out.push({...meta,id,contentKey:id,mechanic:'attention_photo_differences',type:'photoDifference',responseType:'multiple',topic:'Atención · encuentra las diferencias',q:level===1?`Marca el objeto que cambia ${pair.changes[0][1].toLowerCase()}.`:exact?'Compara A con B. Marca solo las descripciones que indican correctamente el color inicial y el final. Las descripciones con el orden invertido no son válidas.':'Marca todos los objetos que cambian de color entre A y B.',stimulus:[{type:'photoPair',pairId}],answers,opts,why:pair.changes.map(([object,change])=>object+': '+change.toLowerCase()+'.').join(' '),photoTask:{kind:'differences',pairId}});
+  out.push({...meta,id,contentKey:id,mechanic:'attention_photo_differences',type:'photoDifference',responseType:'multiple',topic:'Atención · encuentra las diferencias',q:level===1?(pair.varied?`En la imagen B, marca este cambio: ${pair.changes[variant][1].toLowerCase()}.`:`Marca el objeto que cambia ${pair.changes[0][1].toLowerCase()}.`):pair.varied?(exact?'Compara A con B. Marca las descripciones que indican cómo era cada objeto antes y cómo es después. Fíjate en los objetos, su posición, su cantidad y su estado.':'Marca los elementos que han cambiado entre A y B. Puede haber cambios de cantidad, posición, presencia o tipo de objeto.'):exact?'Compara A con B. Marca solo las descripciones que indican correctamente el color inicial y el final. Las descripciones con el orden invertido no son válidas.':'Marca todos los objetos que cambian de color entre A y B.',stimulus:[{type:'photoPair',pairId}],answers,opts,why:pair.changes.map(([object,change])=>object+': '+change.toLowerCase()+'.').join(' '),photoTask:{kind:'differences',pairId,...(pair.varied?{variant}:{})}});
+  }
  }
  return structuredClone(out);
 }
 function validate(item){
  const task=item.photoTask,age=item.teenReview?'teen':item.juniorProfile?.route||item.schoolProfile?.route;
  if(!task||!supports(age,item.domain)||![1,2,3].includes(item.level))throw new Error('Escena o nivel no válido.');
- const expected=pool(age,item.domain,item.level).find(x=>task.kind==='recall'?x.photoTask.sceneId===task.sceneId&&x.photoTask.index===task.index:x.photoTask.pairId===task.pairId);
+ const expected=pool(age,item.domain,item.level).find(x=>task.kind==='recall'?x.photoTask.sceneId===task.sceneId&&x.photoTask.index===task.index:x.photoTask.pairId===task.pairId&&(x.photoTask.variant||0)===(task.variant||0));
  if(!expected)throw new Error('La pregunta no pertenece a la escena revisada.');
  const locale=root.LocaleContent||(typeof require==='function'&&require('./locale-content'));
  const adapted=locale.localizeItem(expected,item.localization?.locale||'es_intl',item.domain);

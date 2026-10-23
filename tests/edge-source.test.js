@@ -73,7 +73,7 @@ test('saved account country controls selection before history or usage writes, i
 });
 test('real handler enforces saved age-route domains, ownership and quota without any production calls',async()=>{
   const h=authorized();
-  let response=await h.request({domain:'social'});assert.equal(response.status,400);assert.equal(h.writes.length,0);
+  let response=await h.request({domain:'english'});assert.equal(response.status,400);assert.equal(h.writes.length,0);
   h.profile.account_id='other';response=await h.request({domain:'attention'});assert.equal(response.status,404);assert.equal(h.writes.length,0);
   h.profile.account_id='u';h.usage.used=500;response=await h.request({domain:'attention'});assert.equal(response.status,403);assert.equal(h.writes.length,0);
   h.usage.used=0;response=await h.request({domain:'attention'});assert.equal(response.status,200);

@@ -35,8 +35,8 @@ test('legacy code filtering material becomes separate cards without altering the
  const html=model.interactiveStimulus(blocks,{structured:true});for(const code of ['A7','B3','B8','C6'])assert.ok(html.includes(code));assert.equal(model.comparisonStimulus('A7 B3 B8'),null);
 });
 
-test('twelve everyday settings have genuinely graded recall: one, two and three independent observations',()=>{
- assert.equal(Object.keys(photo.scenes).length,12);assert.equal(Object.keys(photo.pairs).length,12);
+test('fourteen everyday settings have genuinely graded recall: one, two and three independent observations',()=>{
+ assert.equal(Object.keys(photo.scenes).length,14);assert.equal(Object.keys(photo.pairs).length,14);
  for(const age of ['junior','primary','middle','teen'])for(const level of [1,2,3]){
   const bank=photo.pool(age,'memory',level);
   for(const id of Object.keys(photo.scenes)){
@@ -51,7 +51,7 @@ test('twelve everyday settings have genuinely graded recall: one, two and three 
     const altered=structuredClone(it);altered.photoTask.evidence.reverse();assert.throws(()=>photo.validate(altered));
    }
   }
-  const differences=photo.pool(age,'attention',level);assert.equal(differences.length,12);
+  const differences=photo.pool(age,'attention',level);assert.equal(differences.length,level===1?18:14);
   for(const it of differences){assert.equal(it.answers.length,level===1?1:3);assert.equal(new Set(it.opts).size,it.opts.length);}
  }
 });

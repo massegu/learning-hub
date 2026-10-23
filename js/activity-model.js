@@ -110,6 +110,7 @@
     return blocks;
   }
   function printable(item, profile) {
+    if(item?.socialEvidence||/^social_perspective_/.test(item?.mechanic||''))(root.Curriculum||(typeof require==='function'&&require('./curriculum'))).validateSocial(item);
     if(item?.interactionTask||/^executive_interactive_|^attention_room_search$/.test(item?.mechanic||''))(root.Curriculum||(typeof require==='function'&&require('./curriculum'))).validateInteraction(item);
     if(item?.photoTask||item?.stimulus?.some(b=>['photo','photoPair'].includes(b?.type)))photos.validate(item);
     if (!item || typeof item !== 'object') fail('falta la actividad.');
@@ -283,7 +284,7 @@
   }
   function forDelivery(item, profile, domain) {
     (root.LocaleContent||(typeof require==='function'&&require('./locale-content'))).validateOptions(item);
-    if (!policy.forProfile(profile)){if(item.photoTask||item.stimulus?.some(b=>['photo','photoPair'].includes(b?.type))||item.type==='multiSelect'||item.type==='documentReview'||item.documentPlan||item.memoryResponse==='multiple'||item.selectiveRecall||item.speedEvidence||item.planEvidence||item.mathEvidence||item.type==='memoryReveal'&&item.answerEvidence)printable(item,profile);return item;}
+    if (!policy.forProfile(profile)){if(item.socialEvidence||/^social_perspective_/.test(item.mechanic||'')||item.interactionTask||item.photoTask||item.stimulus?.some(b=>['photo','photoPair'].includes(b?.type))||item.type==='multiSelect'||item.type==='documentReview'||item.documentPlan||item.memoryResponse==='multiple'||item.selectiveRecall||item.speedEvidence||item.planEvidence||item.mathEvidence||item.type==='memoryReveal'&&item.answerEvidence)printable(item,profile);return item;}
     if (domain && item?.domain !== domain) fail('el área recibida no coincide con la solicitada.');
     // Identical contract at the domain boundary, on screen and in the exporter.
     // This applies to local, remote and future cache sources alike.

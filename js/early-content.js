@@ -1,6 +1,7 @@
 (function (root) {
   'use strict';
   const policy = root.ContentPolicy || (typeof require === 'function' && require('./content-policy.js'));
+  const curriculum = root.Curriculum;
   // Noun phrases are authored with their determiners. Generators never guess
   // gender or splice a bare noun into a Spanish sentence.
   const objects = [
@@ -183,8 +184,9 @@
   language.apply(families,{choice,order,text});
   function pool(domain, level = 1, subdomain = null) {
     const bandLevel = Math.max(1, Math.min(3, Number(level) || 1));
-    if(root.Curriculum?.supports('early',domain)){
-      let items=root.Curriculum.pool('early',domain,bandLevel);
+    if(domain==='social')return (root.Curriculum||(typeof require==='function'&&require('./curriculum.js'))).pool('early','social',bandLevel);
+    if(curriculum?.supports('early',domain)){
+      let items=curriculum.pool('early',domain,bandLevel);
       if(domain==='reading'){
         const writing=pool('language',bandLevel,'writing').map(it=>({...it,domain:'reading',originalDomain:'language',passageKey:'writing-early:'+it.semanticKey,ageProfile:{...it.ageProfile,mechanic:'sequencing',family:'reading-writing'},mechanic:'reading_writing'}));
         items=items.filter(it=>it.languageFocus!=='writing');
@@ -224,7 +226,7 @@
         result.push(item);
       }
     });
-    if(domain==='language'&&root.Curriculum?.vocabulary)result.push(...root.Curriculum.vocabulary('early','language',bandLevel));
+    if(domain==='language'&&curriculum?.vocabulary)result.push(...curriculum.vocabulary('early','language',bandLevel));
     const seen = new Set();
     return result.filter(item => {
       if(domain==='language'&&(subdomain?item.languageFocus!==subdomain:item.languageFocus==='writing'))return false;

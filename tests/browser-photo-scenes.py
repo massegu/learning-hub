@@ -12,7 +12,7 @@ try:
   page.evaluate('''()=>{const old=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return old(it,...args)}}''')
   page.locator('#navMenu [data-subject=memory]').click();page.locator('#photoModeSwitch [data-photos=true]').click();page.wait_for_selector('#showMemoryPhoto')
   assert page.evaluate('__requests.at(-1).photos_only') is True
-  assert page.evaluate('__requests.at(-1).client_revision')==4
+  assert page.evaluate('__requests.at(-1).client_revision')==5
   assert 'Límite diario:' in page.locator('#usageHint').inner_text()
   assert page.locator('.everyday-photo img').count()==0
   memory=page.evaluate('__current');assert memory['photoTask']['kind']=='recall'
@@ -70,7 +70,7 @@ try:
   page.locator('#exerciseOptions [data-answer]').evaluate_all('(els,a)=>els.find(e=>e.dataset.answer===a).click()',advanced['a'])
   assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
   badge=page.locator('#exerciseHeading').evaluate("e=>({image:getComputedStyle(e,'::before').backgroundImage,position:getComputedStyle(e,'::before').backgroundPosition})")
-  assert 'adventure-areas.png' in badge['image'] and '100%' in badge['position'],badge
+  assert 'learning-areas-3d.png' in badge['image'] and '50%' in badge['position'],badge
   assert page.evaluate("Array.from(document.images).every(i=>!i.src.includes('adventure-areas')||i.complete)")
   page.locator('#exercise').screenshot(path='/tmp/advanced-memory-and-badge.png')
   # Exercise every new photograph's actual hit regions, including small or
@@ -78,7 +78,7 @@ try:
   fixture={}
   def override(route):route.fulfill(json={'status':200,'data':{'items':[fixture],'usage':{'used':1,'limit':500}}})
   page.route('**/__review/content',override)
-  new_pairs=page.evaluate('PhotoLibrary.pool("teen","attention",2).filter(x=>["street","park","bus","factory","nature","city"].includes(x.photoTask.pairId))')
+  new_pairs=page.evaluate('PhotoLibrary.pool("teen","attention",2).filter(x=>["street","park","bus","factory","nature","city","cafe","sports"].includes(x.photoTask.pairId))')
   for task in new_pairs:
    fixture.clear();fixture.update(task);page.locator('#navMenu [data-subject=attention]').click()
    page.wait_for_function('(id)=>__current?.id===id&&document.querySelectorAll(".photo-comparison img").length===2',arg=task['id'])

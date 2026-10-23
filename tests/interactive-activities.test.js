@@ -2,7 +2,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),{execFileSy
 const curriculum=require('../js/curriculum'),model=require('../js/activity-model'),locale=require('../js/locale-content');
 test('interactive cards have graded, printable rules and explicit observation contracts in all locales',()=>{
  for(const age of ['junior','primary','middle','teen'])for(const level of [1,2,3])for(const domain of ['attention','executive']){
-  const bank=curriculum.interactivePool(age,domain,level);assert.equal(bank.length,domain==='attention'?8:16);
+  const bank=curriculum.interactivePool(age,domain,level);assert.equal(bank.length,domain==='attention'?8:24);
   for(const it of bank){
    const t=it.interactionTask;assert.equal(t.level,level);assert.equal(t.age,age);
    if(domain==='attention'){assert.equal(t.kind,'room');assert.equal(t.conditions,level);assert.equal(it.assessment,'observation');}
@@ -16,7 +16,8 @@ test('interactive cards have graded, printable rules and explicit observation co
     }
     assert.ok(t.trials.every(n=>Number.isInteger(n)&&n>=0&&n<t.rules.length));
     if(t.kind==='movement'){assert.equal(t.waitMs,5000);assert.equal(it.assessment,'observation');}
-    else{assert.equal(Boolean(t.secondRules),level===3);assert.equal(it.assessment,'performance');}
+    else if(t.kind==='symbols'){assert.equal(Boolean(t.secondRules),level===3);assert.equal(it.assessment,'performance');}
+    else{assert.equal(t.kind,'auditory');assert.equal(it.assessment,'observation');assert.equal(t.delays.length,t.trials.length);assert.ok(t.delays.every(n=>n>=1500&&n<4000));}
    }
    for(const country of Object.keys(locale.labels))assert.doesNotThrow(()=>model.forDelivery(locale.localizeItem(it,country,domain),{age_band:age==='junior'?'primary':age,progress:{ageRoute:age}},domain));
    for(const mutate of [x=>delete x.interactionTask,x=>x.interactionTask.variant=99,x=>x.stimulus.pop(),x=>x.level=4]){const bad=structuredClone(it);mutate(bad);assert.throws(()=>model.printable(bad,{age_band:age==='junior'?'primary':age,progress:{ageRoute:age}}));}
