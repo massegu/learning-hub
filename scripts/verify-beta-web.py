@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FILES = ['index.html', 'js/app.js', 'js/api.js', 'js/auth-account.js',
          'js/document-library.js', 'js/curriculum.js', 'js/docx.js',
-         'js/activity-model.js', 'js/content-policy.js', 'js/photo-library.js',
+         'js/activity-model.js', 'js/early-content.js', 'js/content-policy.js', 'js/photo-library.js',
          'js/stimulus-art.js', 'js/stimulus-art-png.js',
          'js/config.js', 'css/styles.css',
          *sorted(p.relative_to(ROOT).as_posix() for p in (ROOT/'assets/documents').glob('*.png')),
@@ -18,7 +18,8 @@ FILES = ['index.html', 'js/app.js', 'js/api.js', 'js/auth-account.js',
          'assets/photos/living-a.png', 'assets/photos/living-b.png',
          *[f'assets/photos/{name}-{variant}.png' for name in ['desk','picnic','market','entry'] for variant in ['a','b']],
          *[f'assets/photos/{name}-{variant}.png' for name in ['street','park','bus','factory','nature','city'] for variant in ['a','b']],
-         'assets/icons/adventure-areas.png']
+         *[f'assets/photos/{name}-{variant}.png' for name in ['cafe','sports'] for variant in ['a','b']],
+         'assets/icons/adventure-areas.png', 'assets/icons/learning-areas-3d.png', 'js/early-journey.js', 'js/school-journey.js']
 
 
 def fingerprint(data):

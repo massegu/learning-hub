@@ -51,7 +51,7 @@
     social: {
       name: "Social Lab",
       icon: "◎",
-      desc: "Cognición social, perspectiva, pragmática, ambigüedad, intención e impacto.",
+      desc: "Comprende situaciones, escucha otros puntos de vista y practica cómo convivir.",
     },
     english: {
       name: "English Lab",
@@ -94,6 +94,7 @@
       label: "10-12 años",
       subjects: [
         "geometry",
+        "social",
         "language",
         "division",
         "reading",
@@ -110,6 +111,7 @@
       label: "13-15 años",
       subjects: [
         "middleLanguage",
+        "social",
         "middleMath",
         "middleReading",
         "english",
@@ -407,8 +409,8 @@
       for(const button of $$('#exerciseOptions .multi-option')){const select=button.onclick;button.onclick=()=>{select();$('#multiCheck').click();};}
     }
   }
-  let interactionTimer=null,interactionVersion=0;
-  function stopInteraction(){clearTimeout(interactionTimer);interactionTimer=null;interactionVersion++;}
+  let interactionTimer=null,interactionVersion=0,interactionAudio=null,interactionVoice=null;
+  function stopInteraction(){clearTimeout(interactionTimer);interactionTimer=null;interactionVersion++;if(interactionVoice){interactionVoice.onend=null;interactionVoice.onerror=null;window.speechSynthesis?.cancel();interactionVoice=null;}if(interactionAudio){interactionAudio.close().catch(()=>{});interactionAudio=null;}}
   document.addEventListener('visibilitychange',()=>{
     const it=currentItem;
     if(!document.hidden||!$('#exercise').classList.contains('active-section')||!it?.interactionTask||it.interactionTask.kind==='room'||it._earlyAnswered)return;
@@ -433,6 +435,7 @@
       $('#exerciseFeedback').textContent='Práctica guardada. Este registro no modifica el porcentaje de aciertos.';$('#exerciseFeedback').className='feedback practice';
       $('#exerciseNext').classList.remove('hidden');$$('#exerciseOptions button').forEach(b=>b.disabled=true);
     };
+    if(t.kind==='auditory'){renderListeningExercise(it,{live,local,recordObservation});return;}
     if(t.kind==='room'){
       area.innerHTML='<div class="room-response"><label for="roomDescription">Describe el objeto y explica por qué cumple la consigna.</label><textarea id="roomDescription" rows="4" maxlength="700" placeholder="He encontrado… Cumple la consigna porque…"></textarea><p id="roomResponseMessage" role="status"></p><button id="saveRoomObservation" class="primary-btn">Guardar descripción</button><button id="roomNotFound" class="secondary-btn">No encuentro un objeto que cumpla la consigna</button></div>';
       $('#saveRoomObservation').onclick=()=>{const text=$('#roomDescription').value.trim();if(text.length<10){$('#roomResponseMessage').textContent='Escribe qué has encontrado y qué característica cumple.';return;}recordObservation('described',text);};
@@ -494,6 +497,67 @@
     };
     $('#startInteractive').onclick=next;
   }
+  function renderListeningExercise(it,{live,local,recordObservation}){
+    const t=it.interactionTask,visual=$('#exerciseVisual'),area=$('#exerciseOptions');
+    let trial=0,busy=false,ready=false,playVersion=0;const reports=[];
+    const supported=t.audioMode==='words'?Boolean(window.speechSynthesis&&window.SpeechSynthesisUtterance):Boolean(window.AudioContext||window.webkitAudioContext);
+    const message=text=>{const el=$('#listeningStatus');if(el)el.textContent=text;};
+    const play=(index,done)=>{
+      if(!live()||busy)return;busy=true;const playing=++playVersion;
+      const fail=()=>{if(!live()||playing!==playVersion)return;playVersion++;busy=false;ready=false;if(interactionVoice){interactionVoice.onend=null;interactionVoice.onerror=null;window.speechSynthesis?.cancel();}clearTimeout(interactionTimer);message('No se ha podido reproducir la señal. Comprueba el sonido y vuelve a probar. Puedes elegir otra actividad.');$('#retryListening')?.classList.remove('hidden');};
+      const end=()=>{if(!live()||playing!==playVersion)return;playVersion++;clearTimeout(interactionTimer);busy=false;done();};
+      interactionTimer=setTimeout(fail,10000);
+      if(t.audioMode==='words'){
+        try{
+          const voice=new SpeechSynthesisUtterance(t.rules[index].label);voice.lang='es-ES';voice.rate=.85;voice.volume=.55;
+          const spanish=window.speechSynthesis.getVoices().find(v=>v.lang==='es-ES')||window.speechSynthesis.getVoices().find(v=>v.lang.startsWith('es'));if(spanish)voice.voice=spanish;
+          interactionVoice=voice;voice.onend=end;voice.onerror=fail;window.speechSynthesis.speak(voice);
+        }catch(_){fail();}return;
+      }
+      try{
+        const signal=t.signals[index],ctx=interactionAudio;
+        if(!ctx||ctx.state==='closed'){fail();return;}
+        ctx.resume().then(()=>{
+          if(!live())return;
+          for(let i=0;i<signal.beeps;i++){
+            const osc=ctx.createOscillator(),gain=ctx.createGain(),start=ctx.currentTime+i*.4;
+            osc.type='sine';osc.frequency.value=signal.frequency;gain.gain.setValueAtTime(0,start);gain.gain.linearRampToValueAtTime(.08,start+.015);gain.gain.setValueAtTime(.08,start+.18);gain.gain.linearRampToValueAtTime(0,start+.22);
+            osc.connect(gain);gain.connect(ctx.destination);osc.start(start);osc.stop(start+.23);
+          }
+          clearTimeout(interactionTimer);interactionTimer=setTimeout(end,signal.beeps*400+100);
+        }).catch(fail);
+      }catch(_){fail();}
+    };
+    const unlock=()=>{
+      if(t.audioMode==='tones'&&!interactionAudio){const Audio=window.AudioContext||window.webkitAudioContext;interactionAudio=new Audio();}return interactionAudio?.resume().catch(()=>{});
+    };
+    const intro=()=>{
+      visual.innerHTML=`<div class="interactive-rules listening-rules"><p>${escapeHtml(it.stimulus[0].text)}</p><p><strong>${t.audioMode==='words'?'Señales habladas':'Señales de sonido'}</strong>. El sonido empieza únicamente al pulsar los botones. Usa un volumen cómodo.</p>${window.ActivityModel.interactiveStimulus([it.stimulus[1]],{structured:true})}<div class="listening-samples">${t.rules.map((r,i)=>`<button class="secondary-btn sample-cue" data-cue="${i}">Escuchar: ${escapeHtml(r.label)}</button>`).join('')}</div><p id="listeningStatus" role="status">${supported?'Prueba al menos una señal antes de empezar.':'Este navegador no dispone del audio necesario. Elige otra actividad o un navegador con sonido.'}</p></div>`;
+      area.innerHTML='<button id="startListening" class="primary-btn" disabled>He oído las señales. Empezar</button>';
+      $$('.sample-cue').forEach(button=>{button.disabled=!supported;button.onclick=()=>{if(busy)return;try{unlock();play(Number(button.dataset.cue),()=>{message('Señal reproducida. Repasa las demás antes de empezar si lo necesitas.');$('#startListening').disabled=false;});}catch(_){message('No se ha podido iniciar el sonido. Prueba otra actividad.');}};});
+      $('#startListening').onclick=()=>{if(!busy)next();};
+    };
+    const next=()=>{
+      if(!live())return;
+      if(trial>=t.trials.length){recordObservation({trials:reports,audioMode:t.audioMode});return;}
+      ready=false;const index=t.trials[trial],rule=t.rules[index];
+      visual.innerHTML=`<div class="interactive-trial"><p class="eyebrow">Señal ${trial+1} de ${t.trials.length}</p><div class="interactive-card"><strong aria-hidden="true">♪</strong><span>Escucha con atención</span></div><p id="listeningStatus" role="status">Espera a oír la señal completa antes de hacer ningún gesto.</p><p>La palabra o el patrón de sonido no se muestra antes de escucharlo.</p></div>`;
+      area.innerHTML='<button id="listeningActed" class="primary-btn" disabled>He seguido la regla</button><button id="listeningEarly" class="secondary-btn" disabled>Me he adelantado o confundido</button><button id="listeningSkipped" class="secondary-btn" disabled>No he practicado esta señal</button><button id="retryListening" class="secondary-btn hidden">Volver a escuchar la señal</button><button id="skipListeningAudio" class="secondary-btn">No oigo el audio: omitir sin puntuar</button>';
+      const emit=()=>play(index,()=>{ready=true;message(rule.target<0?'La señal ha terminado. En esta regla tenías que esperar sin hacer ningún gesto.':'La señal ha terminado. Sigue la regla que has aprendido.');for(const id of ['listeningActed','listeningEarly','listeningSkipped'])$('#'+id).disabled=false;});
+      $('#retryListening').onclick=()=>{if(interactionVoice){interactionVoice.onend=null;interactionVoice.onerror=null;window.speechSynthesis?.cancel();}busy=false;$('#retryListening').classList.add('hidden');emit();};
+      const report=(value,force=false)=>{
+        if(!live()||(!ready&&!force))return;ready=false;playVersion++;clearTimeout(interactionTimer);
+        if(interactionVoice){interactionVoice.onend=null;interactionVoice.onerror=null;window.speechSynthesis?.cancel();}busy=false;
+        reports.push({trial:trial+1,report:value});trial++;
+        message('Observación anotada. La pantalla no comprueba el gesto físico.');
+        area.innerHTML='<button id="nextListening" class="primary-btn">'+(trial===t.trials.length?'Terminar actividad':'Otra señal')+'</button>';$('#nextListening').onclick=next;
+      };
+      $('#listeningActed').onclick=()=>report('waited');$('#listeningEarly').onclick=()=>report('early');$('#listeningSkipped').onclick=()=>report('skipped');$('#skipListeningAudio').onclick=()=>report('audio_unavailable',true);
+      interactionTimer=setTimeout(emit,t.delays[trial]);
+    };
+    intro();
+  }
+
   const blankState = () => {
     const subjects = profile ? ageData().subjects : [];
     const scores = {},
@@ -807,7 +871,7 @@
     nav.innerHTML = items
       .map(
         (x, i) =>
-          `<button class="nav-item ${i === 0 ? "active" : ""}" data-section="${x[0]}" ${x[3] ? `data-subject="${x[3]}"` : ""}>${x[1]} ${x[3]?subjectLabel(x[3]):x[2]}</button>`,
+          `<button class="nav-item ${i === 0 ? "active" : ""}" data-section="${x[0]}" ${x[3] ? `data-subject="${x[3]}"` : ""}>${x[3]?`<span class="nav-area-icon" aria-hidden="true"></span>`:x[1]} ${x[3]?subjectLabel(x[3]):x[2]}</button>`,
       )
       .join("");
     $$(".nav-item").forEach(
@@ -928,7 +992,7 @@
     const localeRevision = API.localeRevision;
     const res = await API.requestContent({
       ...payload,
-      client_revision:4,
+      client_revision:5,
       profile_id: targetProfile.id,
       locale,
     });
@@ -1384,7 +1448,7 @@
     const next=active?journey.definition(active.id,profile).plan[active.index]:domains.includes(suggested)?suggested:domains[0];
     hub.innerHTML=`<div class="school-hero card"><div><p class="eyebrow">LEARNING LAB · ${stage.label}</p><h3>${stage.title}</h3><p>${stage.description}</p><button id="schoolContinue" class="primary-btn">${active?'Continuar misión':'Explorar '+journey.all[next].title} →</button></div><div class="school-summary"><strong>${state.totalAttempts}</strong><span>actividades realizadas</span><small>${saved.completed.length} misiones completadas</small></div></div><div class="hub-heading"><h3>Áreas de entrenamiento</h3><span>Acceso directo o misiones de 3 a 5 actividades</span></div><div class="school-area-grid">${domains.map(domain=>{
       const area=journey.all[domain],results=state.history.filter(x=>x.subject===domain);
-      return `<button class="school-area-card card" data-school-area="${domain}"><span class="school-icon" aria-hidden="true">${window.StimulusArt.svg(area.icon)}</span><span><strong>${area.title}</strong><small>${results.length} actividades · nivel ${state.levels[domain]||1}</small></span><span aria-hidden="true">→</span></button>`;
+      return `<button class="school-area-card card" data-school-area="${domain}" data-area="${domain}"><span class="school-icon area-illustration" aria-hidden="true">${window.StimulusArt.svg(area.icon)}</span><span><strong>${area.title}</strong><small>${results.length} actividades · nivel ${state.levels[domain]||1}</small></span><span aria-hidden="true">→</span></button>`;
     }).join('')}</div><div class="hub-heading"><h3>Misiones</h3><span>El progreso se guarda con tu perfil.</span></div>${active?`<p class="mission-resume">${journey.definition(active.id).title}: ${active.index} actividades realizadas.</p>`:''}<div class="school-mission-grid">${journey.forMissions(profile).map(m=>`<div class="school-mission-card card"><h4>${m.title}</h4><p>${m.plan.length} actividades · ${[...new Set(m.plan)].map(d=>journey.all[d].title).join(', ')}</p><button class="secondary-btn" data-school-mission="${m.id}" ${active&&active.id!==m.id?'disabled':''}>${active?.id===m.id?'Continuar':'Empezar'} →</button></div>`).join('')}</div>`;
     function open(domain){guidedSession=null;hideGuidedBar();subject=domain;switchSection('exercise');setupExercise();}
     $('#schoolContinue').onclick=()=>active?startSchoolMission(active.id):open(next);
@@ -1510,11 +1574,11 @@
       if(entry.description)return entry.description;
       if(entry.report==='not_found')return 'No se ha encontrado un objeto adecuado.';
       const trials=entry.report?.trials;
-      if(Array.isArray(trials))return `Según la observación: espera respetada en ${trials.filter(x=>x.report==='waited').length} de ${trials.length} tarjetas; adelantos: ${trials.filter(x=>x.report==='early').length}; sin práctica: ${trials.filter(x=>x.report==='skipped').length}.`;
+      if(Array.isArray(trials))return `Según la observación: espera respetada en ${trials.filter(x=>x.report==='waited').length} de ${trials.length} tarjetas; adelantos: ${trials.filter(x=>x.report==='early').length}; sin práctica: ${trials.filter(x=>x.report==='skipped').length}; sin audio: ${trials.filter(x=>x.report==='audio_unavailable').length}.`;
       return 'Práctica de espera registrada.';
     };
     observations.classList.toggle('hidden',!entries.length);
-    observations.innerHTML=`<summary>Práctica con movimientos y objetos · ${entries.length} registros</summary><p>Observaciones personales o acompañadas, separadas de los aciertos de las actividades en pantalla.</p><ul>${entries.slice(-8).reverse().map(entry=>`<li><strong>${entry.kind==='movement'?'Espera y actúa':'Busca a tu alrededor'} · nivel ${Number(entry.level)||1}</strong> · ${escapeHtml(observationText(entry))}</li>`).join('')}</ul>`;
+    observations.innerHTML=`<summary>Práctica con movimientos y objetos · ${entries.length} registros</summary><p>Observaciones personales o acompañadas, separadas de los aciertos de las actividades en pantalla.</p><ul>${entries.slice(-8).reverse().map(entry=>`<li><strong>${entry.kind==='movement'?'Espera y actúa':entry.kind==='auditory'?'Escucha y actúa':'Busca a tu alrededor'} · nivel ${Number(entry.level)||1}</strong> · ${escapeHtml(observationText(entry))}</li>`).join('')}</ul>`;
     $("#progressProfileTitle").textContent = `Evolución de ${profile.name}`;
     $("#progressCards").innerHTML = ageData()
       .subjects.map((s) => {

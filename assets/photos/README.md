@@ -4,7 +4,7 @@ Imágenes generadas con IA para estas actividades, sin fotografías de usuarios 
 
 ## Ampliación: paseos, ciudad, trabajo y naturaleza
 
-El banco tiene ahora doce escenas y doce pares A/B (24 PNG). Se conservan las seis anteriores.
+Esta ampliación añadió seis escenas a las seis originales. Con la ampliación de cafetería y vestuario descrita al final, el banco completo tiene 14 escenas y 14 pares A/B (28 PNG).
 
 - Calle A: dos personas con chaqueta roja/mochila azul y abrigo amarillo; coche rojo, bicicleta azul y toldo verde/blanco. B: chaqueta morada, abrigo verde y coche azul.
 - Parque A: persona sentada con jersey amarillo, mochila verde junto al banco, bicicleta roja, botella azul y pelota naranja; dos personas pasean al fondo con chaquetas roja y azul. B: jersey morado, bicicleta azul y botella roja.
@@ -30,3 +30,7 @@ No se cuentan las variaciones incidentales de sombras, textura o iluminación qu
 - Entrada A: mochila azul en la parte izquierda del banco, dos zapatillas rojas en el suelo a la derecha, espejo rectangular, cuenco verde con llaves en la repisa y paraguas amarillo. B: mochila roja, paraguas morado y cuenco naranja.
 
 Nivel 1: un dato; nivel 2: reconstrucción de dos datos independientes; nivel 3: tres datos independientes y alternativas que cambian un solo componente. En Atención nivel 3 se distingue también el sentido de cada cambio A → B; invertirlo no es válido. La misma fotografía A es la fuente de todas las respuestas de recuerdo.
+
+## Cafetería y vestuario deportivo
+
+Se añaden `cafe-a/b.png` y `sports-a/b.png` (1448 × 1086 cada una). Revisadas visualmente con sus preguntas y regiones. En la cafetería cambian tres a dos galletas, desaparecen las gafas y la cuchara pasa de diagonal a vertical. En el vestuario se sustituye fútbol por baloncesto, desaparece el silbato y se abre la bolsa. Las preguntas distinguen cantidad, presencia, orientación, identidad y estado; no valoran variaciones incidentales de textura o iluminación. El total es de 14 escenas y 28 fotografías originales generadas con IA.

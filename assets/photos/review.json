@@ -1,6 +1,6 @@
 {
   "origin": "AI-generated photorealistic scenes using image_gen; not photographs of actual customers, their homes or workplaces.",
-  "review": "Each source and edit visually inspected against js/photo-library.js. Difference tasks intentionally ask only about colour changes, not incidental texture or lighting variations.",
+  "review": "Each source and edit visually inspected against js/photo-library.js. Original 12 pairs ask about colour changes. Cafe and sports add quantity, presence, orientation, object identity and open/closed state; incidental texture changes are not assessed.",
   "images": [
     {
       "file": "bus-a.png",
@@ -9,6 +9,14 @@
     {
       "file": "bus-b.png",
       "sha256": "902d65858d393aad7eaad20dc9754be25c2a2bc41c278d9bc17474f693c57417"
+    },
+    {
+      "file": "cafe-a.png",
+      "sha256": "62aab7dadf9e7ec44a9efaa659b19e398fa437de877fb659e91d89e12d9f81da"
+    },
+    {
+      "file": "cafe-b.png",
+      "sha256": "b55b87c4e4e38bbf3ef74b5990df31a33784caed22496cb0ed94d34d2892d1bf"
     },
     {
       "file": "city-a.png",
@@ -89,6 +97,14 @@
     {
       "file": "picnic-b.png",
       "sha256": "83b932a902db9b92ed89783fb17a05115cc01e80d66313653c8470f409bf57e9"
+    },
+    {
+      "file": "sports-a.png",
+      "sha256": "a59821a793472eca71402e15fc4568b6e40f0e65e5d88f28877fd7991962ecaf"
+    },
+    {
+      "file": "sports-b.png",
+      "sha256": "cd2166c270457e0740a14461eed5745fed179bd58e2da551cb52bd0ce03856be"
     },
     {
       "file": "street-a.png",

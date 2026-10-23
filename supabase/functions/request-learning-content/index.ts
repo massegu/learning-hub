@@ -44,10 +44,10 @@ const LIMITS:any = {
 };
 
 const SUBJECTS:any = {
-  early:["language","division","reading","attention","executive","memory","speedReasoning","applied"],
-  junior:["language","division","reading","attention","executive","memory","speedReasoning","applied"],
-  primary:["geometry","language","division","reading","english","literacy","attention","executive","memory","speedReasoning","applied"],
-  middle:["middleLanguage","middleMath","middleReading","english","literacy","attention","executive","memory","speedReasoning","applied"],
+  early:["social","language","division","reading","attention","executive","memory","speedReasoning","applied"],
+  junior:["social","language","division","reading","attention","executive","memory","speedReasoning","applied"],
+  primary:["social","geometry","language","division","reading","english","literacy","attention","executive","memory","speedReasoning","applied"],
+  middle:["social","middleLanguage","middleMath","middleReading","english","literacy","attention","executive","memory","speedReasoning","applied"],
   teen:["teenLanguage","teenMath","social","english","literacy","attention","executive","memory","speedReasoning","applied"]
 };
 
@@ -972,6 +972,7 @@ function socialExercise(level:number){
 }
 
 function validateItem(item:any):boolean{
+  if(item?.socialEvidence||/^social_perspective_/.test(item?.mechanic||'')){try{(globalThis as any).Curriculum.validateSocial(item);}catch(_){return false;}}
   if(item?.interactionTask||/^executive_interactive_|^attention_room_search$/.test(item?.mechanic||'')){try{(globalThis as any).Curriculum.validateInteraction(item);}catch(_){return false;}}
   try{
     if(item?.photoTask||item?.stimulus?.some((b:any)=>['photo','photoPair'].includes(b?.type)))(globalThis as any).PhotoLibrary.validate(item);
@@ -2306,6 +2307,7 @@ function variantExercise(age:string,domain:string,level:number,subdomain:string|
   const photos=(globalThis as any).PhotoLibrary;
   const photo=()=>{const item=photos.generate(age,domain,level);return item?{...item,id:age+'-photo-'+crypto.randomUUID()}:null;};
   if(photosOnly)return photo();
+  if(domain==='social'&&age==='teen'&&Math.random()<.5)return {...matrixSocial18(age,domain,level,Math.floor(Math.random()*360)),domain};
   if(domain==="attention"&&documentsOnly!==true&&photos.supports(age,domain)&&Math.random()<.3)return photo();
   const academic=(globalThis as any).Curriculum.generateAcademic(age,domain,level,subdomain||'grammar');
   if(academic)return {...academic,id:age+'-academic-'+crypto.randomUUID()};
@@ -2389,10 +2391,11 @@ Deno.serve(async (req:Request)=>{
   const requestedDomains=kind==="worksheet" ? (Array.isArray(body.domains)&&body.domains.length?body.domains:(globalThis as any).Curriculum.visible(SUBJECTS[age]||[],age)) : [body.domain];
   if(!SUBJECTS[age] || !Number.isInteger(level) || (kind!=="game" && (!Array.isArray(requestedDomains)||!requestedDomains.length||requestedDomains.some((d:any)=>!SUBJECTS[age].includes(d)))))
     return new Response(JSON.stringify({error:"Área o nivel no permitido para este perfil."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
-  if(body.client_revision!==undefined&&![1,2,3,4].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.client_revision!==undefined&&![1,2,3,4,5].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.interaction_only!==undefined&&(typeof body.interaction_only!=='boolean'||body.interaction_only&&(kind!=='exercise'||!['junior','primary','middle','teen'].includes(age)||!['attention','executive'].includes(body.domain)||body.documents_only||body.photos_only)))return new Response(JSON.stringify({error:'Modalidad interactiva no disponible para esta petición.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.interaction_only&&Number(body.client_revision||1)<4)return new Response(JSON.stringify({error:'Actualiza la página para abrir las actividades interactivas.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
-  if(body.interaction_kind!==undefined&&(!body.interaction_only||!(body.domain==='attention'?['room']:['symbols','movement']).includes(body.interaction_kind)))return new Response(JSON.stringify({error:'Tipo de actividad interactiva no válido.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.interaction_kind==='auditory'&&Number(body.client_revision||1)<5)return new Response(JSON.stringify({error:'Actualiza la página para abrir las actividades con audio.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.interaction_kind!==undefined&&(!body.interaction_only||!(body.domain==='attention'?['room']:['symbols','movement','auditory']).includes(body.interaction_kind)))return new Response(JSON.stringify({error:'Tipo de actividad interactiva no válido.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   // Existing tabs must never receive an interaction they cannot score. Old
   // clients retain established tasks; the new document audit requests a refresh.
   if(body.photos_only&&Number(body.client_revision||1)<3)return new Response(JSON.stringify({error:'Actualiza la página para abrir las escenas cotidianas.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});

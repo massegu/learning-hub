@@ -2955,18 +2955,14 @@ body {
 #progress .section-intro p{font-size:.85rem;line-height:1.5}
 @media(max-width:650px){#progressCards{grid-template-columns:repeat(2,minmax(0,1fr))}#progressCards .progress-subject{grid-template-columns:1fr;text-align:center;gap:5px;min-height:155px;padding:10px}#progressCards .progress-subject>small:first-child{grid-column:1;grid-row:1;align-self:center}#progressCards .accuracy-ring{grid-column:1;grid-row:2;margin:auto;width:70px;height:70px}#progressCards .progress-subject>small:last-child{grid-column:1;grid-row:3}.speed-timing-list{grid-template-columns:1fr;gap:16px}.speed-timing-card{padding:14px}}
 
-/* Original storybook medallions: decorative area art, independent of answer icons. */
-#exerciseHeading::before{content:'';display:inline-block;flex:0 0 58px;width:58px;height:58px;background-image:url('../assets/icons/adventure-areas.png');background-size:400% 200%;background-repeat:no-repeat;background-position:0 0}
+/* Cohesive original area icons. Text labels carry meaning; artwork is decorative. */
 #exerciseHeading{display:flex;align-items:center;gap:12px;min-width:0}
-#exercise[data-subject='division'] #exerciseHeading::before,#exercise[data-subject='middleMath'] #exerciseHeading::before,#exercise[data-subject='teenMath'] #exerciseHeading::before,#exercise[data-subject='geometry'] #exerciseHeading::before{background-position:33.333333% 0}
-#exercise[data-subject='reading'] #exerciseHeading::before,#exercise[data-subject='literacy'] #exerciseHeading::before{background-position:66.666667% 0}
-#exercise[data-subject='attention'] #exerciseHeading::before{background-position:100% 0}
-#exercise[data-subject='executive'] #exerciseHeading::before{background-position:0 100%}
-#exercise[data-subject='memory'] #exerciseHeading::before{background-position:33.333333% 100%}
-#exercise[data-subject='speedReasoning'] #exerciseHeading::before{background-position:66.666667% 100%}
-#exercise[data-subject='english'] #exerciseHeading::before,#exercise[data-subject='social'] #exerciseHeading::before,#exercise[data-subject='applied'] #exerciseHeading::before{background-position:100% 100%}
-@media(max-width:650px){#exerciseHeading::before{flex-basis:46px;width:46px;height:46px}#exerciseHeading{gap:8px}}
-
+#exerciseHeading::before,.nav-area-icon,[data-area] .area-illustration{content:'';display:inline-block;background-image:url('../assets/icons/learning-areas-3d.png');background-size:400% 300%;background-repeat:no-repeat;background-position:0 0;border-radius:12px;flex-shrink:0}
+#exerciseHeading::before{width:64px;height:64px;flex-basis:64px}
+.nav-area-icon{width:32px;height:32px;vertical-align:middle;margin-right:7px}
+.nav-item[data-subject]{display:flex;align-items:center;text-align:left}
+[data-area] .area-illustration{width:64px;height:64px}
+[data-area] .area-illustration svg{visibility:hidden}
 #billingMessage{margin:0;padding:12px 20px;background:#eef5e9;color:#244f40;border-bottom:1px solid #d4dfd2;line-height:1.5}
 #billingMessage:empty{display:none}
 /* Support stays available on the sign-in screen and in the workspace. */
@@ -2992,3 +2988,23 @@ body {
 #interactionKindSwitch{display:flex;width:fit-content;max-width:100%;flex-wrap:wrap}
 
 .practice-document.editorial-document{width:100%;max-width:850px}
+
+#exercise[data-subject='language'] #exerciseHeading::before,.nav-item[data-subject='language'] .nav-area-icon,[data-area='language'] .area-illustration{background-position:0.000000% 0%}
+#exercise[data-subject='middleLanguage'] #exerciseHeading::before,.nav-item[data-subject='middleLanguage'] .nav-area-icon,[data-area='middleLanguage'] .area-illustration{background-position:0.000000% 0%}
+#exercise[data-subject='teenLanguage'] #exerciseHeading::before,.nav-item[data-subject='teenLanguage'] .nav-area-icon,[data-area='teenLanguage'] .area-illustration{background-position:0.000000% 0%}
+#exercise[data-subject='division'] #exerciseHeading::before,.nav-item[data-subject='division'] .nav-area-icon,[data-area='division'] .area-illustration{background-position:33.333333% 0%}
+#exercise[data-subject='middleMath'] #exerciseHeading::before,.nav-item[data-subject='middleMath'] .nav-area-icon,[data-area='middleMath'] .area-illustration{background-position:33.333333% 0%}
+#exercise[data-subject='teenMath'] #exerciseHeading::before,.nav-item[data-subject='teenMath'] .nav-area-icon,[data-area='teenMath'] .area-illustration{background-position:33.333333% 0%}
+#exercise[data-subject='reading'] #exerciseHeading::before,.nav-item[data-subject='reading'] .nav-area-icon,[data-area='reading'] .area-illustration{background-position:66.666667% 0%}
+#exercise[data-subject='middleReading'] #exerciseHeading::before,.nav-item[data-subject='middleReading'] .nav-area-icon,[data-area='middleReading'] .area-illustration{background-position:66.666667% 0%}
+#exercise[data-subject='literacy'] #exerciseHeading::before,.nav-item[data-subject='literacy'] .nav-area-icon,[data-area='literacy'] .area-illustration{background-position:66.666667% 0%}
+#exercise[data-subject='attention'] #exerciseHeading::before,.nav-item[data-subject='attention'] .nav-area-icon,[data-area='attention'] .area-illustration{background-position:100.000000% 0%}
+#exercise[data-subject='executive'] #exerciseHeading::before,.nav-item[data-subject='executive'] .nav-area-icon,[data-area='executive'] .area-illustration{background-position:0.000000% 50%}
+#exercise[data-subject='memory'] #exerciseHeading::before,.nav-item[data-subject='memory'] .nav-area-icon,[data-area='memory'] .area-illustration{background-position:33.333333% 50%}
+#exercise[data-subject='speedReasoning'] #exerciseHeading::before,.nav-item[data-subject='speedReasoning'] .nav-area-icon,[data-area='speedReasoning'] .area-illustration{background-position:66.666667% 50%}
+#exercise[data-subject='social'] #exerciseHeading::before,.nav-item[data-subject='social'] .nav-area-icon,[data-area='social'] .area-illustration{background-position:100.000000% 50%}
+#exercise[data-subject='english'] #exerciseHeading::before,.nav-item[data-subject='english'] .nav-area-icon,[data-area='english'] .area-illustration{background-position:0.000000% 100%}
+#exercise[data-subject='geometry'] #exerciseHeading::before,.nav-item[data-subject='geometry'] .nav-area-icon,[data-area='geometry'] .area-illustration{background-position:33.333333% 100%}
+#exercise[data-subject='applied'] #exerciseHeading::before,.nav-item[data-subject='applied'] .nav-area-icon,[data-area='applied'] .area-illustration{background-position:66.666667% 100%}
+@media(max-width:650px){#exerciseHeading::before{width:48px;height:48px;flex-basis:48px}.nav-area-icon{width:28px;height:28px}[data-area] .area-illustration{width:52px;height:52px}}
+.listening-samples{display:flex;gap:.5rem;flex-wrap:wrap;margin:1rem 0}.listening-rules #listeningStatus{min-height:3em}

@@ -1,6 +1,7 @@
 (function(root){
   'use strict';
   const areas={
+    social:{title:'Social Lab',theme:'Convivir',icon:'gift',description:'Escucha, comparte y comprende a los demás.'},
     language:{title:'Lenguaje',theme:'Palabras',icon:'pencil',description:'Juega con las palabras.'},
     reading:{title:'Lectura + Escritura',theme:'Historias',icon:'book',description:'Descubre historias cortas.'},
     division:{title:'Matemáticas',theme:'Cantidades',icon:'apple',description:'Cuenta, junta y compara.'},

@@ -1,8 +1,8 @@
 (function (root) {
   'use strict';
-  const domains = ['language', 'division', 'reading', 'attention', 'executive', 'memory', 'speedReasoning', 'applied'];
+  const domains = ['language', 'division', 'reading', 'attention', 'executive', 'memory', 'speedReasoning', 'applied', 'social'];
   const domainMechanics = {
-    language:['literal','vocabulary','sentence'], division:['count','addition','subtraction','compare'],
+    social:['cooperation','perspective','boundaries'], language:['literal','vocabulary','sentence'], division:['count','addition','subtraction','compare'],
     reading:['literal','inference','sequencing'], attention:['matching','search','oddOne','findPlace'],
     memory:['rememberObjects','rememberPlace','rememberPair','rememberOrder'],
     executive:['planning','inhibition','sequencing','organisation'],
@@ -12,7 +12,7 @@
   const early = Object.freeze({
     id: 'early', revision: 1, label: '6-7 años', subjects: Object.freeze(domains),
     contexts: Object.freeze(['school', 'playground', 'animals', 'toys', 'sports', 'snacks', 'birthday', 'family', 'bedroom', 'backpack', 'excursion']),
-    mechanics: Object.freeze(['literal', 'inference', 'vocabulary', 'sentence', 'count', 'addition', 'subtraction', 'compare', 'matching', 'search', 'oddOne', 'rememberObjects', 'rememberPlace', 'rememberPair', 'rememberOrder', 'planning', 'inhibition', 'sequencing', 'organisation', 'analogy', 'pattern', 'classification', 'relationship', 'chooseObject', 'solveProblem', 'followRule', 'findPlace', 'speedCompare']),
+    mechanics: Object.freeze(['cooperation','perspective','boundaries','literal', 'inference', 'vocabulary', 'sentence', 'count', 'addition', 'subtraction', 'compare', 'matching', 'search', 'oddOne', 'rememberObjects', 'rememberPlace', 'rememberPair', 'rememberOrder', 'planning', 'inhibition', 'sequencing', 'organisation', 'analogy', 'pattern', 'classification', 'relationship', 'chooseObject', 'solveProblem', 'followRule', 'findPlace', 'speedCompare']),
     maxWords: 45, maxSentenceWords: 14, maxOptions: 3, maxElements: 6,
     memoryElements: Object.freeze([5, 6, 7]), maxSteps: 3,
     stimulusTypes: Object.freeze(['text', 'list', 'table']),
