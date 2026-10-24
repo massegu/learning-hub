@@ -37,14 +37,15 @@
     <div class="profile-modal card">
       <span class="pill">PERFIL</span>
       <h2>Crea un perfil para empezar</h2>
-      <p>Cada persona tendrá su propio progreso, puntuación e historial. Cambiar de usuario ya no mezcla los resultados.</p>
-      <label>Nombre o alias<input id="newProfileName" maxlength="24" placeholder="Ej. Alex" /></label>
+      <p>Utiliza un código distinto por persona, sin nombres, fecha de nacimiento ni diagnósticos. Guarda la correspondencia con la persona en tu propio sistema. Cada código conserva su seguimiento.</p>
+      <label>Código del perfil<input id="newProfileName" maxlength="24" placeholder="Ej. P-024" /></label>
       <label>Grupo de edad<select id="newProfileAge"><option value="primary">10-12 años</option><option value="middle">13-15 años</option><option value="teen">16-18 años</option></select></label>
       <label>Nivel inicial<select id="newProfileLevel"><option value="1">Nivel 1 · Inicio</option><option value="2">Nivel 2 · Intermedio</option><option value="3">Nivel 3 · Avanzado</option></select></label>
       <button id="createProfileBtn" class="primary-btn">Crear perfil</button>
     </div>
   </div>
 
+  <dialog id="privacyDialog" class="password-dialog" aria-labelledby="privacyTitle"><h2 id="privacyTitle">Privacidad del perfil</h2><p>El código permite el seguimiento, pero no garantiza anonimato. Evita nombres y datos clínicos.</p><p id="privacyStatus" role="status"></p><label>Código del perfil<input id="privacyAlias" maxlength="24" /></label><label>Revisar la conservación el<input id="privacyReviewDate" type="date" /></label><p>Esta fecha es un recordatorio. No elimina datos automáticamente. Revisa qué necesitas conservar y borra lo que ya no sea necesario.</p><div class="auth-actions"><button id="saveProfilePrivacy" class="primary-btn">Guardar ajustes</button><button id="exportProfilePrivacy" class="secondary-btn">Exportar datos del perfil (JSON)</button><button id="eraseProfilePrivacy" class="secondary-btn">Eliminar perfil y resultados</button><button id="closeProfilePrivacy" class="secondary-btn">Cerrar</button></div><p>Los resultados pueden estar en las copias de seguridad del proveedor hasta su rotación. Los archivos descargados y las copias del profesional se gestionan por separado.</p></dialog>
   <div id="appShell" class="app-shell hidden">
     <aside class="sidebar">
       <div class="brand"><div class="brand-badge"><span>LU</span></div><div><h1>LEVEL UP</h1><p>Learning Lab</p></div></div>
@@ -53,6 +54,7 @@
         <select id="profileSelect"></select>
         <div class="profile-actions"><button id="newProfileBtn" class="mini-btn">+ Nuevo</button><button id="deleteProfileBtn" class="mini-btn danger">Eliminar</button></div>
       </div>
+      <div class="privacy-panel"><button id="independentSessionBtn" class="ghost-btn">Empezar sesión independiente</button><p id="independentSessionStatus" role="status">Seguimiento individual: los resultados se guardan en este perfil.</p><button id="profilePrivacyBtn" class="ghost-btn">Privacidad de este perfil</button></div>
       <nav id="navMenu" class="nav-menu"></nav>
       <div class="sidebar-footer">
         <div class="score-chip"><span>TOTAL</span><strong id="globalScore">0</strong><small>PTS</small></div>
@@ -119,6 +121,6 @@
     </main>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/stimulus-art.js"></script><script src="js/stimulus-art-png.js"></script><script src="js/early-refinements.js"></script><script src="js/content-policy.js"></script><script src="js/early-language.js"></script><script src="js/document-library.js"></script><script src="js/reading-library.js"></script><script src="js/photo-library.js"></script><script src="js/curriculum.js"></script><script src="js/early-content.js"></script><script src="js/activity-model.js"></script><script src="js/locale-content.js"></script><script src="js/worksheet-selection.js"></script><script src="js/early-journey.js"></script><script src="js/config.js"></script><script src="js/api.js"></script><script src="js/auth-account.js"></script><script src="js/docx.js"></script><script src="js/age-stages.js"></script><script src="js/school-journey.js"></script><script src="js/app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/stimulus-art.js"></script><script src="js/stimulus-art-png.js"></script><script src="js/early-refinements.js"></script><script src="js/content-policy.js"></script><script src="js/early-language.js"></script><script src="js/document-library.js"></script><script src="js/reading-library.js"></script><script src="js/photo-library.js"></script><script src="js/curriculum.js"></script><script src="js/early-content.js"></script><script src="js/activity-model.js"></script><script src="js/locale-content.js"></script><script src="js/worksheet-selection.js"></script><script src="js/early-journey.js"></script><script src="js/config.js"></script><script src="js/privacy-controls.js"></script><script src="js/api.js"></script><script src="js/auth-account.js"></script><script src="js/docx.js"></script><script src="js/age-stages.js"></script><script src="js/school-journey.js"></script><script src="js/app.js"></script>
 </body>
 </html>
