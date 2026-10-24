@@ -448,10 +448,10 @@
     stopInteraction();const version=interactionVersion,t=it.interactionTask,visual=$('#exerciseVisual'),area=$('#exerciseOptions');
     const live=()=>currentItem===it&&version===interactionVersion;
     const local=value=>window.LocaleContent.text(value,API.effectiveLocale(profile));
-    const recordObservation=(report,description='')=>{
+    const recordObservation=report=>{
       if(!live()||it._earlyAnswered)return;
       it._earlyAnswered=true;
-      const entry={itemId:it.id,subject,kind:t.kind,level:it.level,ts:new Date().toISOString(),report,description};
+      const entry={itemId:it.id,subject,kind:t.kind,level:it.level,ts:new Date().toISOString(),report};
       profile.progress={...profile.progress,interactiveObservations:[...(profile.progress?.interactiveObservations||[]),entry].slice(-100)};
       if(guidedSession){
         guidedSession.answered=true;
@@ -464,9 +464,9 @@
     if(t.kind==='auditory'){renderListeningExercise(it,{live,local,recordObservation});return;}
     if(t.kind==='movement'){renderMovementExercise(it,{live,local,recordObservation});return;}
     if(t.kind==='room'){
-      area.innerHTML='<div class="room-response"><label for="roomDescription">Describe el objeto y explica por qué cumple la consigna.</label><textarea id="roomDescription" rows="4" maxlength="700" placeholder="He encontrado… Cumple la consigna porque…"></textarea><p id="roomResponseMessage" role="status"></p><button id="saveRoomObservation" class="primary-btn">Guardar descripción</button><button id="roomNotFound" class="secondary-btn">No encuentro un objeto que cumpla la consigna</button></div>';
-      $('#saveRoomObservation').onclick=()=>{const text=$('#roomDescription').value.trim();if(text.length<10){$('#roomResponseMessage').textContent='Escribe qué has encontrado y qué característica cumple.';return;}recordObservation('described',text);};
-      $('#roomNotFound').onclick=()=>recordObservation('not_found',$('#roomDescription').value.trim());return;
+      area.innerHTML='<div class="room-response"><p>Respuesta temporal: no incluyas nombres ni datos personales. La descripción no se guarda en el historial.</p><label for="roomDescription">Describe el objeto y explica por qué cumple la consigna.</label><textarea id="roomDescription" rows="4" maxlength="700" placeholder="He encontrado… Cumple la consigna porque…"></textarea><p id="roomResponseMessage" role="status"></p><button id="saveRoomObservation" class="primary-btn">Registrar respuesta</button><button id="roomNotFound" class="secondary-btn">No encuentro un objeto que cumpla la consigna</button></div>';
+      $('#saveRoomObservation').onclick=()=>{const text=$('#roomDescription').value.trim();if(text.length<10){$('#roomResponseMessage').textContent='Escribe qué has encontrado y qué característica cumple.';return;}recordObservation('described');};
+      $('#roomNotFound').onclick=()=>recordObservation('not_found');return;
     }
     let trial=0,correctTrials=0,noGoErrors=0;
     const rulesTable=rules=>window.ActivityModel.interactiveStimulus([{type:'table',header:true,rows:[['Tarjeta','Qué tienes que hacer'],...rules.map(r=>[t.kind==='symbols'?r.symbol+' · '+local(r.label):r.label,r.target<0?'Espera sin hacer nada':local(t.actions[r.target])])]}],{structured:true});
@@ -742,6 +742,7 @@
       ts: new Date().toISOString(),
       sessionId: state.session.id,
       sessionStartedAt: state.session.startedAt,
+      sessionOnly:profile._sessionOnly===true,
       subject: s,
       correct,
       points: pts,
@@ -761,6 +762,7 @@
   }
   function showAuth(msg = "") {
     stopMemoryCountdown();
+    $('#privacyDialog').close();privacyTarget=null;API.setIndependent(null);
     $("#authGate").classList.remove("hidden");
     $("#appShell").classList.add("hidden");
     $("#authMessage").textContent = msg;
@@ -855,6 +857,7 @@
   }
   function openProfileGate() {
     $("#profileGate").classList.remove("hidden");
+    if(!$("#newProfileName").value)$("#newProfileName").value=window.PrivacyControls.newCode();
     $("#newProfileName").focus();
   }
   function closeProfileGate() {
@@ -878,11 +881,17 @@
       alert(e.message);
     }
   }
-  function activateProfile(id) {
+  function activateProfile(id,independent=false) {
     stopMemoryCountdown();
+    $('#privacyDialog').close();privacyTarget=null;
     const p = profiles.find((x) => x.id === id);
     if (!p) return;
-    profile = p;
+    API.setIndependent(independent?id:null);
+    profile = independent?window.PrivacyControls.independent(p):p;
+    if(!independent)API.recordAccess(id);
+    $("#independentSessionBtn").textContent=independent?"Terminar sesión independiente":"Empezar sesión independiente";
+    $("#independentSessionStatus").textContent=independent?"Los resultados de esta sesión no se guardan. El uso se contabiliza por cuenta. Al terminar o recargar se descartan.":"Seguimiento individual: los resultados se guardan en este perfil.";
+    $("#deleteProfileBtn").disabled=independent;$("#profilePrivacyBtn").disabled=independent;
     photoOnly = false;roomSpeedOnly=false;
     guidedSession=null;
     hideGuidedBar();
@@ -894,7 +903,7 @@
     currentItem = null;
     requestGeneration++;
     localStorage.setItem("lh_current_profile", id);
-    state = normalizeState(p);
+    state = normalizeState(profile);
     subject = ageData().subjects[0];
     mode = "grammar";
     counter = 0;
@@ -1046,6 +1055,7 @@
     const res = await API.requestContent({
       ...payload,
       client_revision:7,
+      ...(targetProfile._sessionOnly?{session_only:true}:{}),
       profile_id: targetProfile.id,
       locale,
     });
@@ -1629,8 +1639,8 @@
     if(!observations){observations=document.createElement('details');observations.id='interactiveObservations';observations.className='card interactive-observations';$('#speedProgressChart').after(observations);}
     const entries=profile.progress?.interactiveObservations||[];
     const observationText=entry=>{
+      if(entry.report==='described')return 'Objeto descrito y revisado durante la actividad. La descripción no se conserva.';
       if(entry.report?.completion){const labels={completed:'Práctica realizada según la valoración final.',difficult:'Se han indicado dificultades en la valoración final.',skipped:'Práctica no realizada según la valoración final.'};return (labels[entry.report.completion]||'Práctica finalizada.')+' Los gestos no se han comprobado automáticamente. Adelantos o confusiones marcados: '+(entry.report.trials||[]).filter(x=>x.report==='early').length+'.';}
-      if(entry.description)return entry.description;
       if(entry.report==='not_found')return 'No se ha encontrado un objeto adecuado.';
       const trials=entry.report?.trials;
       if(Array.isArray(trials))return `Según la observación: espera respetada en ${trials.filter(x=>x.report==='waited').length} de ${trials.length} tarjetas; adelantos: ${trials.filter(x=>x.report==='early').length}; sin práctica: ${trials.filter(x=>x.report==='skipped').length}; sin audio: ${trials.filter(x=>x.report==='audio_unavailable').length}.`;
@@ -1878,19 +1888,60 @@
       hideGuidedBar();
       switchSection(mission?'home':'sessionBuilder');
     };
+  $('#independentSessionBtn').onclick=()=>{
+    if(!profile)return;
+    const active=profile._sessionOnly===true;
+    if(active&&!confirm('Terminar y descartar los resultados de esta sesión independiente?'))return;
+    activateProfile(profile.id,!active);
+  };
+  let privacyTarget=null,privacyBusy=false;
+  const privacyMessage=text=>{$('#privacyStatus').textContent=text;};
+  const privacyAction=async(action,settings={})=>{
+    if(privacyBusy||!privacyTarget)return;privacyBusy=true;
+    $$('#privacyDialog button').forEach(b=>b.disabled=true);
+    try{const target=privacyTarget,owner=API.user?.id;const result=await API.privacy(action,target,settings);if(privacyTarget!==target||API.user?.id!==owner||!$('#privacyDialog').open)throw new Error('La sesión ha cambiado. Vuelve a abrir la gestión de privacidad.');return result;}
+    catch(error){privacyMessage(error.message);throw error;}
+    finally{privacyBusy=false;$$('#privacyDialog button').forEach(b=>b.disabled=false);}
+  };
+  $('#profilePrivacyBtn').onclick=async()=>{
+    if(!profile||profile._sessionOnly)return;
+    privacyTarget=profile.id;$('#privacyAlias').value=profile.name;$('#privacyReviewDate').value='';
+    $('#privacyDialog').showModal();privacyMessage('Cargando los ajustes del perfil…');
+    try{const status=await privacyAction('open');$('#privacyReviewDate').value=status.review_at||'';privacyMessage(status.review_at&&status.review_at<=new Date().toISOString().slice(0,10)?'Ha llegado la fecha de revisar la conservación de este perfil.':'La exportación y el borrado incluyen los resultados asociados al perfil.');}catch(_){}
+  };
+  $('#closeProfilePrivacy').onclick=()=>{if(!privacyBusy)$('#privacyDialog').close();};
+  $('#privacyDialog').addEventListener('cancel',e=>{if(privacyBusy)e.preventDefault();});
+  $('#saveProfilePrivacy').onclick=async()=>{
+    try{const updated=await privacyAction('settings',{alias:$('#privacyAlias').value.trim(),reviewAt:$('#privacyReviewDate').value||null});
+      const found=profiles.find(p=>p.id===privacyTarget);if(found)Object.assign(found,updated);if(profile?.id===privacyTarget){profile.name=updated.name;renderProfiles();updateGlobalUI();}privacyMessage('Código y fecha de revisión guardados.');
+    }catch(_){}
+  };
+  $('#exportProfilePrivacy').onclick=async()=>{
+    try{const data=await privacyAction('export'),url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+      const a=document.createElement('a');a.href=url;a.download='perfil-'+privacyTarget+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);privacyMessage('Exportación preparada. Guarda el archivo en un lugar seguro.');
+    }catch(_){}
+  };
+  $('#eraseProfilePrivacy').onclick=async()=>{
+    if(!confirm('Eliminar definitivamente este perfil, su historial y sus resultados? Los archivos ya descargados se gestionan por separado.'))return;
+    try{await privacyAction('delete');const id=privacyTarget;$('#privacyDialog').close();localStorage.removeItem('lh_v16_last_subject_'+id);profiles=profiles.filter(p=>p.id!==id);profile=null;state=null;currentItem=null;stopMemoryCountdown();requestGeneration++;
+      if(profiles.length)activateProfile(profiles[0].id);else{API.setIndependent(null);$('#navMenu').innerHTML='';renderProfiles();openProfileGate();}
+    }catch(_){}
+  };
+
   $("#createProfileBtn").onclick = createProfile;
   $("#newProfileBtn").onclick = openProfileGate;
-  $("#profileSelect").onchange = (e) => activateProfile(e.target.value);
+  $("#profileSelect").onchange = (e) => {if(profile?._sessionOnly&&!confirm('Cambiar de perfil y descartar los resultados de la sesión independiente?')){e.target.value=profile.id;return;}activateProfile(e.target.value);};
   $("#deleteProfileBtn").onclick = async () => {
     if (!profile || !confirm(`¿Eliminar el perfil de ${profile.name}?`)) return;
-    await API.deleteProfile(profile.id);
-    profiles = profiles.filter((p) => p.id !== profile.id);
-    profile = null;
-    if (profiles.length) activateProfile(profiles[0].id);
-    else {
-      renderProfiles();
-      openProfileGate();
-    }
+    const target=profile.id,owner=API.user?.id;
+    try{await API.deleteProfile(target);}catch(error){alert(error.message);return;}
+    if(API.user?.id!==owner)return;
+    localStorage.removeItem('lh_v16_last_subject_'+target);
+    profiles=profiles.filter(p=>p.id!==target);
+    if(profile?.id!==target){renderProfiles();return;}
+    profile=null;state=null;currentItem=null;requestGeneration++;stopMemoryCountdown();API.setIndependent(null);
+    if(profiles.length)activateProfile(profiles[0].id);
+    else{$('#navMenu').innerHTML='';renderProfiles();openProfileGate();}
   };
   $("#resetProgressBtn").onclick = () => {
     if (confirm("¿Reiniciar el progreso de este perfil?")) {

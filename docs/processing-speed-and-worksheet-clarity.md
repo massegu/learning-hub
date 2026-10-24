@@ -1,6 +1,6 @@
 # Iteración del 24 de octubre: instrucciones y velocidad
 
-Parte de `desarrollo` tras la PR #19. No cambia iconos, fotografías, documentos visuales existentes, cuotas de suscripción ni Stripe. No incorpora ni ejecuta la migración de privacidad.
+Se prepara sobre la rama de privacidad revisada, que ya incorpora `desarrollo` tras la PR #19. Primero se activa y fusiona privacidad; después esta PR añade los cambios educativos. No cambia iconos, fotografías, documentos visuales existentes, cuotas de suscripción ni Stripe. La migración no se ejecuta automáticamente.
 
 ## Banco y uso diario
 
@@ -41,3 +41,5 @@ La API exige revisión 7 y valida la edad, el área y la modalidad; clientes ant
 - La compilación remota sin publicación no pudo completarse: Supabase rechazó la credencial del entorno (HTTP 401). No se ha publicado ni aplicado SQL; queda la comprobación remota y la validación de beta tras revisar/publicar la rama.
 
 Capturas: [plan separado](review-assets/processing-speed/attention-plan.png), [dos claves en móvil](review-assets/processing-speed/two-keys-mobile.png), [búsqueda observada](review-assets/processing-speed/room-observation.png).
+
+La integración con privacidad mantiene el indicador de sesión independiente en la revisión 7 del cliente y suprime también las escrituras de las observaciones del entorno cuando la sesión es temporal. Se han resuelto los conflictos de código antes de entregar las ramas.
