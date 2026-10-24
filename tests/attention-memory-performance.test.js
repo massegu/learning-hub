@@ -21,7 +21,7 @@ test('memory icon labels are concise while canonical evidence and other subject 
 });
 test('cached mechanic groups preserve the complete speed bank and return isolated candidates',()=>{
  const {context}=load(),bank=context.Curriculum.pool('teen','speedReasoning',3),keys=new Set(),families=new Set();
- for(let i=0;i<12000;i++){
+ for(let i=0;i<bank.length*80&&keys.size<bank.length;i++){
   const it=context.Curriculum.generate('teen','speedReasoning',3);keys.add(it.contentKey);families.add(it.mechanic);
   it.q='mutated';if(it.stimulus?.[0]?.rows)it.stimulus[0].rows[0][0]='mutated';
  }

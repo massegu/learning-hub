@@ -972,6 +972,7 @@ function socialExercise(level:number){
 }
 
 function validateItem(item:any):boolean{
+  if(item?.roomSpeedTask){try{(globalThis as any).Curriculum.validateRoomSpeed(item);}catch(_){return false;}}
   if(item?.socialEvidence||/^social_perspective_/.test(item?.mechanic||'')){try{(globalThis as any).Curriculum.validateSocial(item);}catch(_){return false;}}
   if(item?.interactionTask||/^executive_interactive_|^attention_room_search$/.test(item?.mechanic||'')){try{(globalThis as any).Curriculum.validateInteraction(item);}catch(_){return false;}}
   try{
@@ -2400,7 +2401,9 @@ Deno.serve(async (req:Request)=>{
   const requestedDomains=kind==="worksheet" ? (Array.isArray(body.domains)&&body.domains.length?body.domains:(globalThis as any).Curriculum.visible(SUBJECTS[age]||[],age)) : [body.domain];
   if(!SUBJECTS[age] || !Number.isInteger(level) || (kind!=="game" && (!Array.isArray(requestedDomains)||!requestedDomains.length||requestedDomains.some((d:any)=>!SUBJECTS[age].includes(d)))))
     return new Response(JSON.stringify({error:"Área o nivel no permitido para este perfil."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
-  if(body.client_revision!==undefined&&![1,2,3,4,5].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.client_revision!==undefined&&![1,2,3,4,5,6,7].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.room_speed_only!==undefined&&(typeof body.room_speed_only!=='boolean'||body.room_speed_only&&(kind!=='exercise'||body.domain!=='speedReasoning'||!['junior','primary','middle','teen'].includes(age)||body.interaction_only||body.photos_only||body.documents_only)))return new Response(JSON.stringify({error:'Modalidad de velocidad no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.room_speed_only&&Number(body.client_revision||1)<7)return new Response(JSON.stringify({error:'Actualiza la página para abrir los retos del entorno.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.interaction_only!==undefined&&(typeof body.interaction_only!=='boolean'||body.interaction_only&&(kind!=='exercise'||!['junior','primary','middle','teen'].includes(age)||!['attention','executive'].includes(body.domain)||body.documents_only||body.photos_only)))return new Response(JSON.stringify({error:'Modalidad interactiva no disponible para esta petición.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.interaction_only&&Number(body.client_revision||1)<4)return new Response(JSON.stringify({error:'Actualiza la página para abrir las actividades interactivas.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.interaction_kind==='auditory'&&Number(body.client_revision||1)<5)return new Response(JSON.stringify({error:'Actualiza la página para abrir las actividades con audio.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -2484,7 +2487,7 @@ Deno.serve(async (req:Request)=>{
       if(row.mechanic_signature) recentEntries.push(row.mechanic_signature);
     }
     const compatibleExercise=()=>{
-      const item=variantExercise(age,domain,level,subdomain,typeof body.documents_only==='boolean'?body.documents_only:null,body.photos_only===true,body.interaction_only===true,body.interaction_kind||null);
+      const item=body.room_speed_only?pick((globalThis as any).Curriculum.roomSpeedPool(age,level)):variantExercise(age,domain,level,subdomain,typeof body.documents_only==='boolean'?body.documents_only:null,body.photos_only===true,body.interaction_only===true,body.interaction_kind||null);
       if(!item||Number(body.client_revision||1)<2&&(item.type==='documentReview'||item.selectiveRecall)||Number(body.client_revision||1)<3&&item.photoTask)return null;
       return regionalCandidate(item,locale,domain,age);
     };

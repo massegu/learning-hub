@@ -147,16 +147,17 @@
 
     items.forEach((it,i)=>{
       const model=models[i];
-      const prompt=model.question;
+      const prompt=it.paperQuestion||model.question;
       const block=[new Paragraph({keepNext:true,spacing:{before:i?160:0,after:90},children:[new TextRun({text:`ACTIVIDAD ${i+1}`,bold:true,size:15,color:green2,font:'Aptos'})]})];
-      if(model.stimulus.length){
+      const paperSource=it.roomSpeedTask?[{type:'text',text:'Busca solo con la vista, desde tu sitio. Una persona puede leer la consigna. En papel, realiza la búsqueda como práctica sin compararla con los tiempos de pantalla.'}]:model.stimulus;
+      if(paperSource.length){
         block.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:softBorders,rows:[new TableRow({children:[new TableCell({shading:{fill:light},margins:{top:140,bottom:140,left:170,right:170},children:[
           new Paragraph({spacing:{after:55},children:[new TextRun({text:early?'MIRA':'INFORMACIÓN',bold:true,size:early?20:13,color:green,font:'Aptos'})]}),
-          ...model.stimulus.flatMap(material=>renderMaterial(material,it))
+          ...paperSource.flatMap(material=>renderMaterial(material,it))
         ]})]})]}));
         block.push(new Paragraph({spacing:{after:75},children:[]}));
       }
-      if(it.type==='memoryReveal') block.push(paragraph(it.recallSequence?'Una persona muestra las figuras una a una, en el orden impreso. Después tapa la secuencia y pide reproducirla.':'Mira el material. Después tápalo antes de responder.'));
+      if(it.type==='memoryReveal') block.push(paragraph(it.recallSequence?'Una persona muestra los elementos uno a uno, en el orden impreso. Después tapa la secuencia y pide reproducirla.':'Mira el material. Después tápalo antes de responder.'));
       if(it.speedTask) block.push(paragraph('Práctica visual en papel: esta ficha no mide el tiempo de respuesta.'));
       block.push(new Paragraph({keepNext:true,spacing:{after:90,line:early?360:300},children:[new TextRun({text:prompt,bold:true,size:early?28:21,color:ink,font:'Aptos'})]}));
       if(model.tokens.length){

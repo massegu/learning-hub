@@ -112,7 +112,7 @@
     if(key!=='es_es'&&/taller|inscripci[oó]n|participa|curso|actividad|centro estudia/iu.test(result))result=result.replace(/(?<!\p{L})m[aá]s plazas(?!\p{L})/giu,x=>casing('más cupos',x)).replace(/(?<!\p{L})ampliar plazas(?!\p{L})/giu,x=>casing('ampliar cupos',x));
     return checkAgreement(result,key);
   }
-  const scalarFields=['q','prompt','memoryQuestion','why','topic','theme','text','title','scenario','sample','model','a','detail','label','instruction','question','rule','n'];
+  const scalarFields=['q','paperQuestion','prompt','memoryQuestion','why','topic','theme','text','title','scenario','sample','model','a','detail','label','instruction','question','rule','n'];
   const arrayFields=['opts','answers','tokens','answer','modelSequence','rows','visualItems','grid','stimuli','sequence','recallSequence','writingRubric'];
   function html(value,locale,senses) {
     if(!value || !/[<>]/.test(value))return text(value,locale,senses);
@@ -164,7 +164,7 @@
     const originalText=visible(item), adaptedText=visible(result);
     const moneyContext=/(?:cuesta|precio|paga|compra|moneda|ahorra|cambio|presupuesto|\d+\s*(?:€|euros?|dólares?|balboas?|colones|colón|EUR|USD|MXN|COP|ARS|CLP|PAB|CRC))/iu.test(originalText);
     if(key!=='es_intl' && moneyContext && item.currencyContext!=='foreign' && Object.entries(currencyPatterns).some(([code,pattern])=>!currencies[key].includes(code)&&pattern.test(originalText)))throw new LocaleAdaptationError('La moneda necesita una actividad regional revisada o un contexto extranjero explícito.');
-    if(item.interactionTask?.kind!=='room'&&originalText!==adaptedText && /letras|sílabas|rima|conjug|sinónimo|antónimo|tradu(?:ce|cir|cción)|palabra[^?]*(?:empieza|termina)/iu.test(item.q || item.prompt || ''))throw new LocaleAdaptationError('La actividad sobre la forma de las palabras necesita una versión regional revisada.');
+    if(item.interactionTask?.kind!=='room'&&!item.roomSpeedTask&&originalText!==adaptedText && /letras|sílabas|rima|conjug|sinónimo|antónimo|tradu(?:ce|cir|cción)|palabra[^?]*(?:empieza|termina)/iu.test(item.q || item.prompt || ''))throw new LocaleAdaptationError('La actividad sobre la forma de las palabras necesita una versión regional revisada.');
     const genderChange=(senses.banana===true?[...rules,bananaRule]:rules).some(rule=>{
       const target=rule.preferred[key]||rule.common;
       return rule.sources.some(source=>source.gender!==target.gender && new RegExp(`(?<!\\p{L})(?:${escape(source.word)}|${escape(source.plural)})(?!\\p{L})`,'iu').test(originalText));
