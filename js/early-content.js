@@ -226,6 +226,7 @@
         result.push(item);
       }
     });
+    if(domain==='attention'&&curriculum?.practice)result.push(...curriculum.practice('early','attention',bandLevel));
     if(domain==='language'&&curriculum?.vocabulary)result.push(...curriculum.vocabulary('early','language',bandLevel));
     const seen = new Set();
     return result.filter(item => {

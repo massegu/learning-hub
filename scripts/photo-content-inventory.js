@@ -5,8 +5,8 @@ for(const age of ages){
  const known=new Set(),byDomain={};
  for(const level of [1,2,3]){
   const language=age==='teen'?'teenLanguage':age==='middle'?'middleLanguage':'language',math=age==='teen'?'teenMath':age==='middle'?'middleMath':'division';
-  for(const domain of ['memory','executive','speedReasoning','reading','literacy',language,math].filter(d=>curriculum.visible(api.SUBJECTS[age],age).includes(d))){
-   const bank=[...curriculum.pool(age,domain,level),...curriculum.academic(age,domain,level,'grammar'),...(docs.supports(age,domain)?docs.pool(age,domain,level):[])];
+  for(const domain of ['memory','executive','speedReasoning','reading','literacy','attention',language,math].filter(d=>curriculum.visible(api.SUBJECTS[age],age).includes(d))){
+   const bank=[...curriculum.pool(age,domain,level),...(domain==='attention'?curriculum.practice(age,domain,level):[]),...curriculum.academic(age,domain,level,'grammar'),...(docs.supports(age,domain)?docs.pool(age,domain,level):[])];
    for(const it of bank){
     const projection=model.printable(it,{age_band:age,progress:{ageRoute:age}});
     const signature=JSON.stringify({domain,stimulus:projection.stimulus,q:projection.question,a:it.a,answers:it.answers,answer:it.answer});
