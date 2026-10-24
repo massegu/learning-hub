@@ -13,7 +13,7 @@ alter table public.learner_privacy_audit enable row level security;
 create policy audit_own on public.learner_privacy_audit for select to authenticated using(account_id=auth.uid());
 revoke all on public.learner_privacy_audit from public,anon,authenticated;
 grant select on public.learner_privacy_audit to authenticated;
-grant all on public.learner_privacy_audit to service_role;
+grant select,insert,delete on public.learner_privacy_audit to service_role;
 
 -- Foreign keys also reject late writes after a concurrent profile deletion.
 do $$declare t text;begin
@@ -22,6 +22,14 @@ do $$declare t text;begin
    execute format('alter table public.%I add constraint %I foreign key(profile_id) references public.learner_profiles(id) on delete cascade',t,'privacy_'||t||'_profile_fk');
   end if;
  end loop;
+end$$;
+
+-- The existing private log schema was reviewed from read-only metadata.
+do $$begin
+ if to_regclass('private.content_delivery_log') is not null and not exists(
+  select 1 from pg_constraint c join pg_attribute a on a.attrelid=c.conrelid and a.attnum=any(c.conkey)
+  where c.contype='f' and c.conrelid=to_regclass('private.content_delivery_log') and c.confrelid='public.learner_profiles'::regclass and a.attname='profile_id' and c.confdeltype='c'
+ ) then raise exception 'Private delivery log must cascade on profile deletion';end if;
 end$$;
 
 -- Replace the policies for these learner-owned tables with one ownership model.
@@ -43,7 +51,26 @@ revoke all on public.learner_profiles,public.exercise_results,public.content_see
 grant select,insert,update,delete on public.learner_profiles to authenticated;
 grant select,insert on public.exercise_results to authenticated;
 grant select on public.content_seen to authenticated;
-grant all on public.learner_profiles,public.exercise_results,public.content_seen to service_role;
+-- Clear explicit column grants too; table REVOKE alone does not remove them.
+do $$declare t text;cols text;begin
+ foreach t in array array['learner_profiles','exercise_results','content_seen'] loop
+  select string_agg(quote_ident(attname),',') into cols from pg_attribute where attrelid=format('public.%I',t)::regclass and attnum>0 and not attisdropped;
+  execute format('revoke all (%s) on public.%I from public,anon,authenticated,service_role',cols,t);
+ end loop;
+end$$;
+revoke all on public.learner_profiles,public.exercise_results,public.content_seen from service_role;
+grant select,insert,update,delete on public.learner_profiles,public.exercise_results,public.content_seen to service_role;
+-- Identity/serial IDs may use separately protected sequences.
+do $$declare t text;seq text;begin
+ foreach t in array array['exercise_results','content_seen','learner_privacy_audit'] loop
+  select pg_get_serial_sequence('public.'||t,'id') into seq;
+  if seq is not null then
+   execute format('revoke all on sequence %s from public,anon,authenticated',seq);
+   execute format('grant usage on sequence %s to service_role',seq);
+   if t='exercise_results' then execute format('grant usage on sequence %s to authenticated',seq);end if;
+  end if;
+ end loop;
+end$$;
 
 create function public.minimize_learner_progress(p jsonb) returns jsonb language sql immutable set search_path=public as $$
  select case when jsonb_typeof(p->'interactiveObservations')='array' then jsonb_set(p,'{interactiveObservations}',coalesce((select jsonb_agg(e-'description'-'notes'-'freeText'-'responseText') from jsonb_array_elements(p->'interactiveObservations') e),'[]'::jsonb)) else p end
@@ -70,13 +97,22 @@ update public.learner_profiles set progress=public.minimize_learner_progress(pro
 
 create function public.manage_learner_privacy(p_action text,p_profile uuid,p_alias text default null,p_review_at date default null) returns jsonb
 language plpgsql security definer set search_path=public,pg_temp as $$
-declare learner public.learner_profiles;result jsonb;
+declare learner public.learner_profiles;result jsonb;delivery_log jsonb='[]'::jsonb;inconsistent boolean;
 begin
  if auth.uid() is null then raise exception 'Authentication required' using errcode='42501';end if;
  select * into learner from public.learner_profiles where id=p_profile and account_id=auth.uid() for update;
  if not found then raise exception 'Profile not found' using errcode='42501';end if;
  if p_action='export' then
+  if exists(select 1 from pg_constraint where contype='f' and confrelid='public.learner_profiles'::regclass and conrelid not in ('public.exercise_results'::regclass,'public.content_seen'::regclass) and conrelid is distinct from to_regclass('private.content_delivery_log')) then raise exception 'Unreviewed learner storage requires review';end if;
+  if to_regclass('private.content_delivery_log') is not null then
+   if exists(select 1 from pg_attribute where attrelid=to_regclass('private.content_delivery_log') and attnum>0 and not attisdropped and attname not in ('id','user_id','profile_id','content_id','kind','delivered_at')) then raise exception 'Unreviewed private delivery columns require review';end if;
+   execute 'select exists(select 1 from private.content_delivery_log where profile_id=$1 and user_id is distinct from $2)' into inconsistent using learner.id,auth.uid();
+   if inconsistent then raise exception 'Inconsistent delivery ownership requires review';end if;
+   execute 'select coalesce(jsonb_agg(jsonb_build_object(''id'',id,''user_id'',user_id,''profile_id'',profile_id,''content_id'',content_id,''kind'',kind,''delivered_at'',delivered_at) order by delivered_at,id),''[]''::jsonb) from private.content_delivery_log where profile_id=$1 and user_id=$2'
+   into delivery_log using learner.id,auth.uid();
+  end if;
   result=jsonb_build_object('version',1,'exported_at',now(),'profile',to_jsonb(learner),
+   'delivery_log',delivery_log,
    'results',coalesce((select jsonb_agg(to_jsonb(r)) from public.exercise_results r where r.profile_id=learner.id),'[]'::jsonb),
    'content_history',coalesce((select jsonb_agg(to_jsonb(s)) from public.content_seen s where s.profile_id=learner.id),'[]'::jsonb),
    'privacy_events',coalesce((select jsonb_agg(to_jsonb(a)) from public.learner_privacy_audit a where a.profile_id=learner.id and a.account_id=auth.uid()),'[]'::jsonb));

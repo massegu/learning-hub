@@ -1,6 +1,7 @@
 -- Read-only schema/grant inventory and aggregate checks. No personal records.
 -- One JSON result so the SQL Editor output can be reviewed without missing tabs.
 select jsonb_build_object(
+ 'private_delivery_columns',(select coalesce(jsonb_agg(to_jsonb(c)),'[]') from (select column_name,data_type,is_nullable from information_schema.columns where table_schema='private' and table_name='content_delivery_log' order by ordinal_position) c),
  'columns',(select coalesce(jsonb_agg(to_jsonb(c)),'[]') from (
   select table_name,column_name,data_type,is_nullable,column_default from information_schema.columns
   where table_schema='public' and table_name in ('accounts','learner_profiles','exercise_results','content_seen','content_usage') order by table_name,ordinal_position

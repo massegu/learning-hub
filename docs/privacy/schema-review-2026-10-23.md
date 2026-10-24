@@ -29,3 +29,7 @@ select jsonb_build_object(
 ```
 
 Esta consulta no selecciona filas de la tabla privada ni cambia los permisos.
+
+## Actualización del 24/10
+
+La usuaria aportó las seis columnas del registro privado: id bigint, user_id/profile_id/content_id uuid, kind text y delivered_at timestamptz, todas no nulas. La migración revisada exporta explícitamente esos campos con autorización por cuenta y perfil y verifica la FK en cascada; una fila con propietario incompatible hace fallar la exportación. Las pruebas locales cubren el registro privado. Se han retirado también los permisos explícitos de columna. Sigue pendiente la aplicación y validación en Supabase; la revisión técnica no sustituye el asesoramiento jurídico.

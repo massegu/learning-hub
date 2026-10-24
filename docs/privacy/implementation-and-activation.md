@@ -50,3 +50,13 @@ Finalidad educativa o asistencial; base de legitimación y, si procede, excepci�
 - Los 11 recorridos de navegador del workflow han pasado; el nuevo `browser-privacy.py` comprueba resultados temporales, recarga, restauración del progreso, exportación JSON real, errores recuperables y borrado concurrente con cambio de perfil. Auth y almacenamiento están simulados en estas pruebas de interfaz.
 - Compilación de la función de contenido comprobada sin publicar; la versión remota permanece en 61. El diagnóstico de esquema se validó localmente y devuelve un único JSON de metadatos y recuentos.
 - Estas comprobaciones no sustituyen la validación de RLS con dos cuentas en el Supabase real después de revisar/aplicar la migración.
+
+## Revisión del 24 de octubre
+
+Se ha integrado `desarrollo` tras la PR #19. El diagnóstico aportado confirma una FK con borrado en cascada desde `private.content_delivery_log`. Sus columnas revisadas son `id`, `user_id`, `profile_id`, `content_id`, `kind` y `delivered_at`. La exportación incluye esos seis campos únicamente para la cuenta y perfil autorizados; una incompatibilidad de propietario detiene la exportación. La migración verifica la FK en cascada antes de activarse. No exporta tablas privadas arbitrarias.
+
+Se revocan además permisos explícitos de columna y permisos peligrosos de tabla; se conceden permisos DML al servicio sin `TRUNCATE` ni `TRIGGER`. Se contempla el uso de secuencias para IDs bigint. Las pruebas locales recrean el registro privado y verifican exportación, aislamiento y borrado.
+
+La consulta remota de metadatos sigue bloqueada (HTTP 401); el esquema se ha revisado con los resultados que aportó la usuaria. No se ha ejecutado SQL remoto ni se han modificado proveedores. Antes de fusionar: copia recuperable, aplicar la migración revisada, pruebas con dos cuentas de prueba, programar la purga de auditoría y completar la revisión jurídica/operativa descrita arriba.
+
+Validación de la revisión: 193 pruebas de la batería completa aprobadas tras integrar desarrollo; ocho pruebas específicas repetidas después del endurecimiento final de permisos y exportación; recorrido de navegador de privacidad aprobado. Los controles nuevos rechazan almacenes hijos o columnas privadas no revisadas antes de afirmar que una exportación es completa. No se han leído registros personales del Supabase remoto.
