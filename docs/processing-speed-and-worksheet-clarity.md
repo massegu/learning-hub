@@ -43,3 +43,5 @@ La API exige revisión 7 y valida la edad, el área y la modalidad; clientes ant
 Capturas: [plan separado](review-assets/processing-speed/attention-plan.png), [dos claves en móvil](review-assets/processing-speed/two-keys-mobile.png), [búsqueda observada](review-assets/processing-speed/room-observation.png).
 
 La integración con privacidad mantiene el indicador de sesión independiente en la revisión 7 del cliente y suprime también las escrituras de las observaciones del entorno cuando la sesión es temporal. Se han resuelto los conflictos de código antes de entregar las ramas.
+
+Validación conjunta tras integrar privacidad: 197 pruebas de Node aprobadas y trece recorridos de navegador (doce educativos y el de privacidad). Se comprueba también que una búsqueda del entorno en sesión independiente no modifique ni guarde el progreso del perfil. La corrección de papel cubre igualmente actividades antiguas que todavía no traigan `paperQuestion`; su formulación no puede cambiar la categoría evaluada.

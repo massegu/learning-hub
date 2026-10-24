@@ -147,7 +147,7 @@
 
     items.forEach((it,i)=>{
       const model=models[i];
-      const prompt=it.paperQuestion||model.question;
+      const prompt=it.speedEvidence?.kind==='category'&&it.speedEvidence.category==='animals'?(it.paperQuestion||'¿Son animales todos los elementos de la lista?'):model.question;
       const block=[new Paragraph({keepNext:true,spacing:{before:i?160:0,after:90},children:[new TextRun({text:`ACTIVIDAD ${i+1}`,bold:true,size:15,color:green2,font:'Aptos'})]})];
       const paperSource=it.roomSpeedTask?[{type:'text',text:'Busca solo con la vista, desde tu sitio. Una persona puede leer la consigna. En papel, realiza la búsqueda como práctica sin compararla con los tiempos de pantalla.'}]:model.stimulus;
       if(paperSource.length){

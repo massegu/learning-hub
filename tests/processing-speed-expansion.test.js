@@ -19,6 +19,7 @@ test('environment search is explicitly observed and cannot enter scored speed po
 });
 test('plans are distinct source blocks and paper category prompts refer to elements rather than absent images',()=>{
  const task=c.practice('middle','attention',2).find(x=>x.mechanic==='attention_plan_intruder');assert.ok(!task.stimulus[0].text.includes('prepara para preparar'));assert.equal(task.stimulus[1].label,'Plan acordado');assert.equal(task.stimulus[2].label,'Lista que debes revisar');assert.equal(task.stimulus[1].items.length,3);
+ const altered=c.pool('middle','speedReasoning',1).find(x=>x.speedFamily==='category');altered.paperQuestion='¿Son frutas todos los elementos?';assert.throws(()=>c.validateSpeed(altered));
  for(const age of ['early','junior','primary','middle','teen'])for(const it of c.pool(age,'speedReasoning',1).filter(x=>x.speedFamily==='category'))assert.match(it.paperQuestion,/elementos de la lista/);
 });
 test('real handler gates observed environment requests by revision, route and domain',async()=>{

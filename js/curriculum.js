@@ -565,7 +565,7 @@ function validateSpeed(item){
  }else if(e.kind==='ruleChoice'){
   if(JSON.stringify(item.stimulus?.[0]?.rows)!==JSON.stringify([['Regla','Izquierda','Derecha'],['LETRA','Vocal','Consonante'],['NÚMERO','Par','Impar']]))throw new Error('La tabla de reglas no coincide.');
   if(!['LETRA','NÚMERO'].includes(e.rule)||b?.items?.length!==2||!Number.isInteger(Number(b.items[1]))||!/^[A-Z]$/.test(b.items[0])||item.stimulus?.[e.ruleBlock]?.text!=='Regla activa: '+e.rule+(item.level===3?(e.reverse?' · Invierte la respuesta':' · Mantén la respuesta'):''))throw new Error('Falta el criterio activo.');const left=e.rule==='LETRA'?/[AEIOU]/.test(b.items[0]):Number(b.items[1])%2===0;answer=(e.reverse?!left:left)?'Izquierda':'Derecha';
- }else if(e.kind==='category'){if(b?.type!=='list')throw new Error('Falta el grupo de imágenes.');answer=b.items.every(x=>['gato','perro','conejo','pájaro'].includes(x))?'Sí':'No';}
+ }else if(e.kind==='category'){if(e.category!=='animals'||item.paperQuestion&&item.paperQuestion!=='¿Son animales todos los elementos de la lista?')throw new Error('La pregunta de papel no coincide con la categoría.');if(b?.type!=='list')throw new Error('Falta el grupo de imágenes.');answer=b.items.every(x=>['gato','perro','conejo','pájaro'].includes(x))?'Sí':'No';}
  else if(e.kind==='targetCount')answer=String(b?.items?.filter(x=>x===e.target).length);
  else if(e.kind==='pairCount')answer=String(b?.rows?.filter(r=>r.length===2&&r[0]===r[1]).length);
  else if(e.kind==='central'){
