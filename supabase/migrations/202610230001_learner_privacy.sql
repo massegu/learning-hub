@@ -32,6 +32,15 @@ do $$begin
  ) then raise exception 'Private delivery log must cascade on profile deletion';end if;
 end$$;
 
+-- Clients access private delivery metadata only through the owned-profile RPC.
+do $$declare cols text;begin
+ if to_regclass('private.content_delivery_log') is not null then
+  execute 'revoke all on private.content_delivery_log from public,anon,authenticated';
+  select string_agg(quote_ident(attname),',') into cols from pg_attribute where attrelid=to_regclass('private.content_delivery_log') and attnum>0 and not attisdropped;
+  execute format('revoke all (%s) on private.content_delivery_log from public,anon,authenticated',cols);
+ end if;
+end$$;
+
 -- Replace the policies for these learner-owned tables with one ownership model.
 do $$declare p record;begin
  for p in select tablename,policyname from pg_policies where schemaname='public' and tablename in ('learner_profiles','exercise_results','content_seen') loop
