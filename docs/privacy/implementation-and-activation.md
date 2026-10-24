@@ -60,3 +60,5 @@ Se revocan además permisos explícitos de columna y permisos peligrosos de tabl
 La consulta remota de metadatos sigue bloqueada (HTTP 401); el esquema se ha revisado con los resultados que aportó la usuaria. No se ha ejecutado SQL remoto ni se han modificado proveedores. Antes de fusionar: copia recuperable, aplicar la migración revisada, pruebas con dos cuentas de prueba, programar la purga de auditoría y completar la revisión jurídica/operativa descrita arriba.
 
 Validación de la revisión: 193 pruebas de la batería completa aprobadas tras integrar desarrollo; ocho pruebas específicas repetidas después del endurecimiento final de permisos y exportación; recorrido de navegador de privacidad aprobado. Los controles nuevos rechazan almacenes hijos o columnas privadas no revisadas antes de afirmar que una exportación es completa. No se han leído registros personales del Supabase remoto.
+
+El acceso directo de PUBLIC, anon y authenticated al registro privado se revoca, incluidos permisos de columna; su exportación se hace únicamente mediante el RPC que comprueba la propiedad del perfil. Las pruebas incluyen permisos privados heredados demasiado amplios.
