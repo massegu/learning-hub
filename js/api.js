@@ -22,13 +22,18 @@
     if(error)throw error;
   };
   API.changePassword=async(password)=>{const {error}=await client.auth.updateUser({password});if(error)throw error;};
-  API.signOut=async()=>{await client.auth.signOut();API.session=null;API.user=null;API.profileLocale=null;API.setContentLocale(null)};
-  API.listProfiles=async()=>{const {data,error}=await client.from('learner_profiles').select('id,name,age_band,locale,progress,created_at').order('created_at');if(error)throw error;return data||[]};
+  API.independentProfile=null;
+  API.setIndependent=id=>{API.independentProfile=id||null;};
+  API.isIndependent=id=>API.independentProfile===id;
+  API.signOut=async()=>{API.setIndependent(null);await client.auth.signOut();API.session=null;API.user=null;API.profileLocale=null;API.setContentLocale(null)};
+  API.listProfiles=async()=>{const {data,error}=await client.from('learner_profiles').select('id,name,age_band,locale,progress,created_at').order('created_at');if(error)throw error;return (data||[]).map(p=>{p.progress=window.PrivacyControls.minimize(p.progress);return p;})};
   API.createProfile=async(name,age_band,initial_level=1,locale='es_intl')=>{const {data,error}=await client.from('learner_profiles').insert({account_id:API.user.id,name,age_band,locale,progress:{initialLevel:Number(initial_level)||1}}).select('id,name,age_band,locale,progress,created_at').single();if(error)throw error;return data};
   API.updateProfileLocale=async(id,locale)=>{const {data,error}=await client.from('learner_profiles').update({locale}).eq('id',id).select('id,name,age_band,locale,progress,created_at').single();if(error)throw error;return data};
-  API.deleteProfile=async(id)=>{const {error}=await client.from('learner_profiles').delete().eq('id',id);if(error)throw error};
-  API.saveProgress=async(id,progress)=>{const {data:row}=await client.from('learner_profiles').select('progress').eq('id',id).single();const merged={...progress};if(row?.progress?._delivery)merged._delivery=row.progress._delivery;const {error}=await client.from('learner_profiles').update({progress:merged}).eq('id',id);if(error)throw error};
-  API.saveResult=async(profile_id,row)=>{const {error}=await client.from('exercise_results').insert({profile_id,occurred_at:row.ts,session_id:row.sessionId,session_started_at:row.sessionStartedAt,subject:row.subject,level:row.level,correct:row.correct,points:row.points,item_id:row.itemId,detail:row.detail});if(error)console.warn('Result insert failed',error)};
+  API.deleteProfile=async(id)=>API.privacy('delete',id);
+  API.saveProgress=async(id,progress)=>{if(API.isIndependent(id)||progress?._sessionOnly)return;const {data:row}=await client.from('learner_profiles').select('progress').eq('id',id).single();const merged=window.PrivacyControls.minimize(progress);if(row?.progress?._delivery)merged._delivery=row.progress._delivery;const {error}=await client.from('learner_profiles').update({progress:merged}).eq('id',id);if(error)throw error};
+  API.saveResult=async(profile_id,row)=>{if(API.isIndependent(profile_id)||row?.sessionOnly)return;const {error}=await client.from('exercise_results').insert({profile_id,occurred_at:row.ts,session_id:row.sessionId,session_started_at:row.sessionStartedAt,subject:row.subject,level:row.level,correct:row.correct,points:row.points,item_id:row.itemId,detail:row.detail});if(error)console.warn('Result insert failed',error)};
+  API.privacy=async(action,id,settings={})=>{if(API.isIndependent(id))throw new Error('Termina la sesión independiente para gestionar el perfil.');const {data,error}=await client.rpc('manage_learner_privacy',{p_action:action,p_profile:id,p_alias:settings.alias??null,p_review_at:settings.reviewAt??null});if(error)throw new Error('No se ha podido completar la gestión de privacidad. Inténtalo de nuevo o contacta con soporte.');return data;};
+  API.recordAccess=id=>typeof client.rpc==='function'?API.privacy('open',id).catch(()=>null):Promise.resolve(null);
   API.getAccount=async()=>{const {data,error}=await client.from('accounts').select('subscription_status,trial_started_at,trial_ends_at,current_period_end,content_locale').single();if(error)throw error;API.setContentLocale(data?.content_locale);return data};
   async function openBilling(action){
     if(!API.user)throw new Error('Inicia sesión para gestionar tu suscripción.');
