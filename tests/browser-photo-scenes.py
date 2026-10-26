@@ -12,8 +12,8 @@ try:
   page.evaluate('''()=>{const old=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return old(it,...args)}}''')
   page.locator('#navMenu [data-subject=memory]').click();page.locator('#photoModeSwitch [data-photos=true]').click();page.wait_for_selector('#showMemoryPhoto')
   assert page.evaluate('__requests.at(-1).photos_only') is True
-  assert page.evaluate('__requests.at(-1).client_revision')==6
-  assert 'Límite diario:' in page.locator('#usageHint').inner_text()
+  assert page.evaluate('__requests.at(-1).client_revision')==7
+  assert 'Hoy:' in page.locator('#usageHint').inner_text()
   assert page.locator('.everyday-photo img').count()==0
   memory=page.evaluate('__current');assert memory['photoTask']['kind']=='recall'
   page.clock.install();page.locator('#showMemoryPhoto').click();page.wait_for_selector('.everyday-photo img')

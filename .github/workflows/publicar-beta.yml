@@ -42,6 +42,7 @@ jobs:
       - run: python tests/browser-presentation.py
       - run: python tests/browser-photo-scenes.py
       - run: python tests/browser-memory-layout.py
+      - run: python tests/browser-processing-speed.py
       - run: python tests/browser-interactive-activities.py
       - run: python tests/browser-listening-social.py
       - run: python tests/browser-privacy.py

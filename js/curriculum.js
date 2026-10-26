@@ -185,7 +185,7 @@ function speed(age,level){
   if(v<48){
    const animals=['gato','perro','conejo','pájaro'],tools=['lápiz','regla','tijeras','pegamento'],sameCategory=v%2===0;
    const categoryItems=Array.from({length:rank===0?level*2:level*2+rank},(_,i)=>animals[(v+i)%animals.length]);if(!sameCategory)categoryItems[(v+level)%categoryItems.length]=tools[Math.floor(v/2)%4];
-   pool.push(finish(choice('¿Son animales todas las imágenes?',[{type:'list',items:categoryItems,presentation:'speedSearch'}],sameCategory?'Sí':'No',[sameCategory?'No':'Sí'],{speedTask:true,speedFamily:'category',speedEvidence:{kind:'category',block:0,category:'animals'},topic:'Velocidad · reconocer una categoría',why:sameCategory?'Todas las imágenes son animales.':'Hay un objeto que no es un animal.'}),age,'speedReasoning',level,`category-${v}`,'speed_category'));
+   pool.push(finish(choice('¿Son animales todas las imágenes?',[{type:'list',items:categoryItems,presentation:'speedSearch'}],sameCategory?'Sí':'No',[sameCategory?'No':'Sí'],{speedTask:true,speedFamily:'category',speedEvidence:{kind:'category',block:0,category:'animals'},paperQuestion:'¿Son animales todos los elementos de la lista?',topic:'Velocidad · reconocer una categoría',why:sameCategory?'Todas las imágenes son animales.':'Hay un objeto que no es un animal.'}),age,'speedReasoning',level,`category-${v}`,'speed_category'));
   }
   if(rank>0){
    const codes=['K','M','R','T','V','Z','P','L'].slice(0,Math.min(8,rank+level+1)),key=rotate(codes,v%codes.length),target=key[(v+level)%key.length],a=String(key.indexOf(target)+1);
@@ -194,7 +194,7 @@ function speed(age,level){
    pool.push(finish(choice('¿Qué opción es idéntica al modelo?',[T('Modelo: '+model)],model,[wrong,(model[0]==='K'?'M':'K')+model.slice(1),(model[0]==='K'?'M':'K')+wrong.slice(1)],{speedTask:true,speedFamily:'match',topic:'Velocidad · coincidencia exacta',speedEvidence:{kind:'model',block:0},why:'Compara todos los caracteres, también el último.'}),age,'speedReasoning',level,`match-${v}`,'speed_match'));
   }
  }
- return pool.concat(speedExpansion(age,level));
+ return pool.concat(speedExpansion(age,level),processingChallenges(age,level));
 }
 // Situations ask for an actual decision and correction, with plausible near misses.
 const contexts={
@@ -492,6 +492,46 @@ function executive(age,level){
 }
 // These tasks use the established choice/order contracts. Source data, not
 // display-only SVG coordinates, determine every answer and printable worksheet.
+function processingChallenges(age,level){
+ if(age==='early')return [];
+ const rank=ages.indexOf(age),out=[],n=Math.min(6,level+2);
+ for(let v=0;v<36;v++){
+  const codes=rotate(['K','M','R','T','V','Z'],v).slice(0,n),zones=rotate(['A','B','C','D','E','F'],v+level).slice(0,n),targets=rotate(['Mesa azul','Mesa roja','Mesa verde','Mesa amarilla','Mesa blanca','Mesa negra'],v+3).slice(0,n);
+  const at=v%n,target=codes[at],answer=targets[at];
+  out.push(finish(choice(`¿A qué mesa lleva el código ${target}?`,[{type:'table',label:'Primera clave',header:true,rows:[['Código','Zona'],...codes.map((x,i)=>[x,zones[i]])]},{type:'table',label:'Segunda clave',header:true,rows:[['Zona','Mesa'],...zones.map((x,i)=>[x,targets[i]])]}],answer,targets.filter(x=>x!==answer).slice(0,3),{speedTask:true,speedFamily:'crossedKeys',speedEvidence:{kind:'crossedKeys',target,block:0,secondBlock:1},topic:'Velocidad · cruzar dos claves',why:`${target} lleva a la zona ${zones[at]}, que corresponde a ${answer.toLowerCase()}.`}),age,'speedReasoning',level,'crossed-keys-'+v,'speed_crossed_keys'));
+  const day=v%2?'Hoy':'Mañana',state=v%3?'Pendiente':'Hecho',priority=level===3?'Alta':null;
+  const rows=Array.from({length:n+level},(_,i)=>['Tarea '+(i+1),i===at?day:i%2?'Mañana':'Hoy',i===at?state:(i%2?'Hecho':'Pendiente'),i===at?'Alta':i%2?'Alta':'Normal']);
+  // Exactly one row satisfies all requested conditions. Distractors each miss
+  // a condition; this is checked against the actual rendered table.
+  rows.forEach((row,i)=>{if(i!==at&&row[1]===day&&row[2]===state&&(!priority||row[3]===priority))row[2]=state==='Hecho'?'Pendiente':'Hecho';});
+  const wanted=rows[at][0],criteria=[`Día: ${day}`,`Estado: ${state}`,...(priority?['Prioridad: Alta']:[])];
+  out.push(finish(choice('Localiza la única tarea que cumple la consigna.',[T(criteria.join(' · ')),{type:'table',header:true,rows:[['Tarea','Día','Estado',...(priority?['Prioridad']:[])],...rows.map(r=>priority?r:r.slice(0,3))]}],wanted,rows.map(r=>r[0]).filter(x=>x!==wanted).slice(0,3),{speedTask:true,speedFamily:'rapidAgenda',speedEvidence:{kind:'rapidAgenda',block:1,day,state,priority},topic:'Velocidad · revisar una agenda',why:'La tarea cumple todos los datos de la consigna, no solo uno.'}),age,'speedReasoning',level,'agenda-'+v,'speed_rapid_agenda'));
+  const letter=rotate(['A','B','E','M','I','R','O','T','U','Z'],v)[0],number=1+(v*7)%((rank+1)*9),rule=v%2?'LETRA':'NÚMERO',reverse=level===3&&v%3===0;
+  const left=rule==='LETRA'?/[AEIOU]/.test(letter):number%2===0,a=(reverse?!left:left)?'Izquierda':'Derecha';
+  out.push(finish(choice('¿Qué respuesta corresponde a la regla activa?',[
+   {type:'table',label:'Reglas',header:true,rows:[['Regla','Izquierda','Derecha'],['LETRA','Vocal','Consonante'],['NÚMERO','Par','Impar']]},
+   T('Regla activa: '+rule+(level===3?(reverse?' · Invierte la respuesta':' · Mantén la respuesta'):'')),
+   {type:'list',label:'Estímulo',presentation:'cards',items:[letter,String(number)]}
+  ],a,[a==='Izquierda'?'Derecha':'Izquierda'],{speedTask:true,speedFamily:'ruleChoice',speedEvidence:{kind:'ruleChoice',block:2,ruleBlock:1,rule,reverse},topic:'Velocidad · cambiar de criterio',why:'Aplica la regla activa y deja de lado el otro dato.'}),age,'speedReasoning',level,'rule-choice-'+v,'speed_rule_choice'));
+ }
+ return out;
+}
+function roomSpeedPool(age,level=1){
+ if(!['junior','primary','middle','teen'].includes(age)||![1,2,3].includes(level))return [];
+ const clues=[
+  ['un objeto redondo','un objeto azul','un objeto de papel','un objeto con letras','un objeto de tela','un objeto alargado','un objeto transparente','un objeto con números'],
+  ['un objeto pequeño y azul','un objeto redondo y de plástico','un objeto de papel con letras','un objeto alargado que sirva para escribir','un objeto de tela que puedas doblar','un objeto rectangular que se pueda abrir','un objeto transparente que sirva para guardar algo','un objeto con números que puedas coger con una mano'],
+  ['un objeto pequeño, azul y que no sea de papel','un objeto redondo, movible y que no sea de cristal','un objeto con letras que no sea un libro ni un teléfono','un objeto que sirva para escribir y que no use tinta','un objeto de tela que no sea una prenda de ropa','un objeto rectangular que se abra y no sea un libro','un objeto transparente que no sea de cristal y no esté vacío','un objeto con números que no sea un reloj ni un teléfono']
+ ][level-1];
+ return clues.map((clue,index)=>finish({type:'self',responseType:'written',assessment:'observation',requiresStimulus:true,q:'Busca a tu alrededor '+clue+'.',stimulus:[T('Busca desde tu sitio. No hace falta levantarte, coger objetos ni usar cámara o micrófono. Primero pulsa Empezar; la consigna aparecerá al iniciar el tiempo.')],sample:'Una persona puede acompañar la observación. En papel, lee la consigna y realiza la búsqueda sin compararla con los tiempos de ejercicios en pantalla.',roomSpeedTask:{age,level,index,clue},topic:'Velocidad · mira a tu alrededor'},age,'speedReasoning',level,'room-speed-'+index,'speed_room_observation'));
+}
+function validateRoomSpeed(item){
+ const task=item.roomSpeedTask,source=roomSpeedPool(task?.age,task?.level).find(x=>x.roomSpeedTask.index===task.index);
+ if(!source||item.domain!=='speedReasoning'||item.assessment!=='observation'||item.speedTask)throw new Error('Búsqueda del entorno no válida.');
+ const rules=root.LocaleContent||(typeof require==='function'&&require('./locale-content')),expected=item.localization?rules.localizeItem(source,item.localization.locale,'speedReasoning'):source;
+ for(const key of ['type','responseType','q','stimulus','sample','roomSpeedTask'])if(JSON.stringify(item[key])!==JSON.stringify(expected[key]))throw new Error('La consigna del entorno no coincide con la actividad revisada.');
+}
+
 function speedExpansion(age,level){
  const rank=ages.indexOf(age),items=[],glyphs=['○','□','△','☆'];
  for(let v=0;v<48;v++){
@@ -517,7 +557,15 @@ function speedExpansion(age,level){
 function validateSpeed(item){
  const e=item.speedEvidence;if(!e)return;
  const b=item.stimulus?.[e.block];let answer;
- if(e.kind==='category'){if(b?.type!=='list')throw new Error('Falta el grupo de imágenes.');answer=b.items.every(x=>['gato','perro','conejo','pájaro'].includes(x))?'Sí':'No';}
+ if(e.kind==='crossedKeys'){
+  if(item.q!==`¿A qué mesa lleva el código ${e.target}?`)throw new Error('La pregunta no coincide con el código.');
+  const first=b?.rows?.slice(1).filter(r=>r[0]===e.target),second=item.stimulus?.[e.secondBlock];if(first?.length!==1)throw new Error('La primera clave no es única.');const targets=second?.rows?.slice(1).filter(r=>r[0]===first[0][1]);if(targets?.length!==1)throw new Error('La segunda clave no es única.');answer=targets[0][1];
+ }else if(e.kind==='rapidAgenda'){
+  const rows=b?.rows?.slice(1).filter(r=>r[1]===e.day&&r[2]===e.state&&(!e.priority||r[3]===e.priority));if(rows?.length!==1)throw new Error('La agenda no tiene una única coincidencia.');const expected=[`Día: ${e.day}`,`Estado: ${e.state}`,...(e.priority?['Prioridad: '+e.priority]:[])].join(' · ');if(item.stimulus?.[0]?.text!==expected)throw new Error('La consigna de agenda no coincide.');answer=rows[0][0];
+ }else if(e.kind==='ruleChoice'){
+  if(JSON.stringify(item.stimulus?.[0]?.rows)!==JSON.stringify([['Regla','Izquierda','Derecha'],['LETRA','Vocal','Consonante'],['NÚMERO','Par','Impar']]))throw new Error('La tabla de reglas no coincide.');
+  if(!['LETRA','NÚMERO'].includes(e.rule)||b?.items?.length!==2||!Number.isInteger(Number(b.items[1]))||!/^[A-Z]$/.test(b.items[0])||item.stimulus?.[e.ruleBlock]?.text!=='Regla activa: '+e.rule+(item.level===3?(e.reverse?' · Invierte la respuesta':' · Mantén la respuesta'):''))throw new Error('Falta el criterio activo.');const left=e.rule==='LETRA'?/[AEIOU]/.test(b.items[0]):Number(b.items[1])%2===0;answer=(e.reverse?!left:left)?'Izquierda':'Derecha';
+ }else if(e.kind==='category'){if(e.category!=='animals'||item.paperQuestion&&item.paperQuestion!=='¿Son animales todos los elementos de la lista?')throw new Error('La pregunta de papel no coincide con la categoría.');if(b?.type!=='list')throw new Error('Falta el grupo de imágenes.');answer=b.items.every(x=>['gato','perro','conejo','pájaro'].includes(x))?'Sí':'No';}
  else if(e.kind==='targetCount')answer=String(b?.items?.filter(x=>x===e.target).length);
  else if(e.kind==='pairCount')answer=String(b?.rows?.filter(r=>r.length===2&&r[0]===r[1]).length);
  else if(e.kind==='central'){
@@ -917,18 +965,19 @@ function practice(age,domain,level=1){
  if(!practiceContexts[age]||!['executive','attention','memory'].includes(domain))return [];
  const rank=ages.indexOf(age),out=[];
  for(const [index,[goal,steps]] of practiceContexts[age].entries()){
-  const context=rank===0?`Vas a ${goal}.`: `Tu grupo se prepara para ${goal}.`;
+  const context=rank===0?`Vas a ${goal}.`: `Tu grupo va a ${goal}.`;
   const intro=`${context} Estos son los pasos. ${steps.join('. ')}.`;
+  const plan=items=>[T(context),{type:'list',label:'Plan acordado',presentation:'sequence',items:[...items]}];
   const mk=(it,key,mechanic)=>out.push(finish(it,age,domain,level,'practice-'+index+'-'+key,mechanic));
   if(domain==='executive'){
    const answer=rank===0&&level===1?steps.slice(0,2):steps;
    mk({type:'order',responseType:'order',requiresStimulus:true,q:rank===0?'Pon los pasos en orden.':'Organiza el plan antes de empezar.',stimulus:[T(context+' Primero hay que '+answer[0].toLowerCase()+'. Después toca '+answer[1].toLowerCase()+'.'+(answer[2]?' Por último, hay que '+answer[2].toLowerCase()+'.':''))],tokens:[...answer].reverse(),answer:[...answer],topic:'Funciones ejecutivas · un plan completo',why:answer.join(' → ')},'order','executive_complete_plan');
    const done=level===1?0:1,answerNext=steps[done+1];
-   mk(choice(rank===0?'¿Qué paso toca ahora?':'¿Cómo continuarías el plan sin repetir lo que ya está hecho?',[T(intro),T(`Ya has terminado: ${steps.slice(0,done+1).join(' y ').toLowerCase()}. Aún no has hecho los demás pasos.`)],answerNext,steps.filter(x=>x!==answerNext),{topic:'Funciones ejecutivas · retomar una tarea',why:'El siguiente paso pendiente es: '+answerNext.toLowerCase()+'.'}),'resume','executive_resume_plan');
+   mk(choice(rank===0?'¿Qué paso toca ahora?':'¿Cómo continuarías el plan sin repetir lo que ya está hecho?',[...plan(steps),T(`Ya has terminado: ${steps.slice(0,done+1).join(' y ').toLowerCase()}. Aún no has hecho los demás pasos.`)],answerNext,steps.filter(x=>x!==answerNext),{topic:'Funciones ejecutivas · retomar una tarea',why:'El siguiente paso pendiente es: '+answerNext.toLowerCase()+'.'}),'resume','executive_resume_plan');
   }else if(domain==='attention'){
    const target=steps[level===1?0:1],irrelevant=rank===0?'Elegir una canción':'Elegir el color de la carpeta';
-   mk(choice(rank===0?'¿Qué tarea falta en la lista?':'Compara el plan con la lista preparada. ¿Qué tarea falta?',[T(intro),{type:'list',presentation:'cards',items:steps.filter(x=>x!==target)}],target,rank===0?steps.filter(x=>x!==target):[...steps.filter(x=>x!==target),irrelevant],{topic:'Atención · detectar una omisión',why:'En la lista falta: '+target.toLowerCase()+'.'}),'omission','attention_plan_omission');
-   mk(choice('¿Qué tarea se ha colado y no pertenece al plan?',[T(rank===0?`${context} Estos son los pasos. ${steps.slice(0,2).join('. ')}.`:intro),{type:'list',presentation:'cards',items:rank===0?[steps[0],irrelevant,steps[1]]:[steps[0],irrelevant,steps[1],steps[2]]}],irrelevant,rank===0?steps.slice(0,2):steps,{topic:'Atención · revisar una lista',why:'Esta tarea no aparece en el plan: '+irrelevant.toLowerCase()+'.'}),'intruder','attention_plan_intruder');
+   mk(choice(rank===0?'¿Qué tarea falta en la lista?':'Compara el plan con la lista preparada. ¿Qué tarea falta?',[...plan(steps),{type:'list',label:'Lista que debes revisar',presentation:'cards',items:steps.filter(x=>x!==target)}],target,rank===0?steps.filter(x=>x!==target):[...steps.filter(x=>x!==target),irrelevant],{topic:'Atención · detectar una omisión',why:'En la lista falta: '+target.toLowerCase()+'.'}),'omission','attention_plan_omission');
+   mk(choice('¿Qué tarea se ha colado y no pertenece al plan?',[...plan(rank===0?steps.slice(0,2):steps),{type:'list',label:'Lista que debes revisar',presentation:'cards',items:rank===0?[steps[0],irrelevant,steps[1]]:[steps[0],irrelevant,steps[1],steps[2]]}],irrelevant,rank===0?steps.slice(0,2):steps,{topic:'Atención · revisar una lista',why:'Esta tarea no aparece en el plan: '+irrelevant.toLowerCase()+'.'}),'intruder','attention_plan_intruder');
   }else{
    const shown=rank===0?steps.slice(0,level===1?2:3):steps,ask=level===1?0:level===2?1:2;
    mk({type:'memoryReveal',responseType:'choice',requiresStimulus:true,q:rank===0?'Recuerda estos pasos. Después los taparemos.':'Recuerda el plan. Después desaparecerá.',stimulus:rank===0?[L([...shown])]:[T(context),L([...shown])],memoryContent:shown.map(detail=>({detail})),memoryQuestion:ask===0?'¿Cuál era el primer paso?':ask===1?'¿Qué paso iba en segundo lugar?':'¿Qué paso cerraba el plan?',a:shown[ask],opts:[...shown],revealMs:level===1?10000:level===2?9000:8000,topic:'Memoria · recordar un encargo',why:shown[ask],answerEvidence:{type:'listItem',block:rank===0?0:1,index:ask}},'recall-plan','memory_plan_recall');
@@ -982,6 +1031,6 @@ function migrate(progress={},age){
   levels:{...progress.levels,executive:1,speedReasoning:1},_levelCheckpoints:{...progress._levelCheckpoints,executive:{attempt:progress.totalAttempts||0},speedReasoning:{attempt:progress.totalAttempts||0}}};
 }
 function speedSummary(history=[]){const rows=history.filter(x=>x.subject==='speedReasoning'&&x.timingValid&&Number.isFinite(x.responseMs));const correct=rows.filter(x=>x.correct).map(x=>x.responseMs).sort((a,b)=>a-b);return {attempts:rows.length,accuracy:rows.length?Math.round(rows.filter(x=>x.correct).length*100/rows.length):null,medianMs:correct.length?correct.length%2?correct[(correct.length-1)/2]:(correct[correct.length/2-1]+correct[correct.length/2])/2:null};}
-const api={practice,social,validateSocial,academic,generateAcademic,validateMath,validateSpeed,validatePlan,memoryCategories,validateSelectiveRecall,validateReview,vocabulary,interactivePool,generateInteractive,validateInteraction,pool,generate,supports,visible,migrate,speedSummary,registerReasoning,registerWriting,spatialPositions};root.Curriculum=api;
+const api={roomSpeedPool,validateRoomSpeed,processingChallenges,practice,social,validateSocial,academic,generateAcademic,validateMath,validateSpeed,validatePlan,memoryCategories,validateSelectiveRecall,validateReview,vocabulary,interactivePool,generateInteractive,validateInteraction,pool,generate,supports,visible,migrate,speedSummary,registerReasoning,registerWriting,spatialPositions};root.Curriculum=api;
 if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);

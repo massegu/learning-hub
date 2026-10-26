@@ -148,6 +148,7 @@
     documentOnly = false,
     photoOnly = false,
     interactionOnly = false,
+    roomSpeedOnly = false,
     interactionKind = 'symbols',
     currentItem = null,
     counter = 0,
@@ -307,6 +308,30 @@
     $('#exerciseOptions').innerHTML=`<div class="spatial-answer-grid" style="--grid-size:${it.gridSize}" role="group" aria-label="Marca en la cuadrícula la posición que recuerdas">${window.Curriculum.spatialPositions(it.gridSize).map(o=>`<button class="option-btn" data-answer="${escapeHtml(o)}" aria-label="${escapeHtml(o)}"><span aria-hidden="true">${it.spatialAnswer==='grid'?'＋':'·'}</span>${it.spatialAnswer==='grid'?'':`<small>${escapeHtml(o)}</small>`}</button>`).join('')}</div>`;
     $$('#exerciseOptions .option-btn').forEach(b=>b.onclick=()=>checkOption(b,b.dataset.answer));
   }
+  function renderRoomSpeed(it){
+    stopInteraction();const version=interactionVersion,visual=$('#exerciseVisual'),area=$('#exerciseOptions');let observed=null,ended=false;
+    const live=()=>currentItem===it&&interactionVersion===version;
+    const record=report=>{
+      if(!live()||ended)return;ended=true;it._earlyAnswered=true;clearTimeout(interactionTimer);
+      const entry={itemId:it.contentKey,level:it.level,ts:new Date().toISOString(),elapsedMs:observed?.elapsedMs??null,timingValid:Boolean(observed?.valid),report,measurement:'self_reported_environment'};
+      profile.progress={...profile.progress,environmentSpeedObservations:[...(profile.progress.environmentSpeedObservations||[]),entry].slice(-100)};persist();
+      $('#exerciseFeedback').textContent='Observación guardada. Esta práctica no modifica tus aciertos ni los tiempos de los retos en pantalla.';$('#exerciseFeedback').className='feedback practice';area.innerHTML='';$('#exerciseNext').classList.remove('hidden');
+    };
+    $('#exercisePrompt').textContent='Localiza un objeto de tu entorno';
+    visual.innerHTML='<p>Busca solo con la vista, desde tu sitio. La consigna aparecerá al empezar. Puedes señalar o nombrar el objeto y pulsar cuando lo hayas localizado.</p><p>El tiempo incluye leer la consigna y responder con el botón. Es una observación de esta búsqueda, no una medida automática del movimiento ni un resultado comparable con los retos en pantalla.</p>';
+    area.innerHTML='<button id="startRoomSpeed" class="primary-btn">Empezar búsqueda</button>';
+    $('#startRoomSpeed').onclick=()=>{
+      if(!live())return;$('#exercisePrompt').textContent=it.q;visual.innerHTML='<p id="roomSpeedClock" role="timer" aria-live="off">0,0 s</p><p>Busca sin levantarte ni mover objetos.</p>';it._roomTiming={started:performance.now(),valid:true};
+      area.innerHTML='<button id="foundRoomSpeed" class="primary-btn">Lo he localizado</button><button id="missingRoomSpeed" class="secondary-btn">No encuentro un objeto adecuado</button><button id="stopRoomSpeed" class="secondary-btn">Detener sin completar</button>';
+      const stop=()=>{clearTimeout(interactionTimer);observed={elapsedMs:Math.round(performance.now()-it._roomTiming.started),valid:it._roomTiming.valid};};
+      $('#foundRoomSpeed').onclick=()=>{stop();visual.innerHTML=`<p>Tiempo observado: ${(observed.elapsedMs/1000).toFixed(1).replace('.',',')} s.</p><p>Comprueba el objeto: ¿cumplía todas las condiciones de la consigna?</p>`;area.innerHTML='<button id="confirmRoomSpeed" class="primary-btn">Sí, cumplía las condiciones</button><button id="rejectRoomSpeed" class="secondary-btn">No cumplía las condiciones</button>';$('#confirmRoomSpeed').onclick=()=>record('found');$('#rejectRoomSpeed').onclick=()=>record('not_met');};
+      $('#missingRoomSpeed').onclick=()=>{stop();record('not_found');};$('#stopRoomSpeed').onclick=()=>{stop();record('skipped');};
+      const tick=()=>{if(!live()||ended||observed)return;$('#roomSpeedClock').textContent=((performance.now()-it._roomTiming.started)/1000).toFixed(1).replace('.',',')+' s';interactionTimer=setTimeout(tick,100);};tick();
+    };
+  }
+  document.addEventListener('visibilitychange',()=>{if(document.hidden&&currentItem?.roomSpeedTask&&!currentItem._earlyAnswered){currentItem._roomTiming&&(currentItem._roomTiming.valid=false);interruptPractice(currentItem);$('#restartInteraction').onclick=()=>renderRoomSpeed(currentItem);}});
+  window.addEventListener('blur',()=>{if(currentItem?._roomTiming)currentItem._roomTiming.valid=false;});
+  $('#speedModeSwitch').onclick=event=>{const button=event.target.closest('[data-speed-mode]');if(!button)return;roomSpeedOnly=button.dataset.speedMode==='room';counter=0;setupExercise();};
   function renderSpeedExercise(it){
     $('#exerciseVisual').innerHTML=window.ContentPolicy.forProfile(profile)?'<p>Mira y responde. El reloj empieza al mostrar las figuras. También puedes practicar sin medir.</p>':'<p>Responde con precisión y agilidad. El tiempo empieza al mostrar el estímulo. Puedes usar los botones o las teclas numéricas.</p>';
     $('#exerciseOptions').innerHTML='<button id="startSpeedTrial" class="primary-btn">Mostrar y medir</button><button id="practiceSpeedTrial" class="secondary-btn">Practicar sin medir</button>';
@@ -314,7 +339,8 @@
       if(currentItem!==it)return;
       $('#exercise').classList.add('speed-active');
       it._timing={started:performance.now(),valid:measured,measured};
-      $('#exerciseVisual').innerHTML=window.ActivityModel.interactiveStimulus(it.stimulus,{illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:true,senses:it.lexicalSenses});
+      const settings={illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:true,senses:it.lexicalSenses};
+      $('#exerciseVisual').innerHTML=['crossedKeys','rapidAgenda','ruleChoice'].includes(it.speedFamily)?`<div class="processing-sources ${it.speedFamily==='crossedKeys'?'two-keys':''}">${it.stimulus.map(block=>`<div class="processing-source">${window.ActivityModel.interactiveStimulus([block],settings)}</div>`).join('')}</div>`:window.ActivityModel.interactiveStimulus(it.stimulus,settings);
       const options=shuffle(it.opts);
       $('#exerciseOptions').innerHTML=options.map((o,i)=>`<button class="option-btn speed-choice" data-answer="${escapeHtml(o)}" aria-label="${escapeHtml(o)}"><small class="speed-key" aria-hidden="true">${i+1}</small>${escapeHtml(o)}</button>`).join('');
       $$('#exerciseOptions .speed-choice').forEach(b=>b.onclick=()=>checkOption(b,b.dataset.answer));
@@ -866,7 +892,7 @@
     $("#independentSessionBtn").textContent=independent?"Terminar sesión independiente":"Empezar sesión independiente";
     $("#independentSessionStatus").textContent=independent?"Los resultados de esta sesión no se guardan. El uso se contabiliza por cuenta. Al terminar o recargar se descartan.":"Seguimiento individual: los resultados se guardan en este perfil.";
     $("#deleteProfileBtn").disabled=independent;$("#profilePrivacyBtn").disabled=independent;
-    photoOnly = false;
+    photoOnly = false;roomSpeedOnly=false;
     guidedSession=null;
     hideGuidedBar();
     $('#appShell').classList.toggle('early-experience',Boolean(window.ContentPolicy.forProfile(p)));
@@ -975,6 +1001,11 @@
       b.classList.toggle('active',b.dataset.mode===mode);
     });
     $("#languageModeSwitch").classList.toggle("hidden", !isLang&&!isReading);
+    if(subject!=='speedReasoning')roomSpeedOnly=false;
+    const roomSpeedSupport=subject==='speedReasoning'&&['junior','primary','middle','teen'].includes(window.AgeStages.route(profile));
+    if(!roomSpeedSupport)roomSpeedOnly=false;
+    $('#speedModeSwitch').classList.toggle('hidden',!roomSpeedSupport);
+    $$('#speedModeSwitch button').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.speedMode==='room')===roomSpeedOnly)));
     const documentSupport=window.DocumentLibrary?.supports(window.AgeStages.route(profile),subject);
     if(!documentSupport||isReading)documentOnly=false;
     const photoSupport=window.PhotoLibrary.supports(window.AgeStages.route(profile),subject);
@@ -1023,7 +1054,7 @@
     const localeRevision = API.localeRevision;
     const res = await API.requestContent({
       ...payload,
-      client_revision:6,
+      client_revision:7,
       ...(targetProfile._sessionOnly?{session_only:true}:{}),
       profile_id: targetProfile.id,
       locale,
@@ -1059,6 +1090,7 @@
       ...(kind==='exercise'&&['attention','executive'].includes(domain)&&window.DocumentLibrary?.supports(window.AgeStages.route(profile),domain)?{documents_only:documentOnly}:{}),
       kind,
       domain,
+      ...(kind==='exercise'&&domain==='speedReasoning'?{room_speed_only:roomSpeedOnly}:{}),
       ...(window.PhotoLibrary.supports(window.AgeStages.route(profile),domain)?{photos_only:photoOnly}:{}),
       subdomain: ["language","middleLanguage","teenLanguage"].includes(domain) ? mode : ["reading","middleReading","literacy"].includes(domain)?(mode==='writing'?'writing':'reading'):null,
       level: state.levels[domain] || 1,
@@ -1066,8 +1098,8 @@
       ...extra,
     });
     if (res?.usage) {
-      $("#usageHint").textContent =
-        `Límite diario: ${res.usage.used} de ${res.usage.limit} ${kind === "worksheet" ? "fichas" : kind === "game" ? "juegos" : "ejercicios"}`;
+      $('#usageHint').textContent=`Hoy: ${res.usage.used} ${kind==='worksheet'?'fichas':kind==='game'?'juegos':'ejercicios'}`;
+      $('#dailyUsageExplanation').textContent=`Tu cuota es de ${res.usage.limit} ${kind==='worksheet'?'fichas':kind==='game'?'juegos':'ejercicios'} al día. Esta cifra limita el uso de la cuenta; no es el tamaño del banco de actividades.`;
     }
     return res?.items?.[0] || null;
   }
@@ -1193,6 +1225,7 @@
       $("#exerciseVisual").innerHTML =
         `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus,{heading:it.topic||it.theme,rubric:it.writingRubric,illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:!window.ContentPolicy.forProfile(profile),senses:it.lexicalSenses})}</div>`;
     $("#exercisePrompt").textContent = it.q || "Actividad";
+    if(it.roomSpeedTask){renderRoomSpeed(it);return;}
     if(it.interactionTask){renderInteractiveExercise(it);return;}
     if(it.speedTask){renderSpeedExercise(it);return;}
     if(['multiSelect','documentReview','photoDifference'].includes(it.type)){renderMultiSelect(it);return;}
@@ -1576,7 +1609,7 @@
     const history = state.history.filter(x => x.subject === 'speedReasoning');
     container.classList.toggle('hidden', !history.length);
     if (!history.length) { container.innerHTML = ''; return; }
-    const names = {figures:'Figuras',objects:'Objetos',arrows:'Flechas',orientation:'Orientación',pictograms:'Pictogramas',characters:'Letras y números',mixed:'Series mixtas',category:'Categorías',key:'Clave de códigos',match:'Coincidencias',search:'Búsqueda visual',pairs:'Revisar parejas',flanker:'Ignorar distractores',translation:'Traducción de claves'};
+    const names = {figures:'Figuras',objects:'Objetos',arrows:'Flechas',orientation:'Orientación',pictograms:'Pictogramas',characters:'Letras y números',mixed:'Series mixtas',category:'Categorías',key:'Clave de códigos',match:'Coincidencias',search:'Búsqueda visual',pairs:'Revisar parejas',flanker:'Ignorar distractores',translation:'Traducción de claves',crossedKeys:'Cruzar dos claves',rapidAgenda:'Agenda rápida',ruleChoice:'Cambiar de criterio'};
     const groups = new Map();
     for (const row of history) {
       if (!row.speedFamily) continue;
@@ -1599,6 +1632,9 @@
     container.innerHTML = `<p class="eyebrow">VELOCIDAD DE PROCESAMIENTO</p><h3>Tiempo y precisión por reto</h3><p class="speed-timing-intro">Tiempo al acertar y precisión. Compara el mismo reto, nivel y formato.</p>${rows.length ? `<div class="speed-timing-scale"><span>0 s</span><span>${seconds(maximum * 1000)} s</span></div><ul class="speed-timing-list">${rows.slice(0,6).map(timingRow).join('')}</ul>${rows.length>6?`<details class="speed-timing-history"><summary>Ver otros retos (${rows.length-6})</summary><ul class="speed-timing-list">${rows.slice(6).map(timingRow).join('')}</ul></details>`:''}<p class="muted speed-timing-note">Hasta 20 intentos por reto. Se excluyen tiempos interrumpidos y práctica sin cronómetro.</p><details class="progress-chart-data"><summary>Ver los datos de tiempos</summary><div class="speed-timing-table"><table><thead><tr><th>Reto y nivel</th><th>Mediana al acertar</th><th>Aciertos</th><th>Respuestas medidas</th></tr></thead><tbody>${rows.map(row => `<tr><th scope="row">${escapeHtml(label(row))}</th><td>${row.medianMs === null ? 'Sin aciertos medidos' : seconds(row.medianMs) + ' s'}</td><td>${row.accuracy}%</td><td>${row.attempts}</td></tr>`).join('')}</tbody></table></div></details>` : '<p class="muted">Todavía no hay respuestas con tiempos válidos. Completa un reto con cronómetro para ver la gráfica.</p>'}`;
   }
   function renderProgress() {
+    let environment=$('#environmentSpeedProgress');if(!environment){environment=document.createElement('details');environment.id='environmentSpeedProgress';environment.className='card';$('#speedProgressChart').after(environment);}
+    const environmentEntries=profile.progress.environmentSpeedObservations||[];environment.classList.toggle('hidden',!environmentEntries.length);
+    environment.innerHTML='<summary>Velocidad · búsquedas en el entorno</summary><p>Observaciones declaradas, separadas de aciertos y tiempos en pantalla. Los tiempos incluyen lectura y respuesta con el botón.</p><ul>'+environmentEntries.slice(-8).reverse().map(x=>`<li>Nivel ${Number(x.level)||1} · ${x.report==='found'?'Objeto localizado según la valoración':x.report==='not_met'?'No cumplía las condiciones':x.report==='not_found'?'No se encontró un objeto adecuado':'Práctica detenida'} · ${x.timingValid&&x.report==='found'?(Number(x.elapsedMs)/1000).toFixed(1).replace('.',',')+' s':'sin tiempo comparable'}</li>`).join('')+'</ul>';
     let observations=$('#interactiveObservations');
     if(!observations){observations=document.createElement('details');observations.id='interactiveObservations';observations.className='card interactive-observations';$('#speedProgressChart').after(observations);}
     const entries=profile.progress?.interactiveObservations||[];
