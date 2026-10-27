@@ -1,0 +1,535 @@
+{
+  "version": 1,
+  "created": "2026-10-27",
+  "language": "es-ES",
+  "units": [
+    {
+      "id": "airport-departures",
+      "title": "Panel de salidas del aeropuerto",
+      "kind": "Pantalla informativa",
+      "locale": "es-ES",
+      "fictional": true,
+      "width": 1600,
+      "height": 1000,
+      "image": "assets/documents/everyday-es-2026/airport-departures.png",
+      "pdf": "assets/documents/everyday-es-2026/airport-departures.pdf",
+      "source": "assets/documents/everyday-es-2026/airport-departures.html",
+      "transcript": "Aeropuerto Bahía. Salidas. 27/10/2026, 10:20. Terminal 1. Bilbao BH 204: 10:35, B04, última llamada. Valencia BH 318: 10:50, B12, embarcando. Sevilla BH 526: prevista 11:10, nueva hora 11:45, C03. Lisboa BH 642: 11:25, C08, a la hora. Palma BH 710: 11:40, B09, a la hora. El vuelo a Valencia cambia de B06 a B12.",
+      "facts": {
+        "valenciaGate": "B12",
+        "sevilleDelayMinutes": 35,
+        "currentTime": "10:20"
+      },
+      "questions": [
+        {
+          "question": "¿Por qué puerta se embarca a Valencia?",
+          "answer": "B12"
+        },
+        {
+          "question": "¿Cuántos minutos de retraso lleva el vuelo a Sevilla?",
+          "answer": "35 minutos"
+        },
+        {
+          "question": "¿Qué vuelo está en última llamada?",
+          "answer": "BH 204 a Bilbao"
+        },
+        {
+          "question": "Son las 10:20. ¿Cuánto falta para la salida prevista a Valencia?",
+          "answer": "30 minutos"
+        }
+      ],
+      "suggestedAgeBands": [
+        "10-12",
+        "13-15",
+        "16-18"
+      ]
+    },
+    {
+      "id": "bus-shelter-ad",
+      "title": "Anuncio de una ruta en autobús",
+      "kind": "Display publicitario",
+      "locale": "es-ES",
+      "fictional": true,
+      "width": 900,
+      "height": 1400,
+      "image": "assets/documents/everyday-es-2026/bus-shelter-ad.png",
+      "pdf": "assets/documents/everyday-es-2026/bus-shelter-ad.pdf",
+      "source": "assets/documents/everyday-es-2026/bus-shelter-ad.html",
+      "transcript": "Mueve Bahía. Línea 24. Centro a Playa Norte, sin transbordos. Sábados y domingos de 09:00 a 21:00. Frecuencia: cada 20 minutos. Trayecto aproximado: 35 minutos. Billete sencillo: 1,50 €. Menores de 6 años: gratis. Válido del 1 al 30 de noviembre de 2026.",
+      "facts": {
+        "fare": 1.5,
+        "frequencyMinutes": 20,
+        "journeyMinutes": 35,
+        "freeUnderAge": 6
+      },
+      "questions": [
+        {
+          "question": "¿Qué línea va a Playa Norte?",
+          "answer": "La línea 24"
+        },
+        {
+          "question": "¿Cuánto cuestan dos billetes sencillos?",
+          "answer": "3 €"
+        },
+        {
+          "question": "¿Se ofrece este servicio especial los martes?",
+          "answer": "No, solo sábados y domingos"
+        },
+        {
+          "question": "Si sales a las 10:00, ¿a qué hora llegarás aproximadamente?",
+          "answer": "A las 10:35"
+        }
+      ],
+      "suggestedAgeBands": [
+        "6-7",
+        "8-10",
+        "10-12",
+        "13-15"
+      ]
+    },
+    {
+      "id": "museum-brochure",
+      "title": "Folleto de un museo de ciencia",
+      "kind": "Folleto de tres cuerpos",
+      "locale": "es-ES",
+      "fictional": true,
+      "width": 1600,
+      "height": 1100,
+      "image": "assets/documents/everyday-es-2026/museum-brochure.png",
+      "pdf": "assets/documents/everyday-es-2026/museum-brochure.pdf",
+      "source": "assets/documents/everyday-es-2026/museum-brochure.html",
+      "transcript": "Museo Prisma, Plaza del Faro 8, Bahía. Horario: martes a viernes 10:00–18:00; sábados y domingos 10:00–20:00; lunes cerrado. Último acceso una hora antes del cierre. General 8 €; 6 a 17 años 5 €; menores de 6 gratis. Taller Construye un robot: sábados 12:00–13:00, de 10 a 14 años, suplemento 4 €, reserva previa. La entrada no incluye el taller.",
+      "facts": {
+        "general": 8,
+        "child": 5,
+        "workshopExtra": 4,
+        "weekendLastEntry": "19:00"
+      },
+      "questions": [
+        {
+          "question": "¿Qué día cierra el museo?",
+          "answer": "Los lunes"
+        },
+        {
+          "question": "¿Cuánto paga una persona de 12 años por entrada y taller?",
+          "answer": "9 €"
+        },
+        {
+          "question": "¿Cuál es la última hora de acceso el domingo?",
+          "answer": "Las 19:00"
+        },
+        {
+          "question": "¿Basta la entrada general para asistir al taller?",
+          "answer": "No; hay que reservar y pagar el suplemento"
+        }
+      ],
+      "suggestedAgeBands": [
+        "8-10",
+        "10-12",
+        "13-15",
+        "16-18"
+      ]
+    },
+    {
+      "id": "school-catalogue",
+      "title": "Catálogo de material para el día a día",
+      "kind": "Catálogo de productos",
+      "locale": "es-ES",
+      "fictional": true,
+      "width": 1200,
+      "height": 1400,
+      "image": "assets/documents/everyday-es-2026/school-catalogue.png",
+      "pdf": "assets/documents/everyday-es-2026/school-catalogue.pdf",
+      "source": "assets/documents/everyday-es-2026/school-catalogue.html",
+      "transcript": "Trazo, colección otoño 2026. Mochila Cometa 18 €, 18 L. Botella Brisa 9 €, 600 ml. Estuche Órbita 7 €, 22 cm. Libreta Bosque 5 €, A5, 80 hojas. Pack de clase: mochila, estuche y libreta por 26 €, ahorro 4 €. No incluye botella. IVA incluido. Recogida gratis; envío 3 €. Válido hasta 30/11/2026.",
+      "facts": {
+        "backpack": 18,
+        "bottle": 9,
+        "case": 7,
+        "notebook": 5,
+        "bundle": 26,
+        "delivery": 3,
+        "saving": 4
+      },
+      "questions": [
+        {
+          "question": "¿Qué producto tiene una capacidad de 600 ml?",
+          "answer": "La botella Brisa"
+        },
+        {
+          "question": "¿Cuánto cuesta el pack con envío?",
+          "answer": "29 €"
+        },
+        {
+          "question": "¿Cuánto ahorras con el pack frente a comprar sus tres productos por separado?",
+          "answer": "4 €"
+        },
+        {
+          "question": "¿Incluye una botella el pack de clase?",
+          "answer": "No"
+        }
+      ],
+      "suggestedAgeBands": [
+        "6-7",
+        "8-10",
+        "10-12",
+        "13-15",
+        "16-18"
+      ]
+    },
+    {
+      "id": "grocery-receipt",
+      "title": "Ticket de una compra pequeña",
+      "kind": "Ticket de compra",
+      "locale": "es-ES",
+      "fictional": true,
+      "width": 700,
+      "height": 1300,
+      "image": "assets/documents/everyday-es-2026/grocery-receipt.png",
+      "pdf": "assets/documents/everyday-es-2026/grocery-receipt.pdf",
+      "source": "assets/documents/everyday-es-2026/grocery-receipt.html",
+      "transcript": "Mercado Azahar, Plaza del Mercado 12, Bahía. Caja 02. Ticket 004821. 27/10/2026 17:42. Pan integral 1,20 €. Leche 1 L 1,10 €. Manzanas 1 kg 2,40 €. Yogures pack 1,80 €. Pasta 500 g 1,50 €. Total 8,00 €, IVA incluido. Efectivo 10 €, cambio 2 €. 5 artículos.",
+      "facts": {
+        "total": 8,
+        "paid": 10,
+        "change": 2,
+        "items": 5,
+        "apples": 2.4
+      },
+      "questions": [
+        {
+          "question": "¿Cuánto ha costado toda la compra?",
+          "answer": "8 €"
+        },
+        {
+          "question": "¿Qué cambio corresponde a un pago de 10 €?",
+          "answer": "2 €"
+        },
+        {
+          "question": "¿Qué producto es el más caro?",
+          "answer": "Las manzanas, 2,40 €"
+        },
+        {
+          "question": "Sin los yogures, ¿cuánto costaría la compra?",
+          "answer": "6,20 €"
+        }
+      ],
+      "suggestedAgeBands": [
+        "6-7",
+        "8-10",
+        "10-12",
+        "13-15"
+      ]
+    },
+    {
+      "id": "boarding-pass",
+      "title": "Tarjeta de embarque con cambio de puerta",
+      "kind": "Tarjeta de embarque",
+      "locale": "es-ES",
+      "fictional": true,
+      "width": 1500,
+      "height": 850,
+      "image": "assets/documents/everyday-es-2026/boarding-pass.png",
+      "pdf": "assets/documents/everyday-es-2026/boarding-pass.pdf",
+      "source": "assets/documents/everyday-es-2026/boarding-pass.html",
+      "transcript": "Bahía Air. Tarjeta de embarque ficticia. Viajero Demo. Madrid MAD a Valencia VLC. Vuelo BH 318, 27/10/2026. Salida 10:50. Asiento 14A. Embarque 10:15; cierre de puerta 10:35; grupo 2. Puerta impresa B06. Aviso recibido 10:05: nueva puerta B12 para BH 318.",
+      "facts": {
+        "seat": "14A",
+        "printedGate": "B06",
+        "updatedGate": "B12",
+        "close": "10:35",
+        "departure": "10:50"
+      },
+      "questions": [
+        {
+          "question": "¿Cuál es el asiento asignado?",
+          "answer": "14A"
+        },
+        {
+          "question": "Tras el aviso, ¿a qué puerta debes ir?",
+          "answer": "B12"
+        },
+        {
+          "question": "Si llegas a la puerta a las 10:40, ¿ha terminado el plazo de embarque?",
+          "answer": "Sí, la puerta cierra a las 10:35"
+        },
+        {
+          "question": "¿Cuántos minutos antes de la salida cierra la puerta?",
+          "answer": "15 minutos"
+        }
+      ],
+      "suggestedAgeBands": [
+        "10-12",
+        "13-15",
+        "16-18"
+      ]
+    },
+    {
+      "id": "video-recipe",
+      "title": "Información en un vídeo de cocina",
+      "kind": "Captura de vídeo",
+      "locale": "es-ES",
+      "fictional": true,
+      "width": 1600,
+      "height": 1050,
+      "image": "assets/documents/everyday-es-2026/video-recipe.png",
+      "pdf": "assets/documents/everyday-es-2026/video-recipe.pdf",
+      "source": "assets/documents/everyday-es-2026/video-recipe.html",
+      "transcript": "Aula en Vídeo. Verduras al horno, paso a paso. Reproducción pausada en 00:42 de 03:20. Paso 2: precalienta el horno. Subtítulo: Pon el horno a 180 °C antes de introducir la bandeja. Preparación 10 min; horneado 20 min; 2 personas. Guantes para retirar la bandeja. Ingredientes: 2 zanahorias, 1 calabacín, 1 cucharada de aceite. Capítulos 00:00 Ingredientes, 00:35 Precalentar, 01:05 Preparar verduras, 01:50 Hornear, 02:50 Servir.",
+      "facts": {
+        "temperatureC": 180,
+        "prepMinutes": 10,
+        "ovenMinutes": 20,
+        "servings": 2,
+        "positionSeconds": 42,
+        "durationSeconds": 200
+      },
+      "questions": [
+        {
+          "question": "¿A qué temperatura hay que precalentar el horno?",
+          "answer": "180 °C"
+        },
+        {
+          "question": "¿Cuánto suman la preparación y el horneado indicados?",
+          "answer": "30 minutos"
+        },
+        {
+          "question": "¿En qué momento empieza el capítulo de hornear?",
+          "answer": "En 01:50"
+        },
+        {
+          "question": "¿Cuántas zanahorias se necesitan para la receta mostrada?",
+          "answer": "2 zanahorias"
+        }
+      ],
+      "suggestedAgeBands": [
+        "8-10",
+        "10-12",
+        "13-15",
+        "16-18"
+      ]
+    },
+    {
+      "id": "cinema-poster",
+      "title": "Póster de cine al aire libre",
+      "kind": "Póster cultural",
+      "locale": "es-ES",
+      "fictional": true,
+      "width": 1000,
+      "height": 1400,
+      "image": "assets/documents/everyday-es-2026/cinema-poster.png",
+      "pdf": "assets/documents/everyday-es-2026/cinema-poster.pdf",
+      "source": "assets/documents/everyday-es-2026/cinema-poster.html",
+      "transcript": "Centro Juvenil Faro. Cine bajo las estrellas. Actividad a partir de 8 años. Sábado 14 de noviembre de 2026. Apertura 18:30; película 19:00. Patio del centro juvenil. Gratis. Aforo 80 personas. Trae manta. Si llueve, salón 2. Menores de 12 años deben ir con persona adulta.",
+      "facts": {
+        "doors": "18:30",
+        "film": "19:00",
+        "capacity": 80,
+        "adultUnderAge": 12,
+        "rainRoom": "salón 2"
+      },
+      "questions": [
+        {
+          "question": "¿A qué hora empieza la película?",
+          "answer": "A las 19:00"
+        },
+        {
+          "question": "¿Cuánto tiempo hay entre la apertura y la película?",
+          "answer": "30 minutos"
+        },
+        {
+          "question": "¿Dónde será la proyección si llueve?",
+          "answer": "En el salón 2"
+        },
+        {
+          "question": "¿Puede ir sola una persona de 10 años?",
+          "answer": "No; debe ir con una persona adulta"
+        }
+      ],
+      "suggestedAgeBands": [
+        "6-7",
+        "8-10",
+        "10-12",
+        "13-15"
+      ]
+    },
+    {
+      "id": "queue-display",
+      "title": "Pantalla de turnos de atención",
+      "kind": "Display de turnos",
+      "locale": "es-ES",
+      "fictional": true,
+      "width": 1400,
+      "height": 950,
+      "image": "assets/documents/everyday-es-2026/queue-display.png",
+      "pdf": "assets/documents/everyday-es-2026/queue-display.pdf",
+      "source": "assets/documents/everyday-es-2026/queue-display.html",
+      "transcript": "Oficina de Atención Ciudadana, 11:26. Última llamada: A028 al puesto 3. En atención: A026 puesto 1; B014 puesto 2; A028 puesto 3. Las letras A y B corresponden a trámites distintos. El resguardo de ejemplo tiene código A029 y todavía no ha sido llamado.",
+      "facts": {
+        "latest": "A028",
+        "latestDesk": 3,
+        "ticket": "A029",
+        "called": false
+      },
+      "questions": [
+        {
+          "question": "¿Qué turno acaba de ser llamado?",
+          "answer": "A028"
+        },
+        {
+          "question": "¿A qué puesto debe ir A028?",
+          "answer": "Al puesto 3"
+        },
+        {
+          "question": "Con el resguardo A029, ¿debes acercarte ya a un puesto?",
+          "answer": "No, todavía no ha sido llamado"
+        },
+        {
+          "question": "¿Quién está en el puesto 2?",
+          "answer": "El turno B014"
+        }
+      ],
+      "suggestedAgeBands": [
+        "6-7",
+        "8-10",
+        "10-12",
+        "13-15",
+        "16-18"
+      ]
+    },
+    {
+      "id": "rail-disruption",
+      "title": "Aviso de una incidencia ferroviaria",
+      "kind": "Pantalla de estación",
+      "locale": "es-ES",
+      "fictional": true,
+      "width": 1500,
+      "height": 1000,
+      "image": "assets/documents/everyday-es-2026/rail-disruption.png",
+      "pdf": "assets/documents/everyday-es-2026/rail-disruption.pdf",
+      "source": "assets/documents/everyday-es-2026/rail-disruption.html",
+      "transcript": "Red Bahía, Estación Central, 27/10/2026 08:10. Línea R2 interrumpida entre Centro y Jardines hasta las 12:00. Sustitución R2-B desde salida norte. Billete de tren válido sin suplemento. Cada 15 minutos. Tiempo adicional aproximado 20 minutos. Próximo autobús 08:15. Resto de R2 normal.",
+      "facts": {
+        "replacement": "R2-B",
+        "exit": "norte",
+        "next": "08:15",
+        "frequencyMinutes": 15,
+        "extraMinutes": 20,
+        "until": "12:00"
+      },
+      "questions": [
+        {
+          "question": "¿Dónde se toma el autobús de sustitución?",
+          "answer": "En la parada provisional de la salida norte"
+        },
+        {
+          "question": "¿Hay que pagar otro billete?",
+          "answer": "No, sirve el billete de tren"
+        },
+        {
+          "question": "Si se mantiene la frecuencia, ¿cuándo saldrá el siguiente al de las 08:15?",
+          "answer": "A las 08:30"
+        },
+        {
+          "question": "¿Está interrumpida toda la línea R2?",
+          "answer": "No, solo entre Centro y Jardines"
+        }
+      ],
+      "suggestedAgeBands": [
+        "10-12",
+        "13-15",
+        "16-18"
+      ]
+    },
+    {
+      "id": "online-order",
+      "title": "Pantalla de recogida de un pedido",
+      "kind": "Captura de una tienda",
+      "locale": "es-ES",
+      "fictional": true,
+      "width": 1300,
+      "height": 1150,
+      "image": "assets/documents/everyday-es-2026/online-order.png",
+      "pdf": "assets/documents/everyday-es-2026/online-order.pdf",
+      "source": "assets/documents/everyday-es-2026/online-order.html",
+      "transcript": "Trazo online. Pedido TZ-2048, realizado 26/10/2026. Listo para recoger. Calle del Olmo 18. Martes a sábado, 10:00–14:00 y 17:00–20:00. Domingo y lunes cerrado. Recoger antes del cierre del sábado 31/10/2026. Código R7K-42. Otra persona puede recogerlo mostrando el código. Estuche 7 €, libreta 5 €, total ya pagado 12 €. Recogida gratis. No volver a pagar.",
+      "facts": {
+        "code": "R7K-42",
+        "totalPaid": 12,
+        "deadline": "31/10/2026 20:00",
+        "closedDays": [
+          "domingo",
+          "lunes"
+        ]
+      },
+      "questions": [
+        {
+          "question": "¿Qué código hay que mostrar para recogerlo?",
+          "answer": "R7K-42"
+        },
+        {
+          "question": "¿Puedes recogerlo un martes a las 15:00?",
+          "answer": "No; la tienda cierra de 14:00 a 17:00"
+        },
+        {
+          "question": "¿Cuánto debes pagar al recogerlo?",
+          "answer": "Nada, los 12 € ya están pagados"
+        },
+        {
+          "question": "¿Puede recogerlo otra persona?",
+          "answer": "Sí, si muestra el código"
+        }
+      ],
+      "suggestedAgeBands": [
+        "8-10",
+        "10-12",
+        "13-15",
+        "16-18"
+      ]
+    },
+    {
+      "id": "sports-schedule",
+      "title": "Programa de actividades de un polideportivo",
+      "kind": "Programa semanal",
+      "locale": "es-ES",
+      "fictional": true,
+      "width": 1400,
+      "height": 1100,
+      "image": "assets/documents/everyday-es-2026/sports-schedule.png",
+      "pdf": "assets/documents/everyday-es-2026/sports-schedule.pdf",
+      "source": "assets/documents/everyday-es-2026/sports-schedule.html",
+      "transcript": "Polideportivo La Vega, noviembre 2026. Baloncesto lunes 17:00–18:00, 10–12 años, pista 1, 4 plazas. Baile urbano martes 17:30–18:30, 13–15, sala 2, completo. Escalada miércoles 18:00–19:00, 13–17, rocódromo, 3 plazas. Fútbol sala jueves 17:00–18:00, 10–12, pista 2, 6 plazas. Yoga viernes 18:00–19:00, 16–18, sala 1, 5 plazas. Inscripciones hasta 30/10; 12 €/mes por actividad; menores con autorización. Agua y calzado deportivo. Material de escalada incluido. Grupos completos con lista de espera.",
+      "facts": {
+        "monthlyFee": 12,
+        "climbingPlaces": 3,
+        "basketballPlaces": 4,
+        "footballPlaces": 6,
+        "danceFull": true
+      },
+      "questions": [
+        {
+          "question": "Con 14 años, ¿qué actividad con plazas libres puedes elegir?",
+          "answer": "Escalada"
+        },
+        {
+          "question": "¿Dónde se hace fútbol sala?",
+          "answer": "En la pista 2"
+        },
+        {
+          "question": "¿Cuánto cuestan dos actividades al mes?",
+          "answer": "24 €"
+        },
+        {
+          "question": "¿Es necesario llevar material propio de escalada?",
+          "answer": "No, está incluido"
+        }
+      ],
+      "suggestedAgeBands": [
+        "8-10",
+        "10-12",
+        "13-15",
+        "16-18"
+      ]
+    }
+  ]
+}

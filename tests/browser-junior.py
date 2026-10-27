@@ -4,7 +4,7 @@ Only a local fake SDK/account/database is used; external services are blocked.
 import functools,http.server,json,re,subprocess,tempfile,threading,sys
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import ROOT,SDK,QuietHandler,doc_text
+from browser_support import workspace, ROOT,SDK,QuietHandler,doc_text
 
 ROUTE=sys.argv[1] if len(sys.argv)>1 else 'junior'
 assert ROUTE in ['junior','primary','middle']
@@ -110,7 +110,7 @@ try:
                 if n<9:
                     page.evaluate('window.__current=null');page.locator('#exerciseNext').click()
         for key in ['es_es','es_mx','es_co','es_ar','es_cl','es_pa','es_cr']:
-            page.locator('#v16ContentLocale').select_option(key)
+            workspace(page).locator('#v16ContentLocale').select_option(key)
             page.wait_for_function('(key)=>LearningAPI.contentLocale===key',arg=key)
             for domain in domains:
                 page.evaluate('window.__current=null');page.locator(f'#navMenu [data-subject="{domain}"]').click()

@@ -898,6 +898,8 @@
     $('#appShell').classList.toggle('early-experience',Boolean(window.ContentPolicy.forProfile(p)));
     $('#appShell').classList.toggle('school-experience',Boolean(window.SchoolJourney.forProfile(p)));
     $('#appShell').dataset.ageTheme=window.AgeStages.forProfile(p)?.theme || '';
+    $('#appShell').dataset.design=['middle','teen'].includes(p.progress?.ageRoute||p.age_band)?'impulso':'calma';
+    $('#appShell').classList.remove('mobile-nav-open');$('#workspaceMenu').setAttribute('aria-expanded','false');
     $('#exercise').classList.toggle('early-primary',Boolean(window.ContentPolicy.forProfile(p)));
     API.profileLocale = p.locale;
     currentItem = null;
@@ -914,6 +916,8 @@
     switchSection("home");
     updateGlobalUI();
   }
+  $('#workspaceMenu').onclick=()=>{const open=$('#appShell').classList.toggle('mobile-nav-open');$('#workspaceMenu').setAttribute('aria-expanded',String(open));};
+  $('#prepareSessionBtn').onclick=()=>switchSection('sessionBuilder');
   function buildNavigation() {
     const nav = $("#navMenu");
     const items = [["home", "⌂", "Inicio"]];
@@ -1054,7 +1058,7 @@
     const localeRevision = API.localeRevision;
     const res = await API.requestContent({
       ...payload,
-      client_revision:7,
+      client_revision:8,
       ...(targetProfile._sessionOnly?{session_only:true}:{}),
       profile_id: targetProfile.id,
       locale,
@@ -1490,6 +1494,9 @@
     $("#activeProfileLabel").textContent = profile.name;
     $("#ageEyebrow").textContent =
       `${AGE[profile.age_band].label} · ${window.LocaleContent.labels[API.effectiveLocale(profile)]}`;
+    $('#welcomeTitle').textContent=$('#appShell').dataset.design==='impulso'?'Un nuevo reto, a tu ritmo':'Tu espacio para avanzar';
+    $('#homeSessionNotice').textContent=profile._sessionOnly?'Sesión independiente: esta práctica no se añade al historial.':'Con seguimiento: los resultados se guardan en este perfil.';
+    $('#homeSessionNotice').classList.toggle('independent',Boolean(profile._sessionOnly));
     renderHomeLevels();
     renderEarlyHub();
     renderEarlyTaskGuide();
@@ -1570,9 +1577,10 @@
     $("#homeLevels").innerHTML = ageData()
       .subjects.map(
         (s) =>
-          `<div class="level-row"><strong>${SUBJECT_META[s].name}</strong><div class="level-track"><span style="width:${((state.levels[s] || 1) / 3) * 100}%"></span></div><span class="level-tag">NIVEL ${state.levels[s] || 1}</span></div>`,
+          `<button type="button" class="level-row" data-home-area="${s}" data-area="${s}"><span class="area-illustration" aria-hidden="true"></span><strong>${SUBJECT_META[s].name}</strong><div class="level-track"><span style="width:${((state.levels[s] || 1) / 3) * 100}%"></span></div><span class="level-tag">NIVEL ${state.levels[s] || 1}</span></button>`,
       )
       .join("");
+    $$('[data-home-area]').forEach(button=>button.onclick=()=>{guidedSession=null;hideGuidedBar();subject=button.dataset.homeArea;switchSection('exercise');setupExercise();});
     const stats = ageData()
       .subjects.map((s) => {
         const r = recent(s, 10);
@@ -1631,6 +1639,10 @@
     const timingRow = row => `<li class="speed-timing-row" data-family="${escapeHtml(row.family)}" data-level="${escapeHtml(row.level)}" data-revision="${row.revision}" data-median-ms="${row.medianMs === null ? '' : row.medianMs}"><div class="speed-timing-heading"><strong>${escapeHtml(label(row))}</strong><span class="speed-timing-value">${row.medianMs === null ? 'Sin aciertos medidos' : seconds(row.medianMs) + ' s'}</span></div><svg viewBox="0 0 600 24" preserveAspectRatio="none" aria-hidden="true"><rect width="600" height="24" rx="12" fill="#e9eee5"/>${row.medianMs === null ? '' : `<rect width="${600 * row.medianMs / 1000 / maximum}" height="24" rx="12" fill="${['#548c76','#5c80ae','#b27855','#946cac','#b5667a'][Object.keys(names).indexOf(row.family)%5]||'#548c76'}"/>`}</svg><p><strong>${row.accuracy}% de aciertos</strong><span>${row.attempts} ${row.attempts === 1 ? 'respuesta medida' : 'respuestas medidas'}</span></p></li>`;
     container.innerHTML = `<p class="eyebrow">VELOCIDAD DE PROCESAMIENTO</p><h3>Tiempo y precisión por reto</h3><p class="speed-timing-intro">Tiempo al acertar y precisión. Compara el mismo reto, nivel y formato.</p>${rows.length ? `<div class="speed-timing-scale"><span>0 s</span><span>${seconds(maximum * 1000)} s</span></div><ul class="speed-timing-list">${rows.slice(0,6).map(timingRow).join('')}</ul>${rows.length>6?`<details class="speed-timing-history"><summary>Ver otros retos (${rows.length-6})</summary><ul class="speed-timing-list">${rows.slice(6).map(timingRow).join('')}</ul></details>`:''}<p class="muted speed-timing-note">Hasta 20 intentos por reto. Se excluyen tiempos interrumpidos y práctica sin cronómetro.</p><details class="progress-chart-data"><summary>Ver los datos de tiempos</summary><div class="speed-timing-table"><table><thead><tr><th>Reto y nivel</th><th>Mediana al acertar</th><th>Aciertos</th><th>Respuestas medidas</th></tr></thead><tbody>${rows.map(row => `<tr><th scope="row">${escapeHtml(label(row))}</th><td>${row.medianMs === null ? 'Sin aciertos medidos' : seconds(row.medianMs) + ' s'}</td><td>${row.accuracy}%</td><td>${row.attempts}</td></tr>`).join('')}</tbody></table></div></details>` : '<p class="muted">Todavía no hay respuestas con tiempos válidos. Completa un reto con cronómetro para ver la gráfica.</p>'}`;
   }
+  function sessionDateLabel(value){
+    const date=new Date(value);if(!value||!Number.isFinite(date.getTime()))return 'Fecha no disponible';
+    return new Intl.DateTimeFormat('es-ES',/^\d{4}-\d{2}-\d{2}$/.test(value)?{dateStyle:'medium'}:{dateStyle:'medium',timeStyle:'short'}).format(date);
+  }
   function renderProgress() {
     let environment=$('#environmentSpeedProgress');if(!environment){environment=document.createElement('details');environment.id='environmentSpeedProgress';environment.className='card';$('#speedProgressChart').after(environment);}
     const environmentEntries=profile.progress.environmentSpeedObservations||[];environment.classList.toggle('hidden',!environmentEntries.length);
@@ -1679,7 +1691,7 @@
     if(!recent.length){$('#sessionEvolution').innerHTML='<p class="muted">Completa algunos ejercicios para ver aquí tu evolución.</p>';return;}
     const points=recent.map((row,i)=>({x:recent.length===1?350:60+i*580/(recent.length-1),y:200-160*row.correct/row.attempts,accuracy:Math.round(100*row.correct/row.attempts),...row}));
     const path=points.map((p,i)=>`${i?'L':'M'}${p.x},${p.y}`).join(' ');
-    $('#sessionEvolution').innerHTML=`<div class="progress-chart-summary"><strong>${recent.reduce((n,r)=>n+r.attempts,0)} ejercicios</strong><span>en ${recent.length} ${recent.length===1?'sesión reciente':'sesiones recientes'}</span></div><svg class="evolution-chart" viewBox="0 0 700 250" role="img" aria-label="Porcentaje de aciertos por sesión. Los datos completos aparecen debajo."><defs><linearGradient id="progressFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#669c88" stop-opacity=".26"/><stop offset="100%" stop-color="#669c88" stop-opacity=".02"/></linearGradient></defs>${[0,50,100].map(n=>`<g><path d="M60 ${200-n*1.6}H650" stroke="#dce5dc" stroke-dasharray="4 6"/><text x="46" y="${205-n*1.6}" text-anchor="end" fill="#61776a" font-size="13">${n}%</text></g>`).join('')}<path d="${path}L${points.at(-1).x},200L${points[0].x},200Z" fill="url(#progressFill)"/><path d="${path}" fill="none" stroke="#397b67" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${points.map((p,i)=>`<g><circle cx="${p.x}" cy="${p.y}" r="6" fill="#fffdf7" stroke="#397b67" stroke-width="3"><title>Sesión ${i+1}: ${p.accuracy}% de aciertos, ${p.attempts} ejercicios</title></circle><text x="${p.x}" y="230" text-anchor="middle" fill="#61776a" font-size="13">${i+1}</text></g>`).join('')}</svg><details class="progress-chart-data"><summary>Ver los datos por sesión</summary><table><thead><tr><th>Sesión</th><th>Ejercicios</th><th>Aciertos</th></tr></thead><tbody>${points.map((p,i)=>`<tr><td>${i+1}</td><td>${p.attempts}</td><td>${p.accuracy}%</td></tr>`).join('')}</tbody></table></details>`;
+    $('#sessionEvolution').innerHTML=`<div class="progress-chart-summary"><strong>${recent.reduce((n,r)=>n+r.attempts,0)} ejercicios</strong><span>en ${recent.length} ${recent.length===1?'sesión reciente':'sesiones recientes'}</span></div><svg class="evolution-chart" viewBox="0 0 700 250" role="img" aria-label="Porcentaje de aciertos por sesión. Los datos completos aparecen debajo."><defs><linearGradient id="progressFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#669c88" stop-opacity=".26"/><stop offset="100%" stop-color="#669c88" stop-opacity=".02"/></linearGradient></defs>${[0,50,100].map(n=>`<g><path d="M60 ${200-n*1.6}H650" stroke="#dce5dc" stroke-dasharray="4 6"/><text x="46" y="${205-n*1.6}" text-anchor="end" fill="#61776a" font-size="13">${n}%</text></g>`).join('')}<path d="${path}L${points.at(-1).x},200L${points[0].x},200Z" fill="url(#progressFill)"/><path d="${path}" fill="none" stroke="#397b67" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${points.map((p,i)=>`<g><circle cx="${p.x}" cy="${p.y}" r="6" fill="#fffdf7" stroke="#397b67" stroke-width="3"><title>Sesión ${i+1} · ${escapeHtml(sessionDateLabel(p.date))}: ${p.accuracy}% de aciertos, ${p.attempts} ejercicios</title></circle><text x="${p.x}" y="230" text-anchor="middle" fill="#61776a" font-size="13">${i+1}</text></g>`).join('')}</svg><details class="progress-chart-data"><summary>Ver los datos por sesión</summary><table><thead><tr><th>Sesión</th><th>Fecha y hora</th><th>Ejercicios</th><th>Aciertos</th></tr></thead><tbody>${points.map((p,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(sessionDateLabel(p.date))}</td><td>${p.attempts}</td><td>${p.accuracy}%</td></tr>`).join('')}</tbody></table></details>`;
   }
   function csvEscape(v) {
     const s = String(v ?? "");

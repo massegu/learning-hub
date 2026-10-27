@@ -2,7 +2,7 @@
 import importlib.util,threading,json,subprocess
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import ROOT
+from browser_support import workspace, ROOT
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');review=importlib.util.module_from_spec(spec);spec.loader.exec_module(review)
 server=review.ReviewServer(('127.0.0.1',0),review.prepare());threading.Thread(target=server.serve_forever,daemon=True).start()
 fixtures=json.loads(subprocess.check_output(['node','-e',"console.log(JSON.stringify(require('./js/curriculum').interactivePool('primary','executive',3).filter(x=>x.interactionTask.kind==='auditory').slice(0,2)))"],cwd=ROOT,text=True));chosen={}
@@ -22,12 +22,12 @@ try:
   page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle')
   page.evaluate('''()=>{const fn=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return fn(it,...args)}}''')
   for age in ['early','junior','primary','middle','teen']:
-   page.locator('#profileSelect').select_option(age);assert page.locator('#navMenu [data-subject=social]').is_visible();page.locator('#navMenu [data-subject=social]').click();page.wait_for_selector('#exerciseOptions .option-btn');assert page.locator('#exercisePrompt').inner_text()
+   workspace(page).locator('#profileSelect').select_option(age);assert page.locator('#navMenu [data-subject=social]').is_visible();workspace(page).locator('#navMenu [data-subject=social]').click();page.wait_for_selector('#exerciseOptions .option-btn');assert page.locator('#exercisePrompt').inner_text()
    assert not page.locator('#navMenu [data-subject=social]').evaluate('e=>e.hidden')
    page.locator('#exerciseOptions [data-answer]').evaluate_all('(els,a)=>els.find(e=>e.dataset.answer===a).click()',page.evaluate('__current.a'));assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
-  page.locator('#profileSelect').select_option('primary');page.locator('#navMenu [data-section=home]').click();assert 'learning-areas-3d.png' in page.locator('[data-school-area=social] .area-illustration').evaluate('e=>getComputedStyle(e).backgroundImage');page.locator('#schoolHub').screenshot(path='/tmp/new-area-icons.png')
+  workspace(page).locator('#profileSelect').select_option('primary');workspace(page).locator('#navMenu [data-section=home]').click();assert 'learning-areas-3d.png' in page.locator('[data-school-area=social] .area-illustration').evaluate('e=>getComputedStyle(e).backgroundImage');page.locator('#schoolHub').screenshot(path='/tmp/new-area-icons.png')
   page.clock.install();page.clock.pause_at(page.evaluate('Date.now()+1000'));page.add_style_tag(content='*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}')
-  page.locator('#navMenu [data-subject=executive]').click();page.locator('#interactionModeBtn').click();page.wait_for_selector('#startInteractive');page.locator('#exerciseLevelSelect').select_option('3');page.wait_for_function('()=>__current?.interactionTask?.level===3')
+  workspace(page).locator('#navMenu [data-subject=executive]').click();page.locator('#interactionModeBtn').click();page.wait_for_selector('#startInteractive');page.locator('#exerciseLevelSelect').select_option('3');page.wait_for_function('()=>__current?.interactionTask?.level===3')
   baseline=page.evaluate('(__profiles.find(p=>p.id==="primary").progress.history||[]).length')
   for fixture in fixtures:
    chosen.clear();chosen.update(fixture)

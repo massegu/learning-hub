@@ -2,7 +2,7 @@
 import importlib.util,threading,tempfile,zipfile,re
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import ROOT,doc_text
+from browser_support import workspace, ROOT,doc_text
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');review=importlib.util.module_from_spec(spec);spec.loader.exec_module(review)
 server=review.ReviewServer(('127.0.0.1',0),review.prepare());threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
@@ -62,11 +62,11 @@ try:
     const fetch=context.fetchMore;context={...context,fetchMore:async(...a)=>{__lateReplacement++;return fetch(...a);}};
     return generate(copy,p,context);
   };}''')
-  page.locator('#navMenu [data-section=homework]').click();page.locator('#worksheetNone').click()
+  workspace(page).locator('#navMenu [data-section=homework]').click();page.locator('#worksheetNone').click()
   for domain in ['language','division','attention','memory']:page.locator(f'#homeworkOptions input[value="{domain}"]').check()
   page.locator('#worksheetQuestions').select_option('10');exports=0
   for country in ['es_es','es_mx','es_co','es_ar','es_cl','es_pa','es_cr']:
-   page.locator('#v16ContentLocale').select_option(country);page.wait_for_function('(c)=>LearningAPI.contentLocale===c',arg=country)
+   workspace(page).locator('#v16ContentLocale').select_option(country);page.wait_for_function('(c)=>LearningAPI.contentLocale===c',arg=country)
    versions=1 if country=='es_es' else 2;page.locator('#worksheetCount').select_option(str(versions))
    with page.expect_download(timeout=60000) as dl:page.locator('#generateWorksheetsBtn').click()
    path=Path(tmp)/(country+('.docx' if versions==1 else '.zip'));dl.value.save_as(path)
@@ -78,7 +78,7 @@ try:
    exports+=len(docs)
   assert page.evaluate('__lateReplacement')==exports
   # Older routes stay mature, and legacy comparisons preserve complete source data.
-  page.locator('#profileSelect').select_option('middle');assert page.locator('#earlyHub').is_hidden();assert page.locator('.discovery-trail').count()==0 or page.locator('.discovery-trail').is_hidden()
+  workspace(page).locator('#profileSelect').select_option('middle');assert page.locator('#earlyHub').is_hidden();assert page.locator('.discovery-trail').count()==0 or page.locator('.discovery-trail').is_hidden()
   page.evaluate('''()=>{const old=LearningAPI.requestContent;LearningAPI.requestContent=async p=>{const r=await old(p);if(p.domain==='attention')r.items=[{type:'standard',requiresStimulus:true,q:'¿Qué opción coincide con el modelo?',scenario:'MODELO: E14-O6 A: E14-O6 B: E14O6 C: E14-O8 D: F14-O6',opts:['A','B','C','D'],a:'A'}];return r;}}''')
   it=open_area('attention');shot('older-attention');assert page.locator('.attention-model').count()==1;assert page.locator('.attention-comparison tr').count()==4,page.locator('#exerciseVisual').inner_html()
   assert not errors,errors;assert not external,external

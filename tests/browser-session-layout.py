@@ -2,7 +2,7 @@
 import importlib.util,threading,tempfile,zipfile,xml.etree.ElementTree as ET,os,json
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import ROOT
+from browser_support import workspace, ROOT
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');review=importlib.util.module_from_spec(spec);spec.loader.exec_module(review)
 server=review.ReviewServer(('127.0.0.1',0),review.prepare());threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
@@ -12,8 +12,8 @@ try:
   page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#profileSelect');page.wait_for_timeout(1000)
   page.evaluate('''()=>{const old=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return old(it,...args)}}''')
   for age in ['early','junior','primary','middle','teen']:
-   page.locator('#profileSelect').select_option(age)
-   page.locator('#navMenu [data-section=sessionBuilder]').click()
+   workspace(page).locator('#profileSelect').select_option(age)
+   workspace(page).locator('#navMenu [data-section=sessionBuilder]').click()
    nav=page.locator('#navMenu [data-subject]').evaluate_all('(els)=>els.map(e=>({domain:e.dataset.subject,label:e.textContent.trim()}))')
    options=page.locator('#sessionDomainOptions label').evaluate_all('(els)=>els.map(e=>({domain:e.querySelector("input").value,label:e.querySelector("strong").textContent}))')
    assert [x['domain'] for x in nav]==[x['domain'] for x in options],(age,nav,options)
@@ -28,7 +28,7 @@ try:
    page.wait_for_function('(domain)=>__current?.domain===domain&&document.querySelector("#exercisePrompt").textContent===__current.q',arg=target)
    assert page.locator('#guidedSessionBar').is_visible()
    page.locator('#cancelGuidedSession').click()
-  page.locator('#navMenu [data-subject=literacy]').click();page.locator('#languageModeSwitch [data-mode=writing]').click();page.locator('#textAnswerInput').wait_for(state='visible')
+  workspace(page).locator('#navMenu [data-subject=literacy]').click();page.locator('#languageModeSwitch [data-mode=writing]').click();page.locator('#textAnswerInput').wait_for(state='visible')
   for width in [1280,390]:
    page.set_viewport_size({'width':width,'height':900});field=page.locator('#textAnswerInput');field.fill('Una frase.');small=field.evaluate('(e)=>e.getBoundingClientRect().height')
    field.fill('Esta respuesta explica los datos que aparecen en el texto y propone una comprobación. '*5);large=field.evaluate('(e)=>e.getBoundingClientRect().height')
@@ -54,15 +54,15 @@ try:
   page.route('**/__review/content',source_override)
   for width in [1280,390]:
    page.set_viewport_size({'width':width,'height':900})
-   page.locator('#navMenu [data-subject=attention]').click();page.wait_for_selector('.attention-comparison')
+   workspace(page).locator('#navMenu [data-subject=attention]').click();page.wait_for_selector('.attention-comparison')
    assert page.locator('.attention-comparison th').all_text_contents()==list('ABCD')
    assert page.locator('.attention-comparison code').all_text_contents()==['P25-P3','P25-P3','P25-P4','P25-P3']
    assert 'SITUACIÓN' not in page.locator('#exerciseVisual').inner_text()
    page.locator('#exerciseOptions').get_by_role('button',name='C',exact=True).click()
-   page.locator('#navMenu [data-subject=executive]').click();page.wait_for_selector('#exercise[data-subject=executive] .stimulus-paragraph')
+   workspace(page).locator('#navMenu [data-subject=executive]').click();page.wait_for_selector('#exercise[data-subject=executive] .stimulus-paragraph')
    dimensions=page.locator('.stimulus-paragraph').evaluate('(e)=>({text:e.getBoundingClientRect().width,box:e.parentElement.clientWidth-parseFloat(getComputedStyle(e.parentElement).paddingLeft)-parseFloat(getComputedStyle(e.parentElement).paddingRight)})')
    assert abs(dimensions['text']-dimensions['box'])<2,dimensions
-   page.locator('#navMenu [data-subject=speedReasoning]').click();page.wait_for_selector('#startSpeedTrial')
+   workspace(page).locator('#navMenu [data-subject=speedReasoning]').click();page.wait_for_selector('#startSpeedTrial')
    page.locator('#practiceSpeedTrial').click();page.wait_for_selector('.speed-choice')
    before=page.locator('.speed-choice').first.bounding_box()
    page.locator('.speed-choice').first.click();page.wait_for_selector('#exerciseNext:not(.hidden)')

@@ -13,7 +13,7 @@ import xml.etree.ElementTree as ET
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
-from browser_support import SDK, QuietHandler, doc_text
+from browser_support import workspace, SDK, QuietHandler, doc_text
 
 def install_journal(page):
     page.evaluate("""() => {
@@ -210,7 +210,7 @@ try:
         assert_doc_integrity(doc_text(single.read_bytes()),page.evaluate('__lastWorksheets[0]'))
         print('PASS: third complete 20-activity DOCX with every stimulus before its question')
         for band in ['junior','primary','middle','teen']:
-            page.locator('#profileSelect').select_option(band)
+            workspace(page).locator('#profileSelect').select_option(band)
             page.locator('#navMenu [data-subject="attention"]').click()
             page.wait_for_function("document.querySelector('#exercisePrompt').textContent==='¿Qué criterio ayuda más?'")
             assert 'F15-P7' in page.locator('#exerciseVisual').inner_text()
@@ -224,7 +224,7 @@ try:
             older_items=page.evaluate('(band)=>__lastWorksheets[0].map(it=>({...it,stimulus:ActivityModel.printable(it,__profiles.find(p=>p.id===band)).stimulus}))',band)
             assert_doc_integrity(doc_text(older.read_bytes()),older_items,early=False)
             print(f'PASS: {band}: remote interactive content and complete 10-question remote DOCX')
-        page.locator('#newProfileBtn').click()
+        workspace(page).locator('#newProfileBtn').click()
         page.locator('#newProfileName').fill('Test child')
         page.locator('#newProfileAge').select_option('early')
         page.locator('#createProfileBtn').click()

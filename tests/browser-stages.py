@@ -4,7 +4,7 @@ Only the SDK boundary is simulated; no production Supabase access.
 from pathlib import Path
 import functools,http.server,json,re,tempfile,threading
 from playwright.sync_api import sync_playwright
-from browser_support import ROOT,SDK,QuietHandler,doc_text
+from browser_support import workspace, ROOT,SDK,QuietHandler,doc_text
 server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(QuietHandler,directory=str(ROOT)))
 threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
@@ -64,7 +64,7 @@ try:
   assert page.locator('#exerciseOptions .option-btn svg').count()==0
   page.evaluate('window.__iconFixture=false')
   for band,theme,n,domains in [('junior','workshop',8,8),('primary','base',10,10),('middle',None,12,10)]:
-   page.locator('#profileSelect').select_option(band)
+   workspace(page).locator('#profileSelect').select_option(band)
    if theme:
     assert page.locator('#schoolHub').is_visible()
     assert page.locator('[data-school-area]').count()==domains
@@ -101,20 +101,20 @@ try:
    assert 'unverified-content-level' in page.evaluate('lastDifficultyAudit.issues')
    # Reload restores the checkpoint, not just the visible age label.
    page.reload(wait_until='networkidle');page.wait_for_selector('#profileSelect');observe()
-   page.locator('#profileSelect').select_option(band)
+   workspace(page).locator('#profileSelect').select_option(band)
    page.locator('#navMenu [data-subject="attention"]').click()
    page.wait_for_function('document.querySelector("#exercisePrompt").textContent==="¿Qué criterio ayuda más?"')
    assert page.locator('#exerciseLevelSelect').input_value()=='3'
    print(f'PASS: {band} fresh {n}-answer windows, no adjacent promotions, requested/visible levels agree, progress restores',flush=True)
   # School mission uses ordinary remote requests and survives reload.
-  page.locator('#profileSelect').select_option('junior');page.locator('[data-school-mission="build"]').click()
+  workspace(page).locator('#profileSelect').select_option('junior');page.locator('[data-school-mission="build"]').click()
   page.wait_for_function('document.querySelectorAll("#exerciseOptions button:not(:disabled)").length>0')
   page.locator('#exerciseOptions').get_by_role('button',name='Azul',exact=True).click()
   page.locator('#cancelGuidedSession').click();page.reload(wait_until='networkidle');page.wait_for_selector('#schoolContinue');observe()
   page.locator('#schoolContinue').click()
   assert 'Actividad 2 de 3' in page.locator('#guidedSessionProgress').inner_text()
   # Existing worksheet generator stays intact and exports orthography stimuli.
-  page.locator('#profileSelect').select_option('early')
+  workspace(page).locator('#profileSelect').select_option('early')
   page.locator('#navMenu [data-section="homework"]').click();page.locator('#worksheetNone').click();page.locator('#homeworkOptions input[value="language"]').check()
   page.locator('#worksheetCount').select_option('1');page.locator('#worksheetQuestions').select_option('20')
   with page.expect_download(timeout=30000) as download:page.locator('#generateWorksheetsBtn').click()

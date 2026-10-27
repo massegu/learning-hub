@@ -2,7 +2,7 @@
 import importlib.util,threading,tempfile,zipfile
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import ROOT
+from browser_support import workspace, ROOT
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');review=importlib.util.module_from_spec(spec);spec.loader.exec_module(review)
 server=review.ReviewServer(('127.0.0.1',0),review.prepare());threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
@@ -42,7 +42,7 @@ try:
     page.locator('#exercise').screenshot(path=f'/tmp/expansion-{name}-{width}.png')
    page.set_viewport_size({'width':1280,'height':900})
   for age in ['early','junior','middle','teen']:
-   page.locator('#profileSelect').select_option(age);page.wait_for_timeout(150)
+   workspace(page).locator('#profileSelect').select_option(age);page.wait_for_timeout(150)
    lang={'middle':'middleLanguage','teen':'teenLanguage'}.get(age,'language');read='reading' if age in ['early','junior'] else 'literacy'
    it=open_area(lang);assert not page.locator('#languageModeSwitch [data-mode=writing]').is_visible();assert it.get('languageFocus')!='writing'
    it=switch_mode('spelling');answer(it)
@@ -72,7 +72,7 @@ try:
    assert {'objects','arrows','category'}.issubset(families),(age,families)
   # Every supported country plus International Spanish: source remains authored, not relocalized.
   for country in ['es_es','es_mx','es_co','es_ar','es_cl','es_pa','es_cr','es_intl']:
-   page.locator('#v16ContentLocale').select_option(country);page.wait_for_function('(x)=>LearningAPI.contentLocale===x',arg=country)
+   workspace(page).locator('#v16ContentLocale').select_option(country);page.wait_for_function('(x)=>LearningAPI.contentLocale===x',arg=country)
    it=open_area('literacy');it=switch_mode('grammar')
    assert not page.locator('#documentModeSwitch').is_visible()
    assert not page.evaluate('__requests.at(-1).documents_only===true')

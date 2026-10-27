@@ -2,15 +2,15 @@
 import importlib.util, threading, tempfile, zipfile, io
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import ROOT
+from browser_support import workspace, ROOT
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');review=importlib.util.module_from_spec(spec);spec.loader.exec_module(review)
 server=review.ReviewServer(('127.0.0.1',0),review.prepare());threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
  with tempfile.TemporaryDirectory() as tmp,sync_playwright() as p:
   browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);page=browser.new_page(viewport={'width':1440,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
-  page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.locator('#profileSelect').select_option('primary')
+  page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');workspace(page).locator('#profileSelect').select_option('primary')
   page.evaluate('''()=>{const original=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return original(it,...args)}}''')
-  page.locator('#navMenu [data-subject=executive]').click();page.locator('#interactionModeBtn').click();page.wait_for_selector('#startInteractive')
+  workspace(page).locator('#navMenu [data-subject=executive]').click();page.locator('#interactionModeBtn').click();page.wait_for_selector('#startInteractive')
   assert page.evaluate('__requests.at(-1).interaction_only') is True
   assert page.evaluate('__requests.at(-1).interaction_kind')=='symbols'
   assert page.locator('[data-support-link]:visible').inner_text().endswith('learninghub2026@proton.me')
@@ -44,18 +44,18 @@ try:
   page.wait_for_function('()=>__profiles.find(p=>p.id==="primary").progress.interactiveObservations?.length===1')
   reports=page.evaluate('__profiles.find(p=>p.id==="primary").progress.interactiveObservations[0].report.trials')
   assert len(reports)==len(movement['interactionTask']['trials']);assert sum(r['report']=='early' for r in reports)==1;assert sum(r['report']=='unverified' for r in reports)==len(reports)-1
-  page.locator('#navMenu [data-subject=attention]').click();page.wait_for_selector('#roomDescription');room=page.evaluate('__current');assert room['interactionTask']['kind']=='room'
+  workspace(page).locator('#navMenu [data-subject=attention]').click();page.wait_for_selector('#roomDescription');room=page.evaluate('__current');assert room['interactionTask']['kind']=='room'
   page.locator('#saveRoomObservation').click();assert 'Escribe' in page.locator('#roomResponseMessage').inner_text()
   page.locator('#roomDescription').fill('He encontrado una caja pequeña. Voy a comprobar las características con mi acompañante.');page.mouse.move(1,1);page.clock.run_for(200);page.locator('#saveRoomObservation').click()
-  assert len(history())==old_attempts;page.locator('#navMenu [data-section=progress]').click();assert page.locator('#interactiveObservations').is_visible();assert '2 registros' in page.locator('#interactiveObservations summary').inner_text()
+  assert len(history())==old_attempts;workspace(page).locator('#navMenu [data-section=progress]').click();assert page.locator('#interactiveObservations').is_visible();assert '2 registros' in page.locator('#interactiveObservations summary').inner_text()
   page.locator('#interactiveObservations summary').click();assert 'caja pequeña' not in page.locator('#interactiveObservations').inner_text()
   observations=page.evaluate('__profiles.find(p=>p.id==="primary").progress.interactiveObservations');assert all('description' not in entry for entry in observations);assert observations[-1]['report']=='described'
   # Level 1: choosing the single valid difference scores once and reveals Next.
-  page.locator('#navMenu [data-subject=attention]').click();page.locator('#attentionPhotos').click();page.locator('#exerciseLevelSelect').select_option('1')
+  workspace(page).locator('#navMenu [data-subject=attention]').click();page.locator('#attentionPhotos').click();page.locator('#exerciseLevelSelect').select_option('1')
   page.wait_for_function('()=>__current?.photoTask?.kind==="differences"&&__current?.level===1');photo=page.evaluate('__current');assert page.locator('#multiCheck').is_hidden()
   page.get_by_role('button',name='Señalar: '+photo['answers'][0],exact=True).click();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class');assert page.locator('#exerciseNext').is_visible();assert len(history())==old_attempts+1
   # A restarted/inactive activity must never produce an automatic success.
-  page.locator('#navMenu [data-subject=executive]').click();page.locator('#interactionModeBtn').click();page.locator('[data-interaction-kind=symbols]').click();page.wait_for_selector('#startInteractive');page.locator('#startInteractive').click()
+  workspace(page).locator('#navMenu [data-subject=executive]').click();page.locator('#interactionModeBtn').click();page.locator('[data-interaction-kind=symbols]').click();page.wait_for_selector('#startInteractive');page.locator('#startInteractive').click()
   page.evaluate('''()=>{Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'));Object.defineProperty(document,'hidden',{configurable:true,value:false});}''')
   page.clock.run_for(10000);assert page.locator('#restartInteraction').is_visible();assert len(history())==old_attempts+1
   page.locator('#restartInteraction').click();assert page.locator('#startInteractive').is_visible()

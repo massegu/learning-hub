@@ -2,7 +2,7 @@
 import importlib.util,threading,tempfile,zipfile
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import ROOT,doc_text
+from browser_support import workspace, ROOT,doc_text
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');preview=importlib.util.module_from_spec(spec);spec.loader.exec_module(preview)
 server=preview.ReviewServer(('127.0.0.1',0),preview.prepare());threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
@@ -87,7 +87,7 @@ try:
     page.locator('#exercise').screenshot(path=f'/tmp/curriculum-{name}-{width}.png')
    page.set_viewport_size({'width':1280,'height':900})
   for age in ['early','junior','primary','middle','teen']:
-   page.locator('#profileSelect').select_option(age);page.locator('#v16ContentLocale').select_option('es_mx');page.wait_for_function('()=>LearningAPI.contentLocale==="es_mx"')
+   workspace(page).locator('#profileSelect').select_option(age);workspace(page).locator('#v16ContentLocale').select_option('es_mx');page.wait_for_function('()=>LearningAPI.contentLocale==="es_mx"')
    assert page.locator('#navMenu [data-subject="applied"]').count()==0
    assert page.locator('#homeworkOptions input[value="applied"]').count()==0
    assert page.locator('#navMenu [data-subject="speedReasoning"]').inner_text().find('Velocidad de procesamiento')>=0
@@ -151,7 +151,7 @@ try:
    print(f'PASS: {age}: ten sources, L1/L3 sequential/spatial/association recall, timed/invalid/untimed/wrong trials, fused executive tasks and two DOCX',flush=True)
   # Timing survives reload in progress; the old domain is never restored as a menu area.
   before=page.evaluate('()=>__profiles.find(p=>p.id==="teen").progress.history.filter(x=>x.subject==="speedReasoning").length')
-  page.reload(wait_until='networkidle');page.wait_for_selector('#profileSelect');page.locator('#profileSelect').select_option('teen')
+  page.reload(wait_until='networkidle');page.wait_for_selector('#profileSelect');workspace(page).locator('#profileSelect').select_option('teen')
   page.wait_for_timeout(300)
   after=page.evaluate('()=>__profiles.find(p=>p.id==="teen").progress.history.filter(x=>x.subject==="speedReasoning").length');assert before==after
   assert not errors,errors;assert not external,external

@@ -14,52 +14,52 @@
     },
     {
       "age": "junior",
-      "distinctActivities": 4887,
+      "distinctActivities": 4990,
       "byDomain": {
-        "memory": 2527,
-        "executive": 587,
+        "memory": 2549,
+        "executive": 614,
         "speedReasoning": 1066,
-        "reading": 88,
-        "attention": 60,
+        "reading": 115,
+        "attention": 87,
         "language": 148,
         "division": 411
       }
     },
     {
       "age": "primary",
-      "distinctActivities": 4986,
+      "distinctActivities": 5116,
       "byDomain": {
-        "memory": 2530,
-        "executive": 605,
+        "memory": 2552,
+        "executive": 641,
         "speedReasoning": 1034,
-        "literacy": 106,
-        "attention": 78,
+        "literacy": 142,
+        "attention": 114,
         "language": 144,
         "division": 489
       }
     },
     {
       "age": "middle",
-      "distinctActivities": 5187,
+      "distinctActivities": 5317,
       "byDomain": {
-        "memory": 2530,
-        "executive": 610,
+        "memory": 2552,
+        "executive": 646,
         "speedReasoning": 1166,
-        "literacy": 124,
-        "attention": 90,
+        "literacy": 160,
+        "attention": 126,
         "middleLanguage": 148,
         "middleMath": 519
       }
     },
     {
       "age": "teen",
-      "distinctActivities": 5155,
+      "distinctActivities": 5285,
       "byDomain": {
-        "memory": 2530,
-        "executive": 609,
+        "memory": 2552,
+        "executive": 645,
         "speedReasoning": 1137,
-        "literacy": 122,
-        "attention": 90,
+        "literacy": 158,
+        "attention": 126,
         "teenLanguage": 148,
         "teenMath": 519
       }

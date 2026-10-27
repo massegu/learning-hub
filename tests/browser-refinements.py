@@ -5,7 +5,7 @@ Ordinary consecutive selection is covered by browser-smoke.py and Node tests.
 from pathlib import Path
 import functools,http.server,json,re,tempfile,threading
 from playwright.sync_api import sync_playwright
-from browser_support import ROOT,SDK,QuietHandler,doc_text
+from browser_support import workspace, ROOT,SDK,QuietHandler,doc_text
 
 server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(QuietHandler,directory=str(ROOT)))
 threading.Thread(target=server.serve_forever,daemon=True).start()
@@ -98,7 +98,7 @@ try:
         assert page.locator('#exerciseOptions .correct').count()==1
         # Other ages retain ordinary remote content and broad desktop/mobile layout.
         for band in ['junior','primary','middle','teen']:
-            page.locator('#profileSelect').select_option(band)
+            workspace(page).locator('#profileSelect').select_option(band)
             for width in [1440,1024,390]:
                 page.set_viewport_size({'width':width,'height':900});page.locator('#navMenu [data-subject="attention"]').click()
                 page.wait_for_function('document.querySelector("#exercisePrompt").textContent==="¿Qué criterio ayuda más?"')
@@ -106,7 +106,7 @@ try:
                 assert 'F15-P7' in page.locator('#exerciseVisual').inner_text();layout()
         print('PASS: timed 4-object recall, numeric answer scoring and all four older routes',flush=True)
         # Actual 20-question DOCX retains all canonical facts and response material.
-        page.set_viewport_size({'width':1280,'height':900});page.locator('#profileSelect').select_option('early')
+        page.set_viewport_size({'width':1280,'height':900});workspace(page).locator('#profileSelect').select_option('early')
         page.locator('#navMenu [data-section="homework"]').click()
         page.locator('#worksheetAll').click();page.locator('#worksheetCount').select_option('1');page.locator('#worksheetQuestions').select_option('20')
         with page.expect_download(timeout=30000) as download:page.locator('#generateWorksheetsBtn').click()

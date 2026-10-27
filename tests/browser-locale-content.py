@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import threading
 from playwright.sync_api import sync_playwright
-from browser_support import ROOT,doc_text
+from browser_support import workspace, ROOT,doc_text
 
 spec=importlib.util.spec_from_file_location('review_preview',ROOT/'tools/review-preview.py')
 preview=importlib.util.module_from_spec(spec);spec.loader.exec_module(preview)
@@ -28,10 +28,10 @@ try:
    return it
   count=0;worksheets=0
   for index,key in enumerate(['es_es','es_mx','es_co','es_ar','es_cl','es_pa','es_cr']):
-   page.locator('#v16ContentLocale').select_option(key)
+   workspace(page).locator('#v16ContentLocale').select_option(key)
    page.wait_for_function('(key)=>LearningAPI.contentLocale===key&&!document.querySelector("#v16ContentLocale").disabled',arg=key)
    for band in ['early','junior','primary','middle','teen']:
-    page.locator('#profileSelect').select_option(band)
+    workspace(page).locator('#profileSelect').select_option(band)
     domains=page.locator('#navMenu [data-subject]:visible').evaluate_all('(els)=>els.map(e=>e.dataset.subject)')
     plan=(domains*2)[:10]
     for domain in plan:

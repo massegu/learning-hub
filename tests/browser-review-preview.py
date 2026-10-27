@@ -5,7 +5,7 @@ from pathlib import Path
 import tempfile
 import threading
 from playwright.sync_api import sync_playwright
-from browser_support import ROOT, doc_text
+from browser_support import workspace, ROOT, doc_text
 
 spec=importlib.util.spec_from_file_location('review_preview',ROOT/'tools/review-preview.py')
 preview=importlib.util.module_from_spec(spec);spec.loader.exec_module(preview)
@@ -43,7 +43,7 @@ try:
   count=0
   cases={'early':['language'],'junior':['reading','memory','attention','speedReasoning'],'primary':['geometry','language','literacy','attention'],'middle':['middleLanguage','attention'],'teen':['teenLanguage','speedReasoning','literacy']}
   for band,domains in cases.items():
-   page.locator('#profileSelect').select_option(band)
+   workspace(page).locator('#profileSelect').select_option(band)
    if band=='primary':
     assert page.locator('#navMenu [data-subject="reading"]').count()==0
     assert page.locator('[data-school-area="reading"]').count()==0

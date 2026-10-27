@@ -193,9 +193,24 @@ Object.assign(scenes,{
 pairs.cafe={sceneId:'cafe',path:'assets/photos/cafe-b.png',varied:true,regions:{'Las galletas':[7,49,30,25],'Las gafas':[70,43,26,22],'La cuchara':[57,59,11,36],'La planta':[43,0,26,32],'La taza':[41,31,25,28]},changes:[['Las galletas','De tres galletas a dos galletas'],['Las gafas','De estar sobre el libro a no estar en la mesa'],['La cuchara','De una posición diagonal a una posición vertical']],unchanged:['La planta','La taza']};
 pairs.sports={sceneId:'sports',path:'assets/photos/sports-b.png',varied:true,regions:{'El balón':[43,32,17,21],'El silbato':[77,43,9,7],'La bolsa':[58,62,40,32],'Las zapatillas':[10,74,25,20],'La botella del banco':[18,26,8,26],'El reloj':[76,0,12,15]},changes:[['El balón','De un balón de fútbol a un balón de baloncesto'],['El silbato','De estar sobre la toalla a no estar en el banco'],['La bolsa','De estar cerrada a estar abierta']],unchanged:['Las zapatillas','La botella del banco','El reloj']};
 
+Object.assign(scenes,{
+ library2026:{title:'Una biblioteca de barrio',width:1536,height:1024,path:'assets/scenes/everyday-es-2026/library-scene.png',facts:[
+ fact('¿De qué color era la botella de la mesa?','Azul',['Verde','Roja','Amarilla'],'La botella de la mesa era azul.'),
+ fact('¿Dónde estaba la mochila verde?','En una silla del primer plano',['En el suelo junto a la puerta','Sobre una estantería','Sobre la mesa'],'La mochila verde estaba en una silla del primer plano.'),
+ fact('¿Cuántas personas conversaban a la derecha?','Dos',['Una','Tres','Cuatro'],'Dos personas conversaban junto a las estanterías de la derecha.'),
+ fact('¿Qué había debajo del bolígrafo?','Un cuaderno abierto',['Una revista cerrada','Una caja','Una mochila'],'El bolígrafo estaba sobre un cuaderno abierto.')
+ ]},
+ autumnPark2026:{title:'Una tarde en el parque',width:1536,height:1024,path:'assets/scenes/everyday-es-2026/park-scene.png',facts:[
+ fact('¿Qué hacía la persona sentada en el banco?','Leía',['Usaba un patinete','Bebía agua','Hablaba por teléfono'],'La persona del banco estaba leyendo.'),
+ fact('¿De qué color era la chaqueta del ciclista?','Roja',['Azul','Amarilla','Verde'],'El ciclista llevaba una chaqueta roja.'),
+ fact('¿Cuántos conos había junto al árbol joven?','Tres',['Dos','Cuatro','Uno'],'Había tres conos naranjas junto al árbol joven.'),
+ fact('¿Qué había en la hierba del primer plano?','Una pelota amarilla',['Una mochila azul','Una cesta','Un libro'],'En la hierba había una pelota amarilla.')
+ ]}
+});
 // Each harder question reconstructs two or three independent facts from the SAME image.
 // Distractors differ in exactly one component; colour alone cannot solve the task.
 const challenges={
+ library2026:[[0,1,2],[1,2,3],[0,2,3],[0,1,3]],autumnPark2026:[[0,1,2],[1,2,3],[0,2,3],[0,1,3]],
  cafe:[[0,1,2],[3,4,5],[6,7,8],[9,10,11]],sports:[[0,1,2],[3,4,5],[6,7,8],[9,10,11]],
  kitchen:[[1,3,5],[11,9,10],[2,6,7],[4,8,5]],
  living:[[1,2,4],[0,7,8],[3,5,11],[6,9,10]],

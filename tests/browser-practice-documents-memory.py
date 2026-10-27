@@ -2,7 +2,7 @@
 import importlib.util,threading,tempfile,zipfile,xml.etree.ElementTree as ET,os,io
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import ROOT
+from browser_support import workspace, ROOT
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');review=importlib.util.module_from_spec(spec);spec.loader.exec_module(review)
 server=review.ReviewServer(('127.0.0.1',0),review.prepare());threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
@@ -11,11 +11,11 @@ try:
   browser=p.chromium.launch(executable_path=executable,args=['--no-sandbox']);page=browser.new_page(viewport={'width':1280,'height':900});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#profileSelect');page.wait_for_timeout(1000)
   page.evaluate('''()=>{const old=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return old(it,...args)}}''')
-  page.locator('#profileSelect').select_option('teen')
+  workspace(page).locator('#profileSelect').select_option('teen')
   def current():
    page.wait_for_function('()=>__current&&document.querySelector("#exercisePrompt").textContent===__current.q');return page.evaluate('__current')
   def open_area(domain):
-   page.evaluate('window.__current=null');page.locator(f'#navMenu [data-subject={domain}]').click();return current()
+   page.evaluate('window.__current=null');workspace(page).locator(f'#navMenu [data-subject={domain}]').click();return current()
   it=open_area('literacy');page.locator('#languageModeSwitch [data-mode=writing]').click();page.locator('#textAnswerInput').wait_for(state='visible')
   draft='Esta es mi respuesta inicial.';page.locator('#textAnswerInput').fill(draft);page.locator('#textAnswerCheck').click();page.locator('[data-self=false]').click()
   assert 'practice' in page.locator('#exerciseFeedback').get_attribute('class');assert 'No esta vez' not in page.locator('#exerciseFeedback').inner_text()

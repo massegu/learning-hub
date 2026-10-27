@@ -11,8 +11,8 @@ test('youngest memory association/sequence loads grow from two to four and photo
 test('finite scene selection rotates every scene before reuse, then uses the least recently seen material',()=>{
  const {api}=load(),bank=photo.pool('middle','memory',1),history=[];
  const take=()=>{const it=api.generatedItems('memory',1,history,()=>{throw Error('No random resampling needed')},structuredClone(bank))[0];history.push(api.contentSignature('memory',it),'memory:mechanic:memory_photo');return it.photoTask.sceneId;};
- const first=Array.from({length:14},take);assert.equal(new Set(first).size,14);
- const second=Array.from({length:14},take);assert.deepEqual(second,first);
+ const count=Object.keys(photo.scenes).length,first=Array.from({length:count},take);assert.deepEqual([...new Set(first)].sort(),Object.keys(photo.scenes).sort());
+ const second=Array.from({length:count},take);assert.deepEqual(second,first);
 });
 test('authored plans and omissions are valid age-specific activities with source-bound answers',()=>{
  const {api}=load(),distinct=new Set();

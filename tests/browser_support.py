@@ -77,3 +77,10 @@ def doc_text(data):
         root = ET.fromstring(z.read('word/document.xml'))
     return [n.text or '' for n in root.iter('{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t')]
 
+
+def workspace(page):
+    """Open the real responsive workspace menu before using a sidebar control."""
+    toggle = page.locator('#workspaceMenu')
+    if toggle.count() and toggle.is_visible() and toggle.get_attribute('aria-expanded') != 'true':
+        toggle.click()
+    return page
