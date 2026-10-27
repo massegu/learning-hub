@@ -2404,7 +2404,7 @@ Deno.serve(async (req:Request)=>{
   const requestedDomains=kind==="worksheet" ? (Array.isArray(body.domains)&&body.domains.length?body.domains:(globalThis as any).Curriculum.visible(SUBJECTS[age]||[],age)) : [body.domain];
   if(!SUBJECTS[age] || !Number.isInteger(level) || (kind!=="game" && (!Array.isArray(requestedDomains)||!requestedDomains.length||requestedDomains.some((d:any)=>!SUBJECTS[age].includes(d)))))
     return new Response(JSON.stringify({error:"Área o nivel no permitido para este perfil."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
-  if(body.client_revision!==undefined&&![1,2,3,4,5,6,7].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.client_revision!==undefined&&![1,2,3,4,5,6,7,8].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.room_speed_only!==undefined&&(typeof body.room_speed_only!=='boolean'||body.room_speed_only&&(kind!=='exercise'||body.domain!=='speedReasoning'||!['junior','primary','middle','teen'].includes(age)||body.interaction_only||body.photos_only||body.documents_only)))return new Response(JSON.stringify({error:'Modalidad de velocidad no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.room_speed_only&&Number(body.client_revision||1)<7)return new Response(JSON.stringify({error:'Actualiza la página para abrir los retos del entorno.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.interaction_only!==undefined&&(typeof body.interaction_only!=='boolean'||body.interaction_only&&(kind!=='exercise'||!['junior','primary','middle','teen'].includes(age)||!['attention','executive'].includes(body.domain)||body.documents_only||body.photos_only)))return new Response(JSON.stringify({error:'Modalidad interactiva no disponible para esta petición.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -2420,6 +2420,8 @@ Deno.serve(async (req:Request)=>{
   if(kind==='exercise'&&['language','middleLanguage','teenLanguage'].includes(body.domain)&&body.subdomain==='writing')return new Response(JSON.stringify({error:'Escritura está en Lectura + Escritura.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if((age==="junior"||age==="primary"||age==="middle"||age==="teen")&&kind==="exercise"&&["language","middleLanguage","teenLanguage"].includes(body.domain)&&body.subdomain&&!["grammar","spelling","vocabulary","writing"].includes(body.subdomain))
     return new Response(JSON.stringify({error:"Habilidad de Lenguaje no válida."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
+  // Cached clients do not yet know these document IDs and photographic sources.
+  const compatibleSource=(item:any)=>Number(body.client_revision||1)>=8||!(item?.stimulus||[]).some((block:any)=>block.type==='document'&&String(block.documentId).startsWith('everyday-')||block.type==='photo'&&['library2026','autumnPark2026'].includes(block.photoId));
   let items:any[]=[];
   if(kind==="game"){
     const excludeTypes=Array.isArray(body.exclude_types)?body.exclude_types.slice(-2):[];
@@ -2452,6 +2454,7 @@ Deno.serve(async (req:Request)=>{
       const recent=recentByDomain.get(domain)||new Set<string>();
       for(let tries=0;tries<220;tries++){
         const cand=regionalCandidate(normalizeItem(ensureWorksheetMemoryCoherence(worksheetTask(age,domain,level))),locale,domain,age);
+        if(!compatibleSource(cand))continue;
         if(cand?.photoTask&&Number(body.client_revision||1)<3)continue;
         if(!validateItem(cand)) continue;
         const sig=contentSignature(domain,cand);
@@ -2491,11 +2494,11 @@ Deno.serve(async (req:Request)=>{
     }
     const compatibleExercise=()=>{
       const item=body.room_speed_only?pick((globalThis as any).Curriculum.roomSpeedPool(age,level)):variantExercise(age,domain,level,subdomain,typeof body.documents_only==='boolean'?body.documents_only:null,body.photos_only===true,body.interaction_only===true,body.interaction_kind||null);
-      if(!item||Number(body.client_revision||1)<2&&(item.type==='documentReview'||item.selectiveRecall)||Number(body.client_revision||1)<3&&item.photoTask)return null;
+      if(!item||!compatibleSource(item)||Number(body.client_revision||1)<2&&(item.type==='documentReview'||item.selectiveRecall)||Number(body.client_revision||1)<3&&item.photoTask)return null;
       return regionalCandidate(item,locale,domain,age);
     };
     if(body.photos_only===true){
-      const bank=(globalThis as any).PhotoLibrary.pool(age,domain,level).map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
+      const bank=(globalThis as any).PhotoLibrary.pool(age,domain,level).filter(compatibleSource).map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
       items=generatedItems(domain,n,recentEntries,compatibleExercise,bank);
     }else if(domain==="attention"){
       items=generatedItems(domain,n,recentEntries,compatibleExercise);

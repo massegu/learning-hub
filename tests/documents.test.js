@@ -1,8 +1,8 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
 const docs=require('../js/document-library'),model=require('../js/activity-model'),locale=require('../js/locale-content'),curriculum=require('../js/curriculum'),load=require('./edge-harness');
-test('twenty-two original document assets have matching PNG dimensions, consistent arithmetic, and known accessible source contracts',()=>{
+test('thirty-four reviewed document assets have matching PNG dimensions, consistent arithmetic, and known accessible source contracts',()=>{
  assert.equal(fs.readFileSync('js/document-library.js','utf8'),fs.readFileSync('supabase/functions/request-learning-content/document-library.js','utf8'));
- assert.equal(Object.keys(docs.documents).length,22);
+ assert.equal(Object.keys(docs.documents).length,34);
  for(const doc of Object.values(docs.documents)){
   const bytes=fs.readFileSync(doc.path);assert.equal(bytes.readUInt32BE(16),doc.width);assert.equal(bytes.readUInt32BE(20),doc.height);
   assert.ok(doc.country);assert.ok(doc.transcript.length);assert.doesNotMatch(JSON.stringify(doc.transcript),/Documento ficticio para practicar/);

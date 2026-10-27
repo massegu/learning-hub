@@ -2,7 +2,7 @@
 import importlib.util,threading,tempfile,zipfile,xml.etree.ElementTree as ET,json,subprocess,os
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import ROOT
+from browser_support import workspace, ROOT
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');review=importlib.util.module_from_spec(spec);spec.loader.exec_module(review)
 tasks=json.loads(subprocess.check_output(['node','-e',"const c=require('./js/curriculum');console.log(JSON.stringify(Object.fromEntries(['junior','primary','middle','teen'].map(age=>[age,Object.fromEntries([1,2,3].map(level=>[level,c.pool(age,'executive',level).filter(x=>x.type==='multiSelect')]))]))))"],cwd=ROOT))
 server=review.ReviewServer(('127.0.0.1',0),review.prepare());threading.Thread(target=server.serve_forever,daemon=True).start()
@@ -22,7 +22,7 @@ try:
   page.evaluate('''()=>{const old=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return old(it,...args)}}''')
   checks=0
   for age in ['junior','primary','middle','teen']:
-   page.locator('#profileSelect').select_option(age);page.locator('#navMenu [data-subject=executive]').click()
+   workspace(page).locator('#profileSelect').select_option(age);workspace(page).locator('#navMenu [data-subject=executive]').click()
    for level in [1,3]:
     page.locator('#exerciseLevelSelect').select_option(str(level));page.wait_for_selector('#multiCheck');page.wait_for_function('(level)=>__current?.level===level',arg=level)
     for correct in [False,True]:
@@ -41,7 +41,7 @@ try:
      page.evaluate('window.__current=null');page.locator('#exerciseNext').click();page.wait_for_function('()=>__current?.type==="multiSelect"&&document.querySelector("#multiCheck")?.disabled===true')
   # Real ZIP with representative cases from every older age; both versions keep data and options.
   for age in ['junior','primary','middle','teen']:
-   page.locator('#profileSelect').select_option(age)
+   workspace(page).locator('#profileSelect').select_option(age)
    with page.expect_download() as download:page.evaluate('({age,items})=>WorksheetGenerator.generate([items.slice(0,2),items.slice(2,4)],__profiles.find(p=>p.id===age))',{'age':age,'items':tasks[age]['3']})
    path=Path(tmp)/(age+'.zip');download.value.save_as(path)
    import io

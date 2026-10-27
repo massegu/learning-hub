@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="css/styles.css" />
   <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <link rel="stylesheet" href="css/age-designs.css" />
 </head>
 <body>
   <div id="authGate" class="auth-gate hidden">
@@ -48,6 +49,7 @@
   <dialog id="privacyDialog" class="password-dialog" aria-labelledby="privacyTitle"><h2 id="privacyTitle">Privacidad del perfil</h2><p>El código permite el seguimiento, pero no garantiza anonimato. Evita nombres y datos clínicos.</p><p id="privacyStatus" role="status"></p><label>Código del perfil<input id="privacyAlias" maxlength="24" /></label><label>Revisar la conservación el<input id="privacyReviewDate" type="date" /></label><p>Esta fecha es un recordatorio. No elimina datos automáticamente. Revisa qué necesitas conservar y borra lo que ya no sea necesario.</p><div class="auth-actions"><button id="saveProfilePrivacy" class="primary-btn">Guardar ajustes</button><button id="exportProfilePrivacy" class="secondary-btn">Exportar datos del perfil (JSON)</button><button id="eraseProfilePrivacy" class="secondary-btn">Eliminar perfil y resultados</button><button id="closeProfilePrivacy" class="secondary-btn">Cerrar</button></div><p>Los resultados pueden estar en las copias de seguridad del proveedor hasta su rotación. Los archivos descargados y las copias del profesional se gestionan por separado.</p></dialog>
   <div id="appShell" class="app-shell hidden">
     <aside class="sidebar">
+      <button id="workspaceMenu" class="workspace-menu" aria-expanded="false" aria-controls="navMenu">Áreas y perfil</button>
       <div class="brand"><div class="brand-badge"><span>LU</span></div><div><h1>LEVEL UP</h1><p>Learning Lab</p></div></div>
       <div class="profile-panel">
         <small>PERFIL ACTIVO</small>
@@ -70,6 +72,8 @@
       </header>
 
       <section id="home" class="section active-section">
+        <div class="home-welcome"><div><p class="eyebrow">APRENDER CON CONFIANZA</p><h3 id="welcomeTitle">Tu espacio para avanzar</h3><p>Elige qué quieres trabajar hoy. Tú decides el ritmo.</p></div><button id="prepareSessionBtn" class="secondary-btn">Preparar sesión</button></div>
+        <div id="homeSessionNotice" class="home-session-notice" role="status"></div>
         <div id="earlyHub" class="early-hub hidden"></div><div id="schoolHub" class="school-hub hidden"></div>
         <div class="hero card"><div class="hero-copy"><span class="pill">LEARNING LAB</span><h3>Entrena habilidades. Sube de nivel.</h3><p id="heroText">Elige un área y completa retos adaptados a tu nivel.</p><button class="primary-btn jump-btn" id="heroStartBtn">Empezar →</button></div><div class="hero-visual" aria-hidden="true"><div class="pixel-world"><span class="pixel-block grass b1"></span><span class="pixel-block grass b2"></span><span class="pixel-block dirt b3"></span><span class="pixel-block stone b4"></span><span class="pixel-block grass b5"></span><span class="pixel-block dirt b6"></span></div><div class="hero-level">UP</div><span>TRAIN</span><span>LEVEL UP</span></div></div>
         <div class="dashboard-grid"><div class="stat card"><span>PTS</span><div><small>Puntos</small><strong id="homePoints">0</strong></div></div><div class="stat card"><span>✓</span><div><small>Aciertos</small><strong id="homeCorrect">0</strong></div></div><div class="stat card"><span>%</span><div><small>Precisión</small><strong id="homeAccuracy">0%</strong></div></div><div class="stat card"><span>#</span><div><small>Ejercicios</small><strong id="homeAttempts">0</strong></div></div></div>

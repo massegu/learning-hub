@@ -35,8 +35,8 @@ test('legacy code filtering material becomes separate cards without altering the
  const html=model.interactiveStimulus(blocks,{structured:true});for(const code of ['A7','B3','B8','C6'])assert.ok(html.includes(code));assert.equal(model.comparisonStimulus('A7 B3 B8'),null);
 });
 
-test('fourteen everyday settings have genuinely graded recall: one, two and three independent observations',()=>{
- assert.equal(Object.keys(photo.scenes).length,14);assert.equal(Object.keys(photo.pairs).length,14);
+test('sixteen everyday settings have genuinely graded recall: one, two and three independent observations',()=>{
+ assert.equal(Object.keys(photo.scenes).length,16);assert.equal(Object.keys(photo.pairs).length,14);
  for(const age of ['junior','primary','middle','teen'])for(const level of [1,2,3]){
   const bank=photo.pool(age,'memory',level);
   for(const id of Object.keys(photo.scenes)){

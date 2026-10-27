@@ -2,7 +2,7 @@
 import importlib.util,http.server,threading,tempfile,os
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import ROOT,SDK
+from browser_support import workspace, ROOT,SDK
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');preview=importlib.util.module_from_spec(spec);spec.loader.exec_module(preview)
 AUTH=r'''
 window.__authEvents=[];window.__changes=[];window.__resets=[];
@@ -33,7 +33,7 @@ try:
   page.goto(origin,wait_until='networkidle');page.wait_for_selector('#changePasswordBtn')
   assert page.locator('#profileSelect').input_value()=='early'
   assert page.evaluate("localStorage.getItem('lh_current_profile')")=='early'
-  page.locator('#navMenu [data-subject=language]').click()
+  workspace(page).locator('#navMenu [data-subject=language]').click()
   page.wait_for_selector('#exerciseOptions .option-btn')
   page.locator('#changePasswordBtn').click();assert page.locator('#passwordDialog').is_visible()
   page.locator('#newPassword').fill('ClaveNueva123!');page.locator('#repeatPassword').fill('Distinta123!');page.locator('#savePassword').click()
@@ -49,9 +49,9 @@ try:
   page.locator('#authEmail').fill('review@example.invalid');page.locator('#authPassword').fill('LocalTest123!');page.locator('#authSignIn').click()
   page.wait_for_function("()=>document.querySelector('#profileSelect').value==='another-early'")
   assert page.evaluate("localStorage.getItem('lh_current_profile')")=='another-early'
-  page.locator('#profileSelect').select_option('another-teen')
+  workspace(page).locator('#profileSelect').select_option('another-teen')
   for domain in ['teenLanguage','teenMath','executive','memory']:
-   page.locator(f'#navMenu [data-subject={domain}]').click();page.wait_for_selector('#exerciseOptions .option-btn')
+   workspace(page).locator(f'#navMenu [data-subject={domain}]').click();page.wait_for_selector('#exerciseOptions .option-btn')
    assert 'Cannot read' not in page.locator('#exercisePrompt').inner_text()
    assert page.evaluate('__requests.at(-1).profile_id')=='another-teen'
   page.locator('#signOutBtn').click();page.wait_for_selector('#authForgotPassword')
@@ -97,7 +97,7 @@ try:
   assert page.evaluate("localStorage.getItem('lh_current_profile')") is None
   page.locator('#newProfileName').fill('Nuevo perfil');page.locator('#newProfileAge').select_option('teen');page.locator('#createProfileBtn').click()
   page.wait_for_selector('#profileGate.hidden',state='hidden')
-  page.locator('#navMenu [data-subject=teenLanguage]').click();page.wait_for_selector('#exerciseOptions .option-btn')
+  workspace(page).locator('#navMenu [data-subject=teenLanguage]').click();page.wait_for_selector('#exerciseOptions .option-btn')
   assert page.evaluate('__requests.at(-1).profile_id')=='created'
   assert not errors,errors
   print('PASS: unavailable remembered profile, account switch with four working areas, owned request IDs, password mismatch, error/retry, update, recovery and mobile; no real emails sent')

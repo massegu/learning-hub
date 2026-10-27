@@ -2,7 +2,7 @@
 import importlib.util,threading,tempfile,zipfile
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import ROOT
+from browser_support import workspace, ROOT
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');preview=importlib.util.module_from_spec(spec);spec.loader.exec_module(preview)
 server=preview.ReviewServer(('127.0.0.1',0),preview.prepare());threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
@@ -25,7 +25,7 @@ try:
    page.set_viewport_size({'width':1280,'height':900})
   count=0
   for age in ['junior','primary','middle','teen']:
-   page.locator('#profileSelect').select_option(age);page.locator('#v16ContentLocale').select_option('es_co');page.wait_for_function('()=>LearningAPI.contentLocale==="es_co"')
+   workspace(page).locator('#profileSelect').select_option(age);workspace(page).locator('#v16ContentLocale').select_option('es_co');page.wait_for_function('()=>LearningAPI.contentLocale==="es_co"')
    for domain in (['attention','executive'] if age=='junior' else ['attention','executive']):
     it=open_area(domain)
     page.evaluate('window.__current=null');page.locator('#documentModeSwitch [data-documents=true]').click();it=current();seen=[]
@@ -79,7 +79,7 @@ try:
   it=open_area('teenLanguage')
   page.evaluate('window.__current=null');page.locator('#languageModeSwitch [data-mode=spelling]').click();it=current()
   assert all(b.get('text')!=it['topic'] for b in it.get('stimulus',[]));assert page.locator('#exerciseVisual').inner_text().strip()!='Dos rutas y un horario'
-  page.evaluate('window.__current=null');page.locator('#navMenu [data-subject=literacy]').click();current();page.evaluate('window.__current=null');page.locator('#languageModeSwitch [data-mode=writing]').click();it=current()
+  page.evaluate('window.__current=null');workspace(page).locator('#navMenu [data-subject=literacy]').click();current();page.evaluate('window.__current=null');page.locator('#languageModeSwitch [data-mode=writing]').click();it=current()
   assert page.locator('#writingCriteria li').count()==len(it['writingRubric'])
   assert 'Criterios de revisión' not in page.locator('#exerciseVisual').inner_text();screenshot('writing-criteria-once')
   assert not errors,errors

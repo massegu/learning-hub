@@ -9,7 +9,7 @@ import re
 import tempfile
 import threading
 from playwright.sync_api import sync_playwright
-from browser_support import ROOT, SDK, QuietHandler, doc_text
+from browser_support import workspace, ROOT, SDK, QuietHandler, doc_text
 
 COUNTRIES=['es_es','es_mx','es_co','es_ar','es_cl','es_pa','es_cr']
 BANDS=['early','junior','primary','middle','teen']
@@ -76,11 +76,11 @@ try:
         page.wait_for_selector('#v16ContentLocale');page.wait_for_timeout(3500)
         journal(page)
         for key in COUNTRIES:
-            page.locator('#v16ContentLocale').select_option(key)
+            workspace(page).locator('#v16ContentLocale').select_option(key)
             page.wait_for_function('(key)=>LearningAPI.contentLocale===key&&!document.querySelector("#v16ContentLocale").disabled',arg=key)
             captures[key]={}
             for band in BANDS:
-                page.locator('#profileSelect').select_option(band)
+                workspace(page).locator('#profileSelect').select_option(band)
                 page.wait_for_timeout(300)  # Existing age-route UI patches settle.
                 domains=page.locator('#navMenu [data-subject]:visible').evaluate_all('(els)=>els.map(e=>e.dataset.subject)')
                 schedule=(domains+domains)[:max(10,len(domains))]
@@ -143,12 +143,12 @@ try:
         }""")
         # Changing locale invalidates old content and a pending server response;
         # it never triggers an extra quota-consuming request automatically.
-        page.locator('#profileSelect').select_option('primary')
+        workspace(page).locator('#profileSelect').select_option('primary')
         page.evaluate('window.__delayNext=true')
         page.locator('#navMenu [data-subject="reading"]').click()
         page.wait_for_function('__pending')
         n=page.evaluate('__requests.length')
-        page.locator('#v16ContentLocale').select_option('es_mx')
+        workspace(page).locator('#v16ContentLocale').select_option('es_mx')
         page.wait_for_function('LearningAPI.contentLocale==="es_mx"')
         page.evaluate('__release()');page.wait_for_timeout(300)
         assert page.evaluate('__requests.length')==n
@@ -160,14 +160,14 @@ try:
         page.evaluate('window.__delayNext=true')
         page.locator('#generateWorksheetsBtn').click()
         page.wait_for_function('__pending')
-        page.locator('#v16ContentLocale').select_option('es_co')
+        workspace(page).locator('#v16ContentLocale').select_option('es_co')
         page.wait_for_function('LearningAPI.contentLocale==="es_co"')
         page.evaluate('__release()')
         page.wait_for_function('document.querySelector("#docxStatus").textContent.includes("variante")')
         assert page.evaluate('__exports.length')==exported
         # Failed saves preserve the previous locale/controller.
         page.evaluate('window.__saveLocaleFail=true')
-        page.locator('#v16ContentLocale').select_option('es_ar')
+        workspace(page).locator('#v16ContentLocale').select_option('es_ar')
         page.wait_for_function('!document.querySelector("#v16ContentLocale").disabled')
         assert page.evaluate('LearningAPI.contentLocale')=='es_co'
         assert page.locator('#v16ContentLocale').input_value()=='es_co'

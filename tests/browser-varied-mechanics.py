@@ -2,7 +2,7 @@
 import importlib.util,threading,tempfile,zipfile,io,os,struct
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import ROOT
+from browser_support import workspace, ROOT
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');review=importlib.util.module_from_spec(spec);spec.loader.exec_module(review)
 server=review.ReviewServer(('127.0.0.1',0),review.prepare());threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
@@ -10,13 +10,13 @@ try:
   browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_EXECUTABLE') or '/usr/bin/chromium',args=['--no-sandbox'])
   page=browser.new_page(viewport={'width':1280,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#profileSelect');page.wait_for_timeout(500)
-  page.locator('#profileSelect').select_option('teen')
+  workspace(page).locator('#profileSelect').select_option('teen')
   page.evaluate('''()=>{const old=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return old(it,...args)}}''')
   fixture={}
   def override(route):route.fulfill(json={'status':200,'data':{'items':[fixture],'usage':{'used':50,'limit':500}}})
   page.route('**/__review/content',override);page.clock.install()
   def show(item,domain):
-   fixture.clear();fixture.update(item);page.evaluate('window.__current=null');page.locator(f'#navMenu [data-subject={domain}]').click()
+   fixture.clear();fixture.update(item);page.evaluate('window.__current=null');workspace(page).locator(f'#navMenu [data-subject={domain}]').click()
    page.wait_for_function('()=>__current&&document.querySelector("#exercisePrompt").textContent===__current.q')
   def good():assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
   scene=page.evaluate('(()=>{const it=Curriculum.pool("early","memory",1).find(x=>x.mechanic==="memory_scene");delete it.ageProfile;it.teenReview={version:3};return it})()');assert len(scene['memoryContent'])==2
@@ -50,11 +50,11 @@ try:
   page.locator('#orderCheck').click();good()
   math=page.evaluate('Curriculum.academic("teen","teenMath",3,"grammar").find(x=>x.mechanic==="math_ecuaciones")');show(math,'teenMath')
   page.locator('[data-answer]').evaluate_all('(els,a)=>els.find(el=>el.dataset.answer===a).click()',math['a']);good()
-  page.locator('#profileSelect').select_option('junior')
+  workspace(page).locator('#profileSelect').select_option('junior')
   page.evaluate("""()=>{const teen=__profiles.find(x=>x.id==='teen');teen.progress.history=[['a',true],['a',false],['b',true],['b',true],['c',false],['c',false]].map(([sessionId,correct],i)=>({sessionId,correct,subject:'memory',points:correct?10:0,level:1,ts:'2026-10-20T12:00:00Z',itemId:'chart-'+i}));}""")
-  page.locator('#profileSelect').select_option('teen')
-  page.locator('#navMenu [data-section=progress]').click();assert page.locator('#bankCoverage').count()==0
-  assert page.locator('.accuracy-ring svg').count()>0;assert page.locator('#sessionEvolution svg circle').count()==3;assert page.locator('.progress-chart-data tbody tr').all_text_contents()==['1250%','22100%','320%']
+  workspace(page).locator('#profileSelect').select_option('teen')
+  workspace(page).locator('#navMenu [data-section=progress]').click();assert page.locator('#bankCoverage').count()==0
+  assert page.locator('.accuracy-ring svg').count()>0;assert page.locator('#sessionEvolution svg circle').count()==3;rows=page.locator('.progress-chart-data tbody tr').evaluate_all('(rows)=>rows.map(r=>[...r.cells].map(c=>c.textContent))');assert [[r[0],r[2],r[3]] for r in rows]==[['1','2','50%'],['2','2','100%'],['3','2','0%']];assert all('2026' in r[1] for r in rows)
   page.set_viewport_size({'width':1280,'height':1000});page.locator('#progress').screenshot(path='/tmp/varied-progress-1280.png')
   page.set_viewport_size({'width':390,'height':1000});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1');page.locator('#progress').screenshot(path='/tmp/varied-progress-390.png')
   for source,name in [(scene,'scene'),(route,'route')]:

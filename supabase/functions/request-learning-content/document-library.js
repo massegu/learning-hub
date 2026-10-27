@@ -890,7 +890,8 @@ function validateExecutiveTask(item){
  if(!plan||!doc||item.domain!=='executive'||![1,2,3].includes(meta.level)||item.level!==meta.level||!supports(meta.age,'executive'))throw new Error('Plan documental incompatible.');
  const source=JSON.stringify(doc.transcript);
  if(plan.checks.some(check=>!source.includes(check[3]||check[1])))throw new Error('Las condiciones del plan no corresponden al documento.');
- const expected=executiveTask(meta.age,meta.level,meta.id);
+ const canonical=executiveTask(meta.age,meta.level,meta.id),locale=root.LocaleContent||(typeof require==='function'&&require('./locale-content'));
+ const expected=item.localization?locale.localizeItem(canonical,item.localization.locale,'executive'):canonical;
  for(const key of ['type','responseType','stimulus','answer','answers'])if(JSON.stringify(item[key])!==JSON.stringify(expected[key]))throw new Error('El plan o sus respuestas no coinciden con el documento.');
  const values=expected.tokens||expected.opts,received=item.tokens||item.opts;
  if(!Array.isArray(received)||received.length!==values.length||new Set(received).size!==values.length||!values.every(x=>received.includes(x)))throw new Error('Faltan opciones del plan documental.');
@@ -1404,6 +1405,1286 @@ Object.assign(readingQuestions,{
  'booking-es-v2':[['¿Qué permite hacer esta pantalla?','Consultar y reservar salas',['Comprar libros','Cambiar la hora del reloj']],['¿Por qué no basta con elegir la sala con más plazas?','También debe estar libre y tener el acceso necesario',['Todas las salas tienen seis plazas','La capacidad no aparece en la pantalla']],['¿Qué no puede afirmarse con este panel?','Que Roble estará libre también de 11:00 a 12:00',['Que Pino está ocupada de 10:00 a 11:00','Que Olmo tiene cuatro plazas']]],
  'orders-es-v2':[['¿Para qué sirve el panel?','Para comprobar qué pedidos pueden enviarse',['Para diseñar una bicicleta','Para publicar una oferta']],['¿Por qué P-107 no puede enviarse en este transporte?','Porque supera el máximo de ocho cajas',['Porque el pago está pendiente','Porque falta revisar el pedido']],['¿Qué afirmación exige consultar otros datos?','Que P-104 llegará mañana a su destino',['Que P-104 tiene seis cajas','Que la recogida tiene una hora límite']]]
 });
+// Original everyday materials, reviewed against their rendered source images.
+const everydayDocuments = {
+ "everyday-airport-departures": {
+  "title": "Panel de salidas del aeropuerto",
+  "kind": "Pantalla informativa",
+  "country": "España",
+  "width": 1600,
+  "height": 1000,
+  "path": "assets/documents/everyday-es-2026/airport-departures.png",
+  "design": "everyday",
+  "minAge": "primary",
+  "transcript": [
+   {
+    "type": "text",
+    "text": "Aeropuerto Bahía. Salidas. 27/10/2026, 10:20. Terminal 1. Bilbao BH 204: 10:35, B04, última llamada. Valencia BH 318: 10:50, B12, embarcando. Sevilla BH 526: prevista 11:10, nueva hora 11:45, C03. Lisboa BH 642: 11:25, C08, a la hora. Palma BH 710: 11:40, B09, a la hora. El vuelo a Valencia cambia de B06 a B12."
+   }
+  ],
+  "facts": {
+   "valenciaGate": "B12",
+   "sevilleDelayMinutes": 35,
+   "currentTime": "10:20"
+  },
+  "questions": [
+   [
+    "¿Por qué puerta se embarca a Valencia?",
+    "B12",
+    [
+     "B06",
+     "C03",
+     "B04"
+    ]
+   ],
+   [
+    "¿Cuántos minutos de retraso lleva el vuelo a Sevilla?",
+    "35 minutos",
+    [
+     "15 minutos",
+     "20 minutos",
+     "45 minutos"
+    ]
+   ],
+   [
+    "Son las 10:20. ¿Cuánto falta para la salida prevista a Valencia?",
+    "30 minutos",
+    [
+     "15 minutos",
+     "40 minutos",
+     "50 minutos"
+    ]
+   ]
+  ],
+  "plan": {
+   "goal": "preparar el embarque del vuelo a Valencia",
+   "steps": [
+    "Localizar BH 318 en el panel actualizado",
+    "Comprobar la puerta B12 y preparar el equipaje",
+    "Dirigirse a B12 mientras el vuelo está embarcando"
+   ],
+   "checks": [
+    [
+     "Puerta actual",
+     "B12",
+     "B06",
+     "B12"
+    ],
+    [
+     "Hora de salida",
+     "10:50",
+     "11:45",
+     "10:50"
+    ],
+    [
+     "Estado del vuelo",
+     "embarcando",
+     "última llamada",
+     "embarcando"
+    ]
+   ]
+  },
+  "readingQuestions": [
+   [
+    "¿Para qué sirve el panel de salidas?",
+    "Para consultar horarios, puertas y estados de los vuelos",
+    [
+     "Para elegir un asiento",
+     "Para pagar una maleta"
+    ]
+   ],
+   [
+    "¿Por qué conviene buscar el número de vuelo y no solo la ciudad?",
+    "Porque el número permite identificar el vuelo concreto que necesitas",
+    [
+     "Porque todas las ciudades tienen una sola salida",
+     "Porque el número indica el precio"
+    ]
+   ],
+   [
+    "¿Qué cambio debe tenerse en cuenta para llegar al vuelo a Valencia?",
+    "La puerta actual es B12 aunque antes fuera B06",
+    [
+     "El destino cambia a Sevilla",
+     "El vuelo se retrasa hasta las 11:45"
+    ]
+   ]
+  ]
+ },
+ "everyday-bus-shelter-ad": {
+  "title": "Anuncio de una ruta en autobús",
+  "kind": "Display publicitario",
+  "country": "España",
+  "width": 900,
+  "height": 1400,
+  "path": "assets/documents/everyday-es-2026/bus-shelter-ad.png",
+  "design": "everyday",
+  "minAge": "junior",
+  "transcript": [
+   {
+    "type": "text",
+    "text": "Mueve Bahía. Línea 24. Centro a Playa Norte, sin transbordos. Sábados y domingos de 09:00 a 21:00. Frecuencia: cada 20 minutos. Trayecto aproximado: 35 minutos. Billete sencillo: 1,50 €. Menores de 6 años: gratis. Válido del 1 al 30 de noviembre de 2026."
+   }
+  ],
+  "facts": {
+   "fare": 1.5,
+   "frequencyMinutes": 20,
+   "journeyMinutes": 35,
+   "freeUnderAge": 6
+  },
+  "questions": [
+   [
+    "¿Qué línea va a Playa Norte?",
+    "La línea 24",
+    [
+     "La línea 12",
+     "La línea 35",
+     "La línea 20"
+    ]
+   ],
+   [
+    "¿Cuánto cuestan dos billetes sencillos?",
+    "3 €",
+    [
+     "1,50 €",
+     "2 €",
+     "4,50 €"
+    ]
+   ],
+   [
+    "Si sales a las 10:00, ¿a qué hora llegarás aproximadamente?",
+    "A las 10:35",
+    [
+     "A las 10:20",
+     "A las 10:15",
+     "A las 10:45"
+    ]
+   ]
+  ],
+  "plan": {
+   "goal": "preparar el viaje a Playa Norte",
+   "steps": [
+    "Comprobar que el viaje será un sábado o domingo",
+    "Preparar 1,50 € para el billete sencillo",
+    "Tomar la línea 24 hacia Playa Norte"
+   ],
+   "checks": [
+    [
+     "Línea",
+     "24",
+     "12",
+     "24"
+    ],
+    [
+     "Duración aproximada",
+     "35 minutos",
+     "20 minutos",
+     "35 minutos"
+    ],
+    [
+     "Precio del billete",
+     "1,50 €",
+     "3 €",
+     "1,50 €"
+    ]
+   ]
+  },
+  "readingQuestions": [
+   [
+    "¿Qué servicio anuncia este cartel?",
+    "Un autobús directo del centro a la playa los fines de semana",
+    [
+     "Un tren diario al aeropuerto",
+     "Un autobús escolar de lunes a viernes"
+    ]
+   ],
+   [
+    "¿Qué significa «sin transbordos» en este anuncio?",
+    "Que no necesitas cambiar de autobús durante el trayecto",
+    [
+     "Que el trayecto no tiene paradas",
+     "Que todos los billetes son gratuitos"
+    ]
+   ],
+   [
+    "¿Qué dato del anuncio impide usar este servicio especial un martes?",
+    "Funciona los sábados y domingos",
+    [
+     "El trayecto dura unos 35 minutos",
+     "El billete cuesta 1,50 €"
+    ]
+   ]
+  ]
+ },
+ "everyday-museum-brochure": {
+  "title": "Folleto de un museo de ciencia",
+  "kind": "Folleto de tres cuerpos",
+  "country": "España",
+  "width": 1600,
+  "height": 1100,
+  "path": "assets/documents/everyday-es-2026/museum-brochure.png",
+  "design": "everyday",
+  "minAge": "junior",
+  "transcript": [
+   {
+    "type": "text",
+    "text": "Museo Prisma, Plaza del Faro 8, Bahía. Horario: martes a viernes 10:00–18:00; sábados y domingos 10:00–20:00; lunes cerrado. Último acceso una hora antes del cierre. General 8 €; 6 a 17 años 5 €; menores de 6 gratis. Taller Construye un robot: sábados 12:00–13:00, de 10 a 14 años, suplemento 4 €, reserva previa. La entrada no incluye el taller."
+   }
+  ],
+  "facts": {
+   "general": 8,
+   "child": 5,
+   "workshopExtra": 4,
+   "weekendLastEntry": "19:00"
+  },
+  "questions": [
+   [
+    "¿Qué día cierra el museo?",
+    "Los lunes",
+    [
+     "Los martes",
+     "Los sábados",
+     "Los domingos"
+    ]
+   ],
+   [
+    "¿Cuánto paga una persona de 12 años por entrada y taller?",
+    "9 €",
+    [
+     "5 €",
+     "8 €",
+     "12 €"
+    ]
+   ],
+   [
+    "¿Basta la entrada general para asistir al taller?",
+    "No; hay que reservar y pagar el suplemento",
+    [
+     "Sí, todos los talleres están incluidos",
+     "Sí, si llegas antes de las 12:00",
+     "No; el museo solo abre los lunes"
+    ]
+   ]
+  ],
+  "plan": {
+   "goal": "asistir al taller del museo con 12 años",
+   "steps": [
+    "Comprobar la edad y reservar el taller del sábado",
+    "Preparar 9 € para la entrada y el suplemento",
+    "Acudir al taller antes de su inicio a las 12:00"
+   ],
+   "checks": [
+    [
+     "Edad del taller",
+     "10 a 14 años",
+     "6 a 9 años",
+     "10 a 14 años"
+    ],
+    [
+     "Inicio del taller",
+     "12:00",
+     "13:00",
+     "12:00"
+    ],
+    [
+     "Suplemento",
+     "4 €",
+     "8 €",
+     "4 €"
+    ]
+   ]
+  },
+  "readingQuestions": [
+   [
+    "¿Qué información reúne el folleto?",
+    "Horarios, precios y condiciones de una visita y un taller",
+    [
+     "Un catálogo de robots en venta",
+     "Las normas de un aeropuerto"
+    ]
+   ],
+   [
+    "¿Por qué no basta con comprar la entrada para hacer el taller?",
+    "Porque el taller requiere reserva y un suplemento",
+    [
+     "Porque la entrada solo permite visitar los lunes",
+     "Porque el taller es para mayores de 18 años"
+    ]
+   ],
+   [
+    "¿Qué afirmación contradice el folleto?",
+    "La entrada de 5 € incluye el taller de robots",
+    [
+     "Los lunes el museo cierra",
+     "El taller tiene un límite de edad"
+    ]
+   ]
+  ]
+ },
+ "everyday-school-catalogue": {
+  "title": "Catálogo de material para el día a día",
+  "kind": "Catálogo de productos",
+  "country": "España",
+  "width": 1200,
+  "height": 1400,
+  "path": "assets/documents/everyday-es-2026/school-catalogue.png",
+  "design": "everyday",
+  "minAge": "junior",
+  "transcript": [
+   {
+    "type": "text",
+    "text": "Trazo, colección otoño 2026. Mochila Cometa 18 €, 18 L. Botella Brisa 9 €, 600 ml. Estuche Órbita 7 €, 22 cm. Libreta Bosque 5 €, A5, 80 hojas. Pack de clase: mochila, estuche y libreta por 26 €, ahorro 4 €. No incluye botella. IVA incluido. Recogida gratis; envío 3 €. Válido hasta 30/11/2026."
+   }
+  ],
+  "facts": {
+   "backpack": 18,
+   "bottle": 9,
+   "case": 7,
+   "notebook": 5,
+   "bundle": 26,
+   "delivery": 3,
+   "saving": 4
+  },
+  "questions": [
+   [
+    "¿Qué producto tiene una capacidad de 600 ml?",
+    "La botella Brisa",
+    [
+     "La mochila Cometa",
+     "El estuche Órbita",
+     "La libreta Bosque"
+    ]
+   ],
+   [
+    "¿Cuánto cuesta el pack con envío?",
+    "29 €",
+    [
+     "26 €",
+     "30 €",
+     "33 €"
+    ]
+   ],
+   [
+    "¿Cuánto ahorras con el pack frente a comprar sus tres productos por separado?",
+    "4 €",
+    [
+     "3 €",
+     "5 €",
+     "7 €"
+    ]
+   ]
+  ],
+  "plan": {
+   "goal": "comprar el pack de clase con envío",
+   "steps": [
+    "Comprobar los tres productos incluidos en el pack",
+    "Reservar 29 € para el pack y el envío",
+    "Confirmar el pedido con entrega a domicilio"
+   ],
+   "checks": [
+    [
+     "Precio del pack",
+     "26 €",
+     "30 €",
+     "26 €"
+    ],
+    [
+     "Envío",
+     "3 €",
+     "Gratis",
+     "3 €"
+    ],
+    [
+     "Ahorro del pack",
+     "4 €",
+     "9 €",
+     "4 €"
+    ]
+   ]
+  },
+  "readingQuestions": [
+   [
+    "¿Qué permite comparar este catálogo?",
+    "Productos, características, precios y un pack",
+    [
+     "Resultados de un partido",
+     "Salidas de autobuses"
+    ]
+   ],
+   [
+    "¿Por qué el pack cuesta menos que sus tres productos por separado?",
+    "Porque aplica una oferta conjunta de 4 € de ahorro",
+    [
+     "Porque elimina el IVA de toda la compra",
+     "Porque incluye menos hojas en la libreta"
+    ]
+   ],
+   [
+    "¿Qué compra no cumple el objetivo de tener una botella?",
+    "Comprar únicamente el pack de clase",
+    [
+     "Comprar la botella Brisa",
+     "Comprar el pack y una botella aparte"
+    ]
+   ]
+  ]
+ },
+ "everyday-grocery-receipt": {
+  "title": "Ticket de una compra pequeña",
+  "kind": "Ticket de compra",
+  "country": "España",
+  "width": 700,
+  "height": 1300,
+  "path": "assets/documents/everyday-es-2026/grocery-receipt.png",
+  "design": "everyday",
+  "minAge": "junior",
+  "transcript": [
+   {
+    "type": "text",
+    "text": "Mercado Azahar, Plaza del Mercado 12, Bahía. Caja 02. Ticket 004821. 27/10/2026 17:42. Pan integral 1,20 €. Leche 1 L 1,10 €. Manzanas 1 kg 2,40 €. Yogures pack 1,80 €. Pasta 500 g 1,50 €. Total 8,00 €, IVA incluido. Efectivo 10 €, cambio 2 €. 5 artículos."
+   }
+  ],
+  "facts": {
+   "total": 8,
+   "paid": 10,
+   "change": 2,
+   "items": 5,
+   "apples": 2.4
+  },
+  "questions": [
+   [
+    "¿Cuánto ha costado toda la compra?",
+    "8 €",
+    [
+     "10 €",
+     "2 €",
+     "6 €"
+    ]
+   ],
+   [
+    "¿Qué cambio corresponde a un pago de 10 €?",
+    "2 €",
+    [
+     "1 €",
+     "3 €",
+     "8 €"
+    ]
+   ],
+   [
+    "Sin los yogures, ¿cuánto costaría la compra?",
+    "6,20 €",
+    [
+     "6,80 €",
+     "7,20 €",
+     "9,80 €"
+    ]
+   ]
+  ],
+  "plan": {
+   "goal": "comprobar el cambio antes de salir de la tienda",
+   "steps": [
+    "Leer el total de 8,00 € en el ticket",
+    "Comparar el total con los 10 € entregados",
+    "Comprobar que se devuelven 2 € y guardar el ticket"
+   ],
+   "checks": [
+    [
+     "Total",
+     "8,00 €",
+     "10 €",
+     "8,00 €"
+    ],
+    [
+     "Efectivo entregado",
+     "10 €",
+     "8,00 €",
+     "10 €"
+    ],
+    [
+     "Cambio",
+     "2 €",
+     "1 €",
+     "2 €"
+    ]
+   ]
+  },
+  "readingQuestions": [
+   [
+    "¿Qué deja registrado este ticket?",
+    "Los productos comprados, el total y el cambio",
+    [
+     "Una reserva para otro día",
+     "Los horarios de la tienda"
+    ]
+   ],
+   [
+    "¿Qué relación hay entre efectivo, total y cambio?",
+    "El cambio es la diferencia entre el efectivo y el total",
+    [
+     "El cambio es un producto más",
+     "El efectivo se suma al precio de cada producto"
+    ]
+   ],
+   [
+    "¿Qué afirmación no se puede asegurar con este ticket?",
+    "Que la compra se entregó a domicilio",
+    [
+     "Que se pagó en efectivo",
+     "Que se compraron cinco artículos"
+    ]
+   ]
+  ]
+ },
+ "everyday-boarding-pass": {
+  "title": "Tarjeta de embarque con cambio de puerta",
+  "kind": "Tarjeta de embarque",
+  "country": "España",
+  "width": 1500,
+  "height": 850,
+  "path": "assets/documents/everyday-es-2026/boarding-pass.png",
+  "design": "everyday",
+  "minAge": "primary",
+  "transcript": [
+   {
+    "type": "text",
+    "text": "Bahía Air. Tarjeta de embarque ficticia. Viajero Demo. Madrid MAD a Valencia VLC. Vuelo BH 318, 27/10/2026. Salida 10:50. Asiento 14A. Embarque 10:15; cierre de puerta 10:35; grupo 2. Puerta impresa B06. Aviso recibido 10:05: nueva puerta B12 para BH 318."
+   }
+  ],
+  "facts": {
+   "seat": "14A",
+   "printedGate": "B06",
+   "updatedGate": "B12",
+   "close": "10:35",
+   "departure": "10:50"
+  },
+  "questions": [
+   [
+    "¿Cuál es el asiento asignado?",
+    "14A",
+    [
+     "B06",
+     "B12",
+     "2"
+    ]
+   ],
+   [
+    "Tras el aviso, ¿a qué puerta debes ir?",
+    "B12",
+    [
+     "B06",
+     "14A",
+     "C03"
+    ]
+   ],
+   [
+    "Si llegas a la puerta a las 10:40, ¿ha terminado el plazo de embarque?",
+    "Sí, la puerta cierra a las 10:35",
+    [
+     "No; puedes llegar hasta las 10:50",
+     "No; la puerta cierra a las 10:45",
+     "Sí; la puerta cierra a las 10:15"
+    ]
+   ]
+  ],
+  "plan": {
+   "goal": "embarcar sin confundir puerta y asiento",
+   "steps": [
+    "Leer la tarjeta y el aviso con la nueva puerta",
+    "Acudir a B12 antes de las 10:35",
+    "Embarcar con el grupo 2 y localizar el asiento 14A"
+   ],
+   "checks": [
+    [
+     "Puerta actual",
+     "B12",
+     "B06",
+     "B12"
+    ],
+    [
+     "Cierre de puerta",
+     "10:35",
+     "10:50",
+     "10:35"
+    ],
+    [
+     "Asiento",
+     "14A",
+     "B12",
+     "14A"
+    ]
+   ]
+  },
+  "readingQuestions": [
+   [
+    "¿Para qué sirve esta tarjeta?",
+    "Para organizar el acceso a un vuelo concreto",
+    [
+     "Para reservar un hotel",
+     "Para consultar todos los vuelos del aeropuerto"
+    ]
+   ],
+   [
+    "¿Por qué debes leer también el aviso recibido?",
+    "Porque actualiza la puerta que aparece impresa",
+    [
+     "Porque cambia el asiento a B12",
+     "Porque cancela el vuelo"
+    ]
+   ],
+   [
+    "¿Qué hora debes respetar para no llegar después del cierre de puerta?",
+    "Las 10:35, aunque el avión salga a las 10:50",
+    [
+     "Las 10:50, porque es la salida",
+     "Las 10:40, porque es antes de la salida"
+    ]
+   ]
+  ]
+ },
+ "everyday-video-recipe": {
+  "title": "Información en un vídeo de cocina",
+  "kind": "Captura de vídeo",
+  "country": "España",
+  "width": 1600,
+  "height": 1050,
+  "path": "assets/documents/everyday-es-2026/video-recipe.png",
+  "design": "everyday",
+  "minAge": "junior",
+  "transcript": [
+   {
+    "type": "text",
+    "text": "Aula en Vídeo. Verduras al horno, paso a paso. Reproducción pausada en 00:42 de 03:20. Paso 2: precalienta el horno. Subtítulo: Pon el horno a 180 °C antes de introducir la bandeja. Preparación 10 min; horneado 20 min; 2 personas. Guantes para retirar la bandeja. Ingredientes: 2 zanahorias, 1 calabacín, 1 cucharada de aceite. Capítulos 00:00 Ingredientes, 00:35 Precalentar, 01:05 Preparar verduras, 01:50 Hornear, 02:50 Servir."
+   }
+  ],
+  "facts": {
+   "temperatureC": 180,
+   "prepMinutes": 10,
+   "ovenMinutes": 20,
+   "servings": 2,
+   "positionSeconds": 42,
+   "durationSeconds": 200
+  },
+  "questions": [
+   [
+    "¿A qué temperatura hay que precalentar el horno?",
+    "180 °C",
+    [
+     "160 °C",
+     "200 °C",
+     "120 °C"
+    ]
+   ],
+   [
+    "¿Cuánto suman la preparación y el horneado indicados?",
+    "30 minutos",
+    [
+     "20 minutos",
+     "10 minutos",
+     "40 minutos"
+    ]
+   ],
+   [
+    "¿En qué momento empieza el capítulo de hornear?",
+    "En 01:50",
+    [
+     "En 00:35",
+     "En 01:05",
+     "En 02:50"
+    ]
+   ]
+  ],
+  "plan": {
+   "goal": "seguir la preparación de las verduras",
+   "steps": [
+    "Precalentar el horno a 180 °C",
+    "Preparar las verduras e introducir la bandeja",
+    "Hornear 20 minutos y retirar la bandeja con guantes"
+   ],
+   "checks": [
+    [
+     "Temperatura",
+     "180 °C",
+     "200 °C",
+     "180 °C"
+    ],
+    [
+     "Horneado",
+     "20 min",
+     "10 min",
+     "20 min"
+    ],
+    [
+     "Personas",
+     "2 personas",
+     "4 personas",
+     "2 personas"
+    ]
+   ]
+  },
+  "readingQuestions": [
+   [
+    "¿Qué explica el vídeo mostrado?",
+    "Cómo preparar verduras al horno",
+    [
+     "Cómo reparar un horno",
+     "Cómo plantar zanahorias"
+    ]
+   ],
+   [
+    "¿Para qué sirven los capítulos que aparecen a la derecha?",
+    "Para localizar diferentes partes de la explicación",
+    [
+     "Para indicar el precio de los ingredientes",
+     "Para cambiar el número de personas"
+    ]
+   ],
+   [
+    "¿Qué instrucción debe cumplirse antes de introducir la bandeja?",
+    "Precalentar el horno a 180 °C",
+    [
+     "Retirar la bandeja con guantes",
+     "Servir las verduras"
+    ]
+   ]
+  ]
+ },
+ "everyday-cinema-poster": {
+  "title": "Póster de cine al aire libre",
+  "kind": "Póster cultural",
+  "country": "España",
+  "width": 1000,
+  "height": 1400,
+  "path": "assets/documents/everyday-es-2026/cinema-poster.png",
+  "design": "everyday",
+  "minAge": "junior",
+  "transcript": [
+   {
+    "type": "text",
+    "text": "Centro Juvenil Faro. Cine bajo las estrellas. Actividad a partir de 8 años. Sábado 14 de noviembre de 2026. Apertura 18:30; película 19:00. Patio del centro juvenil. Gratis. Aforo 80 personas. Trae manta. Si llueve, salón 2. Menores de 12 años deben ir con persona adulta."
+   }
+  ],
+  "facts": {
+   "doors": "18:30",
+   "film": "19:00",
+   "capacity": 80,
+   "adultUnderAge": 12,
+   "rainRoom": "salón 2"
+  },
+  "questions": [
+   [
+    "¿A qué hora empieza la película?",
+    "A las 19:00",
+    [
+     "A las 18:30",
+     "A las 19:30",
+     "A las 20:00"
+    ]
+   ],
+   [
+    "¿Cuánto tiempo hay entre la apertura y la película?",
+    "30 minutos",
+    [
+     "15 minutos",
+     "45 minutos",
+     "60 minutos"
+    ]
+   ],
+   [
+    "¿Puede ir sola una persona de 10 años?",
+    "No; debe ir con una persona adulta",
+    [
+     "Sí; puede ir sola desde los 8 años",
+     "Sí; la entrada gratuita permite ir sin compañía",
+     "No; solo pueden entrar mayores de 18 años"
+    ]
+   ]
+  ],
+  "plan": {
+   "goal": "ir al cine con una persona de 10 años",
+   "steps": [
+    "Acordar la asistencia con una persona adulta",
+    "Preparar una manta y consultar si llueve",
+    "Llegar con tiempo para la película de las 19:00"
+   ],
+   "checks": [
+    [
+     "Inicio de película",
+     "19:00",
+     "18:30",
+     "19:00"
+    ],
+    [
+     "Alternativa por lluvia",
+     "salón 2",
+     "Patio",
+     "salón 2"
+    ],
+    [
+     "Aforo",
+     "80 personas",
+     "120 personas",
+     "80 personas"
+    ]
+   ]
+  },
+  "readingQuestions": [
+   [
+    "¿Cuál es la finalidad del póster?",
+    "Invitar a una proyección e indicar sus condiciones",
+    [
+     "Vender mantas",
+     "Anunciar el cierre del centro juvenil"
+    ]
+   ],
+   [
+    "¿Por qué aparecen dos lugares para la proyección?",
+    "Porque el lugar cambia si llueve",
+    [
+     "Porque hay dos películas a la misma hora",
+     "Porque cada edad tiene una sala obligatoria"
+    ]
+   ],
+   [
+    "¿Qué afirmación no está respaldada por el cartel?",
+    "Que una persona de 10 años puede acudir sola",
+    [
+     "Que la entrada es gratuita",
+     "Que el aforo tiene un límite"
+    ]
+   ]
+  ]
+ },
+ "everyday-queue-display": {
+  "title": "Pantalla de turnos de atención",
+  "kind": "Display de turnos",
+  "country": "España",
+  "width": 1400,
+  "height": 950,
+  "path": "assets/documents/everyday-es-2026/queue-display.png",
+  "design": "everyday",
+  "minAge": "junior",
+  "transcript": [
+   {
+    "type": "text",
+    "text": "Oficina de Atención Ciudadana, 11:26. Última llamada: A028 al puesto 3. En atención: A026 puesto 1; B014 puesto 2; A028 puesto 3. Las letras A y B corresponden a trámites distintos. El resguardo de ejemplo tiene código A029 y todavía no ha sido llamado."
+   }
+  ],
+  "facts": {
+   "latest": "A028",
+   "latestDesk": 3,
+   "ticket": "A029",
+   "called": false
+  },
+  "questions": [
+   [
+    "¿Qué turno acaba de ser llamado?",
+    "A028",
+    [
+     "A029",
+     "B014",
+     "A026"
+    ]
+   ],
+   [
+    "¿A qué puesto debe ir A028?",
+    "Al puesto 3",
+    [
+     "Al puesto 1",
+     "Al puesto 2",
+     "Al puesto 4"
+    ]
+   ],
+   [
+    "Con el resguardo A029, ¿debes acercarte ya a un puesto?",
+    "No, todavía no ha sido llamado",
+    [
+     "Sí, debes ir al puesto 3",
+     "Sí, debes ir al puesto 2",
+     "Sí, porque A029 aparece en tu resguardo"
+    ]
+   ]
+  ],
+  "plan": {
+   "goal": "esperar correctamente con el resguardo A029",
+   "steps": [
+    "Leer el código A029 de tu resguardo",
+    "Compararlo con los turnos llamados en la pantalla",
+    "Seguir esperando hasta que se anuncie A029"
+   ],
+   "checks": [
+    [
+     "Resguardo",
+     "A029",
+     "A028",
+     "A029"
+    ],
+    [
+     "Última llamada",
+     "A028",
+     "A029",
+     "A028"
+    ],
+    [
+     "Puesto de A028",
+     "puesto 3",
+     "puesto 2",
+     "puesto 3"
+    ]
+   ]
+  },
+  "readingQuestions": [
+   [
+    "¿Para qué sirve la pantalla?",
+    "Para avisar de los turnos y el puesto al que deben acudir",
+    [
+     "Para publicar los nombres de las personas",
+     "Para cobrar los trámites"
+    ]
+   ],
+   [
+    "¿Por qué no basta con fijarse solo en el número?",
+    "Porque las letras distinguen trámites diferentes",
+    [
+     "Porque las letras indican el precio",
+     "Porque todos los turnos van al puesto 3"
+    ]
+   ],
+   [
+    "¿Qué indica comparar A029 con los turnos en atención?",
+    "Que el resguardo de ejemplo aún debe esperar",
+    [
+     "Que A029 ya está en el puesto 3",
+     "Que debe cambiar su código por B014"
+    ]
+   ]
+  ]
+ },
+ "everyday-rail-disruption": {
+  "title": "Aviso de una incidencia ferroviaria",
+  "kind": "Pantalla de estación",
+  "country": "España",
+  "width": 1500,
+  "height": 1000,
+  "path": "assets/documents/everyday-es-2026/rail-disruption.png",
+  "design": "everyday",
+  "minAge": "primary",
+  "transcript": [
+   {
+    "type": "text",
+    "text": "Red Bahía, Estación Central, 27/10/2026 08:10. Línea R2 interrumpida entre Centro y Jardines hasta las 12:00. Sustitución R2-B desde salida norte. Billete de tren válido sin suplemento. Cada 15 minutos. Tiempo adicional aproximado 20 minutos. Próximo autobús 08:15. Resto de R2 normal."
+   }
+  ],
+  "facts": {
+   "replacement": "R2-B",
+   "exit": "norte",
+   "next": "08:15",
+   "frequencyMinutes": 15,
+   "extraMinutes": 20,
+   "until": "12:00"
+  },
+  "questions": [
+   [
+    "¿Dónde se toma el autobús de sustitución?",
+    "En la parada provisional de la salida norte",
+    [
+     "En la salida sur",
+     "En el andén del tren",
+     "En la entrada del museo"
+    ]
+   ],
+   [
+    "¿Hay que pagar otro billete?",
+    "No, sirve el billete de tren",
+    [
+     "Sí, hay que pagar un suplemento",
+     "Sí, necesitas dos billetes nuevos",
+     "No se admite ningún billete de tren"
+    ]
+   ],
+   [
+    "Si se mantiene la frecuencia, ¿cuándo saldrá el siguiente al de las 08:15?",
+    "A las 08:30",
+    [
+     "A las 08:20",
+     "A las 08:25",
+     "A las 08:45"
+    ]
+   ]
+  ],
+  "plan": {
+   "goal": "continuar el viaje durante la interrupción",
+   "steps": [
+    "Leer el aviso y localizar la salida norte",
+    "Ir a la parada provisional con el billete de tren",
+    "Tomar el autobús R2-B hacia el tramo interrumpido"
+   ],
+   "checks": [
+    [
+     "Autobús",
+     "R2-B",
+     "R2-C",
+     "R2-B"
+    ],
+    [
+     "Salida",
+     "norte",
+     "sur",
+     "norte"
+    ],
+    [
+     "Tiempo adicional",
+     "20 minutos",
+     "15 minutos",
+     "20 minutos"
+    ]
+   ]
+  },
+  "readingQuestions": [
+   [
+    "¿Qué comunica el aviso?",
+    "Una interrupción y una alternativa para continuar el viaje",
+    [
+     "El cierre permanente de toda la red",
+     "Un cambio de precio para todos los billetes"
+    ]
+   ],
+   [
+    "¿Por qué puede servirte el billete de tren en el autobús?",
+    "Porque es un servicio de sustitución sin coste adicional",
+    [
+     "Porque todos los autobuses son siempre gratis",
+     "Porque hay que comprar un billete nuevo"
+    ]
+   ],
+   [
+    "¿Qué cambio conviene hacer en tu plan de viaje?",
+    "Reservar unos 20 minutos adicionales y buscar la salida norte",
+    [
+     "Llegar 20 minutos más tarde sin cambiar el trayecto",
+     "Esperar el tren en cualquier andén sin leer el aviso"
+    ]
+   ]
+  ]
+ },
+ "everyday-online-order": {
+  "title": "Pantalla de recogida de un pedido",
+  "kind": "Captura de una tienda",
+  "country": "España",
+  "width": 1300,
+  "height": 1150,
+  "path": "assets/documents/everyday-es-2026/online-order.png",
+  "design": "everyday",
+  "minAge": "junior",
+  "transcript": [
+   {
+    "type": "text",
+    "text": "Trazo online. Pedido TZ-2048, realizado 26/10/2026. Listo para recoger. Calle del Olmo 18. Martes a sábado, 10:00–14:00 y 17:00–20:00. Domingo y lunes cerrado. Recoger antes del cierre del sábado 31/10/2026. Código R7K-42. Otra persona puede recogerlo mostrando el código. Estuche 7 €, libreta 5 €, total ya pagado 12 €. Recogida gratis. No volver a pagar."
+   }
+  ],
+  "facts": {
+   "code": "R7K-42",
+   "totalPaid": 12,
+   "deadline": "31/10/2026 20:00",
+   "closedDays": [
+    "domingo",
+    "lunes"
+   ]
+  },
+  "questions": [
+   [
+    "¿Qué código hay que mostrar para recogerlo?",
+    "R7K-42",
+    [
+     "TZ-2048",
+     "R7K-24",
+     "004821"
+    ]
+   ],
+   [
+    "¿Cuánto debes pagar al recogerlo?",
+    "Nada, los 12 € ya están pagados",
+    [
+     "12 €",
+     "3 €",
+     "15 €"
+    ]
+   ],
+   [
+    "¿Puedes recogerlo un martes a las 15:00?",
+    "No; la tienda cierra de 14:00 a 17:00",
+    [
+     "Sí, abre de forma continua",
+     "Sí, la recogida permite entrar a cualquier hora",
+     "No, los martes cierra todo el día"
+    ]
+   ]
+  ],
+  "plan": {
+   "goal": "recoger un pedido que ya está pagado",
+   "steps": [
+    "Comprobar el horario y el plazo de recogida",
+    "Guardar el código R7K-42 antes de ir a la tienda",
+    "Mostrar el código en caja y recoger sin volver a pagar"
+   ],
+   "checks": [
+    [
+     "Código",
+     "R7K-42",
+     "TZ-2048",
+     "R7K-42"
+    ],
+    [
+     "Total ya pagado",
+     "12 €",
+     "15 €",
+     "12 €"
+    ],
+    [
+     "Recogida",
+     "gratis",
+     "3 €",
+     "Recogida gratis"
+    ]
+   ]
+  },
+  "readingQuestions": [
+   [
+    "¿Qué comunica esta pantalla del pedido?",
+    "Que el pedido está listo para recoger y ya está pagado",
+    [
+     "Que el pedido está cancelado",
+     "Que falta pagar un envío"
+    ]
+   ],
+   [
+    "¿Por qué es importante guardar el código?",
+    "Porque hay que mostrarlo en caja para recoger el pedido",
+    [
+     "Porque es una contraseña de pago",
+     "Porque indica el precio del pedido"
+    ]
+   ],
+   [
+    "¿Qué acción se ajusta a las condiciones de recogida?",
+    "Ir durante el horario de apertura antes de que termine el plazo",
+    [
+     "Ir el domingo a cualquier hora",
+     "Pagar otros 12 € al llegar"
+    ]
+   ]
+  ]
+ },
+ "everyday-sports-schedule": {
+  "title": "Programa de actividades de un polideportivo",
+  "kind": "Programa semanal",
+  "country": "España",
+  "width": 1400,
+  "height": 1100,
+  "path": "assets/documents/everyday-es-2026/sports-schedule.png",
+  "design": "everyday",
+  "minAge": "junior",
+  "transcript": [
+   {
+    "type": "text",
+    "text": "Polideportivo La Vega, noviembre 2026. Baloncesto lunes 17:00–18:00, 10–12 años, pista 1, 4 plazas. Baile urbano martes 17:30–18:30, 13–15, sala 2, completo. Escalada miércoles 18:00–19:00, 13–17, rocódromo, 3 plazas. Fútbol sala jueves 17:00–18:00, 10–12, pista 2, 6 plazas. Yoga viernes 18:00–19:00, 16–18, sala 1, 5 plazas. Inscripciones hasta 30/10; 12 €/mes por actividad; menores con autorización. Agua y calzado deportivo. Material de escalada incluido. Grupos completos con lista de espera."
+   }
+  ],
+  "facts": {
+   "monthlyFee": 12,
+   "climbingPlaces": 3,
+   "basketballPlaces": 4,
+   "footballPlaces": 6,
+   "danceFull": true
+  },
+  "questions": [
+   [
+    "¿Dónde se hace fútbol sala?",
+    "En la pista 2",
+    [
+     "En la pista 1",
+     "En la sala 2",
+     "En el rocódromo"
+    ]
+   ],
+   [
+    "¿Cuánto cuestan dos actividades al mes?",
+    "24 €",
+    [
+     "12 €",
+     "18 €",
+     "36 €"
+    ]
+   ],
+   [
+    "Con 14 años, ¿qué actividad con plazas libres puedes elegir?",
+    "Escalada",
+    [
+     "Baloncesto",
+     "Fútbol sala",
+     "Baile urbano, sin lista de espera"
+    ]
+   ]
+  ],
+  "plan": {
+   "goal": "inscribirse en escalada con 14 años",
+   "steps": [
+    "Comprobar la edad y las plazas de escalada",
+    "Preparar la autorización y la cuota de 12 €",
+    "Inscribirse antes del 30 de octubre en recepción"
+   ],
+   "checks": [
+    [
+     "Plazas de escalada",
+     "3 plazas",
+     "6 plazas",
+     "3 plazas"
+    ],
+    [
+     "Horario de escalada",
+     "18:00–19:00",
+     "17:00–18:00",
+     "18:00–19:00"
+    ],
+    [
+     "Cuota mensual",
+     "12 €",
+     "24 €",
+     "12 €/mes"
+    ]
+   ]
+  },
+  "readingQuestions": [
+   [
+    "¿Qué permite elegir este programa?",
+    "Una actividad según horario, edad y plazas",
+    [
+     "Una película según su duración",
+     "Un vuelo según su destino"
+    ]
+   ],
+   [
+    "¿Por qué no basta con que te guste una actividad para apuntarte?",
+    "También debes cumplir la edad y comprobar las plazas",
+    [
+     "Porque todas las actividades son para mayores de edad",
+     "Porque todas se hacen a la misma hora"
+    ]
+   ],
+   [
+    "¿Qué significa que baile urbano esté completo?",
+    "Que puedes consultar la lista de espera, pero no hay plaza libre inmediata",
+    [
+     "Que la actividad ha terminado para siempre",
+     "Que puedes entrar sin inscribirte"
+    ]
+   ]
+  ]
+ }
+};
+for(const [id,entry] of Object.entries(everydayDocuments)){
+ const {plan,readingQuestions:reading,...doc}=entry;documents[id]=doc;
+ documentPlans[id]=plan;readingQuestions[id]=reading;
+}
 function get(id){return documents[id]||null;}
 function supports(age,domain){return ['junior','primary','middle','teen'].includes(age)&&['attention','executive','literacy','reading','middleReading'].includes(domain)&&!(age==='junior'&&domain==='literacy');}
 function pool(age,domain,level=1){

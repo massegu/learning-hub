@@ -4,7 +4,7 @@ Only SDK service responses are simulated. No live Supabase calls or assets.
 from pathlib import Path
 import functools,http.server,json,re,tempfile,threading,zipfile
 from playwright.sync_api import sync_playwright
-from browser_support import ROOT,SDK,QuietHandler,doc_text
+from browser_support import workspace, ROOT,SDK,QuietHandler,doc_text
 
 server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(QuietHandler,directory=str(ROOT)))
 threading.Thread(target=server.serve_forever,daemon=True).start()
@@ -74,12 +74,12 @@ try:
   page.locator('#cancelGuidedSession').click()
   print('PASS: direct access in all eight domains; missions pause/reload/resume, persist completion and advance across areas',flush=True)
   # Older profiles keep their ordinary dashboard and no playful exercise layer.
-  page.locator('#profileSelect').select_option('middle')
+  workspace(page).locator('#profileSelect').select_option('middle')
   assert page.locator('#earlyHub').is_hidden()
   assert page.locator('#home > .hero').is_visible()
   assert not page.locator('#appShell').evaluate('(e)=>e.classList.contains("early-experience")')
   assert page.locator('#schoolHub').is_hidden()
-  page.locator('#profileSelect').select_option('junior')
+  workspace(page).locator('#profileSelect').select_option('junior')
   page.locator('#navMenu [data-section="homework"]').click()
   page.locator('#worksheetNone').click()
   for domain in ['attention','memory']:page.locator(f'#homeworkOptions input[value="{domain}"]').check()
@@ -124,7 +124,7 @@ try:
   assert page.evaluate('__requests.length')==before+1
   page.evaluate('window.__deny=false;window.__candidateMode=null')
   # A defective early candidate after source selection is replaced too.
-  page.locator('#profileSelect').select_option('early')
+  workspace(page).locator('#profileSelect').select_option('early')
   page.evaluate("""()=>{
    const adapt=EarlyContent.adaptResponse;window.__corruptEarly=true;
    EarlyContent.adaptResponse=(...args)=>{const res=adapt(...args);if(args[1].kind==='worksheet'&&window.__corruptEarly){window.__corruptEarly=false;res.items[0]={...res.items[0],stimulus:[]};}return res;};

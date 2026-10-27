@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import threading
 from playwright.sync_api import sync_playwright
-from browser_support import ROOT,doc_text
+from browser_support import workspace, ROOT,doc_text
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py')
 preview=importlib.util.module_from_spec(spec);spec.loader.exec_module(preview)
 server=preview.ReviewServer(('127.0.0.1',0),preview.prepare())
@@ -17,8 +17,8 @@ try:
   page.on('request',lambda r:external.append(r.url) if r.url.startswith('https://') else None)
   page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#v16ContentLocale');page.wait_for_timeout(3000)
   page.evaluate('''()=>{const gate=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return gate(it,...args)}}''');page.clock.install()
-  page.locator('#v16ContentLocale').select_option('es_mx');page.wait_for_function('()=>LearningAPI.contentLocale==="es_mx"')
-  page.locator('#profileSelect').select_option('teen')
+  workspace(page).locator('#v16ContentLocale').select_option('es_mx');page.wait_for_function('()=>LearningAPI.contentLocale==="es_mx"')
+  workspace(page).locator('#profileSelect').select_option('teen')
   def wait_item():
    page.wait_for_function('()=>__current&&[__current.q,__current.memoryQuestion].includes(document.querySelector("#exercisePrompt").textContent)')
    it=page.evaluate('__current')
