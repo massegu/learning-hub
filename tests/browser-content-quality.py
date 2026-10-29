@@ -38,6 +38,8 @@ try:
   # New everyday writing uses the existing manual review and printable source.
   page.evaluate("()=>{window.__fixture=FunctionalContent.pool('teen','literacy',3).find(it=>it.qualityDescriptor.semanticFamily==='reading.recommendation'&&it.qualityDescriptor.scenarioFamily==='home.messages');window.__current=null}")
   workspace(page).locator('#navMenu [data-subject=literacy]').click();page.wait_for_function('()=>window.__current?.writingPurpose&&document.querySelector("#exercisePrompt").textContent===__current.q')
+  page.locator('.language-mode-btn[data-mode=writing]').click();page.locator('#exerciseLevelSelect').select_option('3')
+  page.wait_for_function('()=>document.querySelector(".language-mode-btn[data-mode=writing]").classList.contains("active")&&document.querySelector("#exerciseLevelSelect").value==="3"&&document.querySelector("#writingCriteria li")')
   assert page.locator('#textAnswerArea').is_visible();assert page.locator('#writingCriteria li').count()==3
   assert page.locator('#exerciseOptions [data-answer]').count()==0
   page.locator('#textAnswerInput').fill('Elijo B porque termina antes de las 18:00 y no requiere reserva.')
