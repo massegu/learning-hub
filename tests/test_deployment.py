@@ -7,7 +7,7 @@ spec=importlib.util.spec_from_file_location('deploy',ROOT/'scripts/deploy-supaba
 class Deployment(unittest.TestCase):
  def test_package_has_all_imports_and_keeps_authentication(self):
   folder,files=deploy.sources();body,kind=deploy.multipart(folder,files)
-  self.assertEqual(len(files),15);self.assertIn(b'"verify_jwt": true',body)
+  self.assertEqual(len(files),17);self.assertIn(b'"verify_jwt": true',body)
   self.assertIn(b'filename="data/teen.js"',body);self.assertIn(b'filename="document-library.js"',body);self.assertIn(b'filename="photo-library.js"',body)
   self.assertIn('multipart/form-data',kind);self.assertNotIn(b'sbp_',body)
  def test_missing_key_and_wrong_project_are_rejected(self):

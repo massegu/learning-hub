@@ -999,6 +999,8 @@ function pool(age,domain,level=1){
   if(readingDomain&&writingProvider&&['junior','primary','middle'].includes(age))bank.push(...writingProvider(age,level).map(it=>({...it,domain:actual,originalDomain:it.domain,passageKey:'writing-legacy:'+age+':'+(it.juniorProfile?.context||it.schoolProfile?.context)})));
   if(actual==='executive'&&reasoningProvider&&age!=='early')bank.push(...reasoningProvider(age,level).map(it=>({...it,domain:'executive',topic:'Funciones ejecutivas · razonamiento',mechanic:'executive_reasoning_'+it.mechanic,contentKey:'merged-'+it.contentKey})));
   bank.push(...practice(age,actual,level));
+  const functional=root.FunctionalContent||(typeof require==='function'&&require('./functional-content'));
+  if(functional)bank.push(...functional.pool(age,actual,level));
   cache.set(key,bank);
  }
  return structuredClone(cache.get(key)).map(it=>domain==='applied'?{...it,domain,...(age==='early'?{ageProfile:{...it.ageProfile,mechanic:'chooseObject'}}:{})}:it);
@@ -1010,7 +1012,7 @@ function generate(age,domain,level=1,focus=null){
  if(!generationGroups.has(groupKey)){
   const grouped=new Map();
   for(const item of cache.get(key)||[]){
-   const written=item.type==='self'||item.responseType==='written'||item.type==='order';
+   const written=item.type==='self'||item.responseType==='written'||item.type==='order'&&!item.qualityEvidence;
    if(focus&&(focus==='writing'?!written:written))continue;
    if(!grouped.has(item.mechanic))grouped.set(item.mechanic,[]);
    grouped.get(item.mechanic).push(item);
