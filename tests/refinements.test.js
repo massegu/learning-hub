@@ -56,7 +56,7 @@ test('levels increase counting, attention load, recall load and planning steps w
   assert.deepEqual(attention.map(x=>[...x]),[[3],[5],[6]]);
   for(const l of [1,2,3]){
     assert.ok(early.pool('executive',l).filter(it=>it.type==='order').every(it=>it.answer.length===(l===1?2:3)));
-    assert.ok(early.pool('memory',l).filter(it=>['rememberPair','rememberOrder'].includes(it.ageProfile.mechanic)).every(it=>it.memoryContent.length===l+1));
+    assert.ok(early.pool('memory',l).filter(it=>!it.qualityEvidence&&['rememberPair','rememberOrder'].includes(it.ageProfile.mechanic)).every(it=>it.memoryContent.length===l+1));
     assert.ok(early.pool('memory',l).every(it=>it.revealMs>=6500 && it.memoryContent.length<=policy.early.memoryElements[l-1]));
   }
   assert.ok(early.pool('applied',1).every(it=>!it.tableRule));

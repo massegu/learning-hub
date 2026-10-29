@@ -3,8 +3,8 @@ const c=require('../js/curriculum'),m=require('../js/activity-model'),locale=req
 test('Social Lab is authored for all five ages and three levels with bound factual answers',()=>{
  const all=new Set();
  for(const age of ['early','junior','primary','middle','teen'])for(const level of [1,2,3]){
-  const bank=c.pool(age,'social',level);assert.equal(bank.length,age==='early'?24:6);
-  for(const it of bank){
+  const bank=c.pool(age,'social',level);assert.equal(bank.length,(age==='early'?24:6)+require('../js/functional-content').pool(age,'social',level).length);
+  for(const it of bank.filter(x=>!x.qualityEvidence)){
    const key=JSON.stringify([it.stimulus,it.q,it.a]);assert.ok(!all.has(key));all.add(key);
    const profile={age_band:['early','junior'].includes(age)?'primary':age,progress:{ageRoute:age}};
    for(const country of Object.keys(locale.labels))assert.doesNotThrow(()=>m.forDelivery(locale.localizeItem(it,country,'social'),profile,'social'));

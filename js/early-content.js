@@ -188,7 +188,7 @@
     if(curriculum?.supports('early',domain)){
       let items=curriculum.pool('early',domain,bandLevel);
       if(domain==='reading'){
-        const writing=pool('language',bandLevel,'writing').map(it=>({...it,domain:'reading',originalDomain:'language',passageKey:'writing-early:'+it.semanticKey,ageProfile:{...it.ageProfile,mechanic:'sequencing',family:'reading-writing'},mechanic:'reading_writing'}));
+        const writing=[...pool('language',bandLevel,'writing').map(it=>({...it,domain:'reading',originalDomain:'language',passageKey:'writing-early:'+it.semanticKey,ageProfile:{...it.ageProfile,mechanic:'sequencing',family:'reading-writing'},mechanic:'reading_writing'})),...items.filter(it=>it.languageFocus==='writing'&&it.qualityEvidence)];
         items=items.filter(it=>it.languageFocus!=='writing');
         items=subdomain==='writing'?writing:subdomain==='reading'||subdomain==='grammar'?items:[...items,...writing];
       }
@@ -228,6 +228,8 @@
     });
     if(domain==='attention'&&curriculum?.practice)result.push(...curriculum.practice('early','attention',bandLevel));
     if(domain==='language'&&curriculum?.vocabulary)result.push(...curriculum.vocabulary('early','language',bandLevel));
+    const functional=root.FunctionalContent||(typeof require==='function'&&require('./functional-content'));
+    if(functional)result.push(...functional.pool('early',domain,bandLevel));
     const seen = new Set();
     return result.filter(item => {
       if(domain==='language'&&(subdomain?item.languageFocus!==subdomain:item.languageFocus==='writing'))return false;
@@ -242,6 +244,9 @@
     const usedKeys = new Set(history.keys || []);
     const recent = [...history.mechanics];
     const recentFamilies = [...(history.families || [])];
+    const quality=root.ContentQuality||(typeof require==='function'&&require('./content-quality'));
+    const familyCache=new WeakMap();
+    const familyOf=it=>{if(!familyCache.has(it)){const family=quality.family(it,it.domain);familyCache.set(it,family==='unclassified'?it.ageProfile.family:family);}return familyCache.get(it);};
     const recentPassages=[...(history.passages||[])];
     const chosen = [];
     const pools = new Map(domains.map(d => [d, pool(d, level,subdomain).filter(it=>!accept || accept(it,d))]));
@@ -266,21 +271,21 @@
       }
       const freshTexts=available.filter(it=>!it.passageKey||!recentPassages.slice(-9).includes(it.passageKey));
       if(freshTexts.length)available=freshTexts;
-      let freshFamilies = available.filter(it => !recentFamilies.slice(-2).includes(it.ageProfile.family));
-      if(!freshFamilies.length)freshFamilies=available.filter(it=>it.ageProfile.family!==recentFamilies.at(-1));
+      let freshFamilies = available.filter(it => !recentFamilies.slice(-2).includes(familyOf(it)));
+      if(!freshFamilies.length)freshFamilies=available.filter(it=>familyOf(it)!==recentFamilies.at(-1));
       const varied = (freshFamilies.length ? freshFamilies : available).filter(it => !recent.slice(-2).includes(it.ageProfile.mechanic));
       const options = varied.length ? varied : freshFamilies.length ? freshFamilies : available;
       if (!options.length) throw new Error('No quedan actividades distintas para esta ficha.');
       // Balance task families instead of sampling from their unequal numbers of
       // name/object permutations. Delivery history survives reloads and sessions.
-      const groups=[...new Set(options.map(it=>it.ageProfile.family))];
-      const frequency=f=>recentFamilies.slice(-12).filter(x=>x===f).length/(options.find(it=>it.ageProfile.family===f).selectionWeight || 1);
+      const groups=[...new Set(options.map(it=>familyOf(it)))];
+      const frequency=f=>recentFamilies.slice(-12).filter(x=>x===f).length/(options.find(it=>familyOf(it)===f).selectionWeight || 1);
       const minimum=Math.min(...groups.map(frequency));
       const balanced=groups.filter(f=>frequency(f)===minimum);
       const selectedFamily=balanced[Math.floor(random()*balanced.length)];
-      const familyOptions=options.filter(it=>it.ageProfile.family===selectedFamily);
+      const familyOptions=options.filter(it=>familyOf(it)===selectedFamily);
       const item = familyOptions[Math.floor(random() * familyOptions.length)];
-      chosen.push(item);if(item.passageKey)recentPassages.push(item.passageKey); used.add(item.id); usedKeys.add(item.semanticKey); recent.push(item.ageProfile.mechanic); recentFamilies.push(item.ageProfile.family);
+      chosen.push(item);if(item.passageKey)recentPassages.push(item.passageKey); used.add(item.id); usedKeys.add(item.semanticKey); recent.push(item.ageProfile.mechanic); recentFamilies.push(familyOf(item));
     }
     profile.progress = { ...profile.progress, _earlyDelivery: { ids: [...used].slice(-600), keys: [...usedKeys].slice(-600), mechanics: recent.slice(-12), families: recentFamilies.slice(-12),passages:recentPassages.slice(-9) } };
     return chosen;

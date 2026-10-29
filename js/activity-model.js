@@ -110,6 +110,7 @@
     return blocks;
   }
   function printable(item, profile) {
+    if(item?.qualityEvidence||/^functional_/.test(item?.mechanic||'')||String(item?.contentKey||'').startsWith('functional-v1:'))(root.FunctionalContent||(typeof require==='function'&&require('./functional-content'))).validate(item);
     if(item?.roomSpeedTask)(root.Curriculum||(typeof require==='function'&&require('./curriculum'))).validateRoomSpeed(item);
     if(item?.socialEvidence||/^social_perspective_/.test(item?.mechanic||''))(root.Curriculum||(typeof require==='function'&&require('./curriculum'))).validateSocial(item);
     if(item?.interactionTask||/^executive_interactive_|^attention_room_search$/.test(item?.mechanic||''))(root.Curriculum||(typeof require==='function'&&require('./curriculum'))).validateInteraction(item);
@@ -179,6 +180,7 @@
     return { question, stimulus, options:options.map(String), tokens, writingRubric:item.writingRubric||[], responseType:item.type === 'order' || item.memoryResponse === 'order' ? 'order' : options.length ? 'choice' : 'written' };
   }
   function validateEvidence(item,stimulus){
+    if(item.qualityEvidence||/^functional_/.test(item.mechanic||'')||String(item.contentKey||'').startsWith('functional-v1:')){(root.FunctionalContent||(typeof require==='function'&&require('./functional-content'))).validate(item);return;}
     if(item.languageFocus==='spelling'){
       const e=item.languageEvidence,block=stimulus[e?.block];
       if(block?.type!=='text'||typeof e.word!=='string')fail('la actividad de ortografía no declara su palabra.');
@@ -285,11 +287,14 @@
   }
   function forDelivery(item, profile, domain) {
     (root.LocaleContent||(typeof require==='function'&&require('./locale-content'))).validateOptions(item);
-    if (!policy.forProfile(profile)){if(item.roomSpeedTask||item.socialEvidence||/^social_perspective_/.test(item.mechanic||'')||item.interactionTask||item.photoTask||item.stimulus?.some(b=>['photo','photoPair'].includes(b?.type))||item.type==='multiSelect'||item.type==='documentReview'||item.documentPlan||item.memoryResponse==='multiple'||item.selectiveRecall||item.speedEvidence||item.planEvidence||item.mathEvidence||item.type==='memoryReveal'&&item.answerEvidence)printable(item,profile);return item;}
+    if(item?.qualityEvidence||/^functional_/.test(item?.mechanic||'')||String(item?.contentKey||'').startsWith('functional-v1:'))(root.FunctionalContent||(typeof require==='function'&&require('./functional-content'))).validate(item);
+    const annotate=()=>Object.assign(item,(root.ContentQuality||(typeof require==='function'&&require('./content-quality'))).describe(item,profile?.progress?.ageRoute||profile?.age_band||item.qualityEvidence?.age||item.ageProfile?.id||'unknown',domain||item.domain));
+    if (!policy.forProfile(profile)){if(item.roomSpeedTask||item.socialEvidence||/^social_perspective_/.test(item.mechanic||'')||item.interactionTask||item.photoTask||item.stimulus?.some(b=>['photo','photoPair'].includes(b?.type))||item.type==='multiSelect'||item.type==='documentReview'||item.documentPlan||item.memoryResponse==='multiple'||item.selectiveRecall||item.speedEvidence||item.planEvidence||item.mathEvidence||item.type==='memoryReveal'&&item.answerEvidence)printable(item,profile);annotate();return item;}
     if (domain && item?.domain !== domain) fail('el área recibida no coincide con la solicitada.');
     // Identical contract at the domain boundary, on screen and in the exporter.
     // This applies to local, remote and future cache sources alike.
     printable(item, profile);
+    annotate();
     return item;
   }
   function escape(text) { return String(text).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }

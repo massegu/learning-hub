@@ -47,6 +47,7 @@ jobs:
       - run: python tests/browser-listening-social.py
       - run: python tests/browser-privacy.py
       - run: python tests/browser-age-designs.py
+      - run: python tests/browser-content-quality.py
   publicar:
     needs: comprobar
     if: github.event_name != 'pull_request' && !inputs.verificar_solo && github.ref == 'refs/heads/desarrollo'

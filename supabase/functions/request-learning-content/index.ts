@@ -10,6 +10,9 @@ await import("./teen-review.js");
 await import("./document-library.js");
 await import("./reading-library.js");
 await import("./photo-library.js");
+await import("./content-quality.js");
+await import("./transfer-content.js");
+await import("./functional-content.js");
 await import("./curriculum.js");
 await import("./data/primary.js");
 await import("./data/middle.js");
@@ -972,6 +975,7 @@ function socialExercise(level:number){
 }
 
 function validateItem(item:any):boolean{
+  if(item?.qualityEvidence||/^functional_/.test(item?.mechanic||'')||String(item?.contentKey||'').startsWith('functional-v1:')){try{(globalThis as any).FunctionalContent.validate(item);}catch(_){return false;}}
   if(item?.roomSpeedTask){try{(globalThis as any).Curriculum.validateRoomSpeed(item);}catch(_){return false;}}
   if(item?.socialEvidence||/^social_perspective_/.test(item?.mechanic||'')){try{(globalThis as any).Curriculum.validateSocial(item);}catch(_){return false;}}
   if(item?.interactionTask||/^executive_interactive_|^attention_room_search$/.test(item?.mechanic||'')){try{(globalThis as any).Curriculum.validateInteraction(item);}catch(_){return false;}}
@@ -1174,6 +1178,8 @@ function mechanicSignature(domain:string,item:any){
 }
 
 
+function familyOf(item:any,domain:string){return (globalThis as any).ContentQuality.family(item,domain);}
+function storedMechanicSignature(domain:string,item:any){return mechanicSignature(domain,item)+'|family:'+familyOf(item,domain);}
 function photoQuestionSignature(domain:string,item:any){
   const t=item.photoTask;return t?domain+':question:'+t.kind+':'+(t.sceneId||t.pairId)+':'+item.level+':'+(t.index??t.variant??0):null;
 }
@@ -1183,7 +1189,9 @@ function generatedItems(domain:string,n:number,recentEntries:string[],factory:()
   const signatures=new WeakMap<object,string>();
   const signature=(item:any)=>{if(!signatures.has(item))signatures.set(item,contentSignature(domain,item));return signatures.get(item)!;};
   const recentItems=new Set(recentEntries.filter((x:string)=>x.includes(":item:")).slice(-360));
-  const mechanicHistory=recentEntries.filter((x:string)=>x.includes(":mechanic:")).slice(-360);
+  const mechanicHistory=recentEntries.filter((x:string)=>x.includes(":mechanic:")).slice(-360).map((x:string)=>x.split('|family:')[0]);
+  const familyHistory=recentEntries.flatMap((x:string)=>x.includes('|family:')?[x.split('|family:')[1]]:x.includes(':semantic:')?[x.split(':semantic:')[1]]:[]).slice(-24);
+  const localFamilies:string[]=[];
   const mechanicCounts=new Map<string,number>();
   for(const m of mechanicHistory) mechanicCounts.set(m,(mechanicCounts.get(m)||0)+1);
   const veryRecent=new Set(mechanicHistory.slice(-12));
@@ -1228,13 +1236,17 @@ function generatedItems(domain:string,n:number,recentEntries:string[],factory:()
       const sameFormat=previousPassage&&previousPassage.includes(':passage:document:')===Boolean(cand.passageKey?.startsWith('document:'));
       const formatPenalty=readingDomain&&sameFormat?20000:0;
       const question=photoQuestionSignature(domain,cand),questionPenalty=question&&recentEntries.includes(question)?10:0;
-      const score=itemPenalty+formatPenalty+recentPenalty+localPenalty+countPenalty+questionPenalty+Math.random();
+      const family=familyOf(cand,domain),familyWindow=[...familyHistory,...localFamilies].slice(-24);
+      const familyCount=familyWindow.filter((x:string)=>x===family).length;
+      const semanticPenalty=family==='unclassified'?0:(family===familyWindow.at(-1)?60000:0)+Math.min(30000,familyCount*5000);
+      const score=itemPenalty+formatPenalty+semanticPenalty+recentPenalty+localPenalty+countPenalty+questionPenalty+Math.random();
       if(score<bestScore){best=cand;bestScore=score;}
     }
     if(!best) break;
     const sig=signature(best), msig=mechanicSignature(domain,best);
     localItems.add(sig); localMechanics.add(msig);
     mechanicCounts.set(msig,(mechanicCounts.get(msig)||0)+1);
+    localFamilies.push(familyOf(best,domain));
     out.push(best);
   }
   return out;
@@ -2312,6 +2324,7 @@ function matrixApplied20(age:string,level:number,v:number){
 }
 
 function variantExercise(age:string,domain:string,level:number,subdomain:string|null=null,documentsOnly:boolean|null=null,photosOnly:boolean=false,interactionOnly:boolean=false,interactionKind:string|null=null){
+  if(!interactionOnly&&!photosOnly&&documentsOnly!==true&&Math.random()<.3){const functional=(globalThis as any).FunctionalContent.generate(age,domain,level,subdomain);if(functional)return {...functional,id:age+'-functional-'+crypto.randomUUID()};}
   if(interactionOnly){const item=(globalThis as any).Curriculum.generateInteractive(age,domain,level,interactionKind);return item?{...item,id:age+'-interactive-'+crypto.randomUUID()}:null;}
   const photos=(globalThis as any).PhotoLibrary;
   const photo=()=>{const item=photos.generate(age,domain,level);return item?{...item,id:age+'-photo-'+crypto.randomUUID()}:null;};
@@ -2518,7 +2531,7 @@ Deno.serve(async (req:Request)=>{
       const generated=["attention","executive","memory","speedReasoning","applied","social","language","middleLanguage","teenLanguage","division","geometry","middleMath","teenMath","reading","middleReading","english","literacy"].includes(domain);
       const sig=generated?contentSignature(domain,it):keyOf(domain,subdomain,it);
       delivery.seen[domain].push(sig);
-      if(generated) delivery.seen[domain].push(mechanicSignature(domain,it));
+      if(generated){delivery.seen[domain].push(mechanicSignature(domain,it));delivery.seen[domain].push(domain+':semantic:'+familyOf(it,domain));}
       const question=photoQuestionSignature(domain,it);if(question)delivery.seen[domain].push(question);
     }
     delivery.seen[domain]=delivery.seen[domain].slice(-450);
@@ -2530,7 +2543,7 @@ Deno.serve(async (req:Request)=>{
         profile_id:profileId,
         domain,
         item_signature:itemSig,
-        mechanic_signature:generated?mechanicSignature(domain,it):null
+        mechanic_signature:generated?storedMechanicSignature(domain,it):null
       };
     });
     if(!sessionOnly&&seenInsert.length) await admin.from("content_seen").insert(seenInsert);
@@ -2538,6 +2551,7 @@ Deno.serve(async (req:Request)=>{
   items=items.map(normalizeItem).filter(validateItem);
   if(age!=="early")items=localizeValue(items,locale);
   items=sanitizeGeneratedLanguage(items);
+  items=items.map((it:any)=>(globalThis as any).ContentQuality.annotate(it,age,it.domain||body.domain));
   const nextUsed=usedNow+cost;
   await admin.from("content_usage").upsert({user_id:user.id,usage_date:date,kind,used:nextUsed,updated_at:new Date().toISOString()},{onConflict:"user_id,usage_date,kind"});
   const nextProgress={...progress,_delivery:delivery};

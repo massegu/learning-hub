@@ -18,10 +18,10 @@ test('early Language subdomains select real grammar, spelling and phrase tasks w
 test('spelling answers bind the displayed pattern or syllables and corrupt evidence fails closed',()=>{
   for(const it of early.pool('language',3,'spelling')){
     assert.throws(()=>model.forDelivery({...it,a:it.opts.find(x=>x!==it.a)},profile('early')));
-    assert.throws(()=>model.forDelivery({...it,languageEvidence:undefined},profile('early')));
+    assert.throws(()=>model.forDelivery({...it,languageEvidence:undefined,qualityEvidence:undefined},profile('early')));
   }
-  assert.ok(early.pool('language',1,'spelling').some(it=>it.languageEvidence.segments?.length===2));
-  assert.ok(early.pool('language',3,'spelling').some(it=>it.languageEvidence.segments?.length===4));
+  assert.ok(early.pool('language',1,'spelling').some(it=>it.languageEvidence?.segments?.length===2));
+  assert.ok(early.pool('language',3,'spelling').some(it=>it.languageEvidence?.segments?.length===4));
 });
 test('missing noun icons from manual review have local printable equivalents and people require a factual caption',()=>{
   for(const label of ['la flor','el zapato','un dibujo','gato','perro','conejo','pájaro','pez']){

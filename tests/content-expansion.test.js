@@ -50,8 +50,8 @@ test('speed includes geometric, object, directional and category tasks with bala
  for(const age of ages)for(const level of [1,2,3]){
   const bank=curriculum.pool(age,'speedReasoning',level);assert.ok(bank.every(it=>it.speedRevision===4));const families=new Set(bank.map(x=>x.speedFamily));for(const f of ['figures','objects','arrows','orientation','pictograms','category'])assert.ok(families.has(f));
   if(age!=='early')for(const f of ['characters','mixed','key','match'])assert.ok(families.has(f));
-  for(const f of families){const tasks=bank.filter(it=>it.speedFamily===f);if(!['key','match'].includes(f))assert.equal(tasks.filter(it=>it.a==='Sí').length,tasks.filter(it=>it.a==='No').length,f);}
-  for(const it of bank){if(it.speedEvidence.kind==='category'){assert.equal(it.a,it.stimulus[0].items.every(value=>['gato','perro','conejo','pájaro'].includes(value))?'Sí':'No');}if(it.stimulus[0].presentation==='speedComparison'){const markup=model.interactiveStimulus(it.stimulus);assert.match(markup,/speed-series/);assert.equal((markup.match(/class="speed-series"/g)||[]).length,2);}}
+  for(const f of families){const tasks=bank.filter(it=>it.speedFamily===f);if(!['key','match','translation'].includes(f))assert.equal(tasks.filter(it=>it.a==='Sí').length,tasks.filter(it=>it.a==='No').length,f);}
+  for(const it of bank){if(it.qualityEvidence){assert.ok(require('../js/functional-content').validate(it));continue;}if(it.speedEvidence.kind==='category'){assert.equal(it.a,it.stimulus[0].items.every(value=>['gato','perro','conejo','pájaro'].includes(value))?'Sí':'No');}if(it.stimulus[0].presentation==='speedComparison'){const markup=model.interactiveStimulus(it.stimulus);assert.match(markup,/speed-series/);assert.equal((markup.match(/class="speed-series"/g)||[]).length,2);}}
  }
 });
 
