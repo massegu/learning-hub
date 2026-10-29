@@ -68,3 +68,14 @@ test('document and photo contexts follow the actual source instead of incidental
  const kitchen=photos.pool('teen','memory',1).find(x=>x.photoTask.sceneId==='kitchen');assert.equal(quality.scenario({...kitchen,q:'¿Dónde estaba el cuaderno de clase?'}),'home_routines');
  const boarding=docs.pool('teen','attention',1).find(x=>x.stimulus.some(b=>b.documentId==='boarding-es-v2'));assert.equal(quality.scenario(boarding),'transport');
 });
+test('condition and resource decisions have one factual answer and do not always favour A or the first row',()=>{
+ for(const [domain,families] of [['executive',['executive.conditions','executive.resources']],['attention',['attention.conditions']]])for(const level of [1,2,3])for(const family of families){
+  const items=functional.pool('early',domain,level).filter(x=>x.qualityDescriptor.semanticFamily===family),positions=new Set();
+  for(const item of items){
+   const table=item.stimulus.find(x=>x.type==='table'),requirements=(domain==='attention'?item.q:item.stimulus[0].text).split(': ')[1].replace(/\.$/,'').split(domain==='attention'?', ':' y ');
+   const matches=table.rows.filter(row=>requirements.every(value=>row[1].split(', ').includes(value)));
+   assert.equal(matches.length,1);assert.ok(item.a.endsWith(matches[0][0]));positions.add(table.rows.indexOf(matches[0]));
+  }
+  assert.equal(positions.size,2,family+' always favours one table row');
+ }
+});

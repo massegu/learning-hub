@@ -114,13 +114,14 @@ function pool(age,domain,level=1){
  }
  if(domain==='executive'&&age==='early'){
   for(const home of [false,true]){
-   const scenario=home?'home.routines':'school.project',label=home?'abrigo':'caja';
+   const scenario=home?'home.routines':'school.project',label=home?'abrigo':'caja',chosen=(level+(home?1:0))%2,letters=['A','B'];
    const conditions=home?['seco','de tu talla','con capucha']:['lista','con permiso','cerrada'];
-   const records=[['A',conditions.slice(0,level).join(', ')],['B',[...conditions.slice(0,Math.max(0,level-1)),home?'mojado':'abierta'].join(', ')]];
-   if(level===1)records[1][1]=home?'mojado':'sin preparar';
-   add('executive.conditions',scenario,'¿Qué '+label+' cumple lo que necesitas?',[T('Necesitas: '+conditions.slice(0,level).join(' y ')+'.'),table(records)],'La opción A',['La opción B'],{topic:'Organizar · comprobar condiciones',difficultyParameters:{rules:level}});
+   const rejected=(home?['mojado','de otra talla','sin capucha']:['sin preparar','sin permiso','abierta'])[level-1];
+   const records=[['A',conditions.slice(0,level).join(', ')],['B',[...conditions.slice(0,level-1),rejected].join(', ')]];
+   if(chosen===1)[records[0][1],records[1][1]]=[records[1][1],records[0][1]];
+   add('executive.conditions',scenario,'¿Qué '+label+' cumple lo que necesitas?',[T('Necesitas: '+conditions.slice(0,level).join(' y ')+'.'),table(records)],'La opción '+letters[chosen],['La opción '+letters[1-chosen]],{topic:'Organizar · comprobar condiciones',difficultyParameters:{rules:level}});
    const required=home?['vaso','plato','servilleta']:['papel','lápiz','goma'],need=required.slice(0,level);
-   add('executive.resources',scenario,'¿Qué opción tiene todo lo necesario?',[T('Necesitas: '+need.join(' y ')+'.'),table([['A',need.join(', ')],['B',level===1?'Solo una caja':need.slice(0,-1).join(', ')]])],'La opción A',['La opción B'],{topic:'Organizar · preparar materiales',difficultyParameters:{requiredResources:level}});
+   add('executive.resources',scenario,'¿Qué opción tiene todo lo necesario?',[T('Necesitas: '+need.join(' y ')+'.'),table(letters.map((letter,i)=>[letter,i===chosen?need.join(', '):level===1?'Solo una caja':need.slice(0,-1).join(', ')]))],'La opción '+letters[chosen],['La opción '+letters[1-chosen]],{topic:'Organizar · preparar materiales',difficultyParameters:{requiredResources:level}});
    const updates=home?[
     ['Ibas a dibujar. No queda papel. Ahora toca jugar con bloques.','¿Qué debes preparar ahora?','Los bloques',['El papel para dibujar']],
     ['Ibas a dibujar con lápices. No queda papel. Los bloques están guardados y disponibles.','¿Qué puedes usar sin buscar papel?','Los bloques',['Los lápices para dibujar']],
@@ -259,9 +260,9 @@ function pool(age,domain,level=1){
  }
 
  if(domain==='attention'&&age==='early')for(const home of [false,true]){
-  const sc=home?'home.snack':'school.materials',names=home?['Botella A','Botella B']:['Caja A','Caja B'];
+  const sc=home?'home.snack':'school.materials',names=home?['Botella A','Botella B']:['Caja A','Caja B'],chosen=(level+(home?1:0))%2;
   const wanted=home?['llena','con tapa','limpia']:['lista','cerrada','pequeña'];
-  add('attention.conditions',sc,'Elige la opción que tenga: '+wanted.slice(0,level).join(', ')+'.',[table([[names[0],wanted.slice(0,level).join(', ')],[names[1],level===1?'Vacía':wanted.slice(0,level-1).join(', ')]])],names[0],[names[1]],{ageProfile:{id:'early',revision:1,context:'school',mechanic:'matching',family:'functional-attention.conditions'},topic:'Atención · comprobar condiciones',difficultyParameters:{rules:level}});
+  add('attention.conditions',sc,'Elige la opción que tenga: '+wanted.slice(0,level).join(', ')+'.',[table(names.map((name,i)=>[name,i===chosen?wanted.slice(0,level).join(', '):[...wanted.slice(0,level-1),(home?['vacía','sin tapa','sucia']:['sin preparar','abierta','grande'])[level-1]].join(', ')]))],names[chosen],[names[1-chosen]],{ageProfile:{id:'early',revision:1,context:'school',mechanic:'matching',family:'functional-attention.conditions'},topic:'Atención · comprobar condiciones',difficultyParameters:{rules:level}});
   const values=(home?['Pan','Leche','Fruta','Agua']:['Papel','Lápiz','Goma','Regla']).slice(0,level+1),target=values[1],remaining=values.filter(x=>x!==target);
   add('attention.omission',sc,'¿Qué falta en la lista 2?',[table([['Lista 1',values.join(', ')],['Lista 2',(level===3?[...remaining].reverse():remaining).join(', ')]])],target,[values[0],...(values[2]?[values[2]]:[])],{ageProfile:{id:'early',revision:1,context:'school',mechanic:'matching',family:'functional-attention.omission'},topic:'Atención · comparar listas',difficultyParameters:{elements:values.length,reordered:level===3},why:target+' aparece en la lista 1. Falta en la lista 2.'});
   const optionNames=home?['Plato A','Plato B','Plato C']:['Caja A','Caja B','Caja C'];

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "sourceDigest": "d5af26c27f17245381a0",
+  "sourceDigest": "ee8e7d30ea9d9f58520e",
   "taxonomyDigest": "951e7dd0bb1319ff1793",
-  "revision": "f5b144beff3749da53c57db3351a94bfb5151435",
+  "revision": "1a7361601c796d91e30643389cae06fd4d58a5b3",
   "mode": "working-tree",
   "seed": 73,
   "method": "Finite public banks plus 80 seeded legacy samples per level and focus. Exact duplicates exclude IDs and distractors within each level; exactVisibleActivities also deduplicates across levels and unchangedAcrossLevels flags sources repeated at different levels. Near-duplicates are review groups, not automatic deletions. Selection exposure is a controlled simulation of 12 deliveries at each of L1/L2/L3, preserving history. Ages 6–7 use the actual local selector; other ages use the backend selector over the known bank; it is not real-user telemetry or an estimate of all production traffic.",
@@ -12150,7 +12150,7 @@
             ],
             [
               "Botella B",
-              "Vacía"
+              "vacía"
             ]
           ]
         }
@@ -12282,7 +12282,7 @@
       "domain": "executive",
       "level": 1,
       "q": "¿Qué opción tiene todo lo necesario?",
-      "answer": "La opción A",
+      "answer": "La opción B",
       "source": [
         {
           "type": "text",
@@ -12293,11 +12293,11 @@
           "rows": [
             [
               "A",
-              "papel"
+              "Solo una caja"
             ],
             [
               "B",
-              "Solo una caja"
+              "papel"
             ]
           ]
         }
@@ -12446,7 +12446,7 @@
       "domain": "executive",
       "level": 1,
       "q": "¿Qué caja cumple lo que necesitas?",
-      "answer": "La opción A",
+      "answer": "La opción B",
       "source": [
         {
           "type": "text",
@@ -12457,11 +12457,11 @@
           "rows": [
             [
               "A",
-              "lista"
+              "sin preparar"
             ],
             [
               "B",
-              "sin preparar"
+              "lista"
             ]
           ]
         }
