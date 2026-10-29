@@ -147,8 +147,14 @@ function family(it,domain){
 }
 function scenario(it){
  if(it.qualityDescriptor?.scenarioFamily)return it.qualityDescriptor.scenarioFamily;
+ // Resolve the reviewed source title first: an object in a kitchen does not
+ // turn the whole photograph into a school scene.
+ const names=[];
+ for(const block of it.stimulus||[]){if(block.type==='document'){const doc=root.DocumentLibrary?.get(block.documentId);if(doc)names.push(doc.title,doc.kind);}if(block.type==='photo'&&root.PhotoLibrary?.scenes?.[block.photoId])names.push(root.PhotoLibrary.scenes[block.photoId].title);}
+ const photo=it.photoTask;if(photo&&root.PhotoLibrary){const id=photo.sceneId||root.PhotoLibrary.pairs?.[photo.pairId]?.sceneId;if(root.PhotoLibrary.scenes[id])names.push(root.PhotoLibrary.scenes[id].title);}
  const text=norm([it.topic,it.q,it.scenario,it.text,JSON.stringify(it.stimulus||[])].join(' '));
- for(const [id,re] of [['transport',/vuelo|embarque|aeropuerto|autobus|tren|trayecto/],['shopping',/compra|precio|ticket|factura|tienda|catalogo|pedido/],['school',/clase|aula|colegio|recreo|cuaderno|estuche|escolar/],['digital_communication',/mensaje|correo|video|pantalla|chat|publicacion/],['sports_leisure',/partido|balon|deporte|cine|taller|juego|museo/],['home_routines',/casa|cocina|merienda|mochila|habitacion/],['community',/biblioteca|parque|plaza|oficina/],['nature',/arbol|planta|animal|bosque|lago/]])if(re.test(text))return id;
+ const rules=[['transport',/vuelo|embarque|aeropuerto|autobus|tren|trayecto|estacion/],['shopping',/compra|precio|ticket|factura|tienda|catalogo|pedido|menu|restaurante|cafeteria/],['school',/clase|aula|colegio|recreo|cuaderno|estuche|escolar/],['digital_communication',/mensaje|correo|video|pantalla|chat|publicacion/],['sports_leisure',/partido|balon|deporte|cine|taller|juego|museo|picnic/],['home_routines',/casa|cocina|merienda|mochila|habitacion|sala de estar|salon/],['community',/biblioteca|parque|plaza|oficina/],['nature',/arbol|planta|animal|bosque|lago/]];
+ for(const source of [norm(names.join(' ')),text])for(const [id,re] of rules)if(re.test(source))return id;
  return 'abstract_pattern';
 }
 function describe(it,age,domain=it.domain){
@@ -157,7 +163,7 @@ function describe(it,age,domain=it.domain){
  const text=blocks.filter(b=>b.type==='text').map(b=>b.text).join(' ');
  return {mechanic:it.mechanic||it.ageProfile?.mechanic||it.type||'unknown',semanticFamily,scenarioFamily:scenario(it),stimulusType,
   functionalPurpose:entry?.functionalPurpose||null,
-  difficultyProfile:{level:Number(it.level)||1,age,primaryDimension:entry?.difficultyDimension||'unreviewed',elements:it.memoryContent?.length||blocks.reduce((n,b)=>n+(b.items?.length||b.rows?.length||0),0),steps:it.answer?.length||0,sourceWords:norm(text).split(' ').filter(Boolean).length,requiresInference:entry?.difficultyDimension==='inference',timed:it.speedTask===true,exposureMs:it.revealMs||null,distractors:Math.max(0,(it.opts?.length||1)-1),transformation:it.recallEvidence?.reverse?'reverse':it.recallEvidence?.takeLast?'recent':it.selectiveRecall?'selective':null},
+  difficultyProfile:{level:Number(it.level)||1,age,primaryDimension:entry?.difficultyDimension||'unreviewed',parameters:it.difficultyParameters||null,elements:it.memoryContent?.length||blocks.reduce((n,b)=>n+(b.items?.length||b.rows?.length||0),0),steps:it.answer?.length||0,sourceWords:norm(text).split(' ').filter(Boolean).length,requiresInference:entry?.difficultyDimension==='inference',timed:it.speedTask===true,exposureMs:it.revealMs||null,distractors:Math.max(0,(it.opts?.length||1)-1),transformation:it.recallEvidence?.reverse?'reverse':it.recallEvidence?.takeLast?'recent':it.selectiveRecall?'selective':null},
   taxonomyVersion:1};
 }
 function annotate(it,age,domain){return it?{...it,...describe(it,age,domain)}:it;}

@@ -7,7 +7,8 @@ Inventarios sintéticos reproducibles: [antes](content-quality-before.json), [de
 - Áreas/franjas auditadas: 44. Por debajo de ocho familias: 18 → 0.
 - Repeticiones consecutivas de familia: 226 → 0, en 1.584 entregas por versión.
 - Familias sin clasificación: 0 actividades.
-- Combinaciones familia/franja con menos de dos contextos reconocidos: 216. Este requisito sigue pendiente de revisión editorial.
+- Banco funcional nuevo: 0 familias sin dos contextos; 0 fuentes sin cambios entre niveles.
+- Combinaciones familia/franja con menos de dos contextos reconocidos: 169. Este requisito sigue pendiente de revisión editorial.
 
 ## Método y alcance
 
@@ -28,7 +29,7 @@ El selector de 6–7 evita las dos familias más recientes cuando hay opciones y
 | 6–7 | division | 5 → 8 | 0 → 0 | 25% |
 | 6–7 | reading | 2 → 8 | 0 → 0 | 25% |
 | 6–7 | attention | 5 → 8 | 1 → 0 | 25% |
-| 6–7 | executive | 4 → 8 | 7 → 0 | 33% |
+| 6–7 | executive | 4 → 8 | 7 → 0 | 17% |
 | 6–7 | memory | 6 → 8 | 1 → 0 | 33% |
 | 6–7 | speedReasoning | 5 → 8 | 11 → 0 | 17% |
 | 8–10 | social | 5 → 9 | 1 → 0 | 17% |
@@ -44,25 +45,25 @@ El selector de 6–7 evita las dos familias más recientes cuando hay opciones y
 | 10–12 | language | 10 → 10 | 7 → 0 | 17% |
 | 10–12 | division | 6 → 8 | 1 → 0 | 17% |
 | 10–12 | english | 4 → 9 | 2 → 0 | 17% |
-| 10–12 | literacy | 16 → 16 | 4 → 0 | 42% |
+| 10–12 | literacy | 16 → 16 | 4 → 0 | 50% |
 | 10–12 | attention | 8 → 8 | 26 → 0 | 25% |
 | 10–12 | executive | 8 → 8 | 5 → 0 | 25% |
-| 10–12 | memory | 9 → 9 | 0 → 0 | 17% |
+| 10–12 | memory | 9 → 9 | 0 → 0 | 25% |
 | 10–12 | speedReasoning | 11 → 11 | 6 → 0 | 17% |
 | 13–15 | social | 4 → 9 | 11 → 0 | 25% |
-| 13–15 | middleLanguage | 10 → 10 | 7 → 0 | 25% |
+| 13–15 | middleLanguage | 10 → 10 | 7 → 0 | 17% |
 | 13–15 | middleMath | 6 → 8 | 0 → 0 | 17% |
-| 13–15 | english | 4 → 9 | 2 → 0 | 17% |
-| 13–15 | literacy | 18 → 18 | 2 → 0 | 42% |
+| 13–15 | english | 4 → 9 | 2 → 0 | 25% |
+| 13–15 | literacy | 18 → 18 | 2 → 0 | 50% |
 | 13–15 | attention | 8 → 8 | 22 → 0 | 25% |
 | 13–15 | executive | 8 → 8 | 2 → 0 | 25% |
-| 13–15 | memory | 9 → 9 | 1 → 0 | 25% |
+| 13–15 | memory | 9 → 9 | 1 → 0 | 17% |
 | 13–15 | speedReasoning | 11 → 11 | 7 → 0 | 17% |
 | 16–18 | teenLanguage | 10 → 10 | 4 → 0 | 17% |
 | 16–18 | teenMath | 6 → 8 | 2 → 0 | 17% |
 | 16–18 | social | 10 → 10 | 4 → 0 | 17% |
-| 16–18 | english | 0 → 9 | 0 → 0 | 11% |
-| 16–18 | literacy | 16 → 16 | 6 → 0 | 50% |
+| 16–18 | english | 0 → 9 | 0 → 0 | 17% |
+| 16–18 | literacy | 16 → 16 | 6 → 0 | 42% |
 | 16–18 | attention | 9 → 9 | 17 → 0 | 25% |
 | 16–18 | executive | 8 → 8 | 1 → 0 | 25% |
 | 16–18 | memory | 9 → 9 | 0 → 0 | 17% |
@@ -99,48 +100,62 @@ Los nuevos ejemplos de medida cambian el origen, la traducción de claves pasa d
 |---|---|---|---|
 | 6–7 | social | social.boundary | ¿Qué respeta su petición? |
 | 6–7 | language | language.context_meaning | ¿Qué significa «seco» en esta frase? |
-| 6–7 | division | math.order | ¿Qué número queda en medio al ordenarlos? |
+| 6–7 | division | math.order | ¿Qué número queda en medio de menor a mayor? |
 | 6–7 | reading | reading.literal | ¿Qué piezas pone abajo? |
 | 6–7 | attention | attention.exact_match | Mira el modelo. ¿Cuál es igual? |
 | 6–7 | executive | executive.resume | ¿Qué paso toca ahora? |
 | 6–7 | memory | memory.spatial | Mira dónde está cada imagen. Después taparemos el cuadro. |
-| 6–7 | speedReasoning | speed.translation | Cambia cada figura por su letra. Mantén el orden. |
+| 6–7 | speedReasoning | speed.translation | Cambia las figuras por números. Mantén el orden. |
 | 8–10 | social | social.perspective | ¿Qué sabe Nora con seguridad? |
 | 8–10 | language | language.connectors | Completa con el enlace que conserva la relación entre las ideas. |
 | 8–10 | division | math.missing_value | ¿Qué número hace verdadera la igualdad? |
-| 8–10 | reading | reading.inference | ¿Por qué usan hojas del mismo tamaño? |
-| 8–10 | attention | attention.visual_changes | Marca el objeto que cambia de roja a verde. |
+| 8–10 | reading | reading.document_purpose | ¿Qué permite comparar este catálogo? |
+| 8–10 | attention | attention.exact_match | ¿Qué código coincide con el modelo? |
 | 8–10 | executive | executive.resources | ¿Qué opción cumple todas las condiciones? |
-| 8–10 | memory | memory.serial | Mira la secuencia. Después repetirás el orden. |
+| 8–10 | memory | memory.selective | Mira todas las imágenes. Después recordarás solo una categoría. |
 | 8–10 | speedReasoning | speed.translation | Traduce todos los códigos en el orden mostrado. |
-| 10–12 | social | social.cooperation | ¿Qué acuerdo permite colaborar? |
-| 10–12 | geometry | geometry.symmetry | Un punto está a 4 cuadros a la izquierda del espejo. ¿Dónde queda su reflejo? |
-| 10–12 | language | language.agreement | Elige el verbo que completa la frase. Fíjate en cómo empieza. |
-| 10–12 | division | math.data | ¿Cuál es la puntuación más alta? |
-| 10–12 | english | english.location | Where are the scissors? |
-| 10–12 | literacy | reading.document_purpose | ¿Para qué sirve esta tarjeta? |
-| 10–12 | attention | attention.position | ¿Qué aparece justo después del segundo objeto? |
-| 10–12 | executive | executive.conditions | El grupo eligió el paquete C. ¿Es correcta la decisión? |
-| 10–12 | memory | memory.serial | Mira la secuencia. Después repetirás el orden. |
-| 10–12 | speedReasoning | speed.pairs | ¿Cuántas parejas son exactamente iguales? |
-| 13–15 | social | social.emotion | ¿Qué pista te dice cómo se siente? |
-| 13–15 | middleLanguage | language.agreement | Completa con el verbo que concuerda con el sujeto. |
+| 10–12 | social | social.boundary | ¿Qué respeta su petición? |
+| 10–12 | geometry | math.area | ¿Cuál es el perímetro del rectángulo? |
+| 10–12 | language | language.context_meaning | ¿Qué significa «transparente» en esta frase? |
+| 10–12 | division | math.missing_value | ¿Qué número hace verdadera la igualdad? |
+| 10–12 | english | english.inference | Which task is Jo preparing for? |
+| 10–12 | literacy | reading.document_purpose | ¿Para qué puede usarse este plano? |
+| 10–12 | attention | attention.visual_changes | Marca el objeto que cambia de azul a roja. |
+| 10–12 | executive | executive.conditions | El grupo eligió el paquete A. ¿Es correcta la decisión? |
+| 10–12 | memory | memory.scene | Observa la imagen. Después desaparecerá y responderás una pregunta. |
+| 10–12 | speedReasoning | speed.match | ¿Qué opción es idéntica al modelo? |
+| 13–15 | social | social.context | ¿Qué ha pedido Noa? |
+| 13–15 | middleLanguage | language.spelling | Reconstruye la copia manteniendo la palabra modelo. |
 | 13–15 | middleMath | math.equations | ¿Qué valor de x hace verdadera la igualdad? |
-| 13–15 | english | english.connector | Choose the connector for the stated relationship. |
-| 13–15 | literacy | reading.document_purpose | ¿A quién se dirige este folleto? |
-| 13–15 | attention | attention.visual_changes | Marca el objeto que cambia de roja a morada. |
-| 13–15 | executive | executive.time | ¿Cabe el plan completo en el tiempo disponible? |
-| 13–15 | memory | memory.scene | Observa la imagen. Después desaparecerá y responderás una pregunta. |
-| 13–15 | speedReasoning | speed.search | ¿Cuántas veces aparece △? |
-| 16–18 | teenLanguage | language.sentence_order | Ordena los fragmentos para formar una frase. Sigue el orden de las pistas. |
-| 16–18 | teenMath | math.probability | ¿Qué fracción expresa la probabilidad de sacar una ficha roja? |
-| 16–18 | social | social.context | ¿Qué dos hechos conviene distinguir? |
-| 16–18 | english | english.time | How many minutes early are you? |
-| 16–18 | literacy | reading.document_purpose | ¿Cuál es la novedad principal del correo? |
-| 16–18 | attention | attention.document_lookup | ¿A qué temperatura hay que precalentar el horno? |
-| 16–18 | executive | executive.conditions | ¿Qué paquete se puede enviar? |
-| 16–18 | memory | memory.scene | Observa la imagen. Después desaparecerá y responderás una pregunta. |
-| 16–18 | speedReasoning | speed.match | ¿Qué opción es idéntica al modelo? |
+| 13–15 | english | english.location | Where is the report at the end? |
+| 13–15 | literacy | reading.document_purpose | ¿Para qué puede usarse este plano? |
+| 13–15 | attention | attention.exact_match | ¿Qué código coincide con todas las posiciones del modelo? |
+| 13–15 | executive | executive.plan | Ordena las acciones para cumplir el objetivo. Consulta las condiciones del documento. |
+| 13–15 | memory | memory.selective | Mira todas las imágenes. Después recordarás solo una categoría. |
+| 13–15 | speedReasoning | speed.translation | Traduce todos los códigos en el orden mostrado. |
+| 16–18 | teenLanguage | language.context_meaning | ¿Qué significa «mitigar» en esta frase? |
+| 16–18 | teenMath | math.average | ¿Cuál es la media de puntos? |
+| 16–18 | social | social.intent | ¿Qué te están pidiendo? |
+| 16–18 | english | english.intent | Where should you leave the key? |
+| 16–18 | literacy | reading.document_purpose | ¿Qué servicio anuncia este cartel? |
+| 16–18 | attention | attention.conditions | ¿A qué hora pasa la línea A por Parque? |
+| 16–18 | executive | executive.time | ¿Cabe el plan completo en el tiempo disponible? |
+| 16–18 | memory | memory.spatial | Mira dónde está cada imagen. Después taparemos el cuadro. |
+| 16–18 | speedReasoning | speed.compare | ¿Son iguales? |
+
+## Ejemplos de progresión revisada
+
+| Edad | Familia | Contexto | L1 | L2 | L3 |
+|---|---|---|---|---|---|
+| 6–7 | attention.omission | school.materials | ¿Qué falta en la lista 2? Lista 1 / Papel, Lápiz / Lista 2 / Papel Respuesta: Lápiz | ¿Qué falta en la lista 2? Lista 1 / Papel, Lápiz, Goma / Lista 2 / Papel, Goma Respuesta: Lápiz | ¿Qué falta en la lista 2? Lista 1 / Papel, Lápiz, Goma, Regla / Lista 2 / Regla, Goma, Papel Respuesta: Lápiz |
+| 6–7 | executive.conditions | school.project | ¿Qué caja cumple lo que necesitas? Necesitas: lista. A / lista / B / sin preparar Respuesta: La opción A | ¿Qué caja cumple lo que necesitas? Necesitas: lista y con permiso. A / lista, con permiso / B / lista, abierta Respuesta: La opción A | ¿Qué caja cumple lo que necesitas? Necesitas: lista y con permiso y cerrada. A / lista, con permiso, cerrada / B / lista, con permiso, abierta Respuesta: La opción A |
+| 6–7 | executive.update | school.project | ¿Dónde debes preparar el juego? Ibas a jugar fuera. Ahora llueve. El juego pasa dentro. Respuesta: Dentro | ¿Dónde puedes preparar el juego? Llueve. El juego pasa dentro. La sala grande está ocupada. La pequeña está libre. Respuesta: En la sala pequeña | ¿Qué dato falta para elegir la sala pequeña? Llueve. El juego pasa dentro. La sala grande está ocupada. La pequeña cierra pronto. Respuesta: Si da tiempo a terminar |
+| 6–7 | math.measure | school.materials | ¿Cuánto mide el lápiz? El lápiz empieza en 0 cm y termina en 3 cm. Respuesta: 3 cm | ¿Cuánto mide el lápiz? El lápiz empieza en 2 cm y termina en 6 cm. Respuesta: 4 cm | ¿Cuánto mide el lápiz? El lápiz empieza en 3 cm y termina en 8 cm. Respuesta: 5 cm |
+| 6–7 | reading.follow_instruction | school.materials | ¿Dónde debes guardarlo? La nota dice: «Guarda el lápiz dentro del estuche». Respuesta: Dentro del estuche | ¿Qué debes hacer antes de guardar el cuaderno? La nota dice: «Primero cierra el estuche. Después guarda el cuaderno». Respuesta: Cerrar el estuche | ¿Qué debes hacer ahora? La nota dice: «Si el dibujo está seco, guárdalo. Si está mojado, espera». Está mojado. Respuesta: Esperar |
+| 6–7 | language.sentence_order | school.routines | Forma la frase. Empieza por «La». La / niña / dibuja Respuesta: La → niña → dibuja | Ordena: quién, qué hace, dónde. La niña / dibuja / en clase Respuesta: La niña → dibuja → en clase | Ordena: quién, qué no hace, cuándo. La niña / no dibuja / antes de comer Respuesta: La niña → no dibuja → antes de comer |
+| 6–7 | speed.translation | school.materials | Cambia las figuras por números. Mantén el orden. ○ / 1 Secuencia: ○ La secuencia indica qué armarios abrir. Respuesta: 1 | Cambia las figuras por números. Mantén el orden. ○ / 1 / □ / 2 Secuencia: □ ○ La secuencia indica qué armarios abrir. Respuesta: 2 1 | Cambia las figuras por números. Mantén el orden. ○ / 1 / □ / 2 / △ / 3 Secuencia: △ □ ○ La secuencia indica qué armarios abrir. Respuesta: 3 2 1 |
+| 10–12 | geometry.perimeter | community.garden | ¿Cuánta cinta necesitas para rodear el borde indicado? Señalas un huerto rectangular de 4 por 4 metros. Rodea los cuatro lados completos. Respuesta: 16 m | ¿Cuánta cinta necesitas para rodear el borde indicado? Señalas un huerto rectangular de 6 por 4 metros. Rodea los cuatro lados completos. Respuesta: 20 m | ¿Cuánta cinta necesitas para rodear el borde indicado? Señalas un huerto rectangular de 6 por 4 metros. Deja una abertura de 2 metros sin cinta. Respuesta: 18 m |
+| 16–18 | english.time | school.club | How many minutes early are you? The club starts at 4:00. You arrive at 3:50. Respuesta: 10 minutes | How many minutes early are you? The club starts at 4:15. You arrive at 3:55. Respuesta: 20 minutes | What is the latest time to leave and arrive at the start? The club starts at 4:15. Walking takes 20 minutes. Respuesta: 3:55 |
 
 ## Comprobaciones y revisión visual
 
@@ -151,11 +166,12 @@ La suite de Node, las nueve pruebas Python, los 14 recorridos de navegador exist
 ## Límites y revisión pendiente
 
 - El mínimo de ocho familias se comprueba sobre los tres niveles y los focos del dominio, no en cada nivel ni en cada pestaña. El objetivo deseable de 12–15 no se alcanza en todas las áreas.
-- Varias familias nuevas mantienen la misma fuente entre niveles: orden de frases, lectura concreta, tareas sociales de casa y planificación básica de 6–7. La selección no las presenta como una fuente nueva por cambiar el nivel. Falta graduarlas con más situaciones antes de afirmar una progresión completa.
+- La revisión de la PR añade al menos dos contextos por familia nueva y elimina fuentes idénticas entre sus niveles disponibles. Se comprueba en tests sobre todo el banco funcional. Los niveles varían condiciones, pasos, relaciones, referencias o transformaciones; no solo longitud de texto.
+- El banco histórico conserva familias abstractas y fuentes compartidas entre niveles. Sus avisos se mantienen separados de los del banco nuevo: no se han borrado del inventario ni se presentan como variedad adicional.
 - La cobertura de contextos usa reglas conservadoras sobre la fuente y etiquetas editoriales. Una etiqueta distinta no prueba transferencia; requiere revisión humana. Las familias abstractas no se cuentan como varios contextos.
 - Los near-duplicates son grupos de revisión, no errores automáticos: dos preguntas distintas pueden compartir una fuente legítimamente.
 - La evidencia canónica impide cambiar la fuente o la respuesta de las tareas nuevas y los validadores existentes continúan activos. Esto no demuestra por sí solo que todo distractor legacy sea plausible o que toda pregunta de inferencia admita una única interpretación.
-- Los avisos de carga lectora del inventario deben revisarse editorialmente; no se han elevado los umbrales para esconderlos.
+- Se han simplificado las instrucciones de supervisión, condiciones y recursos de 8–10 sin eliminar las condiciones necesarias. El inventario sigue aplicando el mismo límite de carga lectora.
 - Se mantienen Calma, Impulso, iconos, fotos y documentos. No se añade telemetría, nuevas tablas ni motor adaptativo.
 - No publicar ni fusionar automáticamente. La revisión en Cloudflare requiere una vista previa de esta rama y backend compatible; las pruebas locales no acreditan un despliegue remoto.
 

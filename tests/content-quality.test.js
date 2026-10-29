@@ -32,3 +32,39 @@ test('reproducible inventory covers all visible age/domain cells and detects con
  for(const row of after.rows){assert.ok(row.semanticFamilies>=8,row.age+'/'+row.domain);assert.ok(row.contextCoverageReview);for(const session of row.sessions)assert.ok(session.dominantShare<=.5,row.age+'/'+row.domain);}
  const repeats=data=>data.rows.reduce((n,r)=>n+r.consecutiveSameFamily,0);assert.ok(repeats(after)<repeats(before)/2);
 });
+test('each functional family has two authored settings and no unchanged source between available levels',()=>{
+ for(const age of ['early','junior','primary','middle','teen'])for(const domain of ['language','division','middleMath','teenMath','geometry','reading','attention','executive','memory','speedReasoning','social','english']){
+  const families=new Map(),sources=new Map();
+  for(const level of [1,2,3])for(const item of functional.pool(age,domain,level)){
+   const family=item.qualityDescriptor.semanticFamily,setting=item.qualityDescriptor.scenarioFamily.split('.')[0];
+   if(!families.has(family))families.set(family,new Set());families.get(family).add(setting);
+   const source=JSON.stringify([family,item.q,item.stimulus,item.a,item.answer]);
+   assert.ok(!sources.has(source)||sources.get(source)===level,age+'/'+domain+'/'+family+' repeats across levels');sources.set(source,level);
+  }
+  for(const [family,settings] of families)assert.ok(settings.size>=2,age+'/'+domain+'/'+family+' lacks independent contexts');
+ }
+});
+test('difficulty increases the actual task demand and keeps junior executive reading bounded',()=>{
+ const get=(domain,level,family)=>functional.pool('early',domain,level).find(x=>x.qualityDescriptor.semanticFamily===family);
+ assert.deepEqual([1,2,3].map(l=>get('executive',l,'executive.conditions').difficultyParameters.rules),[1,2,3]);
+ assert.deepEqual([1,2,3].map(l=>get('attention',l,'attention.omission').difficultyParameters.elements),[2,3,4]);
+ assert.deepEqual([1,2,3].map(l=>get('speedReasoning',l,'speed.translation').difficultyParameters.lookups),[1,2,3]);
+ assert.ok(get('division',2,'math.measure').difficultyParameters.origin>0);
+ for(const level of [1,2,3])for(const item of curriculum.pool('junior','executive',level))assert.ok(!quality.issues(item,'junior','executive').includes('secondary-reading-load-review'),item.q);
+ const item=get('executive',3,'executive.conditions');item.difficultyParameters.rules=1;assert.throws(()=>functional.validate(item));
+});
+test('money answers derive independently from visible denominations and fares',()=>{
+ for(const age of ['early','junior','primary','middle','teen'])for(const level of [1,2,3]){
+  const domain=age==='teen'?'teenMath':age==='middle'?'middleMath':'division';
+  for(const item of functional.pool(age,domain,level).filter(x=>x.qualityDescriptor.semanticFamily==='math.money')){
+   const values=item.stimulus.find(x=>x.type==='list').items.map(x=>Number(x.replace(' €',''))),total=values.reduce((a,b)=>a+b,0);
+   if(item.qualityDescriptor.scenarioFamily==='home.savings')assert.equal(item.a,total+' €');
+   else{const fareText=item.stimulus.at(-1).text,fare=Number(fareText.match(/cuesta (\d+) €/)[1]),tickets=fareText.includes('dos billetes')?2:1;assert.equal(item.a,(total-fare*tickets)+' €');}
+  }
+ }
+});
+test('document and photo contexts follow the actual source instead of incidental objects',()=>{
+ const photos=require('../js/photo-library'),docs=require('../js/document-library');
+ const kitchen=photos.pool('teen','memory',1).find(x=>x.photoTask.sceneId==='kitchen');assert.equal(quality.scenario({...kitchen,q:'¿Dónde estaba el cuaderno de clase?'}),'home_routines');
+ const boarding=docs.pool('teen','attention',1).find(x=>x.stimulus.some(b=>b.documentId==='boarding-es-v2'));assert.equal(quality.scenario(boarding),'transport');
+});

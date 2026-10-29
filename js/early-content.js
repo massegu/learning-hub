@@ -245,7 +245,8 @@
     const recent = [...history.mechanics];
     const recentFamilies = [...(history.families || [])];
     const quality=root.ContentQuality||(typeof require==='function'&&require('./content-quality'));
-    const familyOf=it=>{const family=quality.describe(it,'early',it.domain).semanticFamily;return family==='unclassified'?it.ageProfile.family:family;};
+    const familyCache=new WeakMap();
+    const familyOf=it=>{if(!familyCache.has(it)){const family=quality.family(it,it.domain);familyCache.set(it,family==='unclassified'?it.ageProfile.family:family);}return familyCache.get(it);};
     const recentPassages=[...(history.passages||[])];
     const chosen = [];
     const pools = new Map(domains.map(d => [d, pool(d, level,subdomain).filter(it=>!accept || accept(it,d))]));

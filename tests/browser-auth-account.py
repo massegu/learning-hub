@@ -34,7 +34,7 @@ try:
   assert page.locator('#profileSelect').input_value()=='early'
   assert page.evaluate("localStorage.getItem('lh_current_profile')")=='early'
   workspace(page).locator('#navMenu [data-subject=language]').click()
-  page.wait_for_selector('#exerciseOptions .option-btn')
+  page.wait_for_selector('#exerciseOptions .option-btn, #orderCheck')
   page.locator('#changePasswordBtn').click();assert page.locator('#passwordDialog').is_visible()
   page.locator('#newPassword').fill('ClaveNueva123!');page.locator('#repeatPassword').fill('Distinta123!');page.locator('#savePassword').click()
   assert 'no coinciden' in page.locator('#passwordMessage').inner_text();assert page.evaluate('__changes.length')==0

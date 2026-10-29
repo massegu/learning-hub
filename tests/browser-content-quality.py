@@ -13,13 +13,16 @@ try:
   page.evaluate('''()=>{const old=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return old(it,...args)}}''')
   # Force one reviewed source through the actual younger local adapter.
   workspace(page).locator('#profileSelect').select_option('early')
-  page.evaluate('''()=>{const original=EarlyContent.adaptResponse;window.__restoreSelect=()=>EarlyContent.adaptResponse=original;EarlyContent.adaptResponse=(response,payload,profile,options)=>original(response,payload,profile,payload.domain==='attention'?{accept:it=>it.qualityDescriptor?.semanticFamily==='attention.omission'}:options)}''')
+  page.evaluate('''()=>{const original=EarlyContent.adaptResponse;window.__restoreSelect=()=>EarlyContent.adaptResponse=original;EarlyContent.adaptResponse=(response,payload,profile,options)=>original(response,payload,profile,payload.domain==='attention'?{accept:it=>it.qualityDescriptor?.semanticFamily==='attention.omission'}:payload.domain==='language'?{accept:it=>it.qualityDescriptor?.semanticFamily==='language.sentence_order'}:options)}''')
   workspace(page).locator('#navMenu [data-subject=attention]').click();page.wait_for_function('()=>window.__current?.qualityEvidence?.age==="early"&&document.querySelector("#exercisePrompt").textContent===__current.q')
   assert 'lista 2' in page.locator('#exercisePrompt').inner_text()
   page.locator('[data-answer]').evaluate_all('(els,a)=>els.find(e=>e.dataset.answer===a).click()',page.evaluate('__current.a'))
   assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
   page.set_viewport_size({'width':390,'height':844});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
-  page.locator('#exercise').screenshot(path='/tmp/content-quality-early.png');page.evaluate('__restoreSelect()')
+  page.locator('#exercise').screenshot(path='/tmp/content-quality-early.png')
+  page.set_viewport_size({'width':1280,'height':1000});workspace(page).locator('#navMenu [data-subject=language]').click();page.wait_for_selector('#orderCheck')
+  for token in page.evaluate('__current.answer'):page.get_by_role('button',name=token,exact=True).click()
+  page.locator('#orderCheck').click();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class');page.evaluate('__restoreSelect()')
   page.set_viewport_size({'width':1280,'height':1000});workspace(page).locator('#profileSelect').select_option('teen')
   page.evaluate('''()=>{window.__fixture=FunctionalContent.pool('teen','english',3).find(it=>it.qualityDescriptor.semanticFamily==='english.sequence');LearningAPI.requestContent=async()=>({items:[structuredClone(__fixture)],usage:{used:2,limit:500}})}''')
   workspace(page).locator('#navMenu [data-subject=english]').click();page.wait_for_function('()=>window.__current?.qualityEvidence?.age==="teen"&&document.querySelector("#exercisePrompt").textContent===__current.q')
@@ -32,5 +35,5 @@ try:
   file=Path(tmp)/'functional.docx';dl.value.save_as(file)
   with zipfile.ZipFile(file) as z:
    xml=z.read('word/document.xml').decode();assert 'before cutting' in xml;assert 'Wash the fruit' in xml
-  assert not errors,errors;browser.close();print('PASS: reviewed early source through local adapter, teen English through API, correct grading, 390px and matching DOCX source')
+  assert not errors,errors;browser.close();print('PASS: reviewed early choice and word order through local adapter, teen English through API, correct grading, 390px and matching DOCX source')
 finally:server.shutdown();server.server_close()
