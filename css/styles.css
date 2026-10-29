@@ -3026,3 +3026,29 @@ body {
 .processing-sources{max-width:48rem;margin:auto}.processing-sources.two-keys{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}.processing-sources .stimulus-caption{margin:.25rem 0 .5rem!important}.processing-sources .structured-stimulus-table td,.processing-sources .structured-stimulus-table th{padding:.35rem .45rem;font-size:.88rem}.processing-sources .stimulus-table-scroll{min-width:0}.processing-source{min-width:0}
 
 @media(max-width:600px){.processing-sources.two-keys{grid-template-columns:minmax(0,1fr)}.processing-sources .structured-stimulus-table{table-layout:fixed;width:100%}.processing-sources .structured-stimulus-table td,.processing-sources .structured-stimulus-table th{overflow-wrap:anywhere;padding:.3rem;font-size:.82rem}}
+/* Activity choices share one baseline; native groups remain available to assistive technology. */
+.activity-toolbar{display:flex;align-items:stretch;flex-wrap:wrap;gap:8px;margin:16px 0;padding:8px;border:1px solid var(--border,#d8e3e0);border-radius:14px;background:var(--card,#fffdf8)}
+.activity-toolbar>.mode-switch:not(.hidden){display:contents}
+.activity-toolbar button{min-height:50px;margin:0;display:inline-flex;align-items:center;justify-content:center;line-height:1.25;padding:12px 18px;box-sizing:border-box}
+.activity-toolbar button[aria-pressed=true]{background:var(--accent,#247453);color:#fff}
+.executed-area{display:block!important}.executed-area>.secondary-btn{margin:12px 8px 0 0;min-height:48px}
+.executed-grid{display:grid;grid-template-columns:repeat(var(--executed-cols),minmax(0,1fr));gap:10px;max-width:680px;margin:16px auto}
+.executed-cell{display:flex;align-items:center;justify-content:center;min-height:90px;padding:8px;border:2px solid #82999b;border-radius:12px;background:#fff;color:#173e46;min-width:0}
+.executed-cell[aria-pressed=true]{border:4px solid #215a99;background:#dbeafb;box-shadow:inset 0 0 0 2px #fff}
+.executed-cell[aria-pressed=true]::after{content:'✓';font-weight:800;align-self:flex-start}
+.executed-picture .picture-icon svg,.executed-picture .picture-icon img{width:64px;height:64px;object-fit:contain;max-width:100%}
+.executed-picture{display:inline-flex;align-items:center;justify-content:center;flex-direction:column;max-width:100%}
+.executed-picture .picture-label{font-size:1rem}
+.executed-model,.executed-choices,.executed-picked{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:14px;margin:16px 0}
+.executed-picked{min-height:90px;border:2px dashed #82999b;border-radius:12px}
+.executed-choices button{min-width:88px;min-height:94px}.executed-token{display:flex;flex-direction:column;align-items:center;gap:4px;max-width:140px}.executed-token small{font-weight:700}
+.executed-status{font-size:1.1rem;line-height:1.6}.executed-area button:focus-visible{outline:3px solid #143c9b;outline-offset:3px}
+.speed-search-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.speed-search-grid>div{min-height:88px}
+.speed-search-grid .picture-icon svg,.speed-search-grid .picture-icon img,.speed-search-grid .picture-glyphs svg{width:64px;height:64px;max-width:100%;object-fit:contain}
+.speed-symbol .picture-icon img{width:72px;height:72px;object-fit:contain}
+@media(max-width:600px){.activity-toolbar button{min-height:48px;padding:10px 12px;flex:1 1 auto}.executed-grid{gap:8px}.executed-cell{min-height:76px;padding:4px}.executed-picture .picture-icon svg,.executed-picture .picture-icon img{width:52px;height:52px}.executed-choices{gap:8px}.executed-choices button{min-width:72px;min-height:82px}.speed-search-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.speed-search-grid .picture-icon svg,.speed-search-grid .picture-icon img,.speed-search-grid .picture-glyphs svg{width:56px;height:56px}.speed-search-grid>div{min-height:76px}}
+/* One scrollable row keeps every activity button on the same baseline at all widths. */
+#appShell .activity-toolbar{flex-wrap:nowrap;overflow-x:auto;max-width:100%;scroll-padding:8px}
+#appShell .activity-toolbar>.mode-switch:not(.hidden){display:contents!important}
+#appShell .activity-toolbar button{flex:0 0 auto;white-space:nowrap;min-height:50px;height:50px;margin:0;align-self:center}
+#appShell .activity-toolbar #executedMode[aria-pressed=true]{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}

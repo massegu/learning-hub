@@ -1,0 +1,5318 @@
+{
+  "schemaVersion": 1,
+  "scope": "Phase 2, first interactive delivery",
+  "activities": 270,
+  "families": 9,
+  "rows": [
+    {
+      "age": "early",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.cancel",
+      "context": "school.workshop",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 4,
+      "reverse": false,
+      "targets": 1,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.compare",
+      "context": "school.workshop",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.follow",
+      "context": "school.workshop",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 2,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.cancel",
+      "context": "home.materials",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 4,
+      "reverse": false,
+      "targets": 1,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.compare",
+      "context": "home.materials",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.follow",
+      "context": "home.materials",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 2,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.cancel",
+      "context": "school.workshop",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": 1,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.compare",
+      "context": "school.workshop",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.follow",
+      "context": "school.workshop",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.cancel",
+      "context": "home.materials",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": 1,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.compare",
+      "context": "home.materials",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.follow",
+      "context": "home.materials",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.cancel",
+      "context": "school.workshop",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": 2,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.compare",
+      "context": "school.workshop",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.follow",
+      "context": "school.workshop",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.cancel",
+      "context": "home.materials",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": 2,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.compare",
+      "context": "home.materials",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.follow",
+      "context": "home.materials",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.serial",
+      "context": "school.workshop",
+      "primaryConstruct": "shortTermMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 2,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 10000
+    },
+    {
+      "age": "early",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.spatial",
+      "context": "school.workshop",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 1,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 10000
+    },
+    {
+      "age": "early",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.update",
+      "context": "school.workshop",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 2,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 10000
+    },
+    {
+      "age": "early",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.serial",
+      "context": "home.materials",
+      "primaryConstruct": "shortTermMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 2,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 10000
+    },
+    {
+      "age": "early",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.spatial",
+      "context": "home.materials",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 1,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 10000
+    },
+    {
+      "age": "early",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.update",
+      "context": "home.materials",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 2,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 10000
+    },
+    {
+      "age": "early",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.serial",
+      "context": "school.workshop",
+      "primaryConstruct": "shortTermMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 10000
+    },
+    {
+      "age": "early",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.spatial",
+      "context": "school.workshop",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 2,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 10000
+    },
+    {
+      "age": "early",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.update",
+      "context": "school.workshop",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 10000
+    },
+    {
+      "age": "early",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.serial",
+      "context": "home.materials",
+      "primaryConstruct": "shortTermMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 10000
+    },
+    {
+      "age": "early",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.spatial",
+      "context": "home.materials",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 2,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 10000
+    },
+    {
+      "age": "early",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.update",
+      "context": "home.materials",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 10000
+    },
+    {
+      "age": "early",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.serial",
+      "context": "school.workshop",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": 10000
+    },
+    {
+      "age": "early",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.spatial",
+      "context": "school.workshop",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 10000
+    },
+    {
+      "age": "early",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.update",
+      "context": "school.workshop",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": 10000
+    },
+    {
+      "age": "early",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.serial",
+      "context": "home.materials",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": 10000
+    },
+    {
+      "age": "early",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.spatial",
+      "context": "home.materials",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 10000
+    },
+    {
+      "age": "early",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.update",
+      "context": "home.materials",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": 10000
+    },
+    {
+      "age": "early",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.switch",
+      "context": "school.workshop",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.inhibit",
+      "context": "school.workshop",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.plan",
+      "context": "school.workshop",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 2,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.switch",
+      "context": "home.materials",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.inhibit",
+      "context": "home.materials",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.plan",
+      "context": "home.materials",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 2,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.switch",
+      "context": "school.workshop",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.inhibit",
+      "context": "school.workshop",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.plan",
+      "context": "school.workshop",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.switch",
+      "context": "home.materials",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.inhibit",
+      "context": "home.materials",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.plan",
+      "context": "home.materials",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.switch",
+      "context": "school.workshop",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 8,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.inhibit",
+      "context": "school.workshop",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 8,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.plan",
+      "context": "school.workshop",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.switch",
+      "context": "home.materials",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 8,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.inhibit",
+      "context": "home.materials",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 8,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "early",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.plan",
+      "context": "home.materials",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.cancel",
+      "context": "school.workshop",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 9,
+      "reverse": false,
+      "targets": 1,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.compare",
+      "context": "school.workshop",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 9,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.follow",
+      "context": "school.workshop",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.cancel",
+      "context": "home.materials",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 9,
+      "reverse": false,
+      "targets": 1,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.compare",
+      "context": "home.materials",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 9,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.follow",
+      "context": "home.materials",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.cancel",
+      "context": "school.workshop",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": 1,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.compare",
+      "context": "school.workshop",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.follow",
+      "context": "school.workshop",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.cancel",
+      "context": "home.materials",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": 1,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.compare",
+      "context": "home.materials",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.follow",
+      "context": "home.materials",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.cancel",
+      "context": "school.workshop",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": 2,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.compare",
+      "context": "school.workshop",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.follow",
+      "context": "school.workshop",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.cancel",
+      "context": "home.materials",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": 2,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.compare",
+      "context": "home.materials",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.follow",
+      "context": "home.materials",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.serial",
+      "context": "school.workshop",
+      "primaryConstruct": "shortTermMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 9000
+    },
+    {
+      "age": "junior",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.spatial",
+      "context": "school.workshop",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 1,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 9000
+    },
+    {
+      "age": "junior",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.update",
+      "context": "school.workshop",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 9000
+    },
+    {
+      "age": "junior",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.serial",
+      "context": "home.materials",
+      "primaryConstruct": "shortTermMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 9000
+    },
+    {
+      "age": "junior",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.spatial",
+      "context": "home.materials",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 1,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 9000
+    },
+    {
+      "age": "junior",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.update",
+      "context": "home.materials",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 9000
+    },
+    {
+      "age": "junior",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.serial",
+      "context": "school.workshop",
+      "primaryConstruct": "shortTermMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 8000
+    },
+    {
+      "age": "junior",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.spatial",
+      "context": "school.workshop",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 2,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 8000
+    },
+    {
+      "age": "junior",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.update",
+      "context": "school.workshop",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 8000
+    },
+    {
+      "age": "junior",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.serial",
+      "context": "home.materials",
+      "primaryConstruct": "shortTermMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 8000
+    },
+    {
+      "age": "junior",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.spatial",
+      "context": "home.materials",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 2,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 8000
+    },
+    {
+      "age": "junior",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.update",
+      "context": "home.materials",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 8000
+    },
+    {
+      "age": "junior",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.serial",
+      "context": "school.workshop",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": 7000
+    },
+    {
+      "age": "junior",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.spatial",
+      "context": "school.workshop",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 7000
+    },
+    {
+      "age": "junior",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.update",
+      "context": "school.workshop",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": 7000
+    },
+    {
+      "age": "junior",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.serial",
+      "context": "home.materials",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": 7000
+    },
+    {
+      "age": "junior",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.spatial",
+      "context": "home.materials",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 7000
+    },
+    {
+      "age": "junior",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.update",
+      "context": "home.materials",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": 7000
+    },
+    {
+      "age": "junior",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.switch",
+      "context": "school.workshop",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.inhibit",
+      "context": "school.workshop",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.plan",
+      "context": "school.workshop",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.switch",
+      "context": "home.materials",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.inhibit",
+      "context": "home.materials",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.plan",
+      "context": "home.materials",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.switch",
+      "context": "school.workshop",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 8,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.inhibit",
+      "context": "school.workshop",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 8,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.plan",
+      "context": "school.workshop",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.switch",
+      "context": "home.materials",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 8,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.inhibit",
+      "context": "home.materials",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 8,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.plan",
+      "context": "home.materials",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.switch",
+      "context": "school.workshop",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 10,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.inhibit",
+      "context": "school.workshop",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 10,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.plan",
+      "context": "school.workshop",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.switch",
+      "context": "home.materials",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 10,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.inhibit",
+      "context": "home.materials",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 10,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "junior",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.plan",
+      "context": "home.materials",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.cancel",
+      "context": "school.workshop",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 9,
+      "reverse": false,
+      "targets": 1,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.compare",
+      "context": "school.workshop",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 9,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.follow",
+      "context": "school.workshop",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.cancel",
+      "context": "home.materials",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 9,
+      "reverse": false,
+      "targets": 1,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.compare",
+      "context": "home.materials",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 9,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.follow",
+      "context": "home.materials",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.cancel",
+      "context": "school.workshop",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": 1,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.compare",
+      "context": "school.workshop",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.follow",
+      "context": "school.workshop",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.cancel",
+      "context": "home.materials",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": 1,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.compare",
+      "context": "home.materials",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.follow",
+      "context": "home.materials",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.cancel",
+      "context": "school.workshop",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": 2,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.compare",
+      "context": "school.workshop",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.follow",
+      "context": "school.workshop",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.cancel",
+      "context": "home.materials",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": 2,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.compare",
+      "context": "home.materials",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.follow",
+      "context": "home.materials",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.serial",
+      "context": "school.workshop",
+      "primaryConstruct": "shortTermMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 9000
+    },
+    {
+      "age": "primary",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.spatial",
+      "context": "school.workshop",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 1,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 9000
+    },
+    {
+      "age": "primary",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.update",
+      "context": "school.workshop",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 9000
+    },
+    {
+      "age": "primary",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.serial",
+      "context": "home.materials",
+      "primaryConstruct": "shortTermMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 9000
+    },
+    {
+      "age": "primary",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.spatial",
+      "context": "home.materials",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 1,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 9000
+    },
+    {
+      "age": "primary",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.update",
+      "context": "home.materials",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 9000
+    },
+    {
+      "age": "primary",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.serial",
+      "context": "school.workshop",
+      "primaryConstruct": "shortTermMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 8000
+    },
+    {
+      "age": "primary",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.spatial",
+      "context": "school.workshop",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 2,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 8000
+    },
+    {
+      "age": "primary",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.update",
+      "context": "school.workshop",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 8000
+    },
+    {
+      "age": "primary",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.serial",
+      "context": "home.materials",
+      "primaryConstruct": "shortTermMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 8000
+    },
+    {
+      "age": "primary",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.spatial",
+      "context": "home.materials",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 2,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 8000
+    },
+    {
+      "age": "primary",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.update",
+      "context": "home.materials",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 8000
+    },
+    {
+      "age": "primary",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.serial",
+      "context": "school.workshop",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": 7000
+    },
+    {
+      "age": "primary",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.spatial",
+      "context": "school.workshop",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 7000
+    },
+    {
+      "age": "primary",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.update",
+      "context": "school.workshop",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": 7000
+    },
+    {
+      "age": "primary",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.serial",
+      "context": "home.materials",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": 7000
+    },
+    {
+      "age": "primary",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.spatial",
+      "context": "home.materials",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 7000
+    },
+    {
+      "age": "primary",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.update",
+      "context": "home.materials",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": 7000
+    },
+    {
+      "age": "primary",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.switch",
+      "context": "school.workshop",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.inhibit",
+      "context": "school.workshop",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.plan",
+      "context": "school.workshop",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.switch",
+      "context": "home.materials",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.inhibit",
+      "context": "home.materials",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.plan",
+      "context": "home.materials",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.switch",
+      "context": "school.workshop",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 8,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.inhibit",
+      "context": "school.workshop",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 8,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.plan",
+      "context": "school.workshop",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.switch",
+      "context": "home.materials",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 8,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.inhibit",
+      "context": "home.materials",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 8,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.plan",
+      "context": "home.materials",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.switch",
+      "context": "school.workshop",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 10,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.inhibit",
+      "context": "school.workshop",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 10,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.plan",
+      "context": "school.workshop",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.switch",
+      "context": "home.materials",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 10,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.inhibit",
+      "context": "home.materials",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 10,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "primary",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.plan",
+      "context": "home.materials",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.cancel",
+      "context": "school.workshop",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 9,
+      "reverse": false,
+      "targets": 1,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.compare",
+      "context": "school.workshop",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 9,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.follow",
+      "context": "school.workshop",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.cancel",
+      "context": "home.materials",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 9,
+      "reverse": false,
+      "targets": 1,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.compare",
+      "context": "home.materials",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 9,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.follow",
+      "context": "home.materials",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.cancel",
+      "context": "school.workshop",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": 1,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.compare",
+      "context": "school.workshop",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.follow",
+      "context": "school.workshop",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.cancel",
+      "context": "home.materials",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": 1,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.compare",
+      "context": "home.materials",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.follow",
+      "context": "home.materials",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.cancel",
+      "context": "school.workshop",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": 2,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.compare",
+      "context": "school.workshop",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.follow",
+      "context": "school.workshop",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.cancel",
+      "context": "home.materials",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": 2,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.compare",
+      "context": "home.materials",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.follow",
+      "context": "home.materials",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.serial",
+      "context": "school.workshop",
+      "primaryConstruct": "shortTermMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 9000
+    },
+    {
+      "age": "middle",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.spatial",
+      "context": "school.workshop",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 1,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 9000
+    },
+    {
+      "age": "middle",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.update",
+      "context": "school.workshop",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 9000
+    },
+    {
+      "age": "middle",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.serial",
+      "context": "home.materials",
+      "primaryConstruct": "shortTermMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 9000
+    },
+    {
+      "age": "middle",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.spatial",
+      "context": "home.materials",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 1,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 9000
+    },
+    {
+      "age": "middle",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.update",
+      "context": "home.materials",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 9000
+    },
+    {
+      "age": "middle",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.serial",
+      "context": "school.workshop",
+      "primaryConstruct": "shortTermMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 8000
+    },
+    {
+      "age": "middle",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.spatial",
+      "context": "school.workshop",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 2,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 8000
+    },
+    {
+      "age": "middle",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.update",
+      "context": "school.workshop",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 8000
+    },
+    {
+      "age": "middle",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.serial",
+      "context": "home.materials",
+      "primaryConstruct": "shortTermMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 8000
+    },
+    {
+      "age": "middle",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.spatial",
+      "context": "home.materials",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 2,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 8000
+    },
+    {
+      "age": "middle",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.update",
+      "context": "home.materials",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 8000
+    },
+    {
+      "age": "middle",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.serial",
+      "context": "school.workshop",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": 7000
+    },
+    {
+      "age": "middle",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.spatial",
+      "context": "school.workshop",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 7000
+    },
+    {
+      "age": "middle",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.update",
+      "context": "school.workshop",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": 7000
+    },
+    {
+      "age": "middle",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.serial",
+      "context": "home.materials",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": 7000
+    },
+    {
+      "age": "middle",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.spatial",
+      "context": "home.materials",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 7000
+    },
+    {
+      "age": "middle",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.update",
+      "context": "home.materials",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": 7000
+    },
+    {
+      "age": "middle",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.switch",
+      "context": "school.workshop",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.inhibit",
+      "context": "school.workshop",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.plan",
+      "context": "school.workshop",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.switch",
+      "context": "home.materials",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.inhibit",
+      "context": "home.materials",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.plan",
+      "context": "home.materials",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.switch",
+      "context": "school.workshop",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 8,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.inhibit",
+      "context": "school.workshop",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 8,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.plan",
+      "context": "school.workshop",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.switch",
+      "context": "home.materials",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 8,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.inhibit",
+      "context": "home.materials",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 8,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.plan",
+      "context": "home.materials",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.switch",
+      "context": "school.workshop",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 10,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.inhibit",
+      "context": "school.workshop",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 10,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.plan",
+      "context": "school.workshop",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.switch",
+      "context": "home.materials",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 10,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.inhibit",
+      "context": "home.materials",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 10,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "middle",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.plan",
+      "context": "home.materials",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.cancel",
+      "context": "school.workshop",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 9,
+      "reverse": false,
+      "targets": 1,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.compare",
+      "context": "school.workshop",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 9,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.follow",
+      "context": "school.workshop",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.cancel",
+      "context": "home.materials",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 9,
+      "reverse": false,
+      "targets": 1,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.compare",
+      "context": "home.materials",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 9,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "attention",
+      "level": 1,
+      "family": "attention.follow",
+      "context": "home.materials",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.cancel",
+      "context": "school.workshop",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": 1,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.compare",
+      "context": "school.workshop",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.follow",
+      "context": "school.workshop",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.cancel",
+      "context": "home.materials",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": 1,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.compare",
+      "context": "home.materials",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "attention",
+      "level": 2,
+      "family": "attention.follow",
+      "context": "home.materials",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.cancel",
+      "context": "school.workshop",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": 2,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.compare",
+      "context": "school.workshop",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.follow",
+      "context": "school.workshop",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.cancel",
+      "context": "home.materials",
+      "primaryConstruct": "visualSearch",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": 2,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.compare",
+      "context": "home.materials",
+      "primaryConstruct": "visualComparison",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 12,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "attention",
+      "level": 3,
+      "family": "attention.follow",
+      "context": "home.materials",
+      "primaryConstruct": "visualInstructionFollowing",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.serial",
+      "context": "school.workshop",
+      "primaryConstruct": "shortTermMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 9000
+    },
+    {
+      "age": "teen",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.spatial",
+      "context": "school.workshop",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 1,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 9000
+    },
+    {
+      "age": "teen",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.update",
+      "context": "school.workshop",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 9000
+    },
+    {
+      "age": "teen",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.serial",
+      "context": "home.materials",
+      "primaryConstruct": "shortTermMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 9000
+    },
+    {
+      "age": "teen",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.spatial",
+      "context": "home.materials",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 1,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 9000
+    },
+    {
+      "age": "teen",
+      "domain": "memory",
+      "level": 1,
+      "family": "memory.update",
+      "context": "home.materials",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 9000
+    },
+    {
+      "age": "teen",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.serial",
+      "context": "school.workshop",
+      "primaryConstruct": "shortTermMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 8000
+    },
+    {
+      "age": "teen",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.spatial",
+      "context": "school.workshop",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 2,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 8000
+    },
+    {
+      "age": "teen",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.update",
+      "context": "school.workshop",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 8000
+    },
+    {
+      "age": "teen",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.serial",
+      "context": "home.materials",
+      "primaryConstruct": "shortTermMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 8000
+    },
+    {
+      "age": "teen",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.spatial",
+      "context": "home.materials",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 2,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 8000
+    },
+    {
+      "age": "teen",
+      "domain": "memory",
+      "level": 2,
+      "family": "memory.update",
+      "context": "home.materials",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 8000
+    },
+    {
+      "age": "teen",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.serial",
+      "context": "school.workshop",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": 7000
+    },
+    {
+      "age": "teen",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.spatial",
+      "context": "school.workshop",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 7000
+    },
+    {
+      "age": "teen",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.update",
+      "context": "school.workshop",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": 7000
+    },
+    {
+      "age": "teen",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.serial",
+      "context": "home.materials",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": 7000
+    },
+    {
+      "age": "teen",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.spatial",
+      "context": "home.materials",
+      "primaryConstruct": "spatialMemory",
+      "memorySystem": "shortTermMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": 7000
+    },
+    {
+      "age": "teen",
+      "domain": "memory",
+      "level": 3,
+      "family": "memory.update",
+      "context": "home.materials",
+      "primaryConstruct": "workingMemory",
+      "memorySystem": "workingMemory",
+      "secondaryLoads": [
+        "visualRecognition"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": true,
+      "targets": null,
+      "exposureMs": 7000
+    },
+    {
+      "age": "teen",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.switch",
+      "context": "school.workshop",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.inhibit",
+      "context": "school.workshop",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.plan",
+      "context": "school.workshop",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.switch",
+      "context": "home.materials",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.inhibit",
+      "context": "home.materials",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 6,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "executive",
+      "level": 1,
+      "family": "executive.plan",
+      "context": "home.materials",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 3,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.switch",
+      "context": "school.workshop",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 8,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.inhibit",
+      "context": "school.workshop",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 8,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.plan",
+      "context": "school.workshop",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.switch",
+      "context": "home.materials",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 8,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.inhibit",
+      "context": "home.materials",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 8,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "executive",
+      "level": 2,
+      "family": "executive.plan",
+      "context": "home.materials",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 4,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.switch",
+      "context": "school.workshop",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 10,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.inhibit",
+      "context": "school.workshop",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 10,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.plan",
+      "context": "school.workshop",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.switch",
+      "context": "home.materials",
+      "primaryConstruct": "cognitiveFlexibility",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 10,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.inhibit",
+      "context": "home.materials",
+      "primaryConstruct": "responseInhibition",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "minimal",
+      "visualDemand": "medium",
+      "motorDemand": "selection",
+      "elements": 10,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    },
+    {
+      "age": "teen",
+      "domain": "executive",
+      "level": 3,
+      "family": "executive.plan",
+      "context": "home.materials",
+      "primaryConstruct": "planning",
+      "memorySystem": null,
+      "secondaryLoads": [
+        "visualRecognition",
+        "motorSelection"
+      ],
+      "readingDemand": "low",
+      "visualDemand": "low",
+      "motorDemand": "sequence",
+      "elements": 5,
+      "reverse": false,
+      "targets": null,
+      "exposureMs": null
+    }
+  ]
+}

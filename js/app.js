@@ -148,7 +148,7 @@
     documentOnly = false,
     photoOnly = false,
     interactionOnly = false,
-    roomSpeedOnly = false,
+    roomSpeedOnly = false, executedOnly=false, stopExecuted=null,
     interactionKind = 'symbols',
     currentItem = null,
     counter = 0,
@@ -162,6 +162,7 @@
   let memoryCountdown = null, memoryExposureVersion = 0;
   function stopMemoryCountdown() {
     stopInteraction();
+    if(stopExecuted){stopExecuted();stopExecuted=null;}
     clearTimeout(memoryCountdown);memoryCountdown=null;memoryExposureVersion++;
   }
   const ICONS = {
@@ -892,7 +893,7 @@
     $("#independentSessionBtn").textContent=independent?"Terminar sesión independiente":"Empezar sesión independiente";
     $("#independentSessionStatus").textContent=independent?"Los resultados de esta sesión no se guardan. El uso se contabiliza por cuenta. Al terminar o recargar se descartan.":"Seguimiento individual: los resultados se guardan en este perfil.";
     $("#deleteProfileBtn").disabled=independent;$("#profilePrivacyBtn").disabled=independent;
-    photoOnly = false;roomSpeedOnly=false;
+    photoOnly = false;roomSpeedOnly=false;executedOnly=false;
     guidedSession=null;
     hideGuidedBar();
     $('#appShell').classList.toggle('early-experience',Boolean(window.ContentPolicy.forProfile(p)));
@@ -1025,15 +1026,19 @@
     $('#attentionPhotos').classList.toggle('hidden',!photoSupport||subject!=='attention');
     $('#attentionPhotos').setAttribute('aria-pressed',String(photoOnly));
     $('#photoModeSwitch [data-photos=true]').textContent=subject==='attention'?'Encuentra las diferencias':'Escenas cotidianas';
-    $$('#photoModeSwitch button').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.photos==='true')===photoOnly)));
+    $$('#photoModeSwitch button').forEach(b=>b.setAttribute('aria-pressed',String(!executedOnly&&(b.dataset.photos==='true')===photoOnly)));
 
+    if(!['attention','memory','executive'].includes(subject))executedOnly=false;
+    $('#executedMode').classList.toggle('hidden',!['attention','memory','executive'].includes(subject));
+    $('#executedMode').setAttribute('aria-pressed',String(executedOnly));
+    $('#interactionKindSwitch').classList.toggle('hidden',!interactionOnly||executedOnly);
     $('#documentModeSwitch').classList.toggle('hidden',!documentSupport||isReading);
     $('#documentModeSwitch [data-documents=false]').textContent=subject==='executive'?'Planifica y decide':'Busca y compara';
     $('#documentModeSwitch [data-documents=true]').textContent=subject==='executive'?'Resuelve con documentos':'Explora documentos';
     $('#photoModeSwitch [data-photos=false]').textContent='Recuerda imágenes y secuencias';
     $('#documentModeHint').classList.toggle('hidden',!documentSupport||isReading);
-    $('#documentModeHint').textContent=interactionOnly?(subject==='executive'?'Sigue las reglas de las tarjetas o practica una pausa antes de actuar.':'Busca objetos de la sala y explica qué características cumplen.'):photoOnly?'Compara las dos escenas y busca los cambios de color.':subject==='executive'?(documentOnly?'Usa el documento para organizar acciones y corregir un plan.':'Ordena acciones, aplica reglas y revisa decisiones.'):(documentOnly?'Localiza y contrasta los datos del documento.':'Compara figuras, códigos y listas.');
-    $$('#documentModeSwitch [data-documents]').forEach(b=>b.setAttribute('aria-pressed',String(!interactionOnly&&!photoOnly&&(b.dataset.documents==='true')===documentOnly)));
+    $('#documentModeHint').textContent=executedOnly?'Marca, reconstruye o actúa directamente sobre los estímulos.':interactionOnly?(subject==='executive'?'Sigue las reglas de las tarjetas o practica una pausa antes de actuar.':'Busca objetos de la sala y explica qué características cumplen.'):photoOnly?'Compara las dos escenas y busca los cambios de color.':subject==='executive'?(documentOnly?'Usa el documento para organizar acciones y corregir un plan.':'Ordena acciones, aplica reglas y revisa decisiones.'):(documentOnly?'Localiza y contrasta los datos del documento.':'Compara figuras, códigos y listas.');
+    $$('#documentModeSwitch [data-documents]').forEach(b=>b.setAttribute('aria-pressed',String(!executedOnly&&!interactionOnly&&!photoOnly&&(b.dataset.documents==='true')===documentOnly)));
     counter = 0;
     renderEarlyTaskGuide();
     renderSchoolTaskGuide();
@@ -1042,7 +1047,7 @@
   $('#documentModeSwitch').addEventListener('click',event=>{
     const button=event.target.closest('button[data-documents],#attentionPhotos,#interactionModeBtn');
     if(!button)return;
-    photoOnly=button.id==='attentionPhotos';
+    executedOnly=false;photoOnly=button.id==='attentionPhotos';
     interactionOnly=button.id==='interactionModeBtn';
     documentOnly=!interactionOnly&&!photoOnly&&button.dataset.documents==='true';
     setupExercise();
@@ -1050,15 +1055,16 @@
   $('#interactionKindSwitch').addEventListener('click',event=>{const button=event.target.closest('[data-interaction-kind]');if(!button)return;interactionKind=button.dataset.interactionKind;setupExercise();});
   $('#photoModeSwitch').addEventListener('click',event=>{
     const button=event.target.closest('button[data-photos]');if(!button)return;
-    photoOnly=button.dataset.photos==='true';documentOnly=false;setupExercise();
+    executedOnly=false;photoOnly=button.dataset.photos==='true';documentOnly=false;setupExercise();
   });
+  $('#executedMode').onclick=()=>{executedOnly=true;photoOnly=false;documentOnly=false;interactionOnly=false;setupExercise();};
   async function requestForProfile(payload, targetProfile = profile) {
     if (!targetProfile?.id) throw new Error('Selecciona o crea un perfil para empezar.');
     const locale = API.effectiveLocale(targetProfile);
     const localeRevision = API.localeRevision;
     const res = await API.requestContent({
       ...payload,
-      client_revision:8,
+      client_revision:9,
       ...(targetProfile._sessionOnly?{session_only:true}:{}),
       profile_id: targetProfile.id,
       locale,
@@ -1068,7 +1074,7 @@
     // Server authentication, subscription checks and usage accounting happen
     // first. The browser never supplies local content after a rejected call.
     const worksheet=payload.kind==='worksheet';
-    const selected = window.EarlyContent.adaptResponse(res, payload, targetProfile, worksheet?{
+    const selected = payload.executed_only?res:window.EarlyContent.adaptResponse(res, payload, targetProfile, worksheet?{
       accept:(item,domain)=>window.WorksheetSelection.compatible(item,targetProfile,locale,domain),
     }:{});
     // Worksheet candidates are localized/validated individually by the selector.
@@ -1090,6 +1096,7 @@
   }
   async function requestOne(kind, domain = subject, extra = {}) {
     const res = await requestForProfile({
+      ...(kind==='exercise'&&executedOnly?{executed_only:true}:{}),
       ...(kind==='exercise'&&interactionOnly?{interaction_only:true,interaction_kind:subject==='attention'?'room':interactionKind}:{}),
       ...(kind==='exercise'&&['attention','executive'].includes(domain)&&window.DocumentLibrary?.supports(window.AgeStages.route(profile),domain)?{documents_only:documentOnly}:{}),
       kind,
@@ -1194,6 +1201,9 @@
       "hidden",
       !$("#exerciseTopic").textContent,
     );
+    if(it.type==='executed'){
+      $('#exercisePrompt').textContent=it.q;stopExecuted=window.ExecutedRenderer.mount(it,{visual:$('#exerciseVisual'),area:$('#exerciseOptions'),onFinish:(ok,why)=>{if(currentItem!==it)return;const pts=saveResult(subject,ok,it.id,it.mechanic);showFeedback(ok,pts,(ok?'Actividad completada correctamente. ':'Revisa el resultado. ')+why);}});return;
+    }
     if (it.visual)
       $("#exerciseVisual").innerHTML =
         `<div class="shape-visual">${it.visual}</div>`;

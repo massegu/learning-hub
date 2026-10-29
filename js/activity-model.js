@@ -110,6 +110,7 @@
     return blocks;
   }
   function printable(item, profile) {
+    if(item?.type==='executed'||String(item?.contentKey||'').startsWith('executed-v1:')){const bank=root.ExecutedTasks||(typeof require==='function'&&require('./executed-tasks'));bank.validate(item,profile?.progress?.ageRoute||profile?.age_band);return {question:item.paperQuestion,stimulus:item.stimulus,options:[],tokens:[],writingRubric:[],responseType:'written'};}
     if(item?.qualityEvidence||/^functional_/.test(item?.mechanic||'')||String(item?.contentKey||'').startsWith('functional-v1:'))(root.FunctionalContent||(typeof require==='function'&&require('./functional-content'))).validate(item);
     if(item?.roomSpeedTask)(root.Curriculum||(typeof require==='function'&&require('./curriculum'))).validateRoomSpeed(item);
     if(item?.socialEvidence||/^social_perspective_/.test(item?.mechanic||''))(root.Curriculum||(typeof require==='function'&&require('./curriculum'))).validateSocial(item);
@@ -286,6 +287,7 @@
     return versions.map(items => items.map(item => printable(item, profile)));
   }
   function forDelivery(item, profile, domain) {
+    if(item?.type==='executed'||String(item?.contentKey||'').startsWith('executed-v1:')){if(domain&&domain!==item.domain)fail('El área no coincide.');printable(item,profile);return item;}
     (root.LocaleContent||(typeof require==='function'&&require('./locale-content'))).validateOptions(item);
     if(item?.qualityEvidence||/^functional_/.test(item?.mechanic||'')||String(item?.contentKey||'').startsWith('functional-v1:'))(root.FunctionalContent||(typeof require==='function'&&require('./functional-content'))).validate(item);
     const annotate=()=>Object.assign(item,(root.ContentQuality||(typeof require==='function'&&require('./content-quality'))).describe(item,profile?.progress?.ageRoute||profile?.age_band||item.qualityEvidence?.age||item.ageProfile?.id||'unknown',domain||item.domain));
