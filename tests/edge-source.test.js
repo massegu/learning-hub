@@ -61,11 +61,11 @@ test('saved account country controls selection before history or usage writes, i
   const locale=require('../js/locale-content');
   for(const it of result.items){assert.equal(it.localization.locale,'es_co');assert.doesNotThrow(()=>locale.localizeItem(it,'es_co','executive'));assert.doesNotMatch(JSON.stringify(it),/€|\beuros?\b/u);}
   const phone=require('../supabase/functions/request-learning-content/teen-review').pool('literacy',1).find(it=>it.teenReview.context==='interview');
-  h.context.DocumentLibrary.supports=()=>false;
+  h.context.DocumentLibrary.supports=()=>false;h.context.FunctionalContent.generate=()=>null;
   const original=h.context.Curriculum.generate;h.context.Curriculum.generate=(age,domain,level)=>domain==='literacy'?structuredClone(phone):original(age,domain,level);
   response=await h.request({domain:'literacy',locale:'es_es'});assert.equal(response.status,200);
   const phoneResult=(await response.json()).items[0];assert.match(JSON.stringify(phoneResult.stimulus),/teléfonos celulares/);assert.doesNotMatch(JSON.stringify(phoneResult.stimulus),/teléfonos móviles/);
-  const blocked=authorized();blocked.account.content_locale='es_co';
+  const blocked=authorized();blocked.account.content_locale='es_co';blocked.context.FunctionalContent.generate=()=>null;
   blocked.context.Curriculum.generate=()=>({id:'bad',q:'¿Cuánto queda?',scenario:'Tienes 20 euros y gastas 5.',opts:['15 euros','20 euros'],a:'15 euros'});
   blocked.context.DocumentLibrary.generate=blocked.context.Curriculum.generate;
   response=await blocked.request({domain:'executive'});assert.equal(response.status,422);assert.equal(blocked.writes.length,0);

@@ -56,7 +56,7 @@ test('reading and location questions preserve authored determiners for every nou
     if (/^¿Cuánt[oa]s /.test(it.q)) {
       const o=early.objects.find(o=>it.q.includes(o.plural));
       if(o)assert.ok(it.q.startsWith(o.gender==='f'?'¿Cuántas ':'¿Cuántos '));
-      else assert.match(it.q,/^¿Cuánt(?:as (?:cosas|faltan)|os euros)/);
+      else assert.match(it.q,/^¿Cuánt(?:as (?:cosas|faltan)|os (?:euros|vasos|pinceles|hay|quedan))/);
     }
     assert.ok(!it.stimulus.some(s=>s.text&&/Hay 1 \w+s\b/.test(s.text)));
   }

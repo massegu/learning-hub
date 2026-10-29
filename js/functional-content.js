@@ -323,9 +323,11 @@ function pool(age,domain,level=1){
   ];
   for(const [family,versions] of cases){const [source,q,a,wrong]=versions[level-1];add(family,'home.shared_activity',q,[T(source)],a,wrong,{topic:'Social Lab · convivencia en casa',why:quality.registry[family].functionalPurpose+'.',difficultyParameters:{operation:['explicitCue','combineCues','limitInference'][level-1]}});}
  }
+ const transfer=root.TransferContent||(typeof require==='function'&&require('./transfer-content'));
+ transfer.extend({age,domain,level,add,T,L,table});
  // Remove duplicate numeric alternatives and regenerate only an unambiguous numeric foil.
  for(const it of items){
-  if(it.type==='order'||it.memoryResponse==='order'){delete it.opts;delete it.a;}
+  if(it.type==='self'||it.type==='order'||it.memoryResponse==='order'){delete it.opts;delete it.a;}
   else if(it.opts){it.opts=[...new Set(it.opts.filter(x=>x!==undefined))];if(it.opts.length<2)throw Error('Missing distractor '+it.id);}
  }
  const unique=[],seen=new Set();
@@ -339,10 +341,10 @@ function validate(item){
  const canonical=cache.get(key)?.find(x=>x.contentKey===e.id);if(!canonical)throw Error('La familia funcional no está registrada.');
  const locale=root.LocaleContent||(typeof require==='function'&&require('./locale-content'));
  const expected=item.localization?locale.localizeItem(canonical,item.localization.locale,item.domain):canonical;
- for(const field of ['q','stimulus','a','answer','memoryQuestion','memoryContent','type','responseType','qualityDescriptor','recallEvidence','currencyContext','ageProfile','juniorProfile','schoolProfile','teenReview','speedTask','speedFamily','speedRevision','difficultyParameters','revealMs','mechanic'])if(JSON.stringify(item[field])!==JSON.stringify(expected[field]))throw Error('La respuesta no coincide con la fuente funcional: '+field);
+ for(const field of ['q','stimulus','a','answer','memoryQuestion','memoryContent','type','responseType','qualityDescriptor','recallEvidence','currencyContext','ageProfile','juniorProfile','schoolProfile','teenReview','speedTask','speedFamily','speedRevision','difficultyParameters','revealMs','mechanic','languageFocus','sample','writingRubric','writingPurpose','assessment'])if(JSON.stringify(item[field])!==JSON.stringify(expected[field]))throw Error('La respuesta no coincide con la fuente funcional: '+field);
  for(const field of ['opts','tokens'])if(JSON.stringify([...(item[field]||[])].sort())!==JSON.stringify([...(expected[field]||[])].sort()))throw Error('Opciones funcionales modificadas.');
  return true;
 }
-function generate(age,domain,level){const key=[age,domain,level].join(':');if(!cache.has(key))pool(age,domain,level);const bank=cache.get(key)||[];return bank.length?structuredClone(bank[Math.floor(Math.random()*bank.length)]):null;}
+function generate(age,domain,level,focus=null){const key=[age,domain,level].join(':');if(!cache.has(key))pool(age,domain,level);const language=['language','middleLanguage','teenLanguage'].includes(domain);const bank=(cache.get(key)||[]).filter(it=>language?it.languageFocus===(focus||'grammar'):focus==='writing'?it.languageFocus==='writing':focus?it.languageFocus!=='writing':true);return bank.length?structuredClone(bank[Math.floor(Math.random()*bank.length)]):null;}
 const api={pool,generate,validate};root.FunctionalContent=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);

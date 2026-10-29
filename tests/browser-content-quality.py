@@ -35,5 +35,18 @@ try:
   file=Path(tmp)/'functional.docx';dl.value.save_as(file)
   with zipfile.ZipFile(file) as z:
    xml=z.read('word/document.xml').decode();assert 'before cutting' in xml;assert 'Wash the fruit' in xml
-  assert not errors,errors;browser.close();print('PASS: reviewed early choice and word order through local adapter, teen English through API, correct grading, 390px and matching DOCX source')
+  # New everyday writing uses the existing manual review and printable source.
+  page.evaluate("()=>{window.__fixture=FunctionalContent.pool('teen','literacy',3).find(it=>it.qualityDescriptor.semanticFamily==='reading.recommendation'&&it.qualityDescriptor.scenarioFamily==='home.messages');window.__current=null}")
+  workspace(page).locator('#navMenu [data-subject=literacy]').click();page.wait_for_function('()=>window.__current?.writingPurpose&&document.querySelector("#exercisePrompt").textContent===__current.q')
+  assert page.locator('#textAnswerArea').is_visible();assert page.locator('#writingCriteria li').count()==3
+  assert page.locator('#exerciseOptions [data-answer]').count()==0
+  page.locator('#textAnswerInput').fill('Elijo B porque termina antes de las 18:00 y no requiere reserva.')
+  page.locator('#textAnswerCheck').click();assert page.locator('#selfAssessment').is_visible();assert '18:15' in page.locator('#modelAnswer').inner_text()
+  page.set_viewport_size({'width':390,'height':844});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
+  page.locator('#exercise').screenshot(path='/tmp/content-quality-writing-mobile.png')
+  with page.expect_download() as dl:page.evaluate('()=>WorksheetGenerator.generate([[__fixture]],__profiles.find(p=>p.id==="teen"))')
+  file=Path(tmp)/'writing.docx';dl.value.save_as(file)
+  with zipfile.ZipFile(file) as z:
+   xml=z.read('word/document.xml').decode();assert 'Paseo guiado' in xml;assert 'Recomienda una opción' in xml;assert 'La justificación cita datos relevantes' in xml
+  assert not errors,errors;browser.close();print('PASS: reviewed early choice and word order through local adapter, teen English through API, correct grading, 390px, everyday writing with manual review and matching DOCX sources')
 finally:server.shutdown();server.server_close()

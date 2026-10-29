@@ -188,7 +188,7 @@
     if(curriculum?.supports('early',domain)){
       let items=curriculum.pool('early',domain,bandLevel);
       if(domain==='reading'){
-        const writing=pool('language',bandLevel,'writing').map(it=>({...it,domain:'reading',originalDomain:'language',passageKey:'writing-early:'+it.semanticKey,ageProfile:{...it.ageProfile,mechanic:'sequencing',family:'reading-writing'},mechanic:'reading_writing'}));
+        const writing=[...pool('language',bandLevel,'writing').map(it=>({...it,domain:'reading',originalDomain:'language',passageKey:'writing-early:'+it.semanticKey,ageProfile:{...it.ageProfile,mechanic:'sequencing',family:'reading-writing'},mechanic:'reading_writing'})),...items.filter(it=>it.languageFocus==='writing'&&it.qualityEvidence)];
         items=items.filter(it=>it.languageFocus!=='writing');
         items=subdomain==='writing'?writing:subdomain==='reading'||subdomain==='grammar'?items:[...items,...writing];
       }

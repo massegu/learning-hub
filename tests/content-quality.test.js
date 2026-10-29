@@ -8,12 +8,12 @@ test('semantic taxonomy does not multiply by document format, colour, names or a
 });
 test('authored functional tasks have purpose, unique sources and canonical answer evidence across ages and locales',()=>{
  let count=0;
- for(const age of ['early','junior','primary','middle','teen'])for(const domain of ['language','division','middleMath','teenMath','geometry','reading','literacy','attention','executive','memory','speedReasoning','social','english'])for(const level of [1,2,3]){
+ for(const age of ['early','junior','primary','middle','teen'])for(const domain of ['language','middleLanguage','teenLanguage','division','middleMath','teenMath','geometry','reading','literacy','attention','executive','memory','speedReasoning','social','english'])for(const level of [1,2,3]){
   const items=functional.pool(age,domain,level);assert.equal(new Set(items.map(x=>x.semanticKey)).size,items.length);
   for(const item of items){assert.ok(quality.describe(item,age,domain).functionalPurpose);assert.deepEqual(quality.issues(item,age,domain),[]);model.printable(item,profile(age));
    for(const country of Object.keys(locale.labels)){const translated=locale.localizeItem(item,country,domain);functional.validate(translated);model.printable(translated,profile(age));}
    const broken=structuredClone(item);broken.stimulus=[{type:'text',text:'Fuente cambiada'}];assert.throws(()=>functional.validate(broken));
-   const answer=structuredClone(item);if(answer.a!==undefined)answer.a='Respuesta cambiada';else answer.answer=['Respuesta cambiada'];assert.throws(()=>functional.validate(answer));count++;
+   const answer=structuredClone(item);if(answer.a!==undefined)answer.a='Respuesta cambiada';else if(answer.type==='self')answer.sample='Respuesta cambiada';else answer.answer=['Respuesta cambiada'];assert.throws(()=>functional.validate(answer));count++;
   }
  }
  assert.ok(count>350);
@@ -25,7 +25,7 @@ test('actual early selector balances operations across sessions without corrupti
   }
  }
 });
-test('client and Edge quality sources are byte identical',()=>{for(const name of ['content-quality','functional-content'])assert.equal(fs.readFileSync(require.resolve('../js/'+name+'.js'),'utf8'),fs.readFileSync(require.resolve('../supabase/functions/request-learning-content/'+name+'.js'),'utf8'));});
+test('client and Edge quality sources are byte identical',()=>{for(const name of ['content-quality','transfer-content','functional-content'])assert.equal(fs.readFileSync(require.resolve('../js/'+name+'.js'),'utf8'),fs.readFileSync(require.resolve('../supabase/functions/request-learning-content/'+name+'.js'),'utf8'));});
 test('reproducible inventory covers all visible age/domain cells and detects concentration',()=>{
  const before=require('../docs/audits/content-quality-before.json'),after=require('../docs/audits/content-quality-after.json');
  assert.equal(after.rows.length,44);assert.equal(after.taxonomyDigest,before.taxonomyDigest);assert.notEqual(after.sourceDigest,before.sourceDigest);assert.ok(after.rows.every(r=>r.exactVisibleActivities<=r.activities));assert.deepEqual(after.summary.belowMinimum,[]);assert.equal(after.summary.unclassified,0);
@@ -33,7 +33,7 @@ test('reproducible inventory covers all visible age/domain cells and detects con
  const repeats=data=>data.rows.reduce((n,r)=>n+r.consecutiveSameFamily,0);assert.ok(repeats(after)<repeats(before)/2);
 });
 test('each functional family has two authored settings and no unchanged source between available levels',()=>{
- for(const age of ['early','junior','primary','middle','teen'])for(const domain of ['language','division','middleMath','teenMath','geometry','reading','attention','executive','memory','speedReasoning','social','english']){
+ for(const age of ['early','junior','primary','middle','teen'])for(const domain of ['language','middleLanguage','teenLanguage','division','middleMath','teenMath','geometry','reading','literacy','attention','executive','memory','speedReasoning','social','english']){
   const families=new Map(),sources=new Map();
   for(const level of [1,2,3])for(const item of functional.pool(age,domain,level)){
    const family=item.qualityDescriptor.semanticFamily,setting=item.qualityDescriptor.scenarioFamily.split('.')[0];
@@ -77,5 +77,68 @@ test('condition and resource decisions have one factual answer and do not always
    assert.equal(matches.length,1);assert.ok(item.a.endsWith(matches[0][0]));positions.add(table.rows.indexOf(matches[0]));
   }
   assert.equal(positions.size,2,family+' always favours one table row');
+ }
+});
+
+test('the historical context gaps receive authored tasks in two settings at each level',()=>{
+ const transfer=require('../js/transfer-content');let combinations=0;
+ for(const [cell,families] of Object.entries(transfer.targets)){
+  const [age,domain]=cell.split('/');combinations+=families.length;
+  for(const level of [1,2,3]){
+   const added=[];transfer.extend({age,domain,level,T:text=>({type:'text',text}),L:items=>({type:'list',items}),table:rows=>({type:'table',rows}),add:(family,scenario,...args)=>added.push({family,scenario,args})});
+   for(const family of families)assert.ok(new Set(added.filter(x=>x.family===family).map(x=>x.scenario.split('.')[0])).size>=2,cell+'/'+family+'/'+level);
+  }
+ }
+ assert.equal(combinations,177);
+ const after=require('../docs/audits/content-quality-after.json');assert.equal(after.summary.contextFamiliesNeedingReview,0);assert.equal(after.summary.functionalContextGaps,0);
+});
+test('label comparison answers follow the actual labels in both settings and all levels',()=>{
+ for(const age of ['early','junior','primary','middle','teen'])for(const level of [1,2,3]){
+  const rows=functional.pool(age,'speedReasoning',level).filter(x=>x.qualityDescriptor.semanticFamily==='speed.compare'&&/organization|library/.test(x.qualityDescriptor.scenarioFamily));
+  for(const root of ['home','community']){
+   const items=rows.filter(x=>x.qualityDescriptor.scenarioFamily.startsWith(root+'.'));assert.equal(items.length,2);
+   for(const item of items){const [a,b]=item.stimulus.find(b=>b.type==='table').rows[0];assert.equal(item.a,a===b?'Sí':'No');}
+   assert.deepEqual(new Set(items.map(x=>x.a)),new Set(['Sí','No']));
+  }
+ }
+});
+test('writing alternatives stay observable rather than receiving automatic factual grades',()=>{
+ for(const age of ['primary','middle','teen'])for(const level of [1,2,3])for(const item of functional.pool(age,'literacy',level).filter(x=>x.type==='self')){
+  assert.equal(item.assessment,'observation');assert.equal(item.responseType,'written');assert.ok(item.writingRubric.length>=3);assert.ok(item.sample);assert.equal(item.a,undefined);
+  const broken=structuredClone(item);broken.writingRubric=['Acepta todo'];assert.throws(()=>functional.validate(broken));
+ }
+});
+
+test('all authored tasks survive the real Edge normalizer and delivery validator',()=>{
+ const {api,context}=require('./edge-harness')();let checked=0;
+ for(const [cell] of Object.entries(require('../js/transfer-content').targets)){
+  const [age,domain]=cell.split('/');for(const level of [1,2,3])for(const item of context.FunctionalContent.pool(age,domain,level)){
+   assert.equal(api.validateItem(api.normalizeItem(item)),true,item.contentKey);const stripped={...item,qualityEvidence:undefined};assert.equal(api.validateItem(stripped),false);assert.throws(()=>model.printable(stripped,profile(age)));checked++;
+  }
+ }
+ assert.ok(checked>1000);
+});
+test('language and writing focus routes preserve the selected purpose',()=>{
+ for(const age of ['early','junior','primary','middle','teen']){
+  const domain=age==='middle'?'middleLanguage':age==='teen'?'teenLanguage':'language';
+  for(const level of [1,2,3])for(const focus of ['grammar','spelling','vocabulary'])for(let k=0;k<6;k++){
+   const item=functional.generate(age,domain,level,focus);if(item)assert.equal(item.languageFocus,focus);
+  }
+  if(['primary','middle','teen'].includes(age))for(const level of [1,2,3])for(let k=0;k<6;k++)assert.equal(functional.generate(age,'literacy',level,'writing').languageFocus,'writing');
+ }
+});
+test('every added older math calculation derives from its displayed source',()=>{
+ for(const age of ['middle','teen'])for(const level of [1,2,3])for(const item of functional.pool(age,age==='middle'?'middleMath':'teenMath',level).filter(x=>['home.planning','community.club'].includes(x.qualityDescriptor.scenarioFamily))){
+  const blocks=item.stimulus,text=blocks.filter(b=>b.text).map(b=>b.text),numbers=s=>(s.match(/\d+/g)||[]).map(Number);let answer;
+  switch(item.qualityDescriptor.semanticFamily){
+   case 'math.equations':{const [kits,paid]=numbers(text[0]),fee=text[1]?numbers(text[1])[0]:0,coupon=text.some(t=>t.includes('bono'))?3:0;answer=(paid+coupon-fee)/kits;break;}
+   case 'math.percent':{const [price,discount]=numbers(text[0]),fee=text[1]?numbers(text[1])[0]:0;answer=price-price*discount/100+fee;break;}
+   case 'math.average':{const values=blocks.find(b=>b.type==='list').items.map(x=>numbers(x)[0]),excluded=text[1]?numbers(text[1])[0]:null,valid=values.filter(n=>n!==excluded);answer=valid.reduce((a,b)=>a+b,0)/valid.length;break;}
+   case 'math.proportion':{const [base,units,wanted]=numbers(text[0]);answer=units*wanted/base;break;}
+   case 'math.area':{const [w,h,x,y]=numbers(text[1]);answer=w*h+(x===undefined?0:(text[1].includes('sin cubrir')?-1:1)*x*y);break;}
+   case 'math.probability':{const rows=blocks.find(b=>b.type==='table').rows,n=Number(rows[0][1]),other=Number(rows[1][1]),removed=text.some(t=>t.includes('No lo devuelves'))?1:0;assert.equal(item.a,level===1?rows[0][0]:(n-removed)+' de '+(n+other-removed));continue;}
+   default:continue;
+  }
+  assert.equal(parseFloat(item.a),answer,item.contentKey);
  }
 });

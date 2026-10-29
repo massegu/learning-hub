@@ -11,6 +11,7 @@ await import("./document-library.js");
 await import("./reading-library.js");
 await import("./photo-library.js");
 await import("./content-quality.js");
+await import("./transfer-content.js");
 await import("./functional-content.js");
 await import("./curriculum.js");
 await import("./data/primary.js");
@@ -974,7 +975,7 @@ function socialExercise(level:number){
 }
 
 function validateItem(item:any):boolean{
-  if(item?.qualityEvidence){try{(globalThis as any).FunctionalContent.validate(item);}catch(_){return false;}}
+  if(item?.qualityEvidence||/^functional_/.test(item?.mechanic||'')||String(item?.contentKey||'').startsWith('functional-v1:')){try{(globalThis as any).FunctionalContent.validate(item);}catch(_){return false;}}
   if(item?.roomSpeedTask){try{(globalThis as any).Curriculum.validateRoomSpeed(item);}catch(_){return false;}}
   if(item?.socialEvidence||/^social_perspective_/.test(item?.mechanic||'')){try{(globalThis as any).Curriculum.validateSocial(item);}catch(_){return false;}}
   if(item?.interactionTask||/^executive_interactive_|^attention_room_search$/.test(item?.mechanic||'')){try{(globalThis as any).Curriculum.validateInteraction(item);}catch(_){return false;}}
@@ -2323,7 +2324,7 @@ function matrixApplied20(age:string,level:number,v:number){
 }
 
 function variantExercise(age:string,domain:string,level:number,subdomain:string|null=null,documentsOnly:boolean|null=null,photosOnly:boolean=false,interactionOnly:boolean=false,interactionKind:string|null=null){
-  if(!interactionOnly&&!photosOnly&&documentsOnly!==true&&!['writing','vocabulary','spelling'].includes(subdomain||'')&&Math.random()<.3){const functional=(globalThis as any).FunctionalContent.generate(age,domain,level);if(functional)return {...functional,id:age+'-functional-'+crypto.randomUUID()};}
+  if(!interactionOnly&&!photosOnly&&documentsOnly!==true&&Math.random()<.3){const functional=(globalThis as any).FunctionalContent.generate(age,domain,level,subdomain);if(functional)return {...functional,id:age+'-functional-'+crypto.randomUUID()};}
   if(interactionOnly){const item=(globalThis as any).Curriculum.generateInteractive(age,domain,level,interactionKind);return item?{...item,id:age+'-interactive-'+crypto.randomUUID()}:null;}
   const photos=(globalThis as any).PhotoLibrary;
   const photo=()=>{const item=photos.generate(age,domain,level);return item?{...item,id:age+'-photo-'+crypto.randomUUID()}:null;};

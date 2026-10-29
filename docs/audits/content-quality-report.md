@@ -8,7 +8,7 @@ Inventarios sintéticos reproducibles: [antes](content-quality-before.json), [de
 - Repeticiones consecutivas de familia: 226 → 0, en 1.584 entregas por versión.
 - Familias sin clasificación: 0 actividades.
 - Banco funcional nuevo: 0 familias sin dos contextos; 0 fuentes sin cambios entre niveles.
-- Combinaciones familia/franja con menos de dos contextos reconocidos: 169. Este requisito sigue pendiente de revisión editorial.
+- Combinaciones familia/franja con menos de dos contextos reconocidos: 0. El banco añade tareas contextualizadas para las familias históricas que no llegaban al mínimo.
 
 ## Método y alcance
 
@@ -34,37 +34,37 @@ El selector de 6–7 evita las dos familias más recientes cuando hay opciones y
 | 6–7 | speedReasoning | 5 → 8 | 11 → 0 | 17% |
 | 8–10 | social | 5 → 9 | 1 → 0 | 17% |
 | 8–10 | language | 10 → 10 | 8 → 0 | 17% |
-| 8–10 | division | 6 → 8 | 1 → 0 | 17% |
+| 8–10 | division | 6 → 8 | 1 → 0 | 25% |
 | 8–10 | reading | 9 → 13 | 3 → 0 | 42% |
-| 8–10 | attention | 8 → 8 | 17 → 0 | 25% |
+| 8–10 | attention | 8 → 8 | 17 → 0 | 33% |
 | 8–10 | executive | 8 → 8 | 4 → 0 | 25% |
 | 8–10 | memory | 8 → 8 | 0 → 0 | 17% |
 | 8–10 | speedReasoning | 11 → 11 | 7 → 0 | 17% |
-| 10–12 | social | 5 → 10 | 9 → 0 | 25% |
+| 10–12 | social | 5 → 10 | 9 → 0 | 17% |
 | 10–12 | geometry | 4 → 8 | 2 → 0 | 17% |
-| 10–12 | language | 10 → 10 | 7 → 0 | 17% |
-| 10–12 | division | 6 → 8 | 1 → 0 | 17% |
-| 10–12 | english | 4 → 9 | 2 → 0 | 17% |
-| 10–12 | literacy | 16 → 16 | 4 → 0 | 50% |
+| 10–12 | language | 10 → 10 | 7 → 0 | 25% |
+| 10–12 | division | 6 → 8 | 1 → 0 | 25% |
+| 10–12 | english | 4 → 9 | 2 → 0 | 25% |
+| 10–12 | literacy | 16 → 16 | 4 → 0 | 42% |
 | 10–12 | attention | 8 → 8 | 26 → 0 | 25% |
-| 10–12 | executive | 8 → 8 | 5 → 0 | 25% |
+| 10–12 | executive | 8 → 8 | 5 → 0 | 33% |
 | 10–12 | memory | 9 → 9 | 0 → 0 | 25% |
 | 10–12 | speedReasoning | 11 → 11 | 6 → 0 | 17% |
 | 13–15 | social | 4 → 9 | 11 → 0 | 25% |
 | 13–15 | middleLanguage | 10 → 10 | 7 → 0 | 17% |
-| 13–15 | middleMath | 6 → 8 | 0 → 0 | 17% |
+| 13–15 | middleMath | 6 → 8 | 0 → 0 | 25% |
 | 13–15 | english | 4 → 9 | 2 → 0 | 25% |
-| 13–15 | literacy | 18 → 18 | 2 → 0 | 50% |
+| 13–15 | literacy | 18 → 18 | 2 → 0 | 25% |
 | 13–15 | attention | 8 → 8 | 22 → 0 | 25% |
-| 13–15 | executive | 8 → 8 | 2 → 0 | 25% |
+| 13–15 | executive | 8 → 8 | 2 → 0 | 17% |
 | 13–15 | memory | 9 → 9 | 1 → 0 | 17% |
 | 13–15 | speedReasoning | 11 → 11 | 7 → 0 | 17% |
-| 16–18 | teenLanguage | 10 → 10 | 4 → 0 | 17% |
+| 16–18 | teenLanguage | 10 → 10 | 4 → 0 | 25% |
 | 16–18 | teenMath | 6 → 8 | 2 → 0 | 17% |
-| 16–18 | social | 10 → 10 | 4 → 0 | 17% |
+| 16–18 | social | 10 → 10 | 4 → 0 | 25% |
 | 16–18 | english | 0 → 9 | 0 → 0 | 17% |
-| 16–18 | literacy | 16 → 16 | 6 → 0 | 42% |
-| 16–18 | attention | 9 → 9 | 17 → 0 | 25% |
+| 16–18 | literacy | 16 → 17 | 6 → 0 | 25% |
+| 16–18 | attention | 9 → 9 | 17 → 0 | 17% |
 | 16–18 | executive | 8 → 8 | 1 → 0 | 25% |
 | 16–18 | memory | 9 → 9 | 0 → 0 | 17% |
 | 16–18 | speedReasoning | 11 → 11 | 5 → 0 | 17% |
@@ -74,6 +74,10 @@ El selector de 6–7 evita las dos familias más recientes cuando hay opciones y
 Operaciones nuevas en las franjas que las necesitaban: valor del dinero, lectura de medidas, orden numérico, simetría, perímetro, propiedades y caras de cuerpos, propósito de notas, comparación de fuentes, hechos/opiniones, instrucciones, cronología, decisiones con condiciones, recursos, cambio de plan, tiempo disponible, recuerdo reciente e inverso, claves y traducción de símbolos, secuencias de instrucciones en inglés y contextos sociales de convivencia.
 
 No se retiran ejercicios por cambiar la taxonomía. Se retiran del recuento ficticio los subtipos de documentos y los cambios superficiales de formato. Se descartaron variantes nuevas con fuente idéntica aunque declarasen otro contexto.
+
+## Contextos cotidianos añadidos
+
+Se amplían 177 combinaciones de franja, dominio y familia: 169 carencias detectadas en la revisión anterior y ocho adicionales de escritura para completar las familias que podían quedar infrarrepresentadas en el muestreo. Cada combinación incorpora casa y aula/comunidad en sus tres niveles: 1.092 actividades graduadas añadidas, sin contarlas como 1.092 familias diferentes. Incluye mensajes y avisos, materiales, organización, lectura de datos, cálculos, actividades del barrio y talleres. Las tareas de escritura incluyen ejemplos y rúbricas de observación; admiten respuestas justificadas distintas y no reciben una calificación factual automática. En comparación de etiquetas aparecen coincidencias y diferencias en cada contexto, para evitar que el entorno anticipe la respuesta.
 
 ## Matriz de dificultad
 
@@ -99,7 +103,7 @@ Los nuevos ejemplos de medida cambian el origen, la traducción de claves pasa d
 | Edad | Dominio | Familia | Pregunta |
 |---|---|---|---|
 | 6–7 | social | social.boundary | ¿Qué respeta su petición? |
-| 6–7 | language | language.context_meaning | ¿Qué significa «seco» en esta frase? |
+| 6–7 | language | language.context_meaning | ¿Qué significa «caliente» en esta frase? |
 | 6–7 | division | math.order | ¿Qué número queda en medio de menor a mayor? |
 | 6–7 | reading | reading.literal | ¿Qué piezas pone abajo? |
 | 6–7 | attention | attention.exact_match | Mira el modelo. ¿Cuál es igual? |
@@ -107,41 +111,41 @@ Los nuevos ejemplos de medida cambian el origen, la traducción de claves pasa d
 | 6–7 | memory | memory.spatial | Mira dónde está cada imagen. Después taparemos el cuadro. |
 | 6–7 | speedReasoning | speed.translation | Cambia las figuras por números. Mantén el orden. |
 | 8–10 | social | social.perspective | ¿Qué sabe Nora con seguridad? |
-| 8–10 | language | language.connectors | Completa con el enlace que conserva la relación entre las ideas. |
-| 8–10 | division | math.missing_value | ¿Qué número hace verdadera la igualdad? |
-| 8–10 | reading | reading.document_purpose | ¿Qué permite comparar este catálogo? |
-| 8–10 | attention | attention.exact_match | ¿Qué código coincide con el modelo? |
-| 8–10 | executive | executive.resources | ¿Qué opción cumple todas las condiciones? |
-| 8–10 | memory | memory.selective | Mira todas las imágenes. Después recordarás solo una categoría. |
-| 8–10 | speedReasoning | speed.translation | Traduce todos los códigos en el orden mostrado. |
-| 10–12 | social | social.boundary | ¿Qué respeta su petición? |
-| 10–12 | geometry | math.area | ¿Cuál es el perímetro del rectángulo? |
-| 10–12 | language | language.context_meaning | ¿Qué significa «transparente» en esta frase? |
+| 8–10 | language | language.description | Completa la frase. Fíjate en si habla de uno o de varios. |
+| 8–10 | division | math.data | ¿Cuál es la puntuación más alta? |
+| 8–10 | reading | reading.compose | ¿Qué problema debe resolver el nuevo cartel? Escribe un párrafo breve: responde y explica qué dato del texto apoya tu respuesta. |
+| 8–10 | attention | attention.document_lookup | ¿Qué producto tiene una capacidad de 600 ml? |
+| 8–10 | executive | executive.plan | Organiza el plan antes de empezar. |
+| 8–10 | memory | memory.route | Mira el mapa. Recuerda el orden de las 3 visitas. |
+| 8–10 | speedReasoning | speed.match | ¿Qué opción es idéntica al modelo? |
+| 10–12 | social | social.boundary | ¿Qué necesitas antes de cogerla? |
+| 10–12 | geometry | geometry.angle | ¿Cuánto mide el ángulo que falta? |
+| 10–12 | language | language.description | Completa la frase. Fíjate en si habla de uno o de varios. |
 | 10–12 | division | math.missing_value | ¿Qué número hace verdadera la igualdad? |
-| 10–12 | english | english.inference | Which task is Jo preparing for? |
-| 10–12 | literacy | reading.document_purpose | ¿Para qué puede usarse este plano? |
-| 10–12 | attention | attention.visual_changes | Marca el objeto que cambia de azul a roja. |
-| 10–12 | executive | executive.conditions | El grupo eligió el paquete A. ¿Es correcta la decisión? |
+| 10–12 | english | english.connector | Choose the connector that gives a reason. |
+| 10–12 | literacy | reading.document_purpose | ¿Para qué sirve el panel de salidas? |
+| 10–12 | attention | attention.exact_match | ¿Qué código coincide exactamente con el modelo? |
+| 10–12 | executive | executive.resources | ¿Qué opción cumple todas las condiciones? |
 | 10–12 | memory | memory.scene | Observa la imagen. Después desaparecerá y responderás una pregunta. |
-| 10–12 | speedReasoning | speed.match | ¿Qué opción es idéntica al modelo? |
-| 13–15 | social | social.context | ¿Qué ha pedido Noa? |
-| 13–15 | middleLanguage | language.spelling | Reconstruye la copia manteniendo la palabra modelo. |
-| 13–15 | middleMath | math.equations | ¿Qué valor de x hace verdadera la igualdad? |
+| 10–12 | speedReasoning | speed.search | ¿Cuántas veces aparece ☆? |
+| 13–15 | social | social.repair | ¿Qué ayuda a reparar lo ocurrido? |
+| 13–15 | middleLanguage | language.agreement | Completa con el verbo que concuerda con el sujeto. |
+| 13–15 | middleMath | math.proportion | ¿Cuántos metros recorrerá en 4 minutos? |
 | 13–15 | english | english.location | Where is the report at the end? |
-| 13–15 | literacy | reading.document_purpose | ¿Para qué puede usarse este plano? |
-| 13–15 | attention | attention.exact_match | ¿Qué código coincide con todas las posiciones del modelo? |
-| 13–15 | executive | executive.plan | Ordena las acciones para cumplir el objetivo. Consulta las condiciones del documento. |
+| 13–15 | literacy | reading.document_purpose | ¿Qué comunica el aviso? |
+| 13–15 | attention | attention.position | ¿Qué aparece inmediatamente después del tercer elemento? |
+| 13–15 | executive | executive.resources | ¿Qué opción cumple todas las condiciones? |
 | 13–15 | memory | memory.selective | Mira todas las imágenes. Después recordarás solo una categoría. |
-| 13–15 | speedReasoning | speed.translation | Traduce todos los códigos en el orden mostrado. |
-| 16–18 | teenLanguage | language.context_meaning | ¿Qué significa «mitigar» en esta frase? |
-| 16–18 | teenMath | math.average | ¿Cuál es la media de puntos? |
-| 16–18 | social | social.intent | ¿Qué te están pidiendo? |
-| 16–18 | english | english.intent | Where should you leave the key? |
-| 16–18 | literacy | reading.document_purpose | ¿Qué servicio anuncia este cartel? |
-| 16–18 | attention | attention.conditions | ¿A qué hora pasa la línea A por Parque? |
-| 16–18 | executive | executive.time | ¿Cabe el plan completo en el tiempo disponible? |
-| 16–18 | memory | memory.spatial | Mira dónde está cada imagen. Después taparemos el cuadro. |
-| 16–18 | speedReasoning | speed.compare | ¿Son iguales? |
+| 13–15 | speedReasoning | speed.compare | ¿Son iguales? |
+| 16–18 | teenLanguage | language.structure | Completa la frase respetando su sentido y su estructura. |
+| 16–18 | teenMath | math.percent | ¿Cuál es el coste final en puntos? |
+| 16–18 | social | social.context | ¿Qué dos hechos conviene distinguir? |
+| 16–18 | english | english.evidence | Which statement matches the notice? |
+| 16–18 | literacy | reading.instructions | Redacta instrucciones claras para otra persona. Incluye el orden y la condición del encargo. |
+| 16–18 | attention | attention.visual_changes | Marca el objeto que cambia de amarillo a morado. |
+| 16–18 | executive | executive.resources | ¿Qué opción cumple todas las condiciones? |
+| 16–18 | memory | memory.association | Mira la imagen que acompaña a cada persona. Después la taparemos. |
+| 16–18 | speedReasoning | speed.rule | ¿Qué respuesta corresponde a la regla activa? |
 
 ## Ejemplos de progresión revisada
 
@@ -159,15 +163,15 @@ Los nuevos ejemplos de medida cambian el origen, la traducción de claves pasa d
 
 ## Comprobaciones y revisión visual
 
-La suite de Node, las nueve pruebas Python, los 14 recorridos de navegador existentes y el recorrido adicional de contenido se ejecutan antes de subir la rama. El recorrido nuevo comprueba selección local de 6–7, inglés de 16–18, corrección, ancho de 390 px y fuente coincidente en DOCX. Las capturas usan perfiles ficticios y el backend local de esta rama.
+La suite de Node, las nueve pruebas Python, los 14 recorridos de navegador existentes y el recorrido adicional de contenido se ejecutan antes de subir la rama. El recorrido nuevo comprueba selección local de 6–7, inglés de 16–18, corrección, escritura cotidiana con revisión manual, ancho de 390 px y fuentes coincidentes en DOCX. Las capturas usan perfiles ficticios y el backend local de esta rama.
 
-[Atención 6–7 en móvil](../review-assets/content-quality/early-attention-mobile.png) · [English Lab 16–18](../review-assets/content-quality/teen-english-desktop.png)
+[Atención 6–7 en móvil](../review-assets/content-quality/early-attention-mobile.png) · [English Lab 16–18](../review-assets/content-quality/teen-english-desktop.png) · [Escritura cotidiana en móvil](../review-assets/content-quality/writing-mobile.png)
 
 ## Límites y revisión pendiente
 
 - El mínimo de ocho familias se comprueba sobre los tres niveles y los focos del dominio, no en cada nivel ni en cada pestaña. El objetivo deseable de 12–15 no se alcanza en todas las áreas.
-- La revisión de la PR añade al menos dos contextos por familia nueva y elimina fuentes idénticas entre sus niveles disponibles. Se comprueba en tests sobre todo el banco funcional. Los niveles varían condiciones, pasos, relaciones, referencias o transformaciones; no solo longitud de texto.
-- El banco histórico conserva familias abstractas y fuentes compartidas entre niveles. Sus avisos se mantienen separados de los del banco nuevo: no se han borrado del inventario ni se presentan como variedad adicional.
+- La revisión de la PR añade al menos dos contextos por familia funcional, incluidas las familias históricas con cobertura insuficiente y elimina fuentes idénticas entre sus niveles disponibles. Se comprueba en tests sobre todo el banco funcional. Los niveles varían condiciones, pasos, relaciones, referencias o transformaciones; no solo longitud de texto.
+- El banco histórico conserva ejercicios abstractos y fuentes compartidas entre niveles. Sus avisos se mantienen separados de los del banco nuevo: no se han borrado del inventario ni se presentan como variedad adicional.
 - La cobertura de contextos usa reglas conservadoras sobre la fuente y etiquetas editoriales. Una etiqueta distinta no prueba transferencia; requiere revisión humana. Las familias abstractas no se cuentan como varios contextos.
 - Los near-duplicates son grupos de revisión, no errores automáticos: dos preguntas distintas pueden compartir una fuente legítimamente.
 - La evidencia canónica impide cambiar la fuente o la respuesta de las tareas nuevas y los validadores existentes continúan activos. Esto no demuestra por sí solo que todo distractor legacy sea plausible o que toda pregunta de inferencia admita una única interpretación.

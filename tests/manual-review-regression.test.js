@@ -37,8 +37,8 @@ test('focused teen routes deliver real orthography, mature reasoning and evidenc
       if(it.opts){assert.equal(new Set(it.opts).size,it.opts.length);assert.ok(it.opts.includes(it.a));}
       if(domain==='literacy')assert.ok(it.stimulus[0].text.split(/\s+/).length>=45);
     }
-    const delivered=api.variantExercise('teen',domain,level);assert.ok(domain==='teenLanguage'?delivered.teenReview:delivered.contentKey.startsWith('curriculum-v2-teen-')||delivered.contentKey.startsWith('document-v1:teen:'));
-    const worksheet=api.worksheetTask('teen',domain,level);assert.ok(domain==='teenLanguage'?worksheet.teenReview:worksheet.contentKey.startsWith('curriculum-v2-teen-')||worksheet.contentKey.startsWith('document-v1:teen:')); assert.equal(worksheet.sourceDomain,domain);
+    const delivered=api.variantExercise('teen',domain,level);assert.ok(domain==='teenLanguage'?delivered.teenReview:delivered.contentKey.startsWith('curriculum-v2-teen-')||delivered.contentKey.startsWith('document-v1:teen:')||delivered.qualityEvidence?.age==='teen');
+    const worksheet=api.worksheetTask('teen',domain,level);assert.ok(domain==='teenLanguage'?worksheet.teenReview:worksheet.contentKey.startsWith('curriculum-v2-teen-')||worksheet.contentKey.startsWith('document-v1:teen:')||worksheet.qualityEvidence?.age==='teen'); assert.equal(worksheet.sourceDomain,domain);
     for(const focus of ['grammar','spelling','writing'])assert.equal(api.variantExercise('teen','teenLanguage',level,focus).languageFocus,focus);
     for(const it of teen.pool('teenLanguage',level,'spelling'))assert.doesNotMatch(it.q,/inferencia|resumen|conclusión|refiere/u);
     const history=[],signatures=[];
