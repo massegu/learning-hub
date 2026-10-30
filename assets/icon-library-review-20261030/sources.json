@@ -1,0 +1,58 @@
+{
+  "lucide": {
+    "version": "0.468.0",
+    "name": "Lucide",
+    "license": "ISC",
+    "site": "https://lucide.dev",
+    "base": "https://unpkg.com/lucide-static@0.468.0/",
+    "path": "icons/",
+    "icons": [
+      "headphones",
+      "palette",
+      "wrench",
+      "flower-2"
+    ]
+  },
+  "tabler": {
+    "version": "3.28.1",
+    "name": "Tabler Icons",
+    "license": "MIT",
+    "site": "https://tabler.io/icons",
+    "base": "https://unpkg.com/@tabler/icons@3.28.1/",
+    "path": "icons/outline/",
+    "icons": [
+      "headphones",
+      "palette",
+      "tool",
+      "flower"
+    ]
+  },
+  "phosphor": {
+    "version": "2.1.1",
+    "name": "Phosphor Duotone",
+    "license": "MIT",
+    "site": "https://phosphoricons.com",
+    "base": "https://unpkg.com/@phosphor-icons/core@2.1.1/",
+    "path": "assets/duotone/",
+    "icons": [
+      "headphones-duotone",
+      "palette-duotone",
+      "wrench-duotone",
+      "flower-duotone"
+    ]
+  },
+  "iconoir": {
+    "version": "7.11.0",
+    "name": "Iconoir",
+    "license": "MIT",
+    "site": "https://iconoir.com",
+    "base": "https://unpkg.com/iconoir@7.11.0/",
+    "path": "icons/regular/",
+    "icons": [
+      "headset",
+      "palette",
+      "wrench",
+      "flower"
+    ]
+  }
+}

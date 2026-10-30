@@ -207,9 +207,48 @@ Object.assign(scenes,{
  fact('¿Qué había en la hierba del primer plano?','Una pelota amarilla',['Una mochila azul','Una cesta','Un libro'],'En la hierba había una pelota amarilla.')
  ]}
 });
+// New scenes inspected against their visible foreground; no inherited school-object captions.
+Object.assign(scenes,{
+ ceramics2026:{title:'Preparar una pieza de cerámica',width:1448,height:1086,path:'assets/photos/everyday-variety-20261030/ceramics.png',facts:[
+ fact('¿Cuántos cuencos había sobre la base rectangular del primer plano?','Tres',['Dos','Cuatro','Uno'],'Había tres cuencos sobre la base rectangular del primer plano.'),
+ fact('¿Qué objeto amarillo había en el centro de la mesa?','Una esponja',['Un guante','Una vela','Una flor'],'Había una esponja amarilla en el centro.'),
+ fact('¿De qué color era el jarrón de la derecha?','Turquesa',['Rojo','Amarillo','Blanco'],'El jarrón de la derecha era turquesa.'),
+ fact('¿Qué prenda colgaba al fondo?','Un delantal',['Una chaqueta','Una bufanda','Una gorra'],'Al fondo colgaba un delantal claro.'),
+ fact('¿Dónde estaban los tres cuencos del primer plano?','A la izquierda de la esponja',['A la derecha del jarrón','Debajo de la mesa','En el suelo'],'Los tres cuencos estaban a la izquierda de la esponja.'),
+ fact('¿Había flores dentro del jarrón turquesa?','No',['Sí, flores rojas','Sí, flores amarillas','Sí, flores blancas'],'No había flores dentro del jarrón.')
+ ]},
+ music2026:{title:'Un espacio para crear música',width:1448,height:1086,path:'assets/photos/everyday-variety-20261030/music.png',facts:[
+ fact('¿Qué instrumento estaba a la izquierda de la mesa?','Un teclado musical',['Una guitarra','Un tambor','Una trompeta'],'A la izquierda estaba el teclado musical.'),
+ fact('¿Qué había en el centro de la mesa, delante del micrófono?','Unos auriculares',['Unos guantes','Un mando','Una radio'],'Los auriculares estaban delante del micrófono.'),
+ fact('¿De qué color era el cable visible sobre la mesa?','Rojo',['Azul','Amarillo','Verde'],'El cable visible sobre la mesa era rojo.'),
+ fact('¿Dónde estaba la maraca naranja?','A la derecha de los auriculares',['Bajo el taburete','Sobre el teclado','En la ventana'],'La maraca naranja estaba a la derecha de los auriculares.'),
+ fact('¿Qué había delante de la mesa?','Un taburete negro',['Un sillón rojo','Un banco verde','Una caja blanca'],'Delante de la mesa había un taburete negro.'),
+ fact('¿Cómo estaba colocado el micrófono?','En un soporte sobre la mesa',['En el suelo','Colgado del techo','Sobre el taburete'],'El micrófono tenía un soporte sobre la mesa.')
+ ]},
+ bicycle2026:{title:'Poner a punto una bicicleta',width:1448,height:1086,path:'assets/photos/everyday-variety-20261030/bicycle.png',facts:[
+ fact('¿De qué color era la bicicleta?','Naranja',['Azul','Verde','Roja'],'La bicicleta era naranja.'),
+ fact('¿Dónde estaba la bomba de aire verde?','A la izquierda de la bicicleta',['Sobre el taburete','Detrás del casco','En la pared'],'La bomba de aire verde estaba a la izquierda.'),
+ fact('¿Qué había sobre el taburete?','Un casco rojo',['Un guante amarillo','Una maceta','Un altavoz'],'Sobre el taburete había un casco rojo.'),
+ fact('¿Cuántas llaves de boca colgaban en el panel del fondo?','Dos',['Una','Tres','Cuatro'],'En el panel colgaban dos llaves de boca.'),
+ fact('¿Cuántas ruedas tenía la bicicleta de la imagen?','Dos',['Una','Tres','Cuatro'],'Se veían las dos ruedas de la bicicleta.'),
+ fact('¿De qué color era el sillín?','Negro',['Rojo','Azul','Blanco'],'El sillín era negro.')
+ ]},
+ greenhouse2026:{title:'Cuidar las plantas en un invernadero',width:1448,height:1086,path:'assets/photos/everyday-variety-20261030/greenhouse.png',facts:[
+ fact('¿Cuántas macetas formaban la fila del primer plano sobre la mesa?','Tres',['Dos','Cuatro','Una'],'La fila del primer plano tenía tres macetas.'),
+ fact('¿De qué color era la regadera de la izquierda?','Azul',['Roja','Amarilla','Verde'],'La regadera de la izquierda era azul.'),
+ fact('¿Dónde estaban los guantes amarillos?','A la derecha de las macetas',['Bajo la mesa','Dentro de la regadera','A la izquierda de la regadera'],'Los guantes estaban a la derecha de las macetas.'),
+ fact('¿De qué color era el mango de la pala de mano?','Verde',['Azul','Rojo','Negro'],'El mango de la pala de mano era verde.'),
+ fact('¿Qué había en el suelo bajo la mesa?','Un saco cerrado',['Una caja abierta','Una cesta vacía','Una regadera'],'Había un saco cerrado bajo la mesa.'),
+ fact('¿Qué tenían las tres macetas del primer plano?','Plantas con hojas verdes',['Flores rojas','Solo tierra sin plantas','Piedras blancas'],'Las tres macetas tenían plantas con hojas verdes.')
+ ]}
+});
+// Presence/movement are answered with labelled choices: absent objects have no misleading hitbox in B.
+pairs.ceramics2026={sceneId:'ceramics2026',path:'assets/photos/everyday-variety-20261030/ceramics-b.png',varied:true,textSelectionOnly:true,regions:{},changes:[['Los cuencos','De tres cuencos a dos cuencos'],['La esponja','De una esponja visible a ninguna esponja'],['El jarrón','De la zona derecha a la zona central']],unchanged:['El delantal','La ventana']};
+pairs.music2026={sceneId:'music2026',path:'assets/photos/everyday-variety-20261030/music-b.png',varied:true,textSelectionOnly:true,regions:{},changes:[['El micrófono','De un micrófono visible a ningún micrófono'],['La maraca','De la derecha de los auriculares a la izquierda de los auriculares'],['Los auriculares','De la zona central a la zona derecha']],unchanged:['El taburete','Los paneles de la pared']};
 // Each harder question reconstructs two or three independent facts from the SAME image.
 // Distractors differ in exactly one component; colour alone cannot solve the task.
 const challenges={
+ ceramics2026:[[0,1,2],[2,3,4],[1,4,5],[0,3,5]],music2026:[[0,1,2],[2,3,4],[1,4,5],[0,3,5]],bicycle2026:[[0,1,2],[2,3,4],[1,4,5],[0,3,5]],greenhouse2026:[[0,1,2],[2,3,4],[1,4,5],[0,3,5]],
  library2026:[[0,1,2],[1,2,3],[0,2,3],[0,1,3]],autumnPark2026:[[0,1,2],[1,2,3],[0,2,3],[0,1,3]],
  cafe:[[0,1,2],[3,4,5],[6,7,8],[9,10,11]],sports:[[0,1,2],[3,4,5],[6,7,8],[9,10,11]],
  kitchen:[[1,3,5],[11,9,10],[2,6,7],[4,8,5]],

@@ -312,9 +312,9 @@
   function renderRoomSpeed(it){
     stopInteraction();const version=interactionVersion,visual=$('#exerciseVisual'),area=$('#exerciseOptions');let observed=null,ended=false;
     const live=()=>currentItem===it&&interactionVersion===version;
-    const record=report=>{
+    const record=(report,explanation='not_requested')=>{
       if(!live()||ended)return;ended=true;it._earlyAnswered=true;clearTimeout(interactionTimer);
-      const entry={itemId:it.contentKey,level:it.level,ts:new Date().toISOString(),elapsedMs:observed?.elapsedMs??null,timingValid:Boolean(observed?.valid),report,measurement:'self_reported_environment'};
+      const entry={itemId:it.contentKey,level:it.level,ts:new Date().toISOString(),elapsedMs:observed?.elapsedMs??null,timingValid:Boolean(observed?.valid),report,explanation,measurement:'self_reported_environment'};
       profile.progress={...profile.progress,environmentSpeedObservations:[...(profile.progress.environmentSpeedObservations||[]),entry].slice(-100)};persist();
       $('#exerciseFeedback').textContent='Observación guardada. Esta práctica no modifica tus aciertos ni los tiempos de los retos en pantalla.';$('#exerciseFeedback').className='feedback practice';area.innerHTML='';$('#exerciseNext').classList.remove('hidden');
     };
@@ -325,7 +325,11 @@
       if(!live())return;$('#exercisePrompt').textContent=it.q;visual.innerHTML='<p id="roomSpeedClock" role="timer" aria-live="off">0,0 s</p><p>Busca sin levantarte ni mover objetos.</p>';it._roomTiming={started:performance.now(),valid:true};
       area.innerHTML='<button id="foundRoomSpeed" class="primary-btn">Lo he localizado</button><button id="missingRoomSpeed" class="secondary-btn">No encuentro un objeto adecuado</button><button id="stopRoomSpeed" class="secondary-btn">Detener sin completar</button>';
       const stop=()=>{clearTimeout(interactionTimer);observed={elapsedMs:Math.round(performance.now()-it._roomTiming.started),valid:it._roomTiming.valid};};
-      $('#foundRoomSpeed').onclick=()=>{stop();visual.innerHTML=`<p>Tiempo observado: ${(observed.elapsedMs/1000).toFixed(1).replace('.',',')} s.</p><p>Comprueba el objeto: ¿cumplía todas las condiciones de la consigna?</p>`;area.innerHTML='<button id="confirmRoomSpeed" class="primary-btn">Sí, cumplía las condiciones</button><button id="rejectRoomSpeed" class="secondary-btn">No cumplía las condiciones</button>';$('#confirmRoomSpeed').onclick=()=>record('found');$('#rejectRoomSpeed').onclick=()=>record('not_met');};
+      $('#foundRoomSpeed').onclick=()=>{stop();visual.innerHTML=`<p>Tiempo observado: ${(observed.elapsedMs/1000).toFixed(1).replace('.',',')} s.</p><p>Comprueba el objeto: ¿cumplía todas las condiciones de la consigna?</p>`;area.innerHTML='<button id="confirmRoomSpeed" class="primary-btn">Sí, cumplía las condiciones</button><button id="rejectRoomSpeed" class="secondary-btn">No cumplía las condiciones</button>';$('#confirmRoomSpeed').onclick=()=>{
+        visual.innerHTML='<p>Has localizado el objeto en '+(observed.elapsedMs/1000).toFixed(1).replace('.',',')+' s.</p><h4>'+escapeHtml(it.roomSpeedTask.followUp)+'</h4><p>Di tu respuesta en voz alta a la persona que te acompaña, o piensa en ella. Esta parte no se cronometra ni se graba.</p>';
+        area.innerHTML='<button id="roomUseExplained" class="primary-btn">He explicado un uso</button><button id="roomUseHelp" class="secondary-btn">He necesitado ayuda</button><button id="roomUseSkipped" class="secondary-btn">Omitir explicación</button>';
+        $('#roomUseExplained').onclick=()=>record('found','explained');$('#roomUseHelp').onclick=()=>record('found','with_help');$('#roomUseSkipped').onclick=()=>record('found','skipped');
+      };$('#rejectRoomSpeed').onclick=()=>record('not_met');};
       $('#missingRoomSpeed').onclick=()=>{stop();record('not_found');};$('#stopRoomSpeed').onclick=()=>{stop();record('skipped');};
       const tick=()=>{if(!live()||ended||observed)return;$('#roomSpeedClock').textContent=((performance.now()-it._roomTiming.started)/1000).toFixed(1).replace('.',',')+' s';interactionTimer=setTimeout(tick,100);};tick();
     };
@@ -342,8 +346,8 @@
       it._timing={started:performance.now(),valid:measured,measured};
       const settings={illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:true,senses:it.lexicalSenses};
       $('#exerciseVisual').innerHTML=['crossedKeys','rapidAgenda','ruleChoice'].includes(it.speedFamily)?`<div class="processing-sources ${it.speedFamily==='crossedKeys'?'two-keys':''}">${it.stimulus.map(block=>`<div class="processing-source">${window.ActivityModel.interactiveStimulus([block],settings)}</div>`).join('')}</div>`:window.ActivityModel.interactiveStimulus(it.stimulus,settings);
-      const options=shuffle(it.opts);
-      $('#exerciseOptions').innerHTML=options.map((o,i)=>`<button class="option-btn speed-choice" data-answer="${escapeHtml(o)}" aria-label="${escapeHtml(o)}"><small class="speed-key" aria-hidden="true">${i+1}</small>${escapeHtml(o)}</button>`).join('');
+      const options=it.speedFamily==='ruleChoice'?['Izquierda','Derecha']:shuffle(it.opts);
+      $('#exerciseOptions').innerHTML=options.map((o,i)=>`<button class="option-btn speed-choice" data-answer="${escapeHtml(o)}" aria-label="${escapeHtml(o)}"><small class="speed-key" aria-hidden="true">${i+1}</small>${it.speedFamily==='ruleChoice'?`<span aria-hidden="true">${o==='Izquierda'?'←':'→'}</span> `:''}${escapeHtml(o)}</button>`).join('');
       $$('#exerciseOptions .speed-choice').forEach(b=>b.onclick=()=>checkOption(b,b.dataset.answer));
       // Exclude instruction reading and bring source + compact response controls into view.
       $('#exercisePrompt').scrollIntoView({block:'start',behavior:'instant'});
@@ -378,7 +382,7 @@
         mark.disabled=option.disabled;
       }
     }
-    if(it.type==='photoDifference'&&it.level<3){
+    if(it.type==='photoDifference'&&it.level<3&&!window.PhotoLibrary.pairs[it.photoTask.pairId].textSelectionOnly){
       const image=$('.photo-comparison figure:nth-child(2) img');
       if(image){
         const holder=document.createElement('div');holder.className='photo-hit-image';image.before(holder);holder.append(image);
@@ -1021,7 +1025,7 @@
     $('#interactionModeBtn').textContent=subject==='executive'?'Actúa con reglas':'Busca a tu alrededor';
     $('#interactionModeBtn').setAttribute('aria-pressed',String(interactionOnly));
     $('#interactionKindSwitch').classList.toggle('hidden',!interactionOnly||subject!=='executive');
-    $$('#interactionKindSwitch button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.interactionKind===interactionKind)));
+    $$('#interactionKindSwitch button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.interactionKind==='signals'?['movement','auditory'].includes(interactionKind):b.dataset.interactionKind===interactionKind)));
     $('#photoModeSwitch').classList.toggle('hidden',!photoSupport||subject!=='memory');
     $('#attentionPhotos').classList.toggle('hidden',!photoSupport||subject!=='attention');
     $('#attentionPhotos').setAttribute('aria-pressed',String(photoOnly));
@@ -1037,7 +1041,7 @@
     $('#documentModeSwitch [data-documents=true]').textContent=subject==='executive'?'Resuelve con documentos':'Explora documentos';
     $('#photoModeSwitch [data-photos=false]').textContent='Recuerda imágenes y secuencias';
     $('#documentModeHint').classList.toggle('hidden',!documentSupport||isReading);
-    $('#documentModeHint').textContent=executedOnly?'Marca, reconstruye o actúa directamente sobre los estímulos.':interactionOnly?(subject==='executive'?'Sigue las reglas de las tarjetas o practica una pausa antes de actuar.':'Busca objetos de la sala y explica qué características cumplen.'):photoOnly?'Compara las dos escenas y busca los cambios de color.':subject==='executive'?(documentOnly?'Usa el documento para organizar acciones y corregir un plan.':'Ordena acciones, aplica reglas y revisa decisiones.'):(documentOnly?'Localiza y contrasta los datos del documento.':'Compara figuras, códigos y listas.');
+    $('#documentModeHint').textContent=executedOnly?'Marca, reconstruye o actúa directamente sobre los estímulos.':interactionOnly?(subject==='executive'?'Actúa con reglas: elige Tarjetas con reglas o Señales y acciones. Dentro de Señales y acciones puedes usar señales en pantalla o de audio.':'Busca objetos de la sala y explica qué características cumplen.'):photoOnly?'Compara las dos escenas y busca los cambios de color.':subject==='executive'?(documentOnly?'Usa el documento para organizar acciones y corregir un plan.':'Ordena acciones, aplica reglas y revisa decisiones.'):(documentOnly?'Localiza y contrasta los datos del documento.':'Compara figuras, códigos y listas.');
     $$('#documentModeSwitch [data-documents]').forEach(b=>b.setAttribute('aria-pressed',String(!executedOnly&&!interactionOnly&&!photoOnly&&(b.dataset.documents==='true')===documentOnly)));
     counter = 0;
     renderEarlyTaskGuide();
@@ -1052,7 +1056,7 @@
     documentOnly=!interactionOnly&&!photoOnly&&button.dataset.documents==='true';
     setupExercise();
   });
-  $('#interactionKindSwitch').addEventListener('click',event=>{const button=event.target.closest('[data-interaction-kind]');if(!button)return;interactionKind=button.dataset.interactionKind;setupExercise();});
+  $('#interactionKindSwitch').addEventListener('click',event=>{const button=event.target.closest('[data-interaction-kind]');if(!button)return;interactionKind=button.dataset.interactionKind==='signals'?'movement':button.dataset.interactionKind;setupExercise();});
   $('#photoModeSwitch').addEventListener('click',event=>{
     const button=event.target.closest('button[data-photos]');if(!button)return;
     executedOnly=false;photoOnly=button.dataset.photos==='true';documentOnly=false;setupExercise();
@@ -1064,7 +1068,7 @@
     const localeRevision = API.localeRevision;
     const res = await API.requestContent({
       ...payload,
-      client_revision:9,
+      client_revision:10,
       ...(targetProfile._sessionOnly?{session_only:true}:{}),
       profile_id: targetProfile.id,
       locale,
@@ -1240,7 +1244,11 @@
         `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus,{heading:it.topic||it.theme,rubric:it.writingRubric,illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:!window.ContentPolicy.forProfile(profile),senses:it.lexicalSenses})}</div>`;
     $("#exercisePrompt").textContent = it.q || "Actividad";
     if(it.roomSpeedTask){renderRoomSpeed(it);return;}
-    if(it.interactionTask){renderInteractiveExercise(it);return;}
+    if(it.interactionTask){renderInteractiveExercise(it);
+      if(['movement','auditory'].includes(it.interactionTask.kind)){
+        const controls=document.createElement('label');controls.className='signal-mode-control';controls.innerHTML='Actúa con reglas › Señales y acciones · Tipo de señal <select id="signalModeSelect"><option value="movement">En pantalla</option><option value="auditory">Palabra o sonido</option></select>';
+        $('#exerciseVisual').prepend(controls);$('#signalModeSelect').value=it.interactionTask.kind;$('#signalModeSelect').onchange=e=>{interactionKind=e.target.value;setupExercise();};
+      }return;}
     if(it.speedTask){renderSpeedExercise(it);return;}
     if(['multiSelect','documentReview','photoDifference'].includes(it.type)){renderMultiSelect(it);return;}
     if (it.type === "memoryReveal" || it.type === "memoryMulti") {
@@ -1656,7 +1664,7 @@
   function renderProgress() {
     let environment=$('#environmentSpeedProgress');if(!environment){environment=document.createElement('details');environment.id='environmentSpeedProgress';environment.className='card';$('#speedProgressChart').after(environment);}
     const environmentEntries=profile.progress.environmentSpeedObservations||[];environment.classList.toggle('hidden',!environmentEntries.length);
-    environment.innerHTML='<summary>Velocidad · búsquedas en el entorno</summary><p>Observaciones declaradas, separadas de aciertos y tiempos en pantalla. Los tiempos incluyen lectura y respuesta con el botón.</p><ul>'+environmentEntries.slice(-8).reverse().map(x=>`<li>Nivel ${Number(x.level)||1} · ${x.report==='found'?'Objeto localizado según la valoración':x.report==='not_met'?'No cumplía las condiciones':x.report==='not_found'?'No se encontró un objeto adecuado':'Práctica detenida'} · ${x.timingValid&&x.report==='found'?(Number(x.elapsedMs)/1000).toFixed(1).replace('.',',')+' s':'sin tiempo comparable'}</li>`).join('')+'</ul>';
+    environment.innerHTML='<summary>Velocidad · búsquedas en el entorno</summary><p>Observaciones declaradas, separadas de aciertos y tiempos en pantalla. Los tiempos incluyen lectura y respuesta con el botón.</p><ul>'+environmentEntries.slice(-8).reverse().map(x=>`<li>Nivel ${Number(x.level)||1} · ${x.report==='found'?'Objeto localizado según la valoración':x.report==='not_met'?'No cumplía las condiciones':x.report==='not_found'?'No se encontró un objeto adecuado':'Práctica detenida'} · ${x.timingValid&&x.report==='found'?(Number(x.elapsedMs)/1000).toFixed(1).replace('.',',')+' s':'sin tiempo comparable'} · Utilidad: ${x.explanation==='explained'?'explicada':x.explanation==='with_help'?'con ayuda':x.explanation==='skipped'?'omitida':'sin registro'}</li>`).join('')+'</ul>';
     let observations=$('#interactiveObservations');
     if(!observations){observations=document.createElement('details');observations.id='interactiveObservations';observations.className='card interactive-observations';$('#speedProgressChart').after(observations);}
     const entries=profile.progress?.interactiveObservations||[];
@@ -1669,7 +1677,7 @@
       return 'Práctica de espera registrada.';
     };
     observations.classList.toggle('hidden',!entries.length);
-    observations.innerHTML=`<summary>Práctica con movimientos y objetos · ${entries.length} registros</summary><p>Observaciones personales o acompañadas, separadas de los aciertos de las actividades en pantalla.</p><ul>${entries.slice(-8).reverse().map(entry=>`<li><strong>${entry.kind==='movement'?'Espera y actúa':entry.kind==='auditory'?'Escucha y actúa':'Busca a tu alrededor'} · nivel ${Number(entry.level)||1}</strong> · ${escapeHtml(observationText(entry))}</li>`).join('')}</ul>`;
+    observations.innerHTML=`<summary>Práctica con movimientos y objetos · ${entries.length} registros</summary><p>Observaciones personales o acompañadas, separadas de los aciertos de las actividades en pantalla.</p><ul>${entries.slice(-8).reverse().map(entry=>`<li><strong>${entry.kind==='movement'?'Señales y acciones · pantalla':entry.kind==='auditory'?'Señales y acciones · audio':'Busca a tu alrededor'} · nivel ${Number(entry.level)||1}</strong> · ${escapeHtml(observationText(entry))}</li>`).join('')}</ul>`;
     $("#progressProfileTitle").textContent = `Evolución de ${profile.name}`;
     $("#progressCards").innerHTML = ageData()
       .subjects.map((s) => {

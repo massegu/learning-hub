@@ -1,7 +1,8 @@
 (function(root){
 'use strict';
 const ages=['early','junior','primary','middle','teen'],cache=new Map();
-const pictures=['libro','pelota','lápiz','manzana','botella','regalo'];
+const classicPictures=['libro','pelota','lápiz','manzana','botella','regalo'];
+const adolescentSets=[['cámara','auriculares','brújula','calculadora','llaves','guitarra'],['regalo','linterna','tijeras','carpeta','mapa','sobre'],['martillo','llave inglesa','pala','regla','paraguas','guitarra']];
 const definitions={
  'attention.cancel':['visualSearch','minimal','medium','selection','Localizar objetivos ignorando distractores'],
  'attention.compare':['visualComparison','minimal','medium','selection','Comparar posiciones y localizar diferencias'],
@@ -20,6 +21,7 @@ function pool(age,domain,level=1){
  const key=[age,domain,level].join(':');if(cache.has(key))return structuredClone(cache.get(key));
  const early=age==='early',size=early?(level===1?4:6):level===1?9:12,count=early?Math.min(3,level+1):Math.min(5,level+2),out=[];
  for(const home of [false,true])for(const family of Object.keys(definitions).filter(x=>x.startsWith(domain+'.'))){
+  const pictures=['middle','teen'].includes(age)?adolescentSets[(level-1+(home?1:0))%adolescentSets.length]:classicPictures;
   const kind=family.split('.')[1],offset=home?1:0,cols=early?(level===1?2:3):level===1?3:4;
   const cells=Array.from({length:size},(_,i)=>pictures[(i*3+Math.floor(i/3)+offset)%pictures.length]);
   const target=pictures[offset],sequence=pictures.slice(offset,offset+count),positions=Array.from({length:Math.min(level,early?3:4)},(_,i)=>(i*2+offset)%size);
@@ -50,7 +52,7 @@ function pool(age,domain,level=1){
    q=kind==='inhibit'?'Pulsa solo cuando aparezca el libro. Con la pelota, espera.':'Sigue la regla de cada bloque. La regla cambiará a mitad.';paperQuestion=q+' Indica la respuesta de cada tarjeta sin medir el tiempo.';
    stimulus=[{type:'text',text:setting},{type:'table',rows:execution.trials.map((t,i)=>[String(i+1),t.symbol,kind==='inhibit'?'Libro: pulsa. Pelota: espera.':t.reversed?'Libro: B. Pelota: A.':'Libro: A. Pelota: B.'])}];feedback=kind==='inhibit'?'Comprobar la señal antes de responder ayuda a respetar las pausas.':'Volver a mirar la regla cuando cambia ayuda a ajustar la respuesta.';
   }
-  const def=definitions[family],id=['executed-v1',age,domain,level,family,home?'home':'school'].join(':');
+  const def=definitions[family],id=['executed-v2',age,domain,level,family,home?'home':'school'].join(':');
   out.push({id,contentKey:id,domain,level,type:'executed',responseType:'executed',requiresStimulus:true,q,paperQuestion,stimulus,sample:answer.map(x=>['cancel','compare','spatial'].includes(kind)?'Fila '+(Math.floor(Number(x)/cols)+1)+', columna '+(Number(x)%cols+1):x==='act'?'Responder':x==='wait'?'Esperar':x).join(' → '),execution:{...execution,answer,ordered:!['cancel','compare','spatial'].includes(kind),exposureMs:early?10000:Math.max(5000,10000-level*1000),trialMs:early?3000:2500},topic:({attention:'Atención',memory:'Memoria',executive:'Funciones ejecutivas'})[domain]+' · retos interactivos',mechanic:'executed_'+family.replaceAll('.','_'),qualityDescriptor:{semanticFamily:family,scenarioFamily:home?'home.materials':'school.workshop'},primaryConstruct:domain==='memory'&&(kind==='update'||execution.reverse)?'workingMemory':def[0],...(domain==='memory'?{memorySystem:kind==='update'||execution.reverse?'workingMemory':'shortTermMemory'}:{}),secondaryLoads:domain==='memory'?['visualRecognition']:['visualRecognition','motorSelection'],readingDemand:def[1],visualDemand:def[2],motorDemand:def[3],why:feedback});
  }
  cache.set(key,out);return structuredClone(out);

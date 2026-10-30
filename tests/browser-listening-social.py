@@ -29,10 +29,12 @@ try:
   page.clock.install();page.clock.pause_at(page.evaluate('Date.now()+1000'));page.add_style_tag(content='*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}')
   workspace(page).locator('#navMenu [data-subject=executive]').click();page.locator('#interactionModeBtn').click();page.wait_for_selector('#startInteractive');page.locator('#exerciseLevelSelect').select_option('3');page.wait_for_function('()=>__current?.interactionTask?.level===3')
   baseline=page.evaluate('(__profiles.find(p=>p.id==="primary").progress.history||[]).length')
+  assert page.locator('#interactionKindSwitch button').all_text_contents()==['Tarjetas con reglas','Señales y acciones']
+  page.locator('[data-interaction-kind=signals]').click();page.wait_for_selector('#signalModeSelect')
   for fixture in fixtures:
    chosen.clear();chosen.update(fixture)
-   if page.locator('[data-interaction-kind=auditory][aria-pressed=true]').count():page.locator('[data-interaction-kind=movement]').click();page.wait_for_selector('#startInteractive')
-   page.locator('[data-interaction-kind=auditory]').click();page.wait_for_selector('#startListening');assert page.locator('#startListening').is_disabled()
+   page.locator('[data-interaction-kind=signals]').click();page.wait_for_selector('#signalModeSelect')
+   page.locator('#signalModeSelect').select_option('auditory');page.wait_for_selector('#startListening');assert page.locator('#startListening').is_disabled()
    t=fixture['interactionTask'];mode=t['audioMode'];before=page.evaluate('__spoken.length+__tones.length');page.clock.run_for(5000);assert page.evaluate('__spoken.length+__tones.length')==before
    page.locator('.sample-cue').first.click();page.clock.run_for(2000);assert not page.locator('#startListening').is_disabled()
    assert page.locator('#listeningStatus').inner_text().startswith('Señal reproducida')
@@ -50,7 +52,7 @@ try:
    assert 'no modifica' in page.locator('#exerciseFeedback').inner_text()
   assert page.evaluate('(__profiles.find(p=>p.id==="primary").progress.history||[]).length')==baseline
   records=page.evaluate('__profiles.find(p=>p.id==="primary").progress.interactiveObservations');assert len([r for r in records if r['kind']=='auditory'])==2
-  page.locator('[data-interaction-kind=movement]').click();page.wait_for_selector('#startInteractive');page.locator('[data-interaction-kind=auditory]').click();page.wait_for_selector('#startListening')
+  page.locator('[data-interaction-kind=signals]').click();page.wait_for_selector('#startInteractive');page.locator('#signalModeSelect').select_option('auditory');page.wait_for_selector('#startListening')
   page.locator('.sample-cue').first.click();page.clock.run_for(2000);page.locator('#startListening').click();before=page.evaluate('__spoken.length+__tones.length')
   page.evaluate("Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'));Object.defineProperty(document,'hidden',{configurable:true,value:false})")
   page.clock.run_for(5000);assert page.locator('#restartInteraction').is_visible();assert page.evaluate('__spoken.length+__tones.length')==before

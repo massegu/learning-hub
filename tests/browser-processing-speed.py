@@ -17,7 +17,7 @@ try:
   page.clock.run_for(3000);assert page.locator('#roomSpeedClock').count()==0
   page.locator('#startRoomSpeed').click();assert task['roomSpeedTask']['clue'] in page.locator('#exercisePrompt').inner_text();page.clock.run_for(2400);assert page.locator('#roomSpeedClock').inner_text()=='2,4 s';page.locator('#exercise').screenshot(path='/tmp/speed-room-observed.png')
   page.locator('#foundRoomSpeed').click();assert page.locator('#confirmRoomSpeed').is_visible();assert not page.evaluate('__profiles.find(p=>p.id==="middle").progress.environmentSpeedObservations?.length')
-  page.locator('#confirmRoomSpeed').click();entry=page.evaluate('__profiles.find(p=>p.id==="middle").progress.environmentSpeedObservations[0]');assert entry['report']=='found' and entry['timingValid'];assert 2390<=entry['elapsedMs']<=2410
+  page.locator('#confirmRoomSpeed').click();assert page.locator('#roomUseExplained').is_visible();assert not page.evaluate('__profiles.find(p=>p.id=="middle").progress.environmentSpeedObservations?.length');page.clock.run_for(8000);page.locator('#exercise').screenshot(path='/tmp/room-use-followup.png');page.locator('#roomUseExplained').click();entry=page.evaluate('__profiles.find(p=>p.id==="middle").progress.environmentSpeedObservations[0]');assert entry['report']=='found' and entry['timingValid'] and entry['explanation']=='explained';assert 2390<=entry['elapsedMs']<=2410
   assert page.evaluate('(__profiles.find(p=>p.id==="middle").progress.history||[]).length')==baseline
   page.locator('#exerciseNext').click();page.wait_for_selector('#startRoomSpeed');page.locator('#startRoomSpeed').click();page.evaluate("()=>{Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'));Object.defineProperty(document,'hidden',{configurable:true,value:false});}")
   page.clock.run_for(10000);assert page.locator('#restartInteraction').is_visible();assert page.evaluate('__profiles.find(p=>p.id==="middle").progress.environmentSpeedObservations.length')==1
@@ -29,6 +29,8 @@ try:
    page.evaluate('(family)=>{window.__fixture=Curriculum.processingChallenges("middle",3).find(it=>it.speedFamily===family);window.__current=null}',family)
    workspace(page).locator('#navMenu [data-subject=speedReasoning]').click();page.wait_for_function('()=>__current?.speedFamily==="'+family+'"');page.wait_for_selector('#startSpeedTrial');page.locator('#startSpeedTrial').click()
    assert page.locator('#exerciseVisual .processing-sources').is_visible()
+   if family=='ruleChoice':
+    assert page.locator('.speed-choice').evaluate_all('(els)=>els.map(e=>e.dataset.answer)')==['Izquierda','Derecha'];assert 'ignora' in page.locator('#exercisePrompt').inner_text()
    for width in [1360,390]:
     page.set_viewport_size({'width':width,'height':1000});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1');assert page.locator('.processing-sources .stimulus-table-scroll').evaluate_all('(els)=>els.every(e=>e.scrollWidth<=e.clientWidth+1)');page.locator('#exercise').screenshot(path=f'/tmp/speed-{family}-{width}.png')
    answer=page.evaluate('__current.a');page.clock.run_for(600);page.locator('#exerciseOptions .speed-choice').evaluate_all('(els,a)=>els.find(e=>e.dataset.answer===a).click()',answer);assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
