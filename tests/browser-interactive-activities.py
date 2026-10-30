@@ -53,11 +53,26 @@ try:
   # Level 1: choosing the single valid difference scores once and reveals Next.
   workspace(page).locator('#navMenu [data-subject=attention]').click();page.locator('#attentionPhotos').click();page.locator('#exerciseLevelSelect').select_option('1')
   page.wait_for_function('()=>__current?.photoTask?.kind==="differences"&&__current?.level===1');photo=page.evaluate('__current');assert page.locator('#multiCheck').is_hidden()
-  page.get_by_role('button',name='Señalar: '+photo['answers'][0],exact=True).click();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class');assert page.locator('#exerciseNext').is_visible();assert len(history())==old_attempts+1
+  # Exercise both supported selection modes deterministically. Presence/movement
+  # scenes use text choices: an absent object cannot have a hitbox in image B.
+  page.evaluate("""()=>{const original=LearningAPI.requestContent;window.__restorePhotoRequest=()=>{LearningAPI.requestContent=original;};LearningAPI.requestContent=async payload=>{const response=await original(payload);return payload.photos_only&&window.__photoFixture?{...response,items:[structuredClone(window.__photoFixture)]}:response;};}""")
+  for index,pair_id in enumerate(['kitchen','music2026']):
+   fixture_id=page.evaluate("""pairId=>{window.__photoFixture=PhotoLibrary.pool('primary','attention',1).find(it=>it.photoTask.pairId===pairId);window.__current=null;return __photoFixture.id;}""",pair_id)
+   page.locator('#attentionPhotos').click()
+   page.wait_for_function('(id)=>__current?.id===id&&document.querySelector("#multiCheck")?.classList.contains("hidden")',arg=fixture_id)
+   photo=page.evaluate('__current');text_only=page.evaluate('PhotoLibrary.pairs[__current.photoTask.pairId].textSelectionOnly===true')
+   if text_only:
+    assert page.locator('.photo-hit').count()==0
+    page.locator('#exerciseOptions').get_by_role('button',name=photo['answers'][0],exact=True).click()
+   else:
+    assert page.locator('.photo-hit').count()>0
+    page.get_by_role('button',name='Señalar: '+photo['answers'][0],exact=True).click()
+   assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class');assert page.locator('#exerciseNext').is_visible();assert len(history())==old_attempts+index+1
+  page.evaluate('__restorePhotoRequest()');photo_attempts=len(history())
   # A restarted/inactive activity must never produce an automatic success.
   workspace(page).locator('#navMenu [data-subject=executive]').click();page.locator('#interactionModeBtn').click();page.locator('[data-interaction-kind=symbols]').click();page.wait_for_selector('#startInteractive');page.locator('#startInteractive').click()
   page.evaluate('''()=>{Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'));Object.defineProperty(document,'hidden',{configurable:true,value:false});}''')
-  page.clock.run_for(10000);assert page.locator('#restartInteraction').is_visible();assert len(history())==old_attempts+1
+  page.clock.run_for(10000);assert page.locator('#restartInteraction').is_visible();assert len(history())==photo_attempts
   page.locator('#restartInteraction').click();assert page.locator('#startInteractive').is_visible()
   for width in [1440,390]:
    page.set_viewport_size({'width':width,'height':1000});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1');page.locator('#exercise').screenshot(path=f'/tmp/interactive-rules-{width}.png')
@@ -70,6 +85,6 @@ try:
     with zipfile.ZipFile(io.BytesIO(outer.read(name))) as doc:
      xml=doc.read('word/document.xml').decode();assert 'PAUSA' in xml and 'Pulsa' in xml and 'No se cuenta como un error' in xml
   assert not errors,errors
-  print('PASS: real interactive delivery, graded symbol rules/change, keyboard, go/no-go scoring, 5-second gate, unscored movement/room observations and persistence, support email, single-click level-1 differences, interruption/restart, mobile and 2 Word documents')
+  print('PASS: real interactive delivery, graded symbol rules/change, keyboard, go/no-go scoring, 5-second gate, unscored movement/room observations and persistence, support email, deterministic hitbox/text level-1 differences with one result each, interruption/restart, mobile and 2 Word documents')
   browser.close()
 finally:server.shutdown();server.server_close()
