@@ -59,7 +59,7 @@
       for(const [index,model] of models.entries())for(const block of model.stimulus){
         if(!['memoryScene','routeMap'].includes(block.presentation))continue;
         const key=JSON.stringify(block);if(sceneImages.has(key))continue;
-        const holder=document.createElement('div');holder.innerHTML=window.ActivityModel.interactiveStimulus([block],{memory:true,senses:items[index].lexicalSenses});
+        const holder=document.createElement('div');holder.innerHTML=window.ActivityModel.interactiveStimulus([block],{memory:true,senses:items[index].lexicalSenses,iconProfile:profile});
         const svg=holder.querySelector('svg');if(!svg)throw new Error('Falta la escena visual para la ficha.');
         const bounds=svg.getAttribute('viewBox').split(/\s+/).map(Number);svg.setAttribute('width',String(bounds[2]));svg.setAttribute('height',String(bounds[3]));
         const image=new window.Image();
@@ -100,12 +100,12 @@
     const textSize=early?28:19;
     const paragraph=value=>new Paragraph({spacing:{line:early?360:285,after:70},children:[new TextRun({text:value,size:textSize,color:ink,font:'Aptos'})]});
     function pictureParagraph(value,item,material,position){
-      const illustrated=early||item.type==='memoryReveal'||item.speedTask;
+      const illustrated=early||item.type==='memoryReveal'||item.type==='executed'||item.speedTask;
       if(!illustrated)return paragraph(value);
       const key=illustrated?window.StimulusArt?.forLabel(value,{...item.lexicalSenses,subject:material.label}):null;
       // Glyphs are the units themselves: never add a second pictogram/dot.
       const prefix=position===undefined?[]:[new TextRun({text:`${position}. `,size:textSize})];
-      const picture=key&&!/^[●○□△☆]$/.test(value)?[new ImageRun({data:window.StimulusArt.png(key),transformation:{width:32,height:32},altText:{name:'Objeto: '+value,title:value,description:value}}),new TextRun({text:' '})]:[];
+      const picture=key&&!/^[●○□△☆]$/.test(value)?[new ImageRun({data:window.ActivityModel.artFor(key,profile).png(key),transformation:{width:['middle','teen'].includes(profile?.progress?.ageRoute||profile?.age_band)?48:32,height:['middle','teen'].includes(profile?.progress?.ageRoute||profile?.age_band)?48:32},altText:{name:'Objeto: '+value,title:value,description:value}}),new TextRun({text:' '})]:[];
       return new Paragraph({spacing:{line:360,after:90},children:[...prefix,...picture,new TextRun({text:key&&item.type==='memoryReveal'?window.ActivityModel.memoryLabel(value):value,size:textSize,color:ink,font:'Aptos'})]});
     }
     function renderMaterial(material,item){
@@ -128,7 +128,7 @@
       }
       if(material.type==='text') return [...heading,paragraph(material.text)];
       if(early && material.presentation==='count' && material.items.every(x=>x==='●'))return [...heading,new Paragraph({spacing:{after:130},children:material.items.flatMap(value=>[new TextRun({text:value,size:40,color:ink}),new TextRun({text:'    '})])})];
-      if(material.type==='list')return [...heading,...material.items.map((value,i)=>(early||item.type==='memoryReveal') && ['count','cards','sequence'].includes(material.presentation)?pictureParagraph(value,item,material,material.presentation==='sequence'?i+1:undefined):paragraph(`${i+1}. ${value}`))];
+      if(material.type==='list')return [...heading,...material.items.map((value,i)=>(early||item.type==='memoryReveal'||item.type==='executed') && (item.type==='executed'||['count','cards','sequence'].includes(material.presentation))?pictureParagraph(value,item,material,material.presentation==='sequence'?i+1:undefined):paragraph(`${i+1}. ${value}`))];
       return [...heading,new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:softBorders,rows:material.rows.map(row=>new TableRow({children:row.map(value=>new TableCell({margins:{top:100,bottom:100,left:120,right:120},children:[pictureParagraph(value,item,material)]}))}))})];
     }
     const header=new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:noBorders,rows:[new TableRow({children:[
@@ -149,7 +149,7 @@
       const model=models[i];
       const prompt=it.speedEvidence?.kind==='category'&&it.speedEvidence.category==='animals'?(it.paperQuestion||'¿Son animales todos los elementos de la lista?'):model.question;
       const block=[new Paragraph({keepNext:true,spacing:{before:i?160:0,after:90},children:[new TextRun({text:`ACTIVIDAD ${i+1}`,bold:true,size:15,color:green2,font:'Aptos'})]})];
-      const paperSource=it.roomSpeedTask?[{type:'text',text:'Busca solo con la vista, desde tu sitio. Una persona puede leer la consigna. En papel, realiza la búsqueda como práctica sin compararla con los tiempos de pantalla.'}]:model.stimulus;
+      const paperSource=it.roomSpeedTask?[{type:'text',text:'Busca solo con la vista, desde tu sitio. Después explica para qué sirve el objeto. En papel no se mide el tiempo de búsqueda ni de explicación.'},{type:'text',text:it.roomSpeedTask.followUp}]:model.stimulus;
       if(paperSource.length){
         block.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:softBorders,rows:[new TableRow({children:[new TableCell({shading:{fill:light},margins:{top:140,bottom:140,left:170,right:170},children:[
           new Paragraph({spacing:{after:55},children:[new TextRun({text:early?'MIRA':'INFORMACIÓN',bold:true,size:early?20:13,color:green,font:'Aptos'})]}),

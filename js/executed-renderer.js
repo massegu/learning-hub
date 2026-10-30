@@ -27,7 +27,7 @@ function mount(item,{visual,area,onFinish}){
   else{area.append(button('A',()=>next('A')),button('B',()=>next('B')));}
   area.append(button('Reiniciar sin registrar',()=>ready('Intento detenido. Puedes volver a empezar.')));
  }
- function start(){clearTimeout(timer);response=[];round=0;area.replaceChildren();visual.replaceChildren(message);message.textContent=item.q;
+ function start(){clearTimeout(timer);response=[];round=0;area.replaceChildren();visual.replaceChildren(message);message.textContent=({serial:'Observa la secuencia. Después se ocultará.',update:'Memoriza la secuencia. Después aparecerá un cambio.',spatial:'Observa las casillas ocupadas. Después se vaciarán.',follow:'Sigue el modelo visible y pulsa los objetos en ese orden.',cancel:'Compara cada objeto con los modelos.',compare:'Revisa la misma posición en A y en B.',plan:'Completa los requisitos antes de pasar al siguiente paso.'})[task.kind]||'Sigue la regla de la tarjeta.';
   if(['switch','inhibit'].includes(task.kind)){trials();return;}
   if(task.kind==='plan'){
    visual.append(node('p',item.stimulus[1].items.join(' ')));sequence([...task.steps].reverse());return;

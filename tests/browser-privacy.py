@@ -21,7 +21,7 @@ try:
   answer_social();page.wait_for_function('()=>__profiles.find(p=>p.id==="primary").progress.history?.length===1')
   original=page.evaluate('JSON.stringify(__profiles.find(p=>p.id==="primary").progress)');saved=page.evaluate('__saved.length')
   workspace(page).locator('#independentSessionBtn').click();assert 'no se guardan' in page.locator('#independentSessionStatus').inner_text();assert page.locator('#profilePrivacyBtn').is_disabled()
-  answer_social();assert page.evaluate('__requests.at(-1).session_only') is True;assert page.evaluate('__requests.at(-1).client_revision')==9
+  answer_social();assert page.evaluate('__requests.at(-1).session_only') is True;assert page.evaluate('__requests.at(-1).client_revision')==10
   assert page.evaluate('__saved.length')==saved;assert page.evaluate('JSON.stringify(__profiles.find(p=>p.id==="primary").progress)')==original
   workspace(page).locator('#independentSessionBtn').click();assert 'Seguimiento individual' in page.locator('#independentSessionStatus').inner_text();assert page.evaluate('JSON.stringify(__profiles.find(p=>p.id==="primary").progress)')==original
   workspace(page).locator('#independentSessionBtn').click();answer_social();page.reload(wait_until='networkidle');assert 'Seguimiento individual' in page.locator('#independentSessionStatus').inner_text();assert page.evaluate('JSON.stringify(__profiles.find(p=>p.id==="primary").progress)')==original

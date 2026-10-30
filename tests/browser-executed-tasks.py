@@ -9,18 +9,21 @@ try:
  with sync_playwright() as p,tempfile.TemporaryDirectory() as tmp:
   browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_EXECUTABLE') or '/usr/bin/chromium',args=['--no-sandbox']);page=browser.new_page(viewport={'width':1440,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#profileSelect');page.clock.install()
-  page.evaluate('''()=>{window.__completedCalls=0;const save=LearningAPI.saveResult;LearningAPI.saveResult=(id,row)=>{if(row.itemId?.startsWith('executed-v1:'))window.__completedCalls++;return save(id,row);};const original=LearningAPI.requestContent;LearningAPI.requestContent=async payload=>{if(payload.executed_only){window.__executionRequest=payload;return {items:[structuredClone(window.__task)],usage:{used:1,limit:500}};}return original(payload);}}''')
+  page.evaluate('''()=>{window.__completedCalls=0;const save=LearningAPI.saveResult;LearningAPI.saveResult=(id,row)=>{if(row.itemId?.startsWith('executed-v'))window.__completedCalls++;return save(id,row);};const original=LearningAPI.requestContent;LearningAPI.requestContent=async payload=>{if(payload.executed_only){window.__executionRequest=payload;return {items:[structuredClone(window.__task)],usage:{used:1,limit:500}};}return original(payload);}}''')
   for age in ['early','teen']:
    workspace(page).locator('#profileSelect').select_option(age)
    for domain,kinds in [('attention',['cancel','compare','follow']),('memory',['serial','spatial','update']),('executive',['plan','switch','inhibit'])]:
     workspace(page).locator(f'#navMenu [data-subject={domain}]').click();page.locator('#exerciseLevelSelect').select_option('2')
     for kind in kinds:
      page.evaluate('''({age,domain,kind})=>{window.__task=ExecutedTasks.pool(age,domain,2).find(x=>x.execution.kind===kind);window.__executionRequest=null;}''',{'age':age,'domain':domain,'kind':kind})
-     page.locator('#executedMode').click();page.wait_for_function('()=>window.__executionRequest?.executed_only&&document.querySelector(".executed-area")');assert page.evaluate('__executionRequest.client_revision')==9
+     page.locator('#executedMode').click();page.wait_for_function('()=>window.__executionRequest?.executed_only&&document.querySelector(".executed-area")');assert page.evaluate('__executionRequest.client_revision')==10
      completed_before=page.evaluate('__completedCalls');page.locator('.executed-area').get_by_role('button',name='Empezar',exact=True).press('Enter')
      task=page.evaluate('__task.execution')
      if kind in ['serial','spatial','update']:
       assert page.locator('#exerciseVisual .executed-picture').count()>0
+      if kind=='serial':
+       assert page.locator('#exerciseVisual [data-icon-library=phosphor]').count()>0 if age=='teen' else page.locator('#exerciseVisual [data-icon-library=phosphor]').count()==0
+       if age=='teen':page.locator('#exercise').screenshot(path='/tmp/phosphor-memory-desktop.png')
       page.clock.fast_forward(task['exposureMs']+20)
       if kind=='update':
        assert 'Cambio' in page.locator('.executed-status').inner_text();page.clock.fast_forward(3600)
@@ -62,7 +65,9 @@ try:
   # Printable projection uses coordinates/instructions and the same source, without claiming timing.
   with page.expect_download() as dl:page.evaluate('()=>WorksheetGenerator.generate([[__task]],__profiles.find(p=>p.id==="teen"))')
   file=Path(tmp)/'executed.docx';dl.value.save_as(file)
-  with zipfile.ZipFile(file) as z:assert 'Reconstruye' in z.read('word/document.xml').decode() or 'reconstruye' in z.read('word/document.xml').decode()
+  with zipfile.ZipFile(file) as z:
+   assert 'Reconstruye' in z.read('word/document.xml').decode() or 'reconstruye' in z.read('word/document.xml').decode()
+   expected=bytes(page.evaluate("Array.from(PhosphorArt.png(StimulusArt.forLabel(__task.execution.sequence[0])))"));assert any(z.read(name)==expected for name in z.namelist() if name.startswith('word/media/'))
   # Every activity tab shares a minimum target height; older submodes join the toolbar.
   workspace(page).locator('#navMenu [data-subject=executive]').click();page.locator('#interactionModeBtn').click()
   boxes=page.locator('.activity-toolbar button:visible').evaluate_all('(els)=>els.map(e=>({h:e.getBoundingClientRect().height,y:e.getBoundingClientRect().y}))');assert all(b['h']==50 for b in boxes);assert max(b['y'] for b in boxes)-min(b['y'] for b in boxes)<2

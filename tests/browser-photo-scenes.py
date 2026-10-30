@@ -12,7 +12,7 @@ try:
   page.evaluate('''()=>{const old=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return old(it,...args)}}''')
   workspace(page).locator('#navMenu [data-subject=memory]').click();page.locator('#photoModeSwitch [data-photos=true]').click();page.wait_for_selector('#showMemoryPhoto')
   assert page.evaluate('__requests.at(-1).photos_only') is True
-  assert page.evaluate('__requests.at(-1).client_revision')==9
+  assert page.evaluate('__requests.at(-1).client_revision')==10
   assert 'Hoy:' in page.locator('#usageHint').inner_text()
   assert page.locator('.everyday-photo img').count()==0
   memory=page.evaluate('__current');assert memory['photoTask']['kind']=='recall'
@@ -78,12 +78,16 @@ try:
   fixture={}
   def override(route):route.fulfill(json={'status':200,'data':{'items':[fixture],'usage':{'used':1,'limit':500}}})
   page.route('**/__review/content',override)
-  new_pairs=page.evaluate('PhotoLibrary.pool("teen","attention",2).filter(x=>["street","park","bus","factory","nature","city","cafe","sports"].includes(x.photoTask.pairId))')
+  new_pairs=page.evaluate('PhotoLibrary.pool("teen","attention",2).filter(x=>["street","park","bus","factory","nature","city","cafe","sports","ceramics2026","music2026"].includes(x.photoTask.pairId))')
   for task in new_pairs:
    fixture.clear();fixture.update(task);workspace(page).locator('#navMenu [data-subject=attention]').click()
    page.wait_for_function('(id)=>__current?.id===id&&document.querySelectorAll(".photo-comparison img").length===2',arg=task['id'])
-   for label in task['answers']:page.get_by_role('button',name='Señalar: '+label,exact=True).click()
+   for label in task['answers']:
+    if task['photoTask']['pairId'] in ['ceramics2026','music2026']:page.locator('#exerciseOptions').get_by_role('button',name=label,exact=True).click()
+    else:page.get_by_role('button',name='Señalar: '+label,exact=True).click()
    page.locator('#multiCheck').click();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class'),task['photoTask']['pairId']
+   if task['photoTask']['pairId']=='ceramics2026':
+    page.locator('.photo-comparison img').evaluate_all('(images)=>Promise.all(images.map(i=>i.decode()))');page.locator('#exercise').screenshot(path='/tmp/new-ceramics-differences.png')
   assert not errors,errors
   print('PASS: real photo-only delivery, explicit start, full viewing period, photograph and answers never coexist, recall scoring, A/B comparison, wrong/correct selections, mobile and 2 DOCX embedding source photographs; direct image marking and accessible button selection stay synchronized')
   browser.close()

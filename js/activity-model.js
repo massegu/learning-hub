@@ -110,7 +110,7 @@
     return blocks;
   }
   function printable(item, profile) {
-    if(item?.type==='executed'||String(item?.contentKey||'').startsWith('executed-v1:')){const bank=root.ExecutedTasks||(typeof require==='function'&&require('./executed-tasks'));bank.validate(item,profile?.progress?.ageRoute||profile?.age_band);return {question:item.paperQuestion,stimulus:item.stimulus,options:[],tokens:[],writingRubric:[],responseType:'written'};}
+    if(item?.type==='executed'||String(item?.contentKey||'').startsWith('executed-v')){const bank=root.ExecutedTasks||(typeof require==='function'&&require('./executed-tasks'));bank.validate(item,profile?.progress?.ageRoute||profile?.age_band);return {question:item.paperQuestion,stimulus:item.stimulus,options:[],tokens:[],writingRubric:[],responseType:'written'};}
     if(item?.qualityEvidence||/^functional_/.test(item?.mechanic||'')||String(item?.contentKey||'').startsWith('functional-v1:'))(root.FunctionalContent||(typeof require==='function'&&require('./functional-content'))).validate(item);
     if(item?.roomSpeedTask)(root.Curriculum||(typeof require==='function'&&require('./curriculum'))).validateRoomSpeed(item);
     if(item?.socialEvidence||/^social_perspective_/.test(item?.mechanic||''))(root.Curriculum||(typeof require==='function'&&require('./curriculum'))).validateSocial(item);
@@ -266,15 +266,15 @@
     const localized=regional.localizeItem(item,country,domain);
     if(policy.forProfile(profile))forDelivery(localized,profile,domain);
     const projection=regional.localizeModel(printable(localized,profile),country,domain,localized);
-    if(policy.forProfile(profile)||item?.type==='memoryReveal'||item?.speedTask){
+    if(policy.forProfile(profile)||item?.type==='memoryReveal'||item?.type==='executed'||item?.speedTask){
       // Verify the same local pictures the Word renderer will embed before
       // selection commits the candidate. Text is always the factual source.
       for(const block of projection.stimulus){
-        const values=block.type==='list'&&['count','cards','sequence'].includes(block.presentation)?block.items:block.type==='table'?block.rows.flat():[];
+        const values=block.type==='list'&&(item.type==='executed'||['count','cards','sequence'].includes(block.presentation))?block.items:block.type==='table'?block.rows.flat():[];
         for(const value of values){
           const key=art?.forLabel(value,{...localized.lexicalSenses,subject:block.label});
           if(key&&!/^[●○□△☆]$/.test(value)){
-            const bytes=art.png(key);
+            const bytes=artFor(key,profile).png(key);
             if(bytes.length<24||[137,80,78,71,13,10,26,10].some((b,i)=>bytes[i]!==b))fail('la ilustración no es un PNG imprimible válido.');
           }
         }
@@ -287,7 +287,7 @@
     return versions.map(items => items.map(item => printable(item, profile)));
   }
   function forDelivery(item, profile, domain) {
-    if(item?.type==='executed'||String(item?.contentKey||'').startsWith('executed-v1:')){if(domain&&domain!==item.domain)fail('El área no coincide.');printable(item,profile);return item;}
+    if(item?.type==='executed'||String(item?.contentKey||'').startsWith('executed-v')){if(domain&&domain!==item.domain)fail('El área no coincide.');printable(item,profile);return item;}
     (root.LocaleContent||(typeof require==='function'&&require('./locale-content'))).validateOptions(item);
     if(item?.qualityEvidence||/^functional_/.test(item?.mechanic||'')||String(item?.contentKey||'').startsWith('functional-v1:'))(root.FunctionalContent||(typeof require==='function'&&require('./functional-content'))).validate(item);
     const annotate=()=>Object.assign(item,(root.ContentQuality||(typeof require==='function'&&require('./content-quality'))).describe(item,profile?.progress?.ageRoute||profile?.age_band||item.qualityEvidence?.age||item.ageProfile?.id||'unknown',domain||item.domain));
@@ -301,13 +301,19 @@
   }
   function escape(text) { return String(text).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
   function memoryLabel(value){return String(value).replace(/^(?:el|la|los|las|un|una|unos|unas)\s+/iu,'');}
+  function artFor(key,profile){
+    const age=profile?.progress?.ageRoute||profile?.age_band;
+    const modern=age?['middle','teen'].includes(age):root.document?.getElementById('appShell')?.dataset.design==='impulso';
+    const selected=root.PhosphorArt||(typeof require==='function'&&require('./phosphor-art'));
+    return modern&&selected?.has(key)?selected:art;
+  }
   function visualLabel(value,senses={}){
     if(value===undefined||value===null||!String(value).trim())throw new Error('Falta la etiqueta visual.');
     if(value==='—')return '<span class="empty-memory-cell">Vacío</span>';
     const raw=String(value),glyphs=/^[●○□△☆\s·]+$/.test(raw)?raw.match(/[●○□△☆]/g):null;
     if(glyphs)return `<span class="picture-glyphs" aria-hidden="true">${glyphs.map(x=>art.svg(art.forLabel(x))).join('')}</span><span class="stimulus-only-text">${escape(raw)}</span>`;
     const key=art?.forLabel(raw,senses);
-    return `${key?`<span class="picture-icon" aria-hidden="true">${art.svg(key)}</span>`:''}<span>${escape(key&&senses.memory?memoryLabel(raw):raw)}</span>`;
+    return `${key?`<span class="picture-icon" aria-hidden="true">${artFor(key,senses.iconProfile).svg(key)}</span>`:''}<span>${escape(key&&senses.memory?memoryLabel(raw):raw)}</span>`;
   }
   function sceneFurniture(place,x,y){
     const frame=`fill="#d3b597" stroke="#8d7761" stroke-width="3" stroke-linejoin="round"`;
@@ -320,6 +326,7 @@
     return `<rect x="${x-83}" y="${y-110}" width="166" height="162" rx="9" fill="#e5dccb" stroke="#a6927b" stroke-width="4"/><path d="M${x-83} ${y+25}h166" stroke="#a6927b" stroke-width="7"/>`;
   }
   function interactiveStimulus(blocks,options={}) {
+    if(options.iconProfile)options={...options,senses:{...options.senses,iconProfile:options.iconProfile}};
     // The topic is already visible above the question. Keep it in the canonical
     // stimulus for standalone worksheets, but do not print it twice on screen.
     const visibleBlocks=blocks.length>1&&options.heading?blocks.filter(b=>b.type!=='text'||b.text!==options.heading):blocks;
@@ -338,11 +345,11 @@
       }
       if(block.presentation==='memoryScene'){
         const positions=[[130,140],[360,140],[590,140],[130,370],[360,370],[590,370],[130,600],[360,600],[590,600]],height=block.rows.length>6?720:490;
-        return `<figure class="memory-scene"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 ${height}" font-family="Arial, sans-serif" role="img" aria-label="Escena para recordar"><rect x="4" y="4" width="712" height="${height-8}" rx="24" fill="#f1eee4"/><path d="M8 ${height-80}H712" stroke="#d8cfb8" stroke-width="3"/>${block.rows.map(([place,value],i)=>{const [x,y]=positions[i],key=art.forLabel(value,options.senses);return `<g>${sceneFurniture(place,x,y)}${key?`<svg x="${x-36}" y="${y-88}" width="72" height="72" viewBox="0 0 64 64">${art.svg(key).replace(/^<svg[^>]*>|<\/svg>$/g,'')}</svg>`:''}<text x="${x}" y="${y+13}" text-anchor="middle" font-size="18" fill="#264b43">${escape(memoryLabel(value))}</text><text x="${x}" y="${y+95}" text-anchor="middle" font-size="19" font-weight="600" fill="#264b43">${escape(memoryLabel(place))}</text></g>`;}).join('')}</svg><details><summary>Ver los elementos de la escena</summary>${interactiveStimulus([{type:'table',rows:block.rows}],{structured:true})}</details></figure>`;
+        return `<figure class="memory-scene"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 ${height}" font-family="Arial, sans-serif" role="img" aria-label="Escena para recordar"><rect x="4" y="4" width="712" height="${height-8}" rx="24" fill="#f1eee4"/><path d="M8 ${height-80}H712" stroke="#d8cfb8" stroke-width="3"/>${block.rows.map(([place,value],i)=>{const [x,y]=positions[i],key=art.forLabel(value,options.senses);return `<g>${sceneFurniture(place,x,y)}${key?`<svg x="${x-36}" y="${y-88}" width="72" height="72" viewBox="0 0 64 64">${artFor(key,options.iconProfile).svg(key).replace(/^<svg[^>]*>|<\/svg>$/g,'')}</svg>`:''}<text x="${x}" y="${y+13}" text-anchor="middle" font-size="18" fill="#264b43">${escape(memoryLabel(value))}</text><text x="${x}" y="${y+95}" text-anchor="middle" font-size="19" font-weight="600" fill="#264b43">${escape(memoryLabel(place))}</text></g>`;}).join('')}</svg><details><summary>Ver los elementos de la escena</summary>${interactiveStimulus([{type:'table',rows:block.rows}],{structured:true})}</details></figure>`;
       }
       if(block.presentation==='routeMap'){
         const coords=[[110,100],[350,100],[590,100],[590,260],[350,260],[110,260],[110,420],[350,420],[590,420]],locations=block.items.map((_,i)=>coords[block.positions?.[i]??i]),points=locations.map(x=>x.join(',')).join(' '),height=510;
-        return `<figure class="memory-route"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 ${height}" font-family="Arial, sans-serif" role="img" aria-label="Mapa con el orden de las visitas"><rect width="700" height="${height}" rx="24" fill="#eef3e9"/><path d="M0 180H700M0 340H700M230 0V${height}M470 0V${height}" stroke="#d5dfd4" stroke-width="24"/><polyline points="${points}" fill="none" stroke="#668d89" stroke-width="7" stroke-dasharray="9 8" stroke-linecap="round"/>${block.items.map((place,i)=>{const [x,y]=locations[i],icon=({Panadería:'bread',Mercado:'apple',Cafetería:'cookie',Parque:'tree',Biblioteca:'book',Estación:'train',Museo:'city',Escuela:'pencil',Polideportivo:'ball'})[place];return `<g><rect x="${x-83}" y="${y-53}" width="166" height="96" rx="15" fill="#fffdf7" stroke="#b6cbbd" stroke-width="2"/>${icon?`<svg x="${x-24}" y="${y-49}" width="48" height="48" viewBox="0 0 64 64">${art.svg(icon).replace(/^<svg[^>]*>|<\/svg>$/g,'')}</svg>`:''}<circle cx="${x-72}" cy="${y-45}" r="16" fill="#28564b"/><text x="${x-72}" y="${y-39}" text-anchor="middle" fill="white" font-size="18">${i+1}</text><text x="${x}" y="${y+22}" text-anchor="middle" fill="#264b43" font-size="19">${escape(place)}</text></g>`;}).join('')}</svg><ol class="route-legend">${block.items.map(x=>`<li>${escape(x)}</li>`).join('')}</ol></figure>`;
+        return `<figure class="memory-route"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 ${height}" font-family="Arial, sans-serif" role="img" aria-label="Mapa con el orden de las visitas"><rect width="700" height="${height}" rx="24" fill="#eef3e9"/><path d="M0 180H700M0 340H700M230 0V${height}M470 0V${height}" stroke="#d5dfd4" stroke-width="24"/><polyline points="${points}" fill="none" stroke="#668d89" stroke-width="7" stroke-dasharray="9 8" stroke-linecap="round"/>${block.items.map((place,i)=>{const [x,y]=locations[i],icon=({Panadería:'bread',Mercado:'apple',Cafetería:'cookie',Parque:'tree',Biblioteca:'book',Estación:'train',Museo:'city',Escuela:'pencil',Polideportivo:'ball'})[place];return `<g><rect x="${x-83}" y="${y-53}" width="166" height="96" rx="15" fill="#fffdf7" stroke="#b6cbbd" stroke-width="2"/>${icon?`<svg x="${x-24}" y="${y-49}" width="48" height="48" viewBox="0 0 64 64">${artFor(icon,options.iconProfile).svg(icon).replace(/^<svg[^>]*>|<\/svg>$/g,'')}</svg>`:''}<circle cx="${x-72}" cy="${y-45}" r="16" fill="#28564b"/><text x="${x-72}" y="${y-39}" text-anchor="middle" fill="white" font-size="18">${i+1}</text><text x="${x}" y="${y+22}" text-anchor="middle" fill="#264b43" font-size="19">${escape(place)}</text></g>`;}).join('')}</svg><ol class="route-legend">${block.items.map(x=>`<li>${escape(x)}</li>`).join('')}</ol></figure>`;
       }
       if(block.presentation==='speedSearch'||block.presentation==='flanker')return `<div class="${block.presentation==='flanker'?'flanker-strip':'speed-search-grid'}" role="list">${block.items.map(x=>`<div role="listitem">${visualLabel(x,options.senses)}</div>`).join('')}</div>`;
       if(block.presentation==='pairScan')return `<table class="pair-scan"><tbody>${block.rows.map(row=>`<tr>${row.map(x=>`<td><code>${escape(x)}</code></td>`).join('')}</tr>`).join('')}</tbody></table>`;
@@ -375,7 +382,7 @@
       return `<table>${block.rows.map(row => `<tr>${row.map(x => `<td>${escape(x)}</td>`).join('')}</tr>`).join('')}</table>`;
     }).join('');
   }
-  const api = { memoryLabel, comparisonStimulus, preparePrintable, printable, validateBatch, forDelivery, interactiveStimulus, choiceKey, visualLabel };
+  const api = { artFor, memoryLabel, comparisonStimulus, preparePrintable, printable, validateBatch, forDelivery, interactiveStimulus, choiceKey, visualLabel };
   root.ActivityModel = api;
   if (typeof module !== 'undefined') module.exports = api;
 })(typeof window === 'undefined' ? globalThis : window);

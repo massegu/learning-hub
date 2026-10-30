@@ -32,7 +32,7 @@ try:
   symbol=play_symbols();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class');assert history()[-1]['interactionSummary']['correctTrials']==len(symbol['interactionTask']['trials'])
   page.locator('#exerciseLevelSelect').select_option('3');page.wait_for_function('()=>__current?.interactionTask?.level===3');advanced=play_symbols(True)
   assert history()[-1]['correct'] is False;assert history()[-1]['interactionSummary']['noGoErrors']==1
-  old_attempts=len(history());page.locator('[data-interaction-kind=movement]').click();page.wait_for_selector('#startInteractive');movement=page.evaluate('__current');assert movement['interactionTask']['kind']=='movement'
+  old_attempts=len(history());page.locator('[data-interaction-kind=signals]').click();page.wait_for_selector('#startInteractive');movement=page.evaluate('__current');assert movement['interactionTask']['kind']=='movement'
   page.locator('#startInteractive').click()
   for n in range(len(movement['interactionTask']['trials'])):
    assert 'Espera:' in page.locator('#interactiveSeconds').inner_text();page.clock.run_for(4900);assert 'Espera:' in page.locator('#interactiveSeconds').inner_text()

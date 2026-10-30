@@ -976,7 +976,7 @@ function socialExercise(level:number){
 }
 
 function validateItem(item:any):boolean{
-  if(item?.type==="executed"||String(item?.contentKey||"").startsWith("executed-v1:")){try{(globalThis as any).ExecutedTasks.validate(item);return true;}catch(_){return false;}}
+  if(item?.type==="executed"||String(item?.contentKey||"").startsWith("executed-v")){try{(globalThis as any).ExecutedTasks.validate(item);return true;}catch(_){return false;}}
   if(item?.qualityEvidence||/^functional_/.test(item?.mechanic||'')||String(item?.contentKey||'').startsWith('functional-v1:')){try{(globalThis as any).FunctionalContent.validate(item);}catch(_){return false;}}
   if(item?.roomSpeedTask){try{(globalThis as any).Curriculum.validateRoomSpeed(item);}catch(_){return false;}}
   if(item?.socialEvidence||/^social_perspective_/.test(item?.mechanic||'')){try{(globalThis as any).Curriculum.validateSocial(item);}catch(_){return false;}}
@@ -2419,9 +2419,9 @@ Deno.serve(async (req:Request)=>{
   const requestedDomains=kind==="worksheet" ? (Array.isArray(body.domains)&&body.domains.length?body.domains:(globalThis as any).Curriculum.visible(SUBJECTS[age]||[],age)) : [body.domain];
   if(!SUBJECTS[age] || !Number.isInteger(level) || (kind!=="game" && (!Array.isArray(requestedDomains)||!requestedDomains.length||requestedDomains.some((d:any)=>!SUBJECTS[age].includes(d)))))
     return new Response(JSON.stringify({error:"Área o nivel no permitido para este perfil."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
-  if(body.client_revision!==undefined&&![1,2,3,4,5,6,7,8,9].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.client_revision!==undefined&&![1,2,3,4,5,6,7,8,9,10].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.room_speed_only!==undefined&&(typeof body.room_speed_only!=='boolean'||body.room_speed_only&&(kind!=='exercise'||body.domain!=='speedReasoning'||!['junior','primary','middle','teen'].includes(age)||body.interaction_only||body.photos_only||body.documents_only)))return new Response(JSON.stringify({error:'Modalidad de velocidad no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
-  if(body.room_speed_only&&Number(body.client_revision||1)<7)return new Response(JSON.stringify({error:'Actualiza la página para abrir los retos del entorno.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.room_speed_only&&Number(body.client_revision||1)<10)return new Response(JSON.stringify({error:'Actualiza la página para abrir los retos del entorno.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.interaction_only!==undefined&&(typeof body.interaction_only!=='boolean'||body.interaction_only&&(kind!=='exercise'||!['junior','primary','middle','teen'].includes(age)||!['attention','executive'].includes(body.domain)||body.documents_only||body.photos_only)))return new Response(JSON.stringify({error:'Modalidad interactiva no disponible para esta petición.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.interaction_only&&Number(body.client_revision||1)<4)return new Response(JSON.stringify({error:'Actualiza la página para abrir las actividades interactivas.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.interaction_kind==='auditory'&&Number(body.client_revision||1)<5)return new Response(JSON.stringify({error:'Actualiza la página para abrir las actividades con audio.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -2436,9 +2436,9 @@ Deno.serve(async (req:Request)=>{
   if((age==="junior"||age==="primary"||age==="middle"||age==="teen")&&kind==="exercise"&&["language","middleLanguage","teenLanguage"].includes(body.domain)&&body.subdomain&&!["grammar","spelling","vocabulary","writing"].includes(body.subdomain))
     return new Response(JSON.stringify({error:"Habilidad de Lenguaje no válida."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
   // Cached clients do not yet know these document IDs and photographic sources.
-  const compatibleSource=(item:any)=>Number(body.client_revision||1)>=8||!(item?.stimulus||[]).some((block:any)=>block.type==='document'&&String(block.documentId).startsWith('everyday-')||block.type==='photo'&&['library2026','autumnPark2026'].includes(block.photoId));
+  const compatibleSource=(item:any)=>(Number(body.client_revision||1)>=10||!['ceramics2026','music2026','bicycle2026','greenhouse2026'].includes((item?.photoTask?.sceneId||item?.photoTask?.pairId))&&!(item?.stimulus||[]).some((b:any)=>['photo','photoPair'].includes(b.type)&&['ceramics2026','music2026','bicycle2026','greenhouse2026'].includes(b.photoId||b.pairId)))&&(Number(body.client_revision||1)>=8||!(item?.stimulus||[]).some((block:any)=>block.type==='document'&&String(block.documentId).startsWith('everyday-')||block.type==='photo'&&['library2026','autumnPark2026'].includes(block.photoId)));
   if(body.executed_only!==undefined&&(typeof body.executed_only!=='boolean'||body.executed_only&&(kind!=='exercise'||!['attention','memory','executive'].includes(body.domain)||body.interaction_only||body.photos_only||body.documents_only||body.room_speed_only)))return new Response(JSON.stringify({error:'Modalidad interactiva no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
-  if(body.executed_only&&Number(body.client_revision||1)<9)return new Response(JSON.stringify({error:'Actualiza la página para abrir los retos interactivos.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.executed_only&&Number(body.client_revision||1)<10)return new Response(JSON.stringify({error:'Actualiza la página para abrir los retos interactivos.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   let items:any[]=[];
   if(kind==="game"){
     const excludeTypes=Array.isArray(body.exclude_types)?body.exclude_types.slice(-2):[];
