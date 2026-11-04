@@ -23,7 +23,7 @@ test('answers follow the displayed grids, memory updates, rules and plan depende
   if(t.kind==='compare')expected=t.cells.flatMap((x,i)=>x!==t.after[i]?[String(i)]:[]);
   if(t.kind==='follow'||t.kind==='serial')expected=t.reverse?[...t.sequence].reverse():t.sequence;
   if(t.kind==='update'){expected=[...t.sequence];expected[t.replaceIndex]=t.replacement;if(t.reverse)expected.reverse();assert.equal(item.primaryConstruct,'workingMemory');}
-  if(t.kind==='spatial')expected=t.cells.flatMap((x,i)=>x===t.target?[String(i)]:[]);
+  if(t.kind==='spatial'){expected=t.cells.flatMap((x,i)=>x===t.target?[String(i)]:[]);if(age==='early'&&level===1){assert.equal(t.cells.length,6);assert.equal(expected.length,3);assert.ok(t.cells.some(x=>x!==t.target));}}
   if(t.kind==='plan'){expected=t.steps;for(const [a,b] of t.dependencies)assert.ok(a<b);}
   if(t.kind==='inhibit')expected=t.trials.map(x=>x.symbol==='libro'?'act':'wait');
   if(t.kind==='switch')expected=t.trials.map(x=>x.reversed?(x.symbol==='libro'?'B':'A'):(x.symbol==='libro'?'A':'B'));

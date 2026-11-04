@@ -2836,7 +2836,7 @@ body {
 #exercise .review-plan-table th:first-child{width:24%}
 #exercise .review-plan-table th,#exercise .review-plan-table td{overflow-wrap:anywhere;min-width:0}
 #exercise .multi-select-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}
-#exercise .multi-option{text-align:left;position:relative;padding-left:3.3rem;min-height:64px;border-radius:10px}
+#exercise .multi-option{text-align:left;position:relative;padding-left:4rem;min-height:64px;border-radius:10px;overflow-wrap:anywhere;white-space:normal}
 #exercise .multi-option::before{content:'';position:absolute;left:1rem;top:50%;transform:translateY(-50%);width:1.1rem;height:1.1rem;border:2px solid #8da58e;border-radius:4px;background:white}
 #exercise .multi-option[aria-pressed=true]::before{content:'✓';display:grid;place-items:center;background:#255d3b;border-color:#255d3b;color:white;font-size:.85rem}
 #exercise .multi-option:focus-visible{outline:3px solid #a57a24;outline-offset:3px}
@@ -3046,13 +3046,13 @@ body {
 .executed-choices button{min-width:88px;min-height:94px}.executed-token{display:flex;flex-direction:column;align-items:center;gap:4px;max-width:140px}.executed-token small{font-weight:700}
 .executed-status{font-size:1.1rem;line-height:1.6}.executed-area button:focus-visible{outline:3px solid #143c9b;outline-offset:3px}
 .speed-search-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.speed-search-grid>div{min-height:88px}
-.speed-search-grid .picture-icon svg,.speed-search-grid .picture-icon img,.speed-search-grid .picture-glyphs svg{width:64px;height:64px;max-width:100%;object-fit:contain}
-.speed-symbol .picture-icon img{width:72px;height:72px;object-fit:contain}
-@media(max-width:600px){.activity-toolbar button{min-height:48px;padding:10px 12px;flex:1 1 auto}.executed-grid{gap:8px}.executed-cell{min-height:76px;padding:4px}.executed-picture .picture-icon svg,.executed-picture .picture-icon img{width:52px;height:52px}.executed-choices{gap:8px}.executed-choices button{min-width:72px;min-height:82px}.speed-search-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.speed-search-grid .picture-icon svg,.speed-search-grid .picture-icon img,.speed-search-grid .picture-glyphs svg{width:56px;height:56px}.speed-search-grid>div{min-height:76px}}
-/* One scrollable row keeps every activity button on the same baseline at all widths. */
-#appShell .activity-toolbar{flex-wrap:nowrap;overflow-x:auto;max-width:100%;scroll-padding:8px}
-#appShell .activity-toolbar>.mode-switch:not(.hidden){display:contents!important}
-#appShell .activity-toolbar button{flex:0 0 auto;white-space:nowrap;min-height:50px;height:50px;margin:0;align-self:center}
+.speed-search-grid .picture-icon svg,.speed-search-grid .picture-icon img,.speed-search-grid .picture-glyphs svg{width:80px;height:80px;max-width:100%;object-fit:contain}
+.speed-symbol .picture-icon img{width:88px;height:88px;object-fit:contain}
+@media(max-width:600px){.activity-toolbar button{min-height:48px;padding:10px 12px;flex:1 1 auto}.executed-grid{gap:8px}.executed-cell{min-height:76px;padding:4px}.executed-picture .picture-icon svg,.executed-picture .picture-icon img{width:52px;height:52px}.executed-choices{gap:8px}.executed-choices button{min-width:72px;min-height:82px}.speed-search-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.speed-search-grid .picture-icon svg,.speed-search-grid .picture-icon img,.speed-search-grid .picture-glyphs svg{width:64px;height:64px}.speed-search-grid>div{min-height:76px}}
+/* Activity choices wrap into clear groups instead of forcing a horizontal scrollbar. */
+#appShell .activity-toolbar{flex-wrap:wrap;overflow:visible;max-width:100%;align-items:flex-start}
+#appShell .activity-toolbar>.mode-switch:not(.hidden){display:inline-flex!important;flex-wrap:wrap;align-items:center;gap:4px;max-width:100%;min-width:0}
+#appShell .activity-toolbar button{flex:0 1 auto;white-space:normal;min-height:50px;height:auto;margin:0;align-self:center}
 #appShell .activity-toolbar #executedMode[aria-pressed=true]{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}
 /* Larger exercise stimuli without replacing the approved asset library. */
 .executed-model .executed-picture .picture-icon svg,.executed-model .executed-picture .picture-icon img{width:104px;height:104px}
@@ -3072,11 +3072,15 @@ body {
 .cognitive-area button{min-height:52px;white-space:normal;font-size:1.1rem;padding:12px 18px;margin:6px 4px;max-width:100%;overflow-wrap:anywhere}
 .cognitive-fact{display:flex;align-items:center;gap:14px;padding:18px;border:2px solid var(--line);border-radius:12px;font-size:1.15rem;line-height:1.55;cursor:pointer}
 .cognitive-fact:has(input:checked){border-color:var(--accent);background:var(--bg)}.cognitive-fact input{flex:0 0 24px;width:24px;height:24px;margin:0}
-.cognitive-candidates{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:14px;margin-top:16px}
-.cognitive-candidate{border:2px solid var(--line);border-radius:12px;padding:16px;min-width:0}.cognitive-candidate.excluded{border-style:dashed;background:#e7e9eb}.cognitive-candidate.excluded h4::after{content:' · TACHADA'}
+.cognitive-candidates{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(250px,100%),1fr));gap:12px;margin-top:16px;align-items:start}
+.cognitive-candidate{border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0;background:var(--card)}.cognitive-candidate.excluded{border-style:dashed;background:#e7e9eb}.cognitive-candidate.excluded h4::after{content:' · TACHADA'}
+.cognitive-candidate h4{margin:0 0 8px;font-size:1.02rem}.cognitive-attributes{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}.cognitive-attributes li{padding:5px 9px;border-radius:999px;background:var(--bg);font-size:.98rem;line-height:1.3;overflow-wrap:anywhere}
+.cognitive-candidate-actions{display:flex;gap:6px;margin-top:9px}.cognitive-candidate-actions button{flex:1 1 0;min-height:44px;margin:0;padding:8px;font-size:.95rem}
+.cognitive-clues{margin:12px 0;padding:14px 18px;border-left:5px solid var(--accent);border-radius:10px;background:var(--bg)}.cognitive-clues h4{margin:0 0 8px}.cognitive-clues ol{margin:0;padding-left:1.5rem}.cognitive-clues li{padding:4px 0;line-height:1.4}.photo-mark-help{padding:12px 16px;border-left:4px solid var(--accent);background:var(--bg);font-size:1.05rem;line-height:1.55}
+.cognitive-source-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:16px 0}.cognitive-source-card{min-width:0;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--card)}.cognitive-source-card>h4{margin:0 0 10px;font-size:1.1rem}.cognitive-source-fact{display:flex;align-items:flex-start;gap:10px;padding:10px 8px;border-top:1px solid var(--line);cursor:pointer}.cognitive-source-copy{display:grid;gap:3px;min-width:0;overflow-wrap:anywhere;line-height:1.4}.cognitive-source-copy strong{font-size:.9rem;color:var(--muted)}.cognitive-source-fact:has(input:checked){background:var(--bg)}
 .cognitive-picture{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;align-items:center;margin:10px 0;font-size:1.25rem}
 .cognitive-picture .picture-icon svg,.cognitive-picture .picture-icon img{width:112px;height:112px;max-width:100%}
-.cognitive-switch{font-size:5rem;font-weight:800;text-align:center;padding:24px}
+.cognitive-switch{font-size:clamp(7rem,20vw,12rem);line-height:1;font-weight:800;text-align:center;padding:20px}.cognitive-rule-change{display:grid;justify-items:center;text-align:center;padding:20px}.cognitive-rule-change p{max-width:42rem;margin:0;font-size:clamp(1.4rem,4vw,2rem);font-weight:800;line-height:1.5}.executed-rule-intro,.executed-rule-change{margin:18px auto;padding:20px;border:1px solid var(--line);border-radius:16px;background:var(--bg);text-align:center}.executed-rule-intro h2,.executed-rule-change h2{margin:4px 0 12px;font-size:clamp(1.35rem,3vw,2rem)}.executed-rule-rows{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}.executed-rule-rows p{margin:0;padding:12px 18px;border-radius:12px;background:var(--card);font-size:clamp(1.4rem,4vw,2rem);font-weight:800}.executed-rule-intro>p:last-child,.executed-rule-change>p{margin:12px 0 0;font-size:clamp(1.1rem,2.5vw,1.4rem);font-weight:700}.executed-next-cue{display:block;padding:12px;text-align:center;font-weight:700;letter-spacing:.04em}
 .cognitive-area button:focus-visible,.cognitive-area input:focus-visible{outline:3px solid #155a9d;outline-offset:4px}
 .cognitive-solution,.memory-solution{margin:22px 0;padding:18px;border:2px solid var(--accent);border-radius:12px;background:var(--card);color:var(--ink)}
 .memory-solution h4,.cognitive-solution h4{font-size:1.2rem;margin:0 0 12px}.memory-solution ol{list-style-position:inside;padding-left:8px}.cognitive-plan-slots{min-height:90px;line-height:1.8;font-size:1.2rem}
@@ -3084,6 +3088,7 @@ body {
 #exercise .interactive-card .word-cue{font-size:clamp(2rem,6vw,3.4rem)}
 #exerciseOptions .option-btn{font-size:1.125rem;line-height:1.55}
 #exerciseVisual .reading-passage{font-size:1.15rem;line-height:1.75}
-@media(max-width:600px){.cognitive-choices,.cognitive-facts{grid-template-columns:1fr}.cognitive-picture .picture-icon svg,.cognitive-picture .picture-icon img{width:88px;height:88px}.cognitive-area button{font-size:1.1rem;margin:6px 0}.cognitive-area form input{width:100%;box-sizing:border-box}.cognitive-fact{padding:14px}}
+@media(max-width:700px){.cognitive-choices,.cognitive-facts,.cognitive-source-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.cognitive-picture .picture-icon svg,.cognitive-picture .picture-icon img{width:88px;height:88px}.cognitive-area button{font-size:1.1rem;margin:6px 0}.cognitive-area form input{width:100%;box-sizing:border-box}.cognitive-fact{padding:14px}.cognitive-candidate-actions button{font-size:.9rem;padding:8px 4px}}
 
 #cognitiveFamilyControl{margin:14px 0;max-width:100%}

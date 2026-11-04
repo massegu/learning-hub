@@ -24,18 +24,18 @@ function mount(item,{visual,area,onFinish}){
   choices.forEach(value=>{const b=button('',()=>{if(response.length>=task.answer.length)return;response.push(value);draw();});b.setAttribute('aria-label',value);b.append(picture(value));bank.append(b);});
   area.replaceChildren(picked,bank,button('Deshacer',()=>{response.pop();draw();}),button('Comprobar',()=>{if(response.length!==task.answer.length){message.textContent='Completa los '+task.answer.length+' pasos antes de comprobar.';return;}complete();}));draw();
  }
- function trials(skipSwitch=false){area.replaceChildren();
+ function trials(skipSwitch=false){area.replaceChildren();message.classList.remove('executed-next-cue');
   if(!skipSwitch&&task.kind==='switch'&&round>0&&round<task.trials.length&&task.trials[round].reversed!==task.trials[round-1].reversed){
-   message.textContent='Cambio de regla. A partir de ahora, invierte A y B.';visual.replaceChildren(message,node('div','↔','cognitive-switch'));later(()=>trials(true),2100);return;
+   const change=node('section',undefined,'executed-rule-change');change.append(node('div','↔','cognitive-switch'),node('h2','CAMBIO DE REGLA'),node('p','Intercambia A y B. La señal no indica qué botón pulsar.'));message.textContent='Cambio de regla.';visual.replaceChildren(message,change);later(()=>trials(true),2100);return;
   }if(round===task.trials.length){complete();return;}
-  const trial=task.trials[round];trialOpen=true;message.textContent=`Tarjeta ${round+1} de ${task.trials.length}. `+(task.kind==='inhibit'?'Libro: pulsa. Pelota: espera.':trial.reversed?'Regla nueva: libro → B; pelota → A.':'Regla: libro → A; pelota → B.');
+  const trial=task.trials[round];trialOpen=true;message.textContent=task.kind==='inhibit'?'Libro: pulsa. Pelota: espera.':'';
   visual.replaceChildren(message,picture(trial.symbol));
-  const next=value=>{if(!trialOpen||stopped||finished)return;trialOpen=false;clearTimeout(timer);response.push(value);round++;visual.replaceChildren(message);message.textContent='Siguiente tarjeta';area.querySelectorAll('button').forEach(b=>b.disabled=true);later(trials,650);};
+  const next=value=>{if(!trialOpen||stopped||finished)return;trialOpen=false;clearTimeout(timer);response.push(value);round++;visual.replaceChildren(message);message.textContent='Siguiente estímulo';message.classList.add('executed-next-cue');area.querySelectorAll('button').forEach(b=>b.disabled=true);later(trials,650);};
   if(task.kind==='inhibit'){area.append(button('Responder',()=>next('act')));later(()=>next('wait'),task.trialMs);}
   else{area.append(button('A',()=>next('A')),button('B',()=>next('B')));}
   area.append(button('Reiniciar sin registrar',()=>ready('Intento detenido. Puedes volver a empezar.')));
  }
- function start(){clearTimeout(timer);response=[];round=0;area.replaceChildren();visual.replaceChildren(message);message.textContent=({serial:'Observa la secuencia. Después se ocultará.',update:'Memoriza la secuencia. Después aparecerá un cambio.',spatial:'Observa dónde está el modelo; ignora los otros objetos.',follow:'Sigue el modelo visible y pulsa los objetos en ese orden.',cancel:'Compara cada objeto con los modelos.',compare:'Revisa la misma posición en A y en B.',plan:'Completa los requisitos antes de pasar al siguiente paso.'})[task.kind]||'Sigue la regla de la tarjeta.';
+ function start(){clearTimeout(timer);response=[];round=0;area.replaceChildren();visual.replaceChildren(message);message.textContent=({serial:'Observa la secuencia. Después se ocultará.',update:'Memoriza la secuencia. Después aparecerá un cambio.',spatial:'Observa dónde está el modelo; ignora los otros objetos.',follow:'Sigue el modelo visible y pulsa los objetos en ese orden.',cancel:'Compara cada objeto con los modelos.',compare:'Revisa la misma posición en A y en B.',plan:'Completa los requisitos antes de pasar al siguiente paso.'})[task.kind]||(task.kind==='switch'?'Aplica la regla inicial.':'Sigue la regla de la tarjeta.');
   if(['switch','inhibit'].includes(task.kind)){trials();return;}
   if(task.kind==='plan'){
    visual.append(node('p',item.stimulus[1].items.join(' ')));sequence([...task.steps].reverse());return;
@@ -49,7 +49,7 @@ function mount(item,{visual,area,onFinish}){
   if(task.kind==='update')later(()=>{visual.replaceChildren(message);message.textContent='Cambio: en la posición '+(task.replaceIndex+1)+' coloca este objeto.';visual.append(picture(task.replacement));later(hide,3500);},task.exposureMs);
   else later(hide,task.exposureMs);
  }
- function ready(text){clearTimeout(timer);trialOpen=false;message.textContent=text;visual.replaceChildren(message);area.replaceChildren(button('Empezar',start));}
+ function ready(text){clearTimeout(timer);trialOpen=false;message.textContent=text;message.classList.remove('executed-next-cue');visual.replaceChildren(message);if(task.kind==='switch'){const intro=node('section',undefined,'executed-rule-intro'),rows=node('div',undefined,'executed-rule-rows');intro.append(node('h2','Regla inicial'));rows.append(node('p','LIBRO → A'),node('p','PELOTA → B'));intro.append(rows,node('p','Si aparece ↔, intercambia las respuestas.'));visual.append(intro);}area.replaceChildren(button('Empezar',start));}
  const interrupt=()=>{if(document.hidden&&!finished&&!stopped)ready('La actividad se ha interrumpido. Vuelve a empezar cuando estés preparado; este intento no se registra.');};
  document.addEventListener('visibilitychange',interrupt);ready('Observa la consigna. Pulsa Empezar cuando estés preparado.');
  return ()=>{stopped=true;clearTimeout(timer);document.removeEventListener('visibilitychange',interrupt);area.classList.remove('executed-area');};

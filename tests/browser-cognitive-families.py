@@ -17,7 +17,10 @@ try:
    for level in [1,2,3]:
     page.locator('#exerciseLevelSelect').select_option(str(level))
     for kind in ['rules','words','deduction','change','information','contradiction']:
-     page.locator('#cognitiveFamilySelect').select_option(kind)
+     family_domain=({'middle':'middleLanguage','teen':'teenLanguage'}.get(age,'language') if kind=='words' else 'executive')
+     workspace(page).locator('#navMenu [data-subject='+family_domain+']').click()
+     if kind=='words':page.locator('#wordFitMode').click()
+     else:page.locator('#cognitiveMode').click();page.locator('#cognitiveFamilySelect').select_option(kind)
      page.wait_for_function('({kind,level})=>window.__current?.type==="cognitiveTask"&&__current.cognitiveTask.kind===kind&&__current.level===level&&document.querySelector(".cognitive-area")',arg={'kind':kind,'level':level})
      item=page.evaluate('__current');task=item['cognitiveTask'];before=page.evaluate('__saves')
      assert page.evaluate('__lastPayload.client_revision')==11
@@ -63,7 +66,7 @@ try:
       file=Path(tmp)/(kind+'.docx');dl.value.save_as(file)
       with zipfile.ZipFile(file) as z:assert item['q'][:25] in z.read('word/document.xml').decode()
   # A hidden document interrupts rules, records nothing and has no pending late score.
-  page.locator('#cognitiveFamilySelect').select_option('rules');page.wait_for_function('()=>window.__current?.cognitiveTask?.kind==="rules"');page.locator('.cognitive-area').get_by_role('button',name='Empezar',exact=True).click();before=page.evaluate('__saves')
+  workspace(page).locator('#navMenu [data-subject=executive]').click();page.locator('#cognitiveMode').click();page.locator('#cognitiveFamilySelect').select_option('rules');page.wait_for_function('()=>window.__current?.cognitiveTask?.kind==="rules"');page.locator('.cognitive-area').get_by_role('button',name='Empezar',exact=True).click();before=page.evaluate('__saves')
   page.evaluate("()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'));}")
   page.clock.fast_forward(60000);assert page.evaluate('__saves')==before;assert 'interrumpida' in page.locator('.cognitive-status').inner_text()
   page.evaluate('()=>{delete document.hidden;}');page.locator('.cognitive-area').get_by_role('button',name='Empezar',exact=True).click();page.locator('.cognitive-area').get_by_role('button',name='Reiniciar sin registrar',exact=True).click();assert page.evaluate('__saves')==before
