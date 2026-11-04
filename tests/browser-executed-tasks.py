@@ -44,8 +44,11 @@ try:
         page.clock.fast_forward(2200)
        if kind=='switch':assert 'Tarjeta' not in page.locator('#exerciseVisual').inner_text()
        if kind=='inhibit':
+        assert 'Libro: pulsa' not in page.locator('#exerciseVisual').inner_text()
         if trial['symbol']=='libro':page.locator('.executed-area').get_by_role('button',name='Responder',exact=True).click()
-        else:page.clock.fast_forward(task['trialMs']+10)
+        else:
+         assert page.locator('.executed-wait-countdown').inner_text().startswith('Espera ')
+         page.clock.fast_forward(task['trialMs']+10)
        else:
         answer=('B' if trial['symbol']=='libro' else 'A') if trial['reversed'] else ('A' if trial['symbol']=='libro' else 'B')
         page.locator('.executed-area').get_by_role('button',name=answer,exact=True).click()
