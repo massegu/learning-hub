@@ -16,13 +16,16 @@ test('six cognitive families keep canonical age/level metadata and localized del
   for(const field of ['q','sample','cognitiveTask','ageRoute'])assert.throws(()=>families.validate({...it,[field]:'tampered'},age));
   assert.throws(()=>families.validate(it,age==='teen'?'early':'teen'));
  }
- assert.equal(variants,300);assert.equal(scenarios.size,5);assert.ok([...scenarios.values()].every(s=>s.size>=4));
+ assert.equal(variants,330);assert.equal(scenarios.size,5);assert.ok([...scenarios.values()].every(s=>s.size>=4));
+ const teenRules=families.pool('teen','executive',1,'rules').map(it=>JSON.stringify(it.cognitiveTask));for(const label of ['cámara','teléfono','auriculares','calculadora','brújula','regla'])assert.ok(teenRules.some(task=>task.includes(label)),label);
+ for(const label of ['Cámara','Teléfono','Auriculares','Calculadora','Brújula','Regla'])assert.match(model.visualLabel(label,{iconProfile:profile('teen')}),/class="picture-icon"/);
  for(const age of ages)for(const level of [1,2,3])assert.equal(families.pool(age,'executive',level).some(it=>it.cognitiveTask.kind==='words'),false);
  for(const age of ages)for(const level of [1,2,3])assert.ok(families.pool(age,'language',level,'words').length>0);
 });
 test('solutions derive independently from clues, facts, constraints, dependencies and rule history',()=>{
  for(const age of ages)for(const level of [1,2,3])for(const it of [...families.pool(age,'executive',level),...families.pool(age,'language',level,'words')]){
   const t=it.cognitiveTask;let answer;
+  if(t.kind==='information')assert.match(it.q,new RegExp(`Situación: .+marca exactamente ${t.answer.length} datos necesarios`,'i'));
   if(t.kind==='rules'){let inverted=false;answer=t.trials.map(trial=>{if(trial.switchBefore)inverted=!inverted;assert.equal(trial.inverted,inverted);return trial.target!==inverted?'act':'wait';});assert.equal(t.trials.filter(x=>x.switchBefore).length,level-1);}
   if(t.kind==='words'){
    const valid=t.options.filter(word=>families.wordFits(word,t));assert.equal(valid.length,1);answer=[valid[0]];

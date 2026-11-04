@@ -234,6 +234,7 @@
         : `<div class="icon-grid level-${it.level || 1}">${(it.icons || []).map((k) => `<div class="icon-cell">${iconFor(k)}</div>`).join("")}</div>`;
     visual.innerHTML = targetPair + cards;
   }
+  function displayMemoryQuestion(it){return it.photoTask?.kind==='recall'?String(it.memoryQuestion||'¿Qué recuerdas?').replace(/\s(?=\d+\))/g,'\n'):it.memoryQuestion||'¿Qué recuerdas?';}
   function renderMemoryExercise(it) {
     if(it.photoTask?.kind==='recall'){
       const visual=$('#exerciseVisual'),area=$('#exerciseOptions');
@@ -252,7 +253,7 @@
           const tick=()=>{
             if(currentItem!==it||exposureVersion!==memoryExposureVersion)return;
             const remaining=Math.max(0,deadline-Date.now());
-            if(!remaining){stopMemoryCountdown();visual.innerHTML='';$('#exercisePrompt').textContent=it.memoryQuestion;renderOptions(it);$('#exercisePrompt').scrollIntoView({block:'center',behavior:'instant'});return;}
+            if(!remaining){stopMemoryCountdown();visual.innerHTML='';$('#exercisePrompt').textContent=displayMemoryQuestion(it);renderOptions(it);$('#exercisePrompt').scrollIntoView({block:'center',behavior:'instant'});return;}
             const seconds=Math.ceil(remaining/1000);notice.textContent=`Tiempo para observar: ${seconds} ${seconds===1?'segundo':'segundos'}.`;
             memoryCountdown=setTimeout(tick,Math.min(250,remaining));
           };tick();
@@ -281,7 +282,7 @@
         const step=()=>{
           if(currentItem!==it)return;
           if(index===it.recallSequence.length){
-            visual.innerHTML='';$('#exercisePrompt').textContent=it.memoryQuestion;renderOrderExercise(it);return;
+            visual.innerHTML='';$('#exercisePrompt').textContent=displayMemoryQuestion(it);renderOrderExercise(it);return;
           }
           visual.innerHTML=`<div class="sequence-flash"><small>${index+1} / ${it.recallSequence.length}</small>${window.ActivityModel.visualLabel(it.recallSequence[index++],{...it.lexicalSenses,memory:true})}</div>`;
           setTimeout(()=>{if(currentItem!==it)return;visual.innerHTML='<div class="sequence-flash" aria-hidden="true">·</div>';setTimeout(step,250);},it.sequenceStepMs);
@@ -506,7 +507,7 @@
         $('#interactiveTrialFeedback').textContent=ok?'Bien. Has seguido la regla.':rule.target<0?'En esta tarjeta había que esperar sin pulsar.':'La regla indicaba: '+local(t.actions[rule.target])+'.';
         interactionTimer=setTimeout(next,650);
       };
-      visual.innerHTML=`<div class="interactive-trial"><p class="eyebrow">Tarjeta ${trial+1} de ${t.trials.length}</p><div class="interactive-card" aria-label="${escapeHtml(rule.label)}">${t.kind==='symbols'?`<strong aria-hidden="true">${rule.symbol}</strong><span>${escapeHtml(local(rule.label))}</span>`:`<strong class="word-cue">${escapeHtml(rule.label)}</strong>`}</div><p id="interactiveTrialFeedback" role="status"></p><div id="interactiveWait" class="interactive-wait hidden"><p id="interactiveSeconds" role="timer" aria-live="off"></p><progress id="interactiveWaitBar" max="${t.waitMs}" value="0"></progress></div><details class="interactive-rule-help"><summary>Consultar las reglas</summary>${rulesTable(activeRules)}</details></div>`;
+      visual.innerHTML=`<div class="interactive-trial"><p class="eyebrow">Tarjeta ${trial+1} de ${t.trials.length}</p>${rule.target<0?'':`<p class="interactive-current-rule">Regla: ${escapeHtml(t.kind==='symbols'?rule.symbol+' · '+local(rule.label):local(rule.label))} → ${escapeHtml(local(t.actions[rule.target]))}</p>`}<div class="interactive-card" aria-label="${escapeHtml(rule.label)}">${t.kind==='symbols'?`<strong aria-hidden="true">${rule.symbol}</strong><span>${escapeHtml(local(rule.label))}</span>`:`<strong class="word-cue">${escapeHtml(rule.label)}</strong>`}</div><p id="interactiveTrialFeedback" role="status"></p><div id="interactiveWait" class="interactive-wait hidden"><p id="interactiveSeconds" role="timer" aria-live="off"></p><progress id="interactiveWaitBar" max="${t.waitMs}" value="0"></progress></div><details class="interactive-rule-help"><summary>Consultar las reglas</summary>${rulesTable(activeRules)}</details></div>`;
       area.innerHTML=t.actions.map((label,i)=>`<button class="option-btn interaction-action" data-action="${i}">${escapeHtml(local(label))}</button>`).join('');
       $$('.interaction-action').forEach(b=>b.onclick=()=>close(Number(b.dataset.action)===rule.target));
       if(rule.target>=0)return;
@@ -541,12 +542,12 @@
       if(!live())return;if(trial>=t.trials.length){finishObservedPractice(it,reports,recordObservation);return;}
       const rule=t.rules[t.trials[trial]],entry={trial:trial+1,report:'unverified'};reports.push(entry);
       const deadline=Date.now()+t.waitMs,finishAt=deadline+4000;
-      visual.innerHTML=`<div class="interactive-trial"><div class="interactive-card"><strong class="word-cue">${escapeHtml(rule.label)}</strong></div><p id="movementAction">${rule.target<0?'PAUSA: no hagas ningún gesto.':''}</p><p id="interactiveSeconds" role="timer" aria-live="off"></p></div>`;
+      visual.innerHTML=`<div class="interactive-trial">${rule.target<0?'':`<p class="interactive-current-rule">Señal: ${escapeHtml(local(rule.label))} → ${escapeHtml(local(t.actions[rule.target]))}</p>`}<div class="interactive-card"><strong class="word-cue">${escapeHtml(rule.label)}</strong></div><p id="movementAction"></p><p id="interactiveSeconds" role="timer" aria-live="off"></p></div>`;
       area.innerHTML='<button id="movementEarly" class="secondary-btn">Marcar un adelanto o una confusión</button><button id="stopPractice" class="secondary-btn">Detener práctica</button>';
       $('#movementEarly').onclick=()=>{entry.report='early';$('#movementEarly').disabled=true;};$('#stopPractice').onclick=()=>interruptPractice(it);
       const tick=()=>{
         if(!live())return;const now=Date.now(),remaining=Math.max(0,deadline-now);
-        $('#interactiveSeconds').textContent=rule.target<0?'':remaining?`Espera ${Math.ceil(remaining/1000)} segundos.`:'';
+        $('#interactiveSeconds').textContent=remaining?`Espera ${Math.ceil(remaining/1000)} segundos.`:'';
         if(!remaining&&rule.target>=0)$('#movementAction').textContent='Ahora: '+local(t.actions[rule.target])+'.';
         if(now>=finishAt){trial++;next();return;}interactionTimer=setTimeout(tick,100);
       };tick();
@@ -1279,7 +1280,7 @@
     if(it.roomSpeedTask){renderRoomSpeed(it);return;}
     if(it.interactionTask){renderInteractiveExercise(it);
       if(['movement','auditory'].includes(it.interactionTask.kind)){
-        const controls=document.createElement('label');controls.className='signal-mode-control';controls.innerHTML='Actúa con reglas › Señales y acciones · Tipo de señal <select id="signalModeSelect"><option value="movement">En pantalla</option><option value="auditory">Palabra o sonido</option></select>';
+        const controls=document.createElement('label');controls.className='signal-mode-control';controls.innerHTML='Mira/escucha y actúa · Tipo de señal <select id="signalModeSelect"><option value="movement">En pantalla</option><option value="auditory">Palabra o sonido</option></select>';
         $('#exerciseVisual').prepend(controls);$('#signalModeSelect').value=it.interactionTask.kind;$('#signalModeSelect').onchange=e=>{interactionKind=e.target.value;setupExercise();};
       }return;}
     if(it.speedTask){renderSpeedExercise(it);return;}
@@ -1715,7 +1716,7 @@
       return 'Práctica de espera registrada.';
     };
     observations.classList.toggle('hidden',!entries.length);
-    observations.innerHTML=`<summary>Práctica con movimientos y objetos · ${entries.length} registros</summary><p>Observaciones personales o acompañadas, separadas de los aciertos de las actividades en pantalla.</p><ul>${entries.slice(-8).reverse().map(entry=>`<li><strong>${entry.kind==='movement'?'Señales y acciones · pantalla':entry.kind==='auditory'?'Señales y acciones · audio':'Busca a tu alrededor'} · nivel ${Number(entry.level)||1}</strong> · ${escapeHtml(observationText(entry))}</li>`).join('')}</ul>`;
+    observations.innerHTML=`<summary>Práctica con movimientos y objetos · ${entries.length} registros</summary><p>Observaciones personales o acompañadas, separadas de los aciertos de las actividades en pantalla.</p><ul>${entries.slice(-8).reverse().map(entry=>`<li><strong>${entry.kind==='movement'?'Mira/escucha y actúa · pantalla':entry.kind==='auditory'?'Mira/escucha y actúa · audio':'Busca a tu alrededor'} · nivel ${Number(entry.level)||1}</strong> · ${escapeHtml(observationText(entry))}</li>`).join('')}</ul>`;
     $("#progressProfileTitle").textContent = `Evolución de ${profile.name}`;
     $("#progressCards").innerHTML = ageData()
       .subjects.map((s) => {

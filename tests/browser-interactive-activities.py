@@ -35,11 +35,11 @@ try:
   old_attempts=len(history());page.locator('[data-interaction-kind=signals]').click();page.wait_for_selector('#startInteractive');movement=page.evaluate('__current');assert movement['interactionTask']['kind']=='movement'
   page.locator('#startInteractive').click()
   for n,rule in enumerate(movement['interactionTask']['rules'][i] for i in movement['interactionTask']['trials']):
-   if rule['target']<0:assert page.locator('#interactiveSeconds').inner_text()==''
-   else:assert 'Espera ' in page.locator('#interactiveSeconds').inner_text()
+   assert 'Espera ' in page.locator('#interactiveSeconds').inner_text()
+   if rule['target']<0:assert page.locator('#movementAction').inner_text()==''
    page.clock.run_for(4900)
-   if rule['target']<0:assert page.locator('#interactiveSeconds').inner_text()==''
-   else:assert 'Espera ' in page.locator('#interactiveSeconds').inner_text()
+   assert 'Espera ' in page.locator('#interactiveSeconds').inner_text()
+   if rule['target']<0:assert page.locator('#movementAction').inner_text()==''
    if n==0:page.locator('#exercise').screenshot(path='/tmp/interactive-movement-wait.png');page.locator('#movementEarly').click()
    page.clock.run_for(4100)
   assert page.locator('#practiceCompleted').is_visible();assert page.evaluate('__profiles.find(p=>p.id==="primary").progress.interactiveObservations?.length||0')==0
