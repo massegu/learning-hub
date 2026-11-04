@@ -1003,11 +1003,11 @@
     const isLang = ["language","middleLanguage","teenLanguage"].includes(subject);
     const isReading=['reading','middleReading','literacy'].includes(subject);
     if(isLang&&mode==='writing'||isReading&&['spelling','vocabulary'].includes(mode))mode='grammar';
-    $$('.language-mode-btn').forEach(b=>{
+    $$('.language-mode-btn[data-mode]').forEach(b=>{
       b.classList.toggle('hidden',isLang&&b.dataset.mode==='writing'||isReading&&['spelling','vocabulary'].includes(b.dataset.mode));
       b.textContent=window.ContentPolicy.forProfile(profile)?({grammar:'Palabras y gramática',spelling:'Ortografía',writing:'Formar frases',vocabulary:'Vocabulario'})[b.dataset.mode]:({grammar:'Gramática',spelling:'Ortografía',writing:'Escritura',vocabulary:'Vocabulario'})[b.dataset.mode];
       if(isReading)b.textContent=({grammar:'Lectura',writing:window.ContentPolicy.forProfile(profile)?'Formar frases':'Escritura'})[b.dataset.mode]||'';
-      b.classList.toggle('active',b.dataset.mode===mode);
+      b.classList.toggle('active',!cognitiveOnly&&b.dataset.mode===mode);
     });
     $("#languageModeSwitch").classList.toggle("hidden", !isLang&&!isReading);
     if(subject!=='speedReasoning')roomSpeedOnly=false;
@@ -1033,11 +1033,16 @@
     $$('#photoModeSwitch button').forEach(b=>b.setAttribute('aria-pressed',String(!cognitiveOnly&&!executedOnly&&(b.dataset.photos==='true')===photoOnly)));
 
     const cognitiveBank=window.CognitiveFamilies.pool(window.AgeStages.route(profile),subject,state.levels[subject]||1);
+    const wordFitAvailable=isLang&&cognitiveBank.some(it=>it.cognitiveTask.kind==='words');
+    $('#wordFitMode').classList.toggle('hidden',!wordFitAvailable);
+    $('#wordFitMode').classList.toggle('active',cognitiveOnly&&cognitiveFamily==='words');
+    $('#wordFitMode').setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily==='words'));
     if(!cognitiveBank.length)cognitiveOnly=false;
-    $('#cognitiveMode').classList.toggle('hidden',!cognitiveBank.length);
+    $('#cognitiveMode').classList.toggle('hidden',!cognitiveBank.length||isLang);
     $('#cognitiveMode').setAttribute('aria-pressed',String(cognitiveOnly));
     $('#cognitiveFamilyControl').classList.toggle('hidden',!cognitiveOnly);
     const families=[...new Set(cognitiveBank.map(it=>it.cognitiveTask.kind))];
+    $('#cognitiveFamilyControl').classList.toggle('hidden',!cognitiveOnly||families.length<=1);
     if(!families.includes(cognitiveFamily))cognitiveFamily='';
     $('#cognitiveFamilySelect').replaceChildren(new Option('Mezclar familias',''),...families.map(key=>new Option(window.CognitiveFamilies.definitions[key].title,key)));
     $('#cognitiveFamilySelect').value=cognitiveFamily;
@@ -1071,6 +1076,7 @@
     cognitiveOnly=false;executedOnly=false;photoOnly=button.dataset.photos==='true';documentOnly=false;setupExercise();
   });
   $('#cognitiveMode').onclick=()=>{cognitiveOnly=true;executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;setupExercise();};
+  $('#wordFitMode').onclick=()=>{mode='vocabulary';cognitiveOnly=true;cognitiveFamily='words';executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;setupExercise();};
   $('#cognitiveFamilySelect').onchange=e=>{cognitiveFamily=e.target.value;setupExercise();};
   $('#executedMode').onclick=()=>{cognitiveOnly=false;executedOnly=true;photoOnly=false;documentOnly=false;interactionOnly=false;setupExercise();};
   async function requestForProfile(payload, targetProfile = profile) {
@@ -1227,7 +1233,7 @@
           if(response?.usage)$('#usageHint').textContent='Hoy: '+response.usage.used+' fichas';
           await window.WorksheetGenerator.generate([response.items],exportProfile);
         }catch(error){exportButton.textContent=error?.message||'No se ha podido generar el archivo. Vuelve a intentarlo.';}finally{exportButton.disabled=false;}};
-        $('#exerciseVisual').before(exportButton);
+        $('#exerciseOptions').after(exportButton);
       }return;
     }
     if(it.type==='executed'){
@@ -1473,7 +1479,7 @@
       advanceGuidedSession();
     } else newExercise();
   };
-  $$(".language-mode-btn").forEach(
+  $$(".language-mode-btn[data-mode]").forEach(
     (b) =>
       (b.onclick = () => {
         mode = b.dataset.mode;cognitiveOnly=false;

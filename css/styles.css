@@ -1078,6 +1078,8 @@ body {
   padding: 7px;
   margin-bottom: 14px;
 }
+#printCognitive { display:block; width:max-content; max-width:100%; margin:20px 0 0 auto; }
+.cognitive-conditions { display:table; margin:22px 0 26px; padding:16px 22px; border-left:6px solid var(--grass); border-radius:10px; background:#edf3eb; color:var(--ink); font-size:1.3rem; font-weight:850; line-height:1.45; }
 .language-mode-btn {
   border: 0;
   background: transparent;
