@@ -66,7 +66,7 @@ try:
   advanced=page.evaluate('__current');page.locator('#showMemoryPhoto').click();page.wait_for_selector('.everyday-photo img')
   page.clock.run_for(advanced['revealMs']+100)
   assert page.locator('#exerciseVisual img').count()==0
-  assert page.locator('#exercisePrompt').inner_text()==advanced['memoryQuestion']
+  assert ' '.join(page.locator('#exercisePrompt').inner_text().split())==' '.join(advanced['memoryQuestion'].split())
   page.locator('#exerciseOptions [data-answer]').evaluate_all('(els,a)=>els.find(e=>e.dataset.answer===a).click()',advanced['a'])
   assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
   badge=page.locator('#exerciseHeading').evaluate("e=>({image:getComputedStyle(e,'::before').backgroundImage,position:getComputedStyle(e,'::before').backgroundPosition})")

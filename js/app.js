@@ -253,7 +253,7 @@
           const tick=()=>{
             if(currentItem!==it||exposureVersion!==memoryExposureVersion)return;
             const remaining=Math.max(0,deadline-Date.now());
-            if(!remaining){stopMemoryCountdown();visual.innerHTML='';$('#exercisePrompt').textContent=displayMemoryQuestion(it);$('#exercisePrompt').scrollIntoView({block:'center',behavior:'instant'});return;}
+            if(!remaining){stopMemoryCountdown();visual.innerHTML='';$('#exercisePrompt').textContent=displayMemoryQuestion(it);renderOptions(it);$('#exercisePrompt').scrollIntoView({block:'center',behavior:'instant'});return;}
             const seconds=Math.ceil(remaining/1000);notice.textContent=`Tiempo para observar: ${seconds} ${seconds===1?'segundo':'segundos'}.`;
             memoryCountdown=setTimeout(tick,Math.min(250,remaining));
           };tick();
