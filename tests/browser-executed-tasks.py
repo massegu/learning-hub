@@ -17,7 +17,9 @@ try:
     for kind in kinds:
      page.evaluate('''({age,domain,kind})=>{window.__task=ExecutedTasks.pool(age,domain,2).find(x=>x.execution.kind===kind);window.__executionRequest=null;}''',{'age':age,'domain':domain,'kind':kind})
      page.locator('#executedMode').click();page.wait_for_function('()=>window.__executionRequest?.executed_only&&document.querySelector(".executed-area")');assert page.evaluate('__executionRequest.client_revision')==11
-     completed_before=page.evaluate('__completedCalls');page.locator('.executed-area').get_by_role('button',name='Empezar',exact=True).press('Enter')
+     completed_before=page.evaluate('__completedCalls');
+     if kind=='switch':assert page.locator('.executed-rule-intro').is_visible() and 'LIBRO → A' in page.locator('.executed-rule-intro').inner_text()
+     page.locator('.executed-area').get_by_role('button',name='Empezar',exact=True).press('Enter')
      task=page.evaluate('__task.execution')
      if kind in ['serial','spatial','update']:
       assert page.locator('#exerciseVisual .executed-picture').count()>0
@@ -37,13 +39,17 @@ try:
       page.locator('.executed-area').get_by_role('button',name='Comprobar',exact=True).click()
      elif kind in ['switch','inhibit']:
       for trial_index,trial in enumerate(task['trials']):
-       if kind=='switch' and trial_index>0 and trial['reversed']!=task['trials'][trial_index-1]['reversed']:page.clock.fast_forward(2200)
+       if kind=='switch' and trial_index>0 and trial['reversed']!=task['trials'][trial_index-1]['reversed']:
+        assert 'CAMBIO DE REGLA' in page.locator('#exerciseVisual').inner_text();assert 'Tarjeta' not in page.locator('#exerciseVisual').inner_text();assert 'LIBRO →' not in page.locator('#exerciseVisual').inner_text()
+        page.clock.fast_forward(2200)
+       if kind=='switch':assert 'Tarjeta' not in page.locator('#exerciseVisual').inner_text()
        if kind=='inhibit':
         if trial['symbol']=='libro':page.locator('.executed-area').get_by_role('button',name='Responder',exact=True).click()
         else:page.clock.fast_forward(task['trialMs']+10)
        else:
         answer=('B' if trial['symbol']=='libro' else 'A') if trial['reversed'] else ('A' if trial['symbol']=='libro' else 'B')
         page.locator('.executed-area').get_by_role('button',name=answer,exact=True).click()
+       if kind=='switch':assert page.locator('#exerciseVisual .executed-next-cue').inner_text()=='Siguiente estímulo'
        page.clock.fast_forward(700)
      else:
       answer=list(task['steps'] if kind=='plan' else task['sequence'])
@@ -76,7 +82,7 @@ try:
    expected=bytes(page.evaluate("Array.from(PhosphorArt.png(StimulusArt.forLabel(__task.execution.sequence[0])))"));assert any(z.read(name)==expected for name in z.namelist() if name.startswith('word/media/'))
   # Every activity tab shares a minimum target height; older submodes join the toolbar.
   workspace(page).locator('#navMenu [data-subject=executive]').click();page.locator('#interactionModeBtn').click()
-  boxes=page.locator('.activity-toolbar button:visible').evaluate_all('(els)=>els.map(e=>({h:e.getBoundingClientRect().height,y:e.getBoundingClientRect().y}))');assert all(b['h']==50 for b in boxes);assert max(b['y'] for b in boxes)-min(b['y'] for b in boxes)<2
+  boxes=page.locator('.activity-toolbar button:visible').evaluate_all('(els)=>els.map(e=>({h:e.getBoundingClientRect().height,y:e.getBoundingClientRect().y}))');assert all(b['h']>=44 for b in boxes);assert page.locator('.activity-toolbar').evaluate('(e)=>e.scrollWidth<=e.clientWidth+1');assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
   page.wait_for_selector('#exerciseVisual table');page.locator('#exercise').screenshot(path='/tmp/phase2-toolbar-desktop.png')
   # Existing pictograms stay legible at mobile widths in the timed speed renderer.
   page.evaluate("()=>{const previous=LearningAPI.requestContent;LearningAPI.requestContent=async payload=>payload.domain==='speedReasoning'?{items:[Curriculum.pool('teen','speedReasoning',1).find(x=>x.speedFamily==='category'&&!x.qualityEvidence)],usage:{used:1,limit:500}}:previous(payload);}")

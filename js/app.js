@@ -394,8 +394,10 @@
           const [left,top,width,height]=box;Object.assign(mark.style,{left:left+'%',top:top+'%',width:width+'%',height:height+'%'});
           mark.onclick=()=>option.click();holder.append(mark);photoMarks.push({mark,option});
         }
-        const help=document.createElement('p');help.className='photo-mark-help';help.textContent='Marca los objetos directamente en la imagen B o utiliza los botones de abajo.';$('.photo-comparison').after(help);
+        const help=document.createElement('p');help.className='photo-mark-help';help.textContent='Compara A con B y marca solo los cambios que pide la consigna. Por ejemplo, si se pregunta por el color, selecciona un objeto solo cuando su color cambie de A a B. Puedes pulsar el objeto en B o usar la lista.';$('.photo-comparison').after(help);
       }
+    } else if(it.type==='photoDifference'){
+      const help=document.createElement('p');help.className='photo-mark-help';help.textContent='Compara A con B y marca solo los cambios que pide la consigna. Por ejemplo, si se pregunta por el color, selecciona un objeto solo cuando su color cambie de A a B.';$('.photo-comparison')?.after(help);
     }
     $$("#exerciseOptions .multi-option").forEach(
       (b) =>
@@ -533,19 +535,19 @@
   }
   function renderMovementExercise(it,{live,local,recordObservation}){
     const t=it.interactionTask,visual=$('#exerciseVisual'),area=$('#exerciseOptions'),reports=[];let trial=0;
-    visual.innerHTML='<div class="interactive-rules">'+window.ActivityModel.interactiveStimulus(it.stimulus.slice(0,2),{structured:true})+'<p>Las tarjetas avanzan solas: espera cinco segundos y después tendrás cuatro segundos para hacer el gesto. No necesitas confirmar cada tarjeta. Al final indicarás cómo ha ido.</p></div>';
+    visual.innerHTML='<div class="interactive-rules">'+window.ActivityModel.interactiveStimulus(it.stimulus.slice(0,2),{structured:true})+'<p>Observa cada señal y sigue la tabla. La pantalla te indicará cuánto esperar antes de hacer el gesto. Con PAUSA, no hagas ningún gesto.</p></div>';
     area.innerHTML='<button id="startInteractive" class="primary-btn">Empezar las tarjetas</button>';
     const next=()=>{
       if(!live())return;if(trial>=t.trials.length){finishObservedPractice(it,reports,recordObservation);return;}
       const rule=t.rules[t.trials[trial]],entry={trial:trial+1,report:'unverified'};reports.push(entry);
       const deadline=Date.now()+t.waitMs,finishAt=deadline+4000;
-      visual.innerHTML=`<div class="interactive-trial"><p class="eyebrow">Tarjeta ${trial+1} de ${t.trials.length}</p><div class="interactive-card"><strong class="word-cue">${escapeHtml(rule.label)}</strong></div><p id="movementAction">Espera antes de hacer el gesto.</p><p id="interactiveSeconds" role="timer" aria-live="off"></p><progress id="interactiveWaitBar" max="${t.waitMs}" value="0"></progress></div>`;
+      visual.innerHTML=`<div class="interactive-trial"><div class="interactive-card"><strong class="word-cue">${escapeHtml(rule.label)}</strong></div><p id="movementAction">${rule.target<0?'PAUSA: no hagas ningún gesto.':''}</p><p id="interactiveSeconds" role="timer" aria-live="off"></p></div>`;
       area.innerHTML='<button id="movementEarly" class="secondary-btn">Marcar un adelanto o una confusión</button><button id="stopPractice" class="secondary-btn">Detener práctica</button>';
       $('#movementEarly').onclick=()=>{entry.report='early';$('#movementEarly').disabled=true;};$('#stopPractice').onclick=()=>interruptPractice(it);
       const tick=()=>{
-        if(!live())return;const now=Date.now(),remaining=Math.max(0,deadline-now);$('#interactiveWaitBar').value=t.waitMs-remaining;
-        $('#interactiveSeconds').textContent=remaining?`Espera: ${Math.ceil(remaining/1000)} segundos.`:`Siguiente tarjeta en ${Math.max(0,Math.ceil((finishAt-now)/1000))} segundos.`;
-        if(!remaining)$('#movementAction').textContent=rule.target<0?'PAUSA: sigue sin hacer ningún gesto.':local(t.actions[rule.target])+'. Ahora.';
+        if(!live())return;const now=Date.now(),remaining=Math.max(0,deadline-now);
+        $('#interactiveSeconds').textContent=rule.target<0?'':remaining?`Espera ${Math.ceil(remaining/1000)} segundos.`:'';
+        if(!remaining&&rule.target>=0)$('#movementAction').textContent='Ahora: '+local(t.actions[rule.target])+'.';
         if(now>=finishAt){trial++;next();return;}interactionTimer=setTimeout(tick,100);
       };tick();
     };$('#startInteractive').onclick=next;
@@ -1055,7 +1057,7 @@
     $('#documentModeSwitch [data-documents=true]').textContent=subject==='executive'?'Resuelve con documentos':'Explora documentos';
     $('#photoModeSwitch [data-photos=false]').textContent='Recuerda imágenes y secuencias';
     $('#documentModeHint').classList.toggle('hidden',!documentSupport||isReading);
-    $('#documentModeHint').textContent=cognitiveOnly?'Elige una familia o alterna entre situaciones. Lee la consigna antes de empezar.':executedOnly?'Marca, reconstruye o actúa directamente sobre los estímulos.':interactionOnly?(subject==='executive'?'Actúa con reglas: elige Tarjetas con reglas o Señales y acciones. Dentro de Señales y acciones puedes usar señales en pantalla o de audio.':'Busca objetos de la sala y explica qué características cumplen.'):photoOnly?'Compara las dos escenas y busca los cambios de color.':subject==='executive'?(documentOnly?'Usa el documento para organizar acciones y corregir un plan.':'Ordena acciones, aplica reglas y revisa decisiones.'):(documentOnly?'Localiza y contrasta los datos del documento.':'Compara figuras, códigos y listas.');
+    $('#documentModeHint').textContent=cognitiveOnly?'Elige una familia o alterna entre situaciones. Lee la consigna antes de empezar.':executedOnly?'Marca, reconstruye o actúa directamente sobre los estímulos.':interactionOnly?(subject==='executive'?'Pulsa el botón que indica cada tarjeta; en la otra modalidad, mira o escucha una señal y haz el gesto indicado. Los gestos no se miden automáticamente.':'Busca objetos de la sala y explica qué características cumplen.'):photoOnly?'Compara las dos escenas y busca los cambios de color.':subject==='executive'?(documentOnly?'Usa el documento para organizar acciones y corregir un plan.':'Ordena acciones, aplica reglas y revisa decisiones.'):(documentOnly?'Localiza y contrasta los datos del documento.':'Compara figuras, códigos y listas.');
     $$('#documentModeSwitch [data-documents]').forEach(b=>b.setAttribute('aria-pressed',String(!cognitiveOnly&&!executedOnly&&!interactionOnly&&!photoOnly&&(b.dataset.documents==='true')===documentOnly)));
     counter = 0;
     renderEarlyTaskGuide();
@@ -1393,7 +1395,7 @@
           saveResult(subject, ok, it.id, it.memoryResponse==='order'?'memory_sequence':'planning'),
           ok
             ? "Secuencia correcta."
-            : `Orden esperado: ${expected.join(" → ")}`,
+            : it.memoryResponse==='order' ? `La secuencia correcta era: ${expected.map(x=>window.ActivityModel.memoryLabel(x)).join(" → " )}` : `Orden esperado: ${expected.join(" → ")}`,
         );
       };
     };

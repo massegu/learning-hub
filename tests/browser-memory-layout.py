@@ -34,6 +34,6 @@ try:
   workspace(page).locator('#navMenu [data-subject=memory]').click();page.wait_for_selector('#startMemorySequence');page.locator('#startMemorySequence').click();page.clock.run_for((chosen['sequenceStepMs']+250)*len(chosen['recallSequence'])+100)
   # Choose a deliberately reversed order from the actual token bank, independent of shuffled indices.
   for label in reversed(chosen['answer']):page.locator('#exerciseOptions').get_by_role('button',name=label,exact=True).click()
-  page.locator('#orderCheck').click();assert 'bad' in page.locator('#exerciseFeedback').get_attribute('class');assert page.locator('.memory-solution').is_visible();assert 'Secuencia correcta' in page.locator('.memory-solution').inner_text()
+  page.locator('#orderCheck').click();assert 'bad' in page.locator('#exerciseFeedback').get_attribute('class');assert page.locator('.memory-solution').is_visible();assert 'Secuencia correcta' in page.locator('.memory-solution').inner_text();assert 'La secuencia correcta era:' in page.locator('#exerciseFeedback').inner_text()
   assert not errors,errors;browser.close();print('PASS: two youngest associations, compact high-contrast spatial targets at desktop/mobile sizes and correct spatial grading')
 finally:server.shutdown();server.server_close()
