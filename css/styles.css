@@ -2836,8 +2836,8 @@ body {
 #exercise .review-plan-table th:first-child{width:24%}
 #exercise .review-plan-table th,#exercise .review-plan-table td{overflow-wrap:anywhere;min-width:0}
 #exercise .multi-select-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}
-#exercise .multi-option{text-align:left;position:relative;padding-left:4rem;min-height:64px;border-radius:10px;overflow-wrap:anywhere;white-space:normal}
-#exercise .multi-option::before{content:'';position:absolute;left:1rem;top:50%;transform:translateY(-50%);width:1.1rem;height:1.1rem;border:2px solid #8da58e;border-radius:4px;background:white}
+#exercise .multi-option{display:flex;align-items:center;gap:1rem;text-align:left;position:relative;padding:1rem 1.25rem;min-height:64px;border-radius:10px;overflow-wrap:anywhere;white-space:normal;line-height:1.5}
+#exercise .multi-option::before{content:'';position:static;transform:none;display:inline-grid;place-items:center;flex:0 0 1.25rem;width:1.25rem;height:1.25rem;border:2px solid #8da58e;border-radius:4px;background:white}
 #exercise .multi-option[aria-pressed=true]::before{content:'✓';display:grid;place-items:center;background:#255d3b;border-color:#255d3b;color:white;font-size:.85rem}
 #exercise .multi-option:focus-visible{outline:3px solid #a57a24;outline-offset:3px}
 #exercise .multi-actions{display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:1rem}
@@ -3092,3 +3092,13 @@ body {
 @media(max-width:600px){.cognitive-picture .picture-icon svg,.cognitive-picture .picture-icon img{width:88px;height:88px}.cognitive-area button{font-size:1.1rem;margin:6px 0}.cognitive-area form input{width:100%;box-sizing:border-box}.cognitive-fact{padding:14px}.cognitive-candidate-actions button{font-size:.9rem;padding:8px 4px}}
 
 #cognitiveFamilyControl{margin:14px 0;max-width:100%}
+
+/* Clear feedback, legible prompts and aligned answer controls. */
+#exercise:has(.cognitive-area) #exercisePrompt{font-size:clamp(1.3rem,2.1vw,1.75rem);line-height:1.5}
+.cognitive-answer-correct{border-color:#247747!important;background:#e3f4e8!important;color:#174e2e!important;box-shadow:inset 0 0 0 2px #247747!important}
+.cognitive-answer-incorrect{border-color:#b83d3d!important;background:#fff0ef!important;color:#762929!important}
+.cognitive-candidate.cognitive-answer-correct{outline:3px solid #247747;outline-offset:2px}
+.interactive-current-rule{padding:.75rem 1rem;margin:.25rem 0 .8rem;border-left:5px solid var(--accent);background:var(--bg);font-size:clamp(1.2rem,2.6vw,1.7rem);font-weight:800;line-height:1.4}
+.cognitive-plan-context{padding:1rem 1.25rem;border-left:5px solid var(--accent);border-radius:10px;background:var(--bg);font-size:clamp(1.15rem,2.3vw,1.45rem);line-height:1.65}
+.cognitive-plan-context p{margin:.35rem 0}
+#exercisePrompt{white-space:pre-line}

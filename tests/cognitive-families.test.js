@@ -23,6 +23,7 @@ test('six cognitive families keep canonical age/level metadata and localized del
 test('solutions derive independently from clues, facts, constraints, dependencies and rule history',()=>{
  for(const age of ages)for(const level of [1,2,3])for(const it of [...families.pool(age,'executive',level),...families.pool(age,'language',level,'words')]){
   const t=it.cognitiveTask;let answer;
+  if(t.kind==='information')assert.match(it.q,new RegExp(`Situación: .+marca exactamente ${t.answer.length} datos necesarios`,'i'));
   if(t.kind==='rules'){let inverted=false;answer=t.trials.map(trial=>{if(trial.switchBefore)inverted=!inverted;assert.equal(trial.inverted,inverted);return trial.target!==inverted?'act':'wait';});assert.equal(t.trials.filter(x=>x.switchBefore).length,level-1);}
   if(t.kind==='words'){
    const valid=t.options.filter(word=>families.wordFits(word,t));assert.equal(valid.length,1);answer=[valid[0]];
