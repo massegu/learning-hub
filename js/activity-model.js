@@ -110,6 +110,7 @@
     return blocks;
   }
   function printable(item, profile) {
+    if(item?.type==='cognitiveTask'||String(item?.contentKey||'').startsWith('cognitive-v'))return (root.CognitiveFamilies||(typeof require==='function'&&require('./cognitive-families'))).printable(item,profile?.progress?.ageRoute||profile?.age_band);
     if(item?.type==='executed'||String(item?.contentKey||'').startsWith('executed-v')){const bank=root.ExecutedTasks||(typeof require==='function'&&require('./executed-tasks'));bank.validate(item,profile?.progress?.ageRoute||profile?.age_band);return {question:item.paperQuestion,stimulus:item.stimulus,options:[],tokens:[],writingRubric:[],responseType:'written'};}
     if(item?.qualityEvidence||/^functional_/.test(item?.mechanic||'')||String(item?.contentKey||'').startsWith('functional-v1:'))(root.FunctionalContent||(typeof require==='function'&&require('./functional-content'))).validate(item);
     if(item?.roomSpeedTask)(root.Curriculum||(typeof require==='function'&&require('./curriculum'))).validateRoomSpeed(item);
@@ -287,6 +288,7 @@
     return versions.map(items => items.map(item => printable(item, profile)));
   }
   function forDelivery(item, profile, domain) {
+    if(item?.type==='cognitiveTask'||String(item?.contentKey||'').startsWith('cognitive-v')){if(domain&&domain!==item.domain)fail('El área no coincide.');(root.CognitiveFamilies||(typeof require==='function'&&require('./cognitive-families'))).validate(item,profile?.progress?.ageRoute||profile?.age_band);return item;}
     if(item?.type==='executed'||String(item?.contentKey||'').startsWith('executed-v')){if(domain&&domain!==item.domain)fail('El área no coincide.');printable(item,profile);return item;}
     (root.LocaleContent||(typeof require==='function'&&require('./locale-content'))).validateOptions(item);
     if(item?.qualityEvidence||/^functional_/.test(item?.mechanic||'')||String(item?.contentKey||'').startsWith('functional-v1:'))(root.FunctionalContent||(typeof require==='function'&&require('./functional-content'))).validate(item);
@@ -305,7 +307,8 @@
     const age=profile?.progress?.ageRoute||profile?.age_band;
     const modern=age?['middle','teen'].includes(age):root.document?.getElementById('appShell')?.dataset.design==='impulso';
     const selected=root.PhosphorArt||(typeof require==='function'&&require('./phosphor-art'));
-    return modern&&selected?.has(key)?selected:art;
+    const complementary=root.ComplementaryArt||(typeof require==='function'&&require('./complementary-art'));
+    return modern&&complementary?.has(key)?complementary:modern&&selected?.has(key)?selected:art;
   }
   function visualLabel(value,senses={}){
     if(value===undefined||value===null||!String(value).trim())throw new Error('Falta la etiqueta visual.');

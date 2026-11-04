@@ -16,7 +16,7 @@ try:
     workspace(page).locator(f'#navMenu [data-subject={domain}]').click();page.locator('#exerciseLevelSelect').select_option('2')
     for kind in kinds:
      page.evaluate('''({age,domain,kind})=>{window.__task=ExecutedTasks.pool(age,domain,2).find(x=>x.execution.kind===kind);window.__executionRequest=null;}''',{'age':age,'domain':domain,'kind':kind})
-     page.locator('#executedMode').click();page.wait_for_function('()=>window.__executionRequest?.executed_only&&document.querySelector(".executed-area")');assert page.evaluate('__executionRequest.client_revision')==10
+     page.locator('#executedMode').click();page.wait_for_function('()=>window.__executionRequest?.executed_only&&document.querySelector(".executed-area")');assert page.evaluate('__executionRequest.client_revision')==11
      completed_before=page.evaluate('__completedCalls');page.locator('.executed-area').get_by_role('button',name='Empezar',exact=True).press('Enter')
      task=page.evaluate('__task.execution')
      if kind in ['serial','spatial','update']:
@@ -31,25 +31,31 @@ try:
      if kind in ['cancel','compare','spatial']:
       if kind=='cancel':indices=[i for i,x in enumerate(task['cells']) if x in task['targets']]
       elif kind=='compare':indices=[i for i,x in enumerate(task['cells']) if x!=task['after'][i]]
-      else:indices=[i for i,x in enumerate(task['cells']) if x]
+      else:indices=[i for i,x in enumerate(task['cells']) if x==task['target']]
       cells=page.locator('.executed-area .executed-cell')
       for i in indices:cells.nth(i).click()
       page.locator('.executed-area').get_by_role('button',name='Comprobar',exact=True).click()
      elif kind in ['switch','inhibit']:
-      for trial in task['trials']:
+      for trial_index,trial in enumerate(task['trials']):
+       if kind=='switch' and trial_index>0 and trial['reversed']!=task['trials'][trial_index-1]['reversed']:page.clock.fast_forward(2200)
        if kind=='inhibit':
         if trial['symbol']=='libro':page.locator('.executed-area').get_by_role('button',name='Responder',exact=True).click()
         else:page.clock.fast_forward(task['trialMs']+10)
        else:
         answer=('B' if trial['symbol']=='libro' else 'A') if trial['reversed'] else ('A' if trial['symbol']=='libro' else 'B')
         page.locator('.executed-area').get_by_role('button',name=answer,exact=True).click()
+       page.clock.fast_forward(700)
      else:
       answer=list(task['steps'] if kind=='plan' else task['sequence'])
       if kind=='update':answer[task['replaceIndex']]=task['replacement']
       for label in answer:page.locator('.executed-choices').get_by_role('button',name=label,exact=True).click()
       page.locator('.executed-area').get_by_role('button',name='Comprobar',exact=True).click()
      assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class'),(age,domain,kind,page.locator('#exerciseFeedback').inner_text())
-     assert 'correctamente' in page.locator('#exerciseFeedback').inner_text();assert page.evaluate('__completedCalls')==completed_before+1
+     assert 'correctamente' in page.locator('#exerciseFeedback').inner_text();
+     if kind in ['serial','spatial','update']:
+      assert page.locator('.memory-solution').is_visible()
+      if age=='teen' and kind=='update':page.locator('#exercise').screenshot(path=str(ROOT/'docs/review-assets/cognitive-families-20261104/memory-correct-sequence.png'))
+     assert page.evaluate('__completedCalls')==completed_before+1
      if kind not in ['switch','inhibit']:
       page.locator('.executed-area').get_by_role('button',name='Comprobar',exact=True).evaluate('(b)=>b.onclick()');assert page.evaluate('__completedCalls')==completed_before+1
      page.set_viewport_size({'width':390,'height':844});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),(age,kind)

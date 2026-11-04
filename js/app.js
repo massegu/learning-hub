@@ -148,7 +148,7 @@
     documentOnly = false,
     photoOnly = false,
     interactionOnly = false,
-    roomSpeedOnly = false, executedOnly=false, stopExecuted=null,
+    roomSpeedOnly = false, cognitiveOnly=false, cognitiveFamily="", executedOnly=false, stopExecuted=null,
     interactionKind = 'symbols',
     currentItem = null,
     counter = 0,
@@ -476,7 +476,7 @@
     let trial=0,correctTrials=0,noGoErrors=0;
     const rulesTable=rules=>window.ActivityModel.interactiveStimulus([{type:'table',header:true,rows:[['Tarjeta','Qué tienes que hacer'],...rules.map(r=>[t.kind==='symbols'?r.symbol+' · '+local(r.label):r.label,r.target<0?'Espera sin hacer nada':local(t.actions[r.target])])]}],{structured:true});
     const introduction=it.stimulus[0].text;
-    visual.innerHTML=`<div class="interactive-rules"><p>${escapeHtml(introduction)}</p>${rulesTable(t.rules)}${t.secondRules?`<p>Después de la tarjeta ${t.rules.length} cambiarán las reglas. Te avisaremos para que puedas leer la tabla nueva.</p>`:''}<p>${t.kind==='movement'?'La pantalla marca la espera. Tú o la persona que te acompaña indicáis si la habéis respetado.':'En las tarjetas de espera no pulses ningún botón. La barra te indicará cuándo termina el turno.'}</p></div>`;
+    visual.innerHTML=`<div class="interactive-rules"><p>${escapeHtml(introduction)}</p>${rulesTable(t.rules)}${t.secondRules?`<p>Después de la tarjeta ${t.rules.length} cambiarán las reglas. Te avisaremos para que puedas leer la tabla nueva.</p>`:''}<p>${t.kind==='movement'?'La pantalla marca la espera. Tú o la persona que te acompaña indicáis si la habéis respetado.':'En las tarjetas de espera no pulses ningún botón. La tarjeta cambiará sola cuando termine el turno.'}</p></div>`;
     area.innerHTML='<button id="startInteractive" class="primary-btn">Empezar las tarjetas</button>';
     const finish=()=>{
       it._interactionSummary={trials:t.trials.length,correctTrials,noGoErrors};
@@ -508,7 +508,7 @@
       area.innerHTML=t.actions.map((label,i)=>`<button class="option-btn interaction-action" data-action="${i}">${escapeHtml(local(label))}</button>`).join('');
       $$('.interaction-action').forEach(b=>b.onclick=()=>close(Number(b.dataset.action)===rule.target));
       if(rule.target>=0)return;
-      $('#interactiveWait').classList.remove('hidden');const started=Date.now(),deadline=started+t.waitMs;
+      const started=Date.now(),deadline=started+t.waitMs;
       const tick=()=>{
         if(!live()||answered)return;
         const remaining=Math.max(0,deadline-Date.now());$('#interactiveWaitBar').value=t.waitMs-remaining;
@@ -897,7 +897,7 @@
     $("#independentSessionBtn").textContent=independent?"Terminar sesión independiente":"Empezar sesión independiente";
     $("#independentSessionStatus").textContent=independent?"Los resultados de esta sesión no se guardan. El uso se contabiliza por cuenta. Al terminar o recargar se descartan.":"Seguimiento individual: los resultados se guardan en este perfil.";
     $("#deleteProfileBtn").disabled=independent;$("#profilePrivacyBtn").disabled=independent;
-    photoOnly = false;roomSpeedOnly=false;executedOnly=false;
+    photoOnly = false;roomSpeedOnly=false;executedOnly=false;cognitiveOnly=false;cognitiveFamily='';
     guidedSession=null;
     hideGuidedBar();
     $('#appShell').classList.toggle('early-experience',Boolean(window.ContentPolicy.forProfile(p)));
@@ -1030,8 +1030,17 @@
     $('#attentionPhotos').classList.toggle('hidden',!photoSupport||subject!=='attention');
     $('#attentionPhotos').setAttribute('aria-pressed',String(photoOnly));
     $('#photoModeSwitch [data-photos=true]').textContent=subject==='attention'?'Encuentra las diferencias':'Escenas cotidianas';
-    $$('#photoModeSwitch button').forEach(b=>b.setAttribute('aria-pressed',String(!executedOnly&&(b.dataset.photos==='true')===photoOnly)));
+    $$('#photoModeSwitch button').forEach(b=>b.setAttribute('aria-pressed',String(!cognitiveOnly&&!executedOnly&&(b.dataset.photos==='true')===photoOnly)));
 
+    const cognitiveBank=window.CognitiveFamilies.pool(window.AgeStages.route(profile),subject,state.levels[subject]||1);
+    if(!cognitiveBank.length)cognitiveOnly=false;
+    $('#cognitiveMode').classList.toggle('hidden',!cognitiveBank.length);
+    $('#cognitiveMode').setAttribute('aria-pressed',String(cognitiveOnly));
+    $('#cognitiveFamilyControl').classList.toggle('hidden',!cognitiveOnly);
+    const families=[...new Set(cognitiveBank.map(it=>it.cognitiveTask.kind))];
+    if(!families.includes(cognitiveFamily))cognitiveFamily='';
+    $('#cognitiveFamilySelect').replaceChildren(new Option('Mezclar familias',''),...families.map(key=>new Option(window.CognitiveFamilies.definitions[key].title,key)));
+    $('#cognitiveFamilySelect').value=cognitiveFamily;
     if(!['attention','memory','executive'].includes(subject))executedOnly=false;
     $('#executedMode').classList.toggle('hidden',!['attention','memory','executive'].includes(subject));
     $('#executedMode').setAttribute('aria-pressed',String(executedOnly));
@@ -1041,8 +1050,8 @@
     $('#documentModeSwitch [data-documents=true]').textContent=subject==='executive'?'Resuelve con documentos':'Explora documentos';
     $('#photoModeSwitch [data-photos=false]').textContent='Recuerda imágenes y secuencias';
     $('#documentModeHint').classList.toggle('hidden',!documentSupport||isReading);
-    $('#documentModeHint').textContent=executedOnly?'Marca, reconstruye o actúa directamente sobre los estímulos.':interactionOnly?(subject==='executive'?'Actúa con reglas: elige Tarjetas con reglas o Señales y acciones. Dentro de Señales y acciones puedes usar señales en pantalla o de audio.':'Busca objetos de la sala y explica qué características cumplen.'):photoOnly?'Compara las dos escenas y busca los cambios de color.':subject==='executive'?(documentOnly?'Usa el documento para organizar acciones y corregir un plan.':'Ordena acciones, aplica reglas y revisa decisiones.'):(documentOnly?'Localiza y contrasta los datos del documento.':'Compara figuras, códigos y listas.');
-    $$('#documentModeSwitch [data-documents]').forEach(b=>b.setAttribute('aria-pressed',String(!executedOnly&&!interactionOnly&&!photoOnly&&(b.dataset.documents==='true')===documentOnly)));
+    $('#documentModeHint').textContent=cognitiveOnly?'Elige una familia o alterna entre situaciones. Lee la consigna antes de empezar.':executedOnly?'Marca, reconstruye o actúa directamente sobre los estímulos.':interactionOnly?(subject==='executive'?'Actúa con reglas: elige Tarjetas con reglas o Señales y acciones. Dentro de Señales y acciones puedes usar señales en pantalla o de audio.':'Busca objetos de la sala y explica qué características cumplen.'):photoOnly?'Compara las dos escenas y busca los cambios de color.':subject==='executive'?(documentOnly?'Usa el documento para organizar acciones y corregir un plan.':'Ordena acciones, aplica reglas y revisa decisiones.'):(documentOnly?'Localiza y contrasta los datos del documento.':'Compara figuras, códigos y listas.');
+    $$('#documentModeSwitch [data-documents]').forEach(b=>b.setAttribute('aria-pressed',String(!cognitiveOnly&&!executedOnly&&!interactionOnly&&!photoOnly&&(b.dataset.documents==='true')===documentOnly)));
     counter = 0;
     renderEarlyTaskGuide();
     renderSchoolTaskGuide();
@@ -1051,7 +1060,7 @@
   $('#documentModeSwitch').addEventListener('click',event=>{
     const button=event.target.closest('button[data-documents],#attentionPhotos,#interactionModeBtn');
     if(!button)return;
-    executedOnly=false;photoOnly=button.id==='attentionPhotos';
+    cognitiveOnly=false;executedOnly=false;photoOnly=button.id==='attentionPhotos';
     interactionOnly=button.id==='interactionModeBtn';
     documentOnly=!interactionOnly&&!photoOnly&&button.dataset.documents==='true';
     setupExercise();
@@ -1059,16 +1068,18 @@
   $('#interactionKindSwitch').addEventListener('click',event=>{const button=event.target.closest('[data-interaction-kind]');if(!button)return;interactionKind=button.dataset.interactionKind==='signals'?'movement':button.dataset.interactionKind;setupExercise();});
   $('#photoModeSwitch').addEventListener('click',event=>{
     const button=event.target.closest('button[data-photos]');if(!button)return;
-    executedOnly=false;photoOnly=button.dataset.photos==='true';documentOnly=false;setupExercise();
+    cognitiveOnly=false;executedOnly=false;photoOnly=button.dataset.photos==='true';documentOnly=false;setupExercise();
   });
-  $('#executedMode').onclick=()=>{executedOnly=true;photoOnly=false;documentOnly=false;interactionOnly=false;setupExercise();};
+  $('#cognitiveMode').onclick=()=>{cognitiveOnly=true;executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;setupExercise();};
+  $('#cognitiveFamilySelect').onchange=e=>{cognitiveFamily=e.target.value;setupExercise();};
+  $('#executedMode').onclick=()=>{cognitiveOnly=false;executedOnly=true;photoOnly=false;documentOnly=false;interactionOnly=false;setupExercise();};
   async function requestForProfile(payload, targetProfile = profile) {
     if (!targetProfile?.id) throw new Error('Selecciona o crea un perfil para empezar.');
     const locale = API.effectiveLocale(targetProfile);
     const localeRevision = API.localeRevision;
     const res = await API.requestContent({
       ...payload,
-      client_revision:10,
+      client_revision:11,
       ...(targetProfile._sessionOnly?{session_only:true}:{}),
       profile_id: targetProfile.id,
       locale,
@@ -1078,7 +1089,7 @@
     // Server authentication, subscription checks and usage accounting happen
     // first. The browser never supplies local content after a rejected call.
     const worksheet=payload.kind==='worksheet';
-    const selected = payload.executed_only?res:window.EarlyContent.adaptResponse(res, payload, targetProfile, worksheet?{
+    const selected = payload.executed_only||payload.cognitive_only?res:window.EarlyContent.adaptResponse(res, payload, targetProfile, worksheet?{
       accept:(item,domain)=>window.WorksheetSelection.compatible(item,targetProfile,locale,domain),
     }:{});
     // Worksheet candidates are localized/validated individually by the selector.
@@ -1100,6 +1111,7 @@
   }
   async function requestOne(kind, domain = subject, extra = {}) {
     const res = await requestForProfile({
+      ...(kind==='exercise'&&cognitiveOnly?{cognitive_only:true,cognitive_family:cognitiveFamily||null}:{}),
       ...(kind==='exercise'&&executedOnly?{executed_only:true}:{}),
       ...(kind==='exercise'&&interactionOnly?{interaction_only:true,interaction_kind:subject==='attention'?'room':interactionKind}:{}),
       ...(kind==='exercise'&&['attention','executive'].includes(domain)&&window.DocumentLibrary?.supports(window.AgeStages.route(profile),domain)?{documents_only:documentOnly}:{}),
@@ -1120,6 +1132,7 @@
   }
   async function newExercise() {
     stopMemoryCountdown();
+    $('#printCognitive')?.remove();
     $('#exercise').classList.remove('speed-active');
     renderEarlyTaskGuide(false);
     $('#exerciseLevelSelect').value=String(state.levels[subject]||1);
@@ -1205,6 +1218,18 @@
       "hidden",
       !$("#exerciseTopic").textContent,
     );
+    if(it.type==='cognitiveTask'){
+      $('#exercisePrompt').textContent=it.q;stopExecuted=window.CognitiveRenderer.mount(it,{visual:$('#exerciseVisual'),area:$('#exerciseOptions'),onFinish:(ok,why)=>{if(currentItem!==it)return;showFeedback(ok,saveResult(subject,ok,it.id,it.mechanic||it.semanticFamily),why);}});
+      if(it.printable!=='interactive-only'){
+        const exportButton=document.createElement('button');exportButton.id='printCognitive';exportButton.className='secondary-btn';exportButton.textContent='Descargar esta actividad en Word';
+        exportButton.onclick=async()=>{exportButton.disabled=true;const exportProfile=profile;try{
+          const response=await requestForProfile({kind:'worksheet',domain:it.domain,domains:[it.domain],questions:1,level:it.level,cognitive_only:true,cognitive_family:it.cognitiveTask.kind,cognitive_content_key:it.contentKey},exportProfile);
+          if(response?.usage)$('#usageHint').textContent='Hoy: '+response.usage.used+' fichas';
+          await window.WorksheetGenerator.generate([response.items],exportProfile);
+        }catch(error){exportButton.textContent=error?.message||'No se ha podido generar el archivo. Vuelve a intentarlo.';}finally{exportButton.disabled=false;}};
+        $('#exerciseVisual').before(exportButton);
+      }return;
+    }
     if(it.type==='executed'){
       $('#exercisePrompt').textContent=it.q;stopExecuted=window.ExecutedRenderer.mount(it,{visual:$('#exerciseVisual'),area:$('#exerciseOptions'),onFinish:(ok,why)=>{if(currentItem!==it)return;const pts=saveResult(subject,ok,it.id,it.mechanic);showFeedback(ok,pts,(ok?'Actividad completada correctamente. ':'Revisa el resultado. ')+why);}});return;
     }
@@ -1432,6 +1457,10 @@
         ? `Correcto · +${pts} puntos`
         : `No esta vez. Respuesta: ${currentItem.a || "revisa el modelo"}`);
     f.className = "feedback " + (correct ? "ok" : "bad");
+    if(subject==='memory'&&currentItem?.type!=='executed'&&(Array.isArray(currentItem?.answer)||Array.isArray(currentItem?.sequence))){
+      const expected=currentItem.answer||currentItem.sequence,solution=document.createElement('div');solution.className='memory-solution';
+      solution.innerHTML='<h4>Secuencia correcta</h4>'+window.ActivityModel.interactiveStimulus([{type:'list',presentation:'sequence',items:expected.map(String)}],{senses:{...currentItem.lexicalSenses,iconProfile:profile}});f.append(solution);
+    }
     $("#exerciseNext").classList.remove("hidden");
     $$('#exerciseOptions button').forEach(b=>b.disabled=true);
     if(window.ContentPolicy.forProfile(profile)||window.AgeStages.forProfile(profile)){
@@ -1447,7 +1476,8 @@
   $$(".language-mode-btn").forEach(
     (b) =>
       (b.onclick = () => {
-        mode = b.dataset.mode;
+        mode = b.dataset.mode;cognitiveOnly=false;
+        $('#cognitiveFamilyControl').classList.add('hidden');$('#cognitiveMode').setAttribute('aria-pressed','false');
         $$(".language-mode-btn").forEach((x) =>
           x.classList.toggle("active", x === b),
         );
