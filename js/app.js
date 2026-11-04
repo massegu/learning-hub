@@ -1038,18 +1038,22 @@
     $('#photoModeSwitch [data-photos=true]').textContent=subject==='attention'?'Encuentra las diferencias':'Escenas cotidianas';
     $$('#photoModeSwitch button').forEach(b=>b.setAttribute('aria-pressed',String(!cognitiveOnly&&!executedOnly&&(b.dataset.photos==='true')===photoOnly)));
 
-    const cognitiveBank=window.CognitiveFamilies.pool(window.AgeStages.route(profile),subject,state.levels[subject]||1);
+    const availableCognitiveBank=window.CognitiveFamilies.pool(window.AgeStages.route(profile),subject,state.levels[subject]||1);
+    // Attention now has one clear task family: compare sources and find contradictions.
+    const cognitiveBank=subject==='attention'?availableCognitiveBank.filter(it=>it.cognitiveTask.kind==='contradiction'):availableCognitiveBank;
     const wordFitAvailable=isLang&&cognitiveBank.some(it=>it.cognitiveTask.kind==='words');
     $('#wordFitMode').classList.toggle('hidden',!wordFitAvailable);
     $('#wordFitMode').classList.toggle('active',cognitiveOnly&&cognitiveFamily==='words');
     $('#wordFitMode').setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily==='words'));
     if(!cognitiveBank.length)cognitiveOnly=false;
     $('#cognitiveMode').classList.toggle('hidden',!cognitiveBank.length||isLang||isReading);
+    $('#cognitiveMode').textContent=subject==='attention'?'Encuentra la contradicción':'Situaciones y decisiones';
     $('#cognitiveMode').setAttribute('aria-pressed',String(cognitiveOnly));
     $('#cognitiveFamilyControl').classList.toggle('hidden',!cognitiveOnly);
     const families=[...new Set(cognitiveBank.map(it=>it.cognitiveTask.kind))];
     $('#cognitiveFamilyControl').classList.toggle('hidden',!cognitiveOnly||families.length<=1);
-    if(!families.includes(cognitiveFamily))cognitiveFamily='';
+    if(subject==='attention'&&families.includes('contradiction'))cognitiveFamily='contradiction';
+    else if(!families.includes(cognitiveFamily))cognitiveFamily='';
     $('#cognitiveFamilySelect').replaceChildren(new Option('Mezclar familias',''),...families.map(key=>new Option(window.CognitiveFamilies.definitions[key].title,key)));
     $('#cognitiveFamilySelect').value=cognitiveFamily;
     if(!['attention','memory','executive'].includes(subject))executedOnly=false;
@@ -1732,15 +1736,6 @@
       })
       .join("");
     renderSpeedProgress();
-    $("#recentResults").innerHTML =
-      state.history
-        .slice(-12)
-        .reverse()
-        .map(
-          (x) =>
-            `<div class="recent-row"><span>${SUBJECT_META[x.subject]?.name || x.subject}</span><span>${x.correct ? "✓ Correcto" : "× A revisar"}</span><strong>${x.points || 0}</strong></div>`,
-        )
-        .join("") || '<p class="muted">Aún no hay resultados.</p>';
     const sessions=new Map();
     for(const row of state.history){
       const key=row.sessionId||row.ts?.slice(0,10)||'anterior';

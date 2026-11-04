@@ -60,7 +60,7 @@ try:
   # Exercise both supported selection modes deterministically. Presence/movement
   # scenes use text choices: an absent object cannot have a hitbox in image B.
   page.evaluate("""()=>{const original=LearningAPI.requestContent;window.__restorePhotoRequest=()=>{LearningAPI.requestContent=original;};LearningAPI.requestContent=async payload=>{const response=await original(payload);return payload.photos_only&&window.__photoFixture?{...response,items:[structuredClone(window.__photoFixture)]}:response;};}""")
-  for index,pair_id in enumerate(['kitchen','music2026']):
+  for index,pair_id in enumerate(['kitchen','street']):
    fixture_id=page.evaluate("""pairId=>{window.__photoFixture=PhotoLibrary.pool('primary','attention',1).find(it=>it.photoTask.pairId===pairId);window.__current=null;return __photoFixture.id;}""",pair_id)
    page.locator('#attentionPhotos').click()
    page.wait_for_function('(id)=>__current?.id===id&&document.querySelector("#multiCheck")?.classList.contains("hidden")',arg=fixture_id)

@@ -35,8 +35,9 @@ test('legacy code filtering material becomes separate cards without altering the
  const html=model.interactiveStimulus(blocks,{structured:true});for(const code of ['A7','B3','B8','C6'])assert.ok(html.includes(code));assert.equal(model.comparisonStimulus('A7 B3 B8'),null);
 });
 
-test('twenty everyday settings have genuinely graded recall: one, two and three independent observations',()=>{
- assert.equal(Object.keys(photo.scenes).length,20);assert.equal(Object.keys(photo.pairs).length,16);
+test('twenty-one everyday settings have genuinely graded recall: one, two and three independent observations',()=>{
+ assert.equal(Object.keys(photo.scenes).length,21);assert.equal(Object.keys(photo.pairs).length,14);
+ for(const id of ['museumVisit','peacefulMarch','footballMatch','railwayRecreation','peopleMarket'])assert.ok(photo.scenes[id].facts.length>=8);
  for(const age of ['junior','primary','middle','teen'])for(const level of [1,2,3]){
   const bank=photo.pool(age,'memory',level);
   for(const id of Object.keys(photo.scenes)){
@@ -51,7 +52,7 @@ test('twenty everyday settings have genuinely graded recall: one, two and three 
     const altered=structuredClone(it);altered.photoTask.evidence.reverse();assert.throws(()=>photo.validate(altered));
    }
   }
-  const differences=photo.pool(age,'attention',level);assert.equal(differences.length,level===1?24:16);
+  const differences=photo.pool(age,'attention',level);assert.equal(differences.length,level===1?18:14);
   for(const it of differences){assert.equal(it.answers.length,level===1?1:3);assert.equal(new Set(it.opts).size,it.opts.length);if(level>=2){const pair=photo.pairs[it.photoTask.pairId],expected=pair.changes.map(([object,change])=>object+': '+change);assert.deepEqual(it.answers,expected);assert.match(it.q,/descripciones completas|descripciones que indican correctamente/);if(level===2){const nearMisses=pair.changes.map(([,change],i)=>pair.changes[(i+1)%pair.changes.length][0]+': '+change);assert.ok(expected.every(x=>it.opts.includes(x)));assert.ok(nearMisses.every(x=>it.opts.includes(x)));}else{const reversed=pair.changes.map(([object,change])=>object+': '+change.replace(/^De (.+) a (.+)$/,'De $2 a $1'));assert.ok(reversed.every(x=>it.opts.includes(x)));}}}
  }
 });
