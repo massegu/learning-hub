@@ -507,7 +507,7 @@
         $('#interactiveTrialFeedback').textContent=ok?'Bien. Has seguido la regla.':rule.target<0?'En esta tarjeta había que esperar sin pulsar.':'La regla indicaba: '+local(t.actions[rule.target])+'.';
         interactionTimer=setTimeout(next,650);
       };
-      visual.innerHTML=`<div class="interactive-trial"><p class="eyebrow">Tarjeta ${trial+1} de ${t.trials.length}</p>${rule.target<0?'':`<p class="interactive-current-rule">Regla: ${escapeHtml(t.kind==='symbols'?rule.symbol+' · '+local(rule.label):local(rule.label))} → ${escapeHtml(local(t.actions[rule.target]))}</p>`}<div class="interactive-card" aria-label="${escapeHtml(rule.label)}">${t.kind==='symbols'?`<strong aria-hidden="true">${rule.symbol}</strong><span>${escapeHtml(local(rule.label))}</span>`:`<strong class="word-cue">${escapeHtml(rule.label)}</strong>`}</div><p id="interactiveTrialFeedback" role="status"></p><div id="interactiveWait" class="interactive-wait hidden"><p id="interactiveSeconds" role="timer" aria-live="off"></p><progress id="interactiveWaitBar" max="${t.waitMs}" value="0"></progress></div><details class="interactive-rule-help"><summary>Consultar las reglas</summary>${rulesTable(activeRules)}</details></div>`;
+      visual.innerHTML=`<div class="interactive-trial"><div class="interactive-card" aria-label="${escapeHtml(rule.label)}">${t.kind==='symbols'?`<strong aria-hidden="true">${rule.symbol}</strong><span>${escapeHtml(local(rule.label))}</span>`:`<strong class="word-cue">${escapeHtml(rule.label)}</strong>`}</div><p id="interactiveTrialFeedback" role="status"></p><div id="interactiveWait" class="interactive-wait hidden"><p id="interactiveSeconds" role="timer" aria-live="off"></p><progress id="interactiveWaitBar" max="${t.waitMs}" value="0"></progress></div><details class="interactive-rule-help"><summary>Consultar las reglas</summary>${rulesTable(activeRules)}</details></div>`;
       area.innerHTML=t.actions.map((label,i)=>`<button class="option-btn interaction-action" data-action="${i}">${escapeHtml(local(label))}</button>`).join('');
       $$('.interaction-action').forEach(b=>b.onclick=()=>close(Number(b.dataset.action)===rule.target));
       if(rule.target>=0)return;
@@ -542,7 +542,7 @@
       if(!live())return;if(trial>=t.trials.length){finishObservedPractice(it,reports,recordObservation);return;}
       const rule=t.rules[t.trials[trial]],entry={trial:trial+1,report:'unverified'};reports.push(entry);
       const deadline=Date.now()+t.waitMs,finishAt=deadline+4000;
-      visual.innerHTML=`<div class="interactive-trial">${rule.target<0?'':`<p class="interactive-current-rule">Señal: ${escapeHtml(local(rule.label))} → ${escapeHtml(local(t.actions[rule.target]))}</p>`}<div class="interactive-card"><strong class="word-cue">${escapeHtml(rule.label)}</strong></div><p id="movementAction"></p><p id="interactiveSeconds" role="timer" aria-live="off"></p></div>`;
+      visual.innerHTML=`<div class="interactive-trial"><div class="interactive-card"><strong class="word-cue">${escapeHtml(rule.label)}</strong></div><p id="movementAction"></p><p id="interactiveSeconds" role="timer" aria-live="off"></p></div>`;
       area.innerHTML='<button id="movementEarly" class="secondary-btn">Marcar un adelanto o una confusión</button><button id="stopPractice" class="secondary-btn">Detener práctica</button>';
       $('#movementEarly').onclick=()=>{entry.report='early';$('#movementEarly').disabled=true;};$('#stopPractice').onclick=()=>interruptPractice(it);
       const tick=()=>{
@@ -983,6 +983,7 @@
   }
   function setupExercise() {
     $("#exercise").dataset.subject=subject;
+    $('#appShell').dataset.subject=subject;
     const m = SUBJECT_META[subject];
     $("#exercisePill").textContent = m.name.toUpperCase();
     $("#exerciseHeading").textContent = m.name;
@@ -1005,6 +1006,8 @@
     $("#subjectScore").textContent = state.scores[subject] || 0;
     const isLang = ["language","middleLanguage","teenLanguage"].includes(subject);
     const isReading=['reading','middleReading','literacy'].includes(subject);
+    if(isReading){cognitiveOnly=false;cognitiveFamily='';}
+    if(isReading){cognitiveOnly=false;cognitiveFamily='';}
     if(isLang&&mode==='writing'||isReading&&['spelling','vocabulary'].includes(mode))mode='grammar';
     $$('.language-mode-btn[data-mode]').forEach(b=>{
       b.classList.toggle('hidden',isLang&&b.dataset.mode==='writing'||isReading&&['spelling','vocabulary'].includes(b.dataset.mode));
@@ -1041,7 +1044,7 @@
     $('#wordFitMode').classList.toggle('active',cognitiveOnly&&cognitiveFamily==='words');
     $('#wordFitMode').setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily==='words'));
     if(!cognitiveBank.length)cognitiveOnly=false;
-    $('#cognitiveMode').classList.toggle('hidden',!cognitiveBank.length||isLang);
+    $('#cognitiveMode').classList.toggle('hidden',!cognitiveBank.length||isLang||isReading);
     $('#cognitiveMode').setAttribute('aria-pressed',String(cognitiveOnly));
     $('#cognitiveFamilyControl').classList.toggle('hidden',!cognitiveOnly);
     const families=[...new Set(cognitiveBank.map(it=>it.cognitiveTask.kind))];

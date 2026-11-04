@@ -52,6 +52,6 @@ test('twenty everyday settings have genuinely graded recall: one, two and three 
    }
   }
   const differences=photo.pool(age,'attention',level);assert.equal(differences.length,level===1?24:16);
-  for(const it of differences){assert.equal(it.answers.length,level===1?1:3);assert.equal(new Set(it.opts).size,it.opts.length);}
+  for(const it of differences){assert.equal(it.answers.length,level===1?1:3);assert.equal(new Set(it.opts).size,it.opts.length);if(level>=2){const pair=photo.pairs[it.photoTask.pairId],expected=pair.changes.map(([object,change])=>object+': '+change);assert.deepEqual(it.answers,expected);assert.match(it.q,/descripciones completas|descripciones que indican correctamente/);if(level===2){const nearMisses=pair.changes.map(([,change],i)=>pair.changes[(i+1)%pair.changes.length][0]+': '+change);assert.ok(expected.every(x=>it.opts.includes(x)));assert.ok(nearMisses.every(x=>it.opts.includes(x)));}else{const reversed=pair.changes.map(([object,change])=>object+': '+change.replace(/^De (.+) a (.+)$/,'De $2 a $1'));assert.ok(reversed.every(x=>it.opts.includes(x)));}}}
  }
 });

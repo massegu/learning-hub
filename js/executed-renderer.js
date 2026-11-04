@@ -28,10 +28,10 @@ function mount(item,{visual,area,onFinish}){
   if(!skipSwitch&&task.kind==='switch'&&round>0&&round<task.trials.length&&task.trials[round].reversed!==task.trials[round-1].reversed){
    const change=node('section',undefined,'executed-rule-change');change.append(node('div','↔','cognitive-switch'),node('h2','CAMBIO DE REGLA'),node('p','Intercambia A y B. La señal no indica qué botón pulsar.'));message.textContent='Cambio de regla.';visual.replaceChildren(message,change);later(()=>trials(true),2100);return;
   }if(round===task.trials.length){complete();return;}
-  const trial=task.trials[round];trialOpen=true;message.textContent=task.kind==='inhibit'?'Libro: pulsa. Pelota: espera.':'';
-  visual.replaceChildren(message,picture(trial.symbol));
+  const trial=task.trials[round];trialOpen=true;message.textContent='';
+  if(task.kind==='switch'||task.kind==='inhibit'){const stimulus=node('div',undefined,'executed-rule-stimulus');stimulus.append(picture(trial.symbol));visual.replaceChildren(message,stimulus);}else visual.replaceChildren(message,picture(trial.symbol));
   const next=value=>{if(!trialOpen||stopped||finished)return;trialOpen=false;clearTimeout(timer);response.push(value);round++;visual.replaceChildren(message);message.textContent='Siguiente estímulo';message.classList.add('executed-next-cue');area.querySelectorAll('button').forEach(b=>b.disabled=true);later(trials,650);};
-  if(task.kind==='inhibit'){area.append(button('Responder',()=>next('act')));later(()=>next('wait'),task.trialMs);}
+  if(task.kind==='inhibit'){area.append(button('Responder',()=>next('act')));if(trial.symbol!=='libro'){const wait=node('p','','executed-wait-countdown');wait.setAttribute('role','timer');wait.setAttribute('aria-live','off');visual.querySelector('.executed-rule-stimulus').append(wait);const deadline=Date.now()+task.trialMs;const tick=()=>{if(!trialOpen||stopped||finished)return;const remaining=Math.max(0,deadline-Date.now());wait.textContent=remaining?`Espera ${Math.ceil(remaining/1000)} segundos.`:'La espera ha terminado.';if(remaining)timer=setTimeout(tick,Math.min(100,remaining));else next('wait');};tick();}else later(()=>next('wait'),task.trialMs);}
   else{area.append(button('A',()=>next('A')),button('B',()=>next('B')));}
   area.append(button('Reiniciar sin registrar',()=>ready('Intento detenido. Puedes volver a empezar.')));
  }

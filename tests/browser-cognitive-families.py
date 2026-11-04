@@ -12,7 +12,7 @@ try:
   page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#profileSelect');page.clock.install()
   page.evaluate('''()=>{window.__saves=0;window.__current=null;const save=LearningAPI.saveResult;LearningAPI.saveResult=(id,row)=>{if(row.itemId?.startsWith('cognitive-v'))window.__saves++;return save(id,row);};const request=LearningAPI.requestContent;LearningAPI.requestContent=async body=>{const response=await request(body);window.__current=response.items?.[0];window.__lastPayload=body;return response;};}''')
   for age in ['early','junior','primary','middle','teen']:
-   workspace(page).locator('#profileSelect').select_option(age);workspace(page).locator('#navMenu [data-subject=executive]').click()
+   workspace(page).locator('#profileSelect').select_option(age);reading_domain={'middle':'literacy','primary':'literacy','teen':'literacy'}.get(age,'reading');page.wait_for_selector('#navMenu [data-subject='+reading_domain+']');workspace(page).locator('#navMenu [data-subject='+reading_domain+']').click();assert not page.locator('#cognitiveMode').is_visible();workspace(page).locator('#navMenu [data-subject=executive]').click()
    page.locator('#cognitiveMode').click();page.wait_for_function('()=>window.__current?.type==="cognitiveTask"&&document.querySelector(".cognitive-area")')
    for level in [1,2,3]:
     for kind in ['rules','words','deduction','change','information','contradiction']:
@@ -23,6 +23,7 @@ try:
      else:page.locator('#cognitiveMode').click();page.locator('#cognitiveFamilySelect').select_option(kind)
      page.wait_for_function('({kind,level})=>window.__current?.type==="cognitiveTask"&&__current.cognitiveTask.kind===kind&&__current.level===level&&document.querySelector(".cognitive-area")',arg={'kind':kind,'level':level})
      item=page.evaluate('__current');task=item['cognitiveTask'];before=page.evaluate('__saves')
+     if kind=='rules' and level==1 and age!='early':assert 'Adivina la regla' in page.locator('#exercisePrompt').inner_text()
      assert page.evaluate('__lastPayload.client_revision')==11
      assert page.locator('#printCognitive').count()==(0 if kind=='rules' else 1)
      page.locator('.cognitive-area').get_by_role('button',name='Empezar',exact=True).press('Enter')
@@ -34,9 +35,12 @@ try:
         assert page.locator('#exerciseVisual progress').count()==0
         cue=page.locator('.cognitive-status').inner_text();assert 'animal' not in cue and 'pulsar' not in cue and 'herramienta' not in cue
         page.clock.fast_forward(task['switchMs']+10)
-       assert page.locator('#exerciseVisual [role=timer]').count()==0
-       if trial['target']!=trial['inverted']:page.locator('.cognitive-area').get_by_role('button',name='Responder',exact=True).press('Enter')
-       else:page.clock.fast_forward(task['trialMs']+10)
+       if trial['target']!=trial['inverted']:
+        assert page.locator('#exerciseVisual [role=timer]').count()==0
+        page.locator('.cognitive-area').get_by_role('button',name='Responder',exact=True).press('Enter')
+       else:
+        assert page.locator('#exerciseVisual [role=timer]').inner_text().startswith('Espera ')
+        page.clock.fast_forward(task['trialMs']+10)
        assert page.locator('#exerciseVisual .cognitive-picture').count()==0
        page.clock.fast_forward(task['gapMs']+10)
      elif kind=='words':
@@ -56,6 +60,9 @@ try:
       for answer in task['answer']:page.locator(f'.cognitive-fact input[value={answer}]').check()
       page.locator('.cognitive-area').get_by_role('button',name='Comprobar',exact=True).click()
      assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class'),(age,kind,level,page.locator('#exerciseFeedback').inner_text())
+     assert page.locator('.cognitive-solution').count()==0
+     if kind!='rules':assert page.locator('.cognitive-answer-correct').count()>0
+     if kind=='change':assert page.locator('.cognitive-plan-step-changed').count()>0
      assert page.evaluate('__saves')==before+1
      assert page.locator('#exerciseNext').is_visible()
      page.set_viewport_size({'width':390,'height':844});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),(age,kind,level)

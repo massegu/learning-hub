@@ -41,11 +41,10 @@ try:
    page.set_viewport_size({'width':width,'height':1000});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
    page.locator('#exercise').screenshot(path=f'/tmp/photo-differences-{width}.png')
   assert page.locator('#multiCheck').is_disabled()
-  first=difference['answers'][0];mark=page.get_by_role('button',name='Señalar: '+first,exact=True);mark.click();assert page.get_by_role('button',name=first,exact=True).get_attribute('aria-pressed')=='true'
-  page.get_by_role('button',name=first,exact=True).click();assert mark.get_attribute('aria-pressed')=='false'
-  mark.click()
+  first=difference['answers'][0];assert page.locator('.photo-hit').count()==0
+  page.get_by_role('button',name=first,exact=True).click()
   for value in difference['answers'][1:]:page.get_by_role('button',name=value,exact=True).click()
-  page.locator('#multiCheck').click();assert mark.is_disabled();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
+  page.locator('#multiCheck').click();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
   page.locator('#exerciseNext').click();page.wait_for_selector('.photo-comparison img')
   difference2=page.evaluate('__current');wrong=next(x for x in difference2['opts'] if x not in difference2['answers']);page.get_by_role('button',name=wrong,exact=True).click();page.locator('#multiCheck').click();assert 'bad' in page.locator('#exerciseFeedback').get_attribute('class')
   with page.expect_download() as download:
@@ -83,8 +82,7 @@ try:
    fixture.clear();fixture.update(task);workspace(page).locator('#navMenu [data-subject=attention]').click()
    page.wait_for_function('(id)=>__current?.id===id&&document.querySelectorAll(".photo-comparison img").length===2',arg=task['id'])
    for label in task['answers']:
-    if task['photoTask']['pairId'] in ['ceramics2026','music2026']:page.locator('#exerciseOptions').get_by_role('button',name=label,exact=True).click()
-    else:page.get_by_role('button',name='Señalar: '+label,exact=True).click()
+    page.locator('#exerciseOptions').get_by_role('button',name=label,exact=True).click()
    page.locator('#multiCheck').click();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class'),task['photoTask']['pairId']
    if task['photoTask']['pairId']=='ceramics2026':
     page.locator('.photo-comparison img').evaluate_all('(images)=>Promise.all(images.map(i=>i.decode()))');page.locator('#exercise').screenshot(path='/tmp/new-ceramics-differences.png')
