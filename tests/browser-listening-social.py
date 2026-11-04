@@ -29,7 +29,7 @@ try:
   page.clock.install();page.clock.pause_at(page.evaluate('Date.now()+1000'));page.add_style_tag(content='*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}')
   workspace(page).locator('#navMenu [data-subject=executive]').click();page.locator('#interactionModeBtn').click();page.wait_for_selector('#startInteractive');page.locator('#exerciseLevelSelect').select_option('3');page.wait_for_function('()=>__current?.interactionTask?.level===3')
   baseline=page.evaluate('(__profiles.find(p=>p.id==="primary").progress.history||[]).length')
-  assert page.locator('#interactionKindSwitch button').all_text_contents()==['Pulsa según la tarjeta','Mira o escucha y actúa']
+  assert page.locator('#interactionKindSwitch button').all_text_contents()==['Retos con tarjetas','Mira/escucha y actúa']
   page.locator('[data-interaction-kind=signals]').click();page.wait_for_selector('#signalModeSelect')
   for fixture in fixtures:
    chosen.clear();chosen.update(fixture)
