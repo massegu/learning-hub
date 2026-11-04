@@ -1,0 +1,4248 @@
+{
+  "broadFamilies": 6,
+  "semanticFamilies": 6,
+  "scenarioFamilies": 40,
+  "renderedVariants": 360,
+  "variantsAreNotIndependentActivities": true,
+  "scenariosByFamily": {
+    "rules": [
+      "rules.animals",
+      "rules.tools",
+      "rules.travel",
+      "rules.music"
+    ],
+    "words": [
+      "lexical.animales",
+      "lexical.alimentos",
+      "lexical.herramientas",
+      "lexical.acciones"
+    ],
+    "deduction": [
+      "deduction.garden",
+      "deduction.music",
+      "deduction.workshop",
+      "deduction.community"
+    ],
+    "change": [
+      "plan.picnic",
+      "plan.craft",
+      "plan.sport",
+      "plan.plant",
+      "plan.transport",
+      "plan.project",
+      "plan.appointment",
+      "plan.event"
+    ],
+    "information": [
+      "information.lesson",
+      "information.recipe",
+      "information.game",
+      "information.visit",
+      "information.travel",
+      "information.deadline",
+      "information.access",
+      "information.equipment"
+    ],
+    "contradiction": [
+      "contradiction.visual.merienda",
+      "contradiction.visual.music",
+      "contradiction.visual.garden",
+      "contradiction.visual.art",
+      "contradiction.notice",
+      "contradiction.schedule",
+      "contradiction.map",
+      "contradiction.recipe",
+      "contradiction.booking",
+      "contradiction.deadline",
+      "contradiction.transport",
+      "contradiction.receipt"
+    ]
+  },
+  "representativeExamples": [
+    {
+      "age": "early",
+      "level": 1,
+      "family": "rules",
+      "q": "Aprende la regla y responde solo cuando corresponda.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pulsa con los animales. Con los objetos, espera."
+        }
+      ],
+      "answer": "Actividad temporal: no se adapta a papel.",
+      "construct": "responseInhibition",
+      "functionalPurpose": "Detener una respuesta automática y adaptarse cuando cambian las instrucciones",
+      "difficulty": {
+        "level": 1,
+        "trials": 6,
+        "switches": 0,
+        "dimensions": 1
+      },
+      "printable": "interactive-only",
+      "sourceWords": 8,
+      "editorialNotes": []
+    },
+    {
+      "age": "early",
+      "level": 1,
+      "family": "words",
+      "q": "Elige la palabra que cumple la regla.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Condiciones",
+          "items": [
+            "Debe ser de la categoría: animales"
+          ]
+        },
+        {
+          "type": "list",
+          "label": "Opciones",
+          "items": [
+            "gato",
+            "pan",
+            "arroz",
+            "sopa"
+          ]
+        }
+      ],
+      "answer": "gato",
+      "construct": "lexicalSearch",
+      "functionalPurpose": "Buscar palabras precisas que cumplan las condiciones de un mensaje",
+      "difficulty": {
+        "level": 1,
+        "constraints": 1,
+        "productionAllowed": false
+      },
+      "printable": "fully-printable",
+      "sourceWords": 10,
+      "editorialNotes": [
+        "Production uses a reviewed finite vocabulary. Unknown words are ungraded."
+      ]
+    },
+    {
+      "age": "early",
+      "level": 1,
+      "family": "deduction",
+      "q": "Lee las pistas y encuentra la tarjeta.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pista 1: Tiene esta característica: perro."
+        },
+        {
+          "type": "text",
+          "text": "Pista 2: Tiene esta característica: camiseta."
+        },
+        {
+          "type": "table",
+          "rows": [
+            [
+              "Tarjeta",
+              "Característica 1",
+              "Característica 2"
+            ],
+            [
+              "1",
+              "gato",
+              "camiseta"
+            ],
+            [
+              "2",
+              "gato",
+              "bufanda"
+            ],
+            [
+              "3",
+              "perro",
+              "camiseta"
+            ],
+            [
+              "4",
+              "perro",
+              "bufanda"
+            ]
+          ]
+        }
+      ],
+      "answer": "Tarjeta 3: perro · camiseta",
+      "construct": "deductiveReasoning",
+      "functionalPurpose": "Descartar alternativas con pistas antes de tomar una decisión",
+      "difficulty": {
+        "level": 1,
+        "candidates": 4,
+        "attributes": 2,
+        "clues": 2,
+        "negativeClues": false,
+        "conditionalClues": false
+      },
+      "printable": "fully-printable",
+      "sourceWords": 29,
+      "editorialNotes": []
+    },
+    {
+      "age": "early",
+      "level": 1,
+      "family": "change",
+      "q": "Objetivo: Merendar sin mojarnos. Cambia el paso que no puedes hacer.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Plan",
+          "items": [
+            "Buscar un lugar",
+            "Comer en el patio"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "El patio está mojado. La sala está libre."
+        },
+        {
+          "type": "list",
+          "label": "Elige un cambio",
+          "items": [
+            "Comer en la sala",
+            "Comer en el patio",
+            "Ir al patio mojado"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Mantén el orden. Cambia el paso."
+        }
+      ],
+      "answer": "Buscar un lugar → Comer en la sala",
+      "construct": "planning",
+      "functionalPurpose": "Reorganizar acciones ante un imprevisto conservando el objetivo",
+      "difficulty": {
+        "level": 1,
+        "steps": 2,
+        "changes": 1,
+        "dependencies": 0,
+        "competingAlternatives": false
+      },
+      "printable": "fully-printable",
+      "sourceWords": 33,
+      "editorialNotes": []
+    },
+    {
+      "age": "early",
+      "level": 1,
+      "family": "information",
+      "q": "Saber si puedes ir al taller al salir de clase. Marca solo los datos necesarios.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Datos disponibles",
+          "items": [
+            "La clase termina a las 16:00",
+            "El taller empieza a las 16:30",
+            "El camino tarda 20 minutos",
+            "El taller dura 45 minutos"
+          ]
+        }
+      ],
+      "answer": "La clase termina a las 16:00; El taller empieza a las 16:30; El camino tarda 20 minutos",
+      "construct": "relevanceSelection",
+      "functionalPurpose": "Seleccionar los datos necesarios para resolver una decisión concreta",
+      "difficulty": {
+        "level": 1,
+        "necessaryFacts": 3,
+        "distractors": 1,
+        "sources": 1
+      },
+      "printable": "fully-printable",
+      "sourceWords": 22,
+      "editorialNotes": []
+    },
+    {
+      "age": "early",
+      "level": 1,
+      "family": "contradiction",
+      "q": "¿Qué no coincide entre la nota y la imagen? Marca las dos fuentes.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Objetivo: Preparar la merienda"
+        },
+        {
+          "type": "list",
+          "label": "Nota del encargo",
+          "items": [
+            "manzana"
+          ]
+        },
+        {
+          "type": "list",
+          "label": "Imagen entregada",
+          "presentation": "cards",
+          "items": [
+            "zanahoria"
+          ]
+        },
+        {
+          "type": "list",
+          "label": "Datos",
+          "items": [
+            "Imagen entregada: zanahoria",
+            "Lugar: mesa de clase",
+            "Nota del encargo: manzana"
+          ]
+        }
+      ],
+      "answer": "Imagen entregada: zanahoria ↔ Nota del encargo: manzana",
+      "construct": "consistencyChecking",
+      "functionalPurpose": "Contrastar fuentes incompatibles antes de actuar",
+      "difficulty": {
+        "level": 1,
+        "facts": 3,
+        "sources": 2,
+        "conflictingFacts": 2,
+        "visualComparison": true
+      },
+      "printable": "fully-printable",
+      "sourceWords": 17,
+      "editorialNotes": []
+    },
+    {
+      "age": "early",
+      "level": 2,
+      "family": "rules",
+      "q": "Recuerda la regla. Cuando veas ↔, inviértela para las siguientes tarjetas.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pulsa con los animales. Con los objetos, espera."
+        },
+        {
+          "type": "text",
+          "text": "↔ significa: invierte la regla que recuerdas. No indica qué debes responder a la siguiente tarjeta."
+        }
+      ],
+      "answer": "Actividad temporal: no se adapta a papel.",
+      "construct": "responseInhibition",
+      "functionalPurpose": "Detener una respuesta automática y adaptarse cuando cambian las instrucciones",
+      "difficulty": {
+        "level": 2,
+        "trials": 8,
+        "switches": 1,
+        "dimensions": 1
+      },
+      "printable": "interactive-only",
+      "sourceWords": 24,
+      "editorialNotes": []
+    },
+    {
+      "age": "early",
+      "level": 2,
+      "family": "words",
+      "q": "Elige la palabra que cumple la regla.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Condiciones",
+          "items": [
+            "Debe ser de la categoría: animales",
+            "Debe contener A"
+          ]
+        },
+        {
+          "type": "list",
+          "label": "Opciones",
+          "items": [
+            "gato",
+            "toro",
+            "oso",
+            "lobo"
+          ]
+        }
+      ],
+      "answer": "gato",
+      "construct": "lexicalSearch",
+      "functionalPurpose": "Buscar palabras precisas que cumplan las condiciones de un mensaje",
+      "difficulty": {
+        "level": 2,
+        "constraints": 2,
+        "productionAllowed": false
+      },
+      "printable": "fully-printable",
+      "sourceWords": 13,
+      "editorialNotes": [
+        "Production uses a reviewed finite vocabulary. Unknown words are ungraded."
+      ]
+    },
+    {
+      "age": "early",
+      "level": 2,
+      "family": "deduction",
+      "q": "Lee las pistas y encuentra la tarjeta.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pista 1: No corresponde a «perro»."
+        },
+        {
+          "type": "text",
+          "text": "Pista 2: No corresponde a «bufanda»."
+        },
+        {
+          "type": "table",
+          "rows": [
+            [
+              "Tarjeta",
+              "Característica 1",
+              "Característica 2"
+            ],
+            [
+              "1",
+              "gato",
+              "camiseta"
+            ],
+            [
+              "2",
+              "gato",
+              "bufanda"
+            ],
+            [
+              "3",
+              "perro",
+              "camiseta"
+            ],
+            [
+              "4",
+              "perro",
+              "bufanda"
+            ]
+          ]
+        }
+      ],
+      "answer": "Tarjeta 1: gato · camiseta",
+      "construct": "deductiveReasoning",
+      "functionalPurpose": "Descartar alternativas con pistas antes de tomar una decisión",
+      "difficulty": {
+        "level": 2,
+        "candidates": 4,
+        "attributes": 2,
+        "clues": 2,
+        "negativeClues": true,
+        "conditionalClues": false
+      },
+      "printable": "fully-printable",
+      "sourceWords": 29,
+      "editorialNotes": []
+    },
+    {
+      "age": "early",
+      "level": 2,
+      "family": "change",
+      "q": "Objetivo: Merendar sin mojarnos. Cambia el paso que no puedes hacer.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Plan",
+          "items": [
+            "Preparar comida",
+            "Comer en el patio",
+            "Guardar la caja"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "El patio está mojado. La sala está libre."
+        },
+        {
+          "type": "list",
+          "label": "Elige un cambio",
+          "items": [
+            "Comer en la sala",
+            "Comer en el patio",
+            "Ir al patio mojado"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Mantén el orden. Cambia el paso."
+        }
+      ],
+      "answer": "Preparar comida → Comer en la sala → Guardar la caja",
+      "construct": "planning",
+      "functionalPurpose": "Reorganizar acciones ante un imprevisto conservando el objetivo",
+      "difficulty": {
+        "level": 2,
+        "steps": 3,
+        "changes": 1,
+        "dependencies": 1,
+        "competingAlternatives": false
+      },
+      "printable": "fully-printable",
+      "sourceWords": 35,
+      "editorialNotes": []
+    },
+    {
+      "age": "early",
+      "level": 2,
+      "family": "information",
+      "q": "Saber si puedes ir al taller al salir de clase. Marca solo los datos necesarios.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Datos disponibles",
+          "items": [
+            "La clase termina a las 16:00",
+            "El taller empieza a las 16:30",
+            "El camino tarda 20 minutos",
+            "El taller dura 45 minutos",
+            "El taller abre los lunes"
+          ]
+        }
+      ],
+      "answer": "La clase termina a las 16:00; El taller empieza a las 16:30; El camino tarda 20 minutos",
+      "construct": "relevanceSelection",
+      "functionalPurpose": "Seleccionar los datos necesarios para resolver una decisión concreta",
+      "difficulty": {
+        "level": 2,
+        "necessaryFacts": 3,
+        "distractors": 2,
+        "sources": 1
+      },
+      "printable": "fully-printable",
+      "sourceWords": 27,
+      "editorialNotes": []
+    },
+    {
+      "age": "early",
+      "level": 2,
+      "family": "contradiction",
+      "q": "¿Qué no coincide entre la nota y la imagen? Marca las dos fuentes.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Objetivo: Preparar la merienda"
+        },
+        {
+          "type": "list",
+          "label": "Nota del encargo",
+          "items": [
+            "manzana"
+          ]
+        },
+        {
+          "type": "list",
+          "label": "Imagen entregada",
+          "presentation": "cards",
+          "items": [
+            "zanahoria"
+          ]
+        },
+        {
+          "type": "list",
+          "label": "Datos",
+          "items": [
+            "Imagen entregada: zanahoria",
+            "Lugar: mesa de clase",
+            "Nota del encargo: manzana",
+            "Momento: antes de empezar"
+          ]
+        }
+      ],
+      "answer": "Imagen entregada: zanahoria ↔ Nota del encargo: manzana",
+      "construct": "consistencyChecking",
+      "functionalPurpose": "Contrastar fuentes incompatibles antes de actuar",
+      "difficulty": {
+        "level": 2,
+        "facts": 4,
+        "sources": 2,
+        "conflictingFacts": 2,
+        "visualComparison": true
+      },
+      "printable": "fully-printable",
+      "sourceWords": 21,
+      "editorialNotes": []
+    },
+    {
+      "age": "early",
+      "level": 3,
+      "family": "rules",
+      "q": "Recuerda la regla. Cuando veas ↔, inviértela para las siguientes tarjetas.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pulsa con los animales. Con los objetos, espera."
+        },
+        {
+          "type": "text",
+          "text": "↔ significa: invierte la regla que recuerdas. No indica qué debes responder a la siguiente tarjeta."
+        }
+      ],
+      "answer": "Actividad temporal: no se adapta a papel.",
+      "construct": "responseInhibition",
+      "functionalPurpose": "Detener una respuesta automática y adaptarse cuando cambian las instrucciones",
+      "difficulty": {
+        "level": 3,
+        "trials": 10,
+        "switches": 2,
+        "dimensions": 1
+      },
+      "printable": "interactive-only",
+      "sourceWords": 24,
+      "editorialNotes": []
+    },
+    {
+      "age": "early",
+      "level": 3,
+      "family": "words",
+      "q": "Elige la palabra que cumple la regla.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Condiciones",
+          "items": [
+            "Debe ser de la categoría: animales",
+            "Debe contener A",
+            "No puede contener R"
+          ]
+        },
+        {
+          "type": "list",
+          "label": "Opciones",
+          "items": [
+            "gato",
+            "rana",
+            "ratón",
+            "toro"
+          ]
+        }
+      ],
+      "answer": "gato",
+      "construct": "lexicalSearch",
+      "functionalPurpose": "Buscar palabras precisas que cumplan las condiciones de un mensaje",
+      "difficulty": {
+        "level": 3,
+        "constraints": 3,
+        "productionAllowed": false
+      },
+      "printable": "fully-printable",
+      "sourceWords": 17,
+      "editorialNotes": [
+        "Production uses a reviewed finite vocabulary. Unknown words are ungraded."
+      ]
+    },
+    {
+      "age": "early",
+      "level": 3,
+      "family": "deduction",
+      "q": "Lee las pistas y encuentra la tarjeta.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pista 1: No corresponde a «gato»."
+        },
+        {
+          "type": "text",
+          "text": "Pista 2: No corresponde a «bufanda»."
+        },
+        {
+          "type": "table",
+          "rows": [
+            [
+              "Tarjeta",
+              "Característica 1",
+              "Característica 2"
+            ],
+            [
+              "1",
+              "gato",
+              "camiseta"
+            ],
+            [
+              "2",
+              "gato",
+              "bufanda"
+            ],
+            [
+              "3",
+              "perro",
+              "camiseta"
+            ],
+            [
+              "4",
+              "perro",
+              "bufanda"
+            ]
+          ]
+        }
+      ],
+      "answer": "Tarjeta 3: perro · camiseta",
+      "construct": "deductiveReasoning",
+      "functionalPurpose": "Descartar alternativas con pistas antes de tomar una decisión",
+      "difficulty": {
+        "level": 3,
+        "candidates": 4,
+        "attributes": 2,
+        "clues": 2,
+        "negativeClues": true,
+        "conditionalClues": false
+      },
+      "printable": "fully-printable",
+      "sourceWords": 29,
+      "editorialNotes": []
+    },
+    {
+      "age": "early",
+      "level": 3,
+      "family": "change",
+      "q": "Objetivo: Merendar sin mojarnos. Cambia el paso que no puedes hacer.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Plan",
+          "items": [
+            "Preparar comida",
+            "Comer en el patio",
+            "Guardar la caja"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "El patio está mojado. La sala está libre."
+        },
+        {
+          "type": "list",
+          "label": "Elige un cambio",
+          "items": [
+            "Comer en la sala",
+            "Comer en el patio",
+            "Ir al patio mojado"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Mantén el orden. Cambia el paso."
+        }
+      ],
+      "answer": "Preparar comida → Comer en la sala → Guardar la caja",
+      "construct": "planning",
+      "functionalPurpose": "Reorganizar acciones ante un imprevisto conservando el objetivo",
+      "difficulty": {
+        "level": 3,
+        "steps": 3,
+        "changes": 1,
+        "dependencies": 2,
+        "competingAlternatives": false
+      },
+      "printable": "fully-printable",
+      "sourceWords": 35,
+      "editorialNotes": []
+    },
+    {
+      "age": "early",
+      "level": 3,
+      "family": "information",
+      "q": "Saber si puedes ir al taller al salir de clase. Marca solo los datos necesarios.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Datos disponibles",
+          "items": [
+            "La clase termina a las 16:00",
+            "El taller empieza a las 16:30",
+            "El camino tarda 20 minutos",
+            "El taller dura 45 minutos",
+            "El taller abre los lunes",
+            "El taller tiene una mesa grande"
+          ]
+        }
+      ],
+      "answer": "La clase termina a las 16:00; El taller empieza a las 16:30; El camino tarda 20 minutos",
+      "construct": "relevanceSelection",
+      "functionalPurpose": "Seleccionar los datos necesarios para resolver una decisión concreta",
+      "difficulty": {
+        "level": 3,
+        "necessaryFacts": 3,
+        "distractors": 3,
+        "sources": 1
+      },
+      "printable": "fully-printable",
+      "sourceWords": 33,
+      "editorialNotes": []
+    },
+    {
+      "age": "early",
+      "level": 3,
+      "family": "contradiction",
+      "q": "¿Qué no coincide entre la nota y la imagen? Marca las dos fuentes.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Objetivo: Preparar la merienda"
+        },
+        {
+          "type": "list",
+          "label": "Nota del encargo",
+          "items": [
+            "manzana"
+          ]
+        },
+        {
+          "type": "list",
+          "label": "Imagen entregada",
+          "presentation": "cards",
+          "items": [
+            "zanahoria"
+          ]
+        },
+        {
+          "type": "list",
+          "label": "Datos",
+          "items": [
+            "Imagen entregada: zanahoria",
+            "Lugar: mesa de clase",
+            "Nota del encargo: manzana",
+            "Momento: antes de empezar",
+            "La caja está abierta"
+          ]
+        }
+      ],
+      "answer": "Imagen entregada: zanahoria ↔ Nota del encargo: manzana",
+      "construct": "consistencyChecking",
+      "functionalPurpose": "Contrastar fuentes incompatibles antes de actuar",
+      "difficulty": {
+        "level": 3,
+        "facts": 5,
+        "sources": 2,
+        "conflictingFacts": 2,
+        "visualComparison": true
+      },
+      "printable": "fully-printable",
+      "sourceWords": 25,
+      "editorialNotes": []
+    },
+    {
+      "age": "junior",
+      "level": 1,
+      "family": "rules",
+      "q": "Aprende la regla y responde solo cuando corresponda.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pulsa al ver un animal. Si es un objeto, no pulses."
+        }
+      ],
+      "answer": "Actividad temporal: no se adapta a papel.",
+      "construct": "responseInhibition",
+      "functionalPurpose": "Detener una respuesta automática y adaptarse cuando cambian las instrucciones",
+      "difficulty": {
+        "level": 1,
+        "trials": 8,
+        "switches": 0,
+        "dimensions": 1
+      },
+      "printable": "interactive-only",
+      "sourceWords": 11,
+      "editorialNotes": []
+    },
+    {
+      "age": "junior",
+      "level": 1,
+      "family": "words",
+      "q": "Busca una palabra que cumpla todas las condiciones.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Condiciones",
+          "items": [
+            "Debe ser de la categoría: animales",
+            "Debe contener A"
+          ]
+        },
+        {
+          "type": "list",
+          "label": "Opciones",
+          "items": [
+            "gato",
+            "toro",
+            "oso",
+            "lobo"
+          ]
+        }
+      ],
+      "answer": "gato",
+      "construct": "lexicalSearch",
+      "functionalPurpose": "Buscar palabras precisas que cumplan las condiciones de un mensaje",
+      "difficulty": {
+        "level": 1,
+        "constraints": 2,
+        "productionAllowed": true
+      },
+      "printable": "fully-printable",
+      "sourceWords": 13,
+      "editorialNotes": [
+        "Production uses a reviewed finite vocabulary. Unknown words are ungraded."
+      ]
+    },
+    {
+      "age": "junior",
+      "level": 1,
+      "family": "deduction",
+      "q": "Localiza a la persona que tiene tu turno en el taller del jardín.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pista 1: Tiene esta característica: gato."
+        },
+        {
+          "type": "text",
+          "text": "Pista 2: Tiene esta característica: bufanda."
+        },
+        {
+          "type": "text",
+          "text": "Pista 3: Tiene esta característica: jardín."
+        },
+        {
+          "type": "table",
+          "rows": [
+            [
+              "Tarjeta",
+              "Característica 1",
+              "Característica 2",
+              "Característica 3"
+            ],
+            [
+              "1",
+              "gato",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "2",
+              "gato",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "3",
+              "gato",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "4",
+              "gato",
+              "bufanda",
+              "taller"
+            ],
+            [
+              "5",
+              "perro",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "6",
+              "perro",
+              "camiseta",
+              "taller"
+            ]
+          ]
+        }
+      ],
+      "answer": "Tarjeta 3: gato · bufanda · jardín",
+      "construct": "deductiveReasoning",
+      "functionalPurpose": "Descartar alternativas con pistas antes de tomar una decisión",
+      "difficulty": {
+        "level": 1,
+        "candidates": 6,
+        "attributes": 3,
+        "clues": 3,
+        "negativeClues": false,
+        "conditionalClues": false
+      },
+      "printable": "fully-printable",
+      "sourceWords": 49,
+      "editorialNotes": []
+    },
+    {
+      "age": "junior",
+      "level": 1,
+      "family": "change",
+      "q": "Objetivo: Preparar la merienda al aire libre. Adapta el plan sin perder el objetivo.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Plan inicial",
+          "items": [
+            "Mirar el tiempo",
+            "Comer en el patio",
+            "Guardar el material"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Imprevisto: El patio está mojado. La sala cubierta está libre."
+        },
+        {
+          "type": "list",
+          "label": "Acciones posibles",
+          "items": [
+            "Comer en la sala cubierta",
+            "Comer en el patio",
+            "Cancelar aunque la sala está libre"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Conserva el orden de los pasos que siguen siendo posibles. Sustituye solo la acción afectada por el imprevisto."
+        }
+      ],
+      "answer": "Mirar el tiempo → Comer en la sala cubierta → Guardar el material",
+      "construct": "planning",
+      "functionalPurpose": "Reorganizar acciones ante un imprevisto conservando el objetivo",
+      "difficulty": {
+        "level": 1,
+        "steps": 3,
+        "changes": 1,
+        "dependencies": 0,
+        "competingAlternatives": false
+      },
+      "printable": "fully-printable",
+      "sourceWords": 53,
+      "editorialNotes": []
+    },
+    {
+      "age": "junior",
+      "level": 1,
+      "family": "information",
+      "q": "Saber si puedes ir al taller al salir de clase. Marca solo los datos necesarios.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Datos disponibles",
+          "items": [
+            "La clase termina a las 16:00",
+            "El taller empieza a las 16:30",
+            "El camino tarda 20 minutos",
+            "El taller dura 45 minutos"
+          ]
+        }
+      ],
+      "answer": "La clase termina a las 16:00; El taller empieza a las 16:30; El camino tarda 20 minutos",
+      "construct": "relevanceSelection",
+      "functionalPurpose": "Seleccionar los datos necesarios para resolver una decisión concreta",
+      "difficulty": {
+        "level": 1,
+        "necessaryFacts": 3,
+        "distractors": 1,
+        "sources": 1
+      },
+      "printable": "fully-printable",
+      "sourceWords": 22,
+      "editorialNotes": []
+    },
+    {
+      "age": "junior",
+      "level": 1,
+      "family": "contradiction",
+      "q": "Preparar el material del taller. Marca las dos informaciones que no pueden ser correctas a la vez. Antes de actuar, habría que comprobarlas.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Fuentes del mismo caso",
+          "items": [
+            "Lista de entrada: No se necesita delantal",
+            "El taller es en la sala 2",
+            "Nota de clase: Hay que llevar un delantal"
+          ]
+        }
+      ],
+      "answer": "Lista de entrada: No se necesita delantal ↔ Nota de clase: Hay que llevar un delantal",
+      "construct": "consistencyChecking",
+      "functionalPurpose": "Contrastar fuentes incompatibles antes de actuar",
+      "difficulty": {
+        "level": 1,
+        "facts": 3,
+        "sources": 2,
+        "conflictingFacts": 2
+      },
+      "printable": "fully-printable",
+      "sourceWords": 22,
+      "editorialNotes": []
+    },
+    {
+      "age": "junior",
+      "level": 2,
+      "family": "rules",
+      "q": "Recuerda la regla. Cuando veas ↔, inviértela para las siguientes tarjetas.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pulsa al ver un animal. Si es un objeto, no pulses."
+        },
+        {
+          "type": "text",
+          "text": "↔ significa: invierte la regla que recuerdas. No indica qué debes responder a la siguiente tarjeta."
+        }
+      ],
+      "answer": "Actividad temporal: no se adapta a papel.",
+      "construct": "responseInhibition",
+      "functionalPurpose": "Detener una respuesta automática y adaptarse cuando cambian las instrucciones",
+      "difficulty": {
+        "level": 2,
+        "trials": 10,
+        "switches": 1,
+        "dimensions": 1
+      },
+      "printable": "interactive-only",
+      "sourceWords": 27,
+      "editorialNotes": []
+    },
+    {
+      "age": "junior",
+      "level": 2,
+      "family": "words",
+      "q": "Busca una palabra que cumpla todas las condiciones.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Condiciones",
+          "items": [
+            "Debe ser de la categoría: animales",
+            "Debe empezar por P"
+          ]
+        },
+        {
+          "type": "list",
+          "label": "Opciones",
+          "items": [
+            "pato",
+            "gato",
+            "rana",
+            "ratón"
+          ]
+        }
+      ],
+      "answer": "pato",
+      "construct": "lexicalSearch",
+      "functionalPurpose": "Buscar palabras precisas que cumplan las condiciones de un mensaje",
+      "difficulty": {
+        "level": 2,
+        "constraints": 2,
+        "productionAllowed": true
+      },
+      "printable": "fully-printable",
+      "sourceWords": 14,
+      "editorialNotes": [
+        "Production uses a reviewed finite vocabulary. Unknown words are ungraded."
+      ]
+    },
+    {
+      "age": "junior",
+      "level": 2,
+      "family": "deduction",
+      "q": "Localiza a la persona que tiene tu turno en el taller del jardín.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pista 1: No corresponde a «gato»."
+        },
+        {
+          "type": "text",
+          "text": "Pista 2: No corresponde a «bufanda»."
+        },
+        {
+          "type": "text",
+          "text": "Pista 3: No corresponde a «taller»."
+        },
+        {
+          "type": "table",
+          "rows": [
+            [
+              "Tarjeta",
+              "Característica 1",
+              "Característica 2",
+              "Característica 3"
+            ],
+            [
+              "1",
+              "gato",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "2",
+              "gato",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "3",
+              "gato",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "4",
+              "gato",
+              "bufanda",
+              "taller"
+            ],
+            [
+              "5",
+              "perro",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "6",
+              "perro",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "7",
+              "perro",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "8",
+              "perro",
+              "bufanda",
+              "taller"
+            ]
+          ]
+        }
+      ],
+      "answer": "Tarjeta 5: perro · camiseta · jardín",
+      "construct": "deductiveReasoning",
+      "functionalPurpose": "Descartar alternativas con pistas antes de tomar una decisión",
+      "difficulty": {
+        "level": 2,
+        "candidates": 8,
+        "attributes": 3,
+        "clues": 3,
+        "negativeClues": true,
+        "conditionalClues": false
+      },
+      "printable": "fully-printable",
+      "sourceWords": 57,
+      "editorialNotes": []
+    },
+    {
+      "age": "junior",
+      "level": 2,
+      "family": "change",
+      "q": "Objetivo: Preparar la merienda al aire libre. Adapta el plan sin perder el objetivo.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Plan inicial",
+          "items": [
+            "Mirar el tiempo",
+            "Preparar la merienda",
+            "Comer en el patio",
+            "Guardar el material"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Imprevisto: El patio está mojado. La sala cubierta está libre."
+        },
+        {
+          "type": "list",
+          "label": "Acciones posibles",
+          "items": [
+            "Comer en la sala cubierta",
+            "Comer en el patio",
+            "Cancelar aunque la sala está libre"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Conserva el orden de los pasos que siguen siendo posibles. Sustituye solo la acción afectada por el imprevisto."
+        }
+      ],
+      "answer": "Mirar el tiempo → Preparar la merienda → Comer en la sala cubierta → Guardar el material",
+      "construct": "planning",
+      "functionalPurpose": "Reorganizar acciones ante un imprevisto conservando el objetivo",
+      "difficulty": {
+        "level": 2,
+        "steps": 4,
+        "changes": 1,
+        "dependencies": 1,
+        "competingAlternatives": false
+      },
+      "printable": "fully-printable",
+      "sourceWords": 56,
+      "editorialNotes": []
+    },
+    {
+      "age": "junior",
+      "level": 2,
+      "family": "information",
+      "q": "Saber si puedes ir al taller al salir de clase. Marca solo los datos necesarios.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Datos disponibles",
+          "items": [
+            "La clase termina a las 16:00",
+            "El taller empieza a las 16:30",
+            "El camino tarda 20 minutos",
+            "El taller dura 45 minutos",
+            "El taller abre los lunes"
+          ]
+        }
+      ],
+      "answer": "La clase termina a las 16:00; El taller empieza a las 16:30; El camino tarda 20 minutos",
+      "construct": "relevanceSelection",
+      "functionalPurpose": "Seleccionar los datos necesarios para resolver una decisión concreta",
+      "difficulty": {
+        "level": 2,
+        "necessaryFacts": 3,
+        "distractors": 2,
+        "sources": 1
+      },
+      "printable": "fully-printable",
+      "sourceWords": 27,
+      "editorialNotes": []
+    },
+    {
+      "age": "junior",
+      "level": 2,
+      "family": "contradiction",
+      "q": "Preparar el material del taller. Marca las dos informaciones que no pueden ser correctas a la vez. Antes de actuar, habría que comprobarlas.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Fuentes del mismo caso",
+          "items": [
+            "Lista de entrada: No se necesita delantal",
+            "El taller es en la sala 2",
+            "Nota de clase: Hay que llevar un delantal",
+            "La sala 2 está en la planta baja"
+          ]
+        }
+      ],
+      "answer": "Lista de entrada: No se necesita delantal ↔ Nota de clase: Hay que llevar un delantal",
+      "construct": "consistencyChecking",
+      "functionalPurpose": "Contrastar fuentes incompatibles antes de actuar",
+      "difficulty": {
+        "level": 2,
+        "facts": 4,
+        "sources": 2,
+        "conflictingFacts": 2
+      },
+      "printable": "fully-printable",
+      "sourceWords": 30,
+      "editorialNotes": []
+    },
+    {
+      "age": "junior",
+      "level": 3,
+      "family": "rules",
+      "q": "Recuerda la regla. Cuando veas ↔, inviértela para las siguientes tarjetas.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pulsa al ver un animal. Si es un objeto, no pulses."
+        },
+        {
+          "type": "text",
+          "text": "↔ significa: invierte la regla que recuerdas. No indica qué debes responder a la siguiente tarjeta."
+        }
+      ],
+      "answer": "Actividad temporal: no se adapta a papel.",
+      "construct": "responseInhibition",
+      "functionalPurpose": "Detener una respuesta automática y adaptarse cuando cambian las instrucciones",
+      "difficulty": {
+        "level": 3,
+        "trials": 12,
+        "switches": 2,
+        "dimensions": 1
+      },
+      "printable": "interactive-only",
+      "sourceWords": 27,
+      "editorialNotes": []
+    },
+    {
+      "age": "junior",
+      "level": 3,
+      "family": "words",
+      "q": "Busca una palabra que cumpla todas las condiciones.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Condiciones",
+          "items": [
+            "Debe ser de la categoría: animales",
+            "Debe contener A",
+            "No puede contener R"
+          ]
+        },
+        {
+          "type": "list",
+          "label": "Opciones",
+          "items": [
+            "gato",
+            "rana",
+            "ratón",
+            "toro"
+          ]
+        }
+      ],
+      "answer": "gato",
+      "construct": "lexicalSearch",
+      "functionalPurpose": "Buscar palabras precisas que cumplan las condiciones de un mensaje",
+      "difficulty": {
+        "level": 3,
+        "constraints": 3,
+        "productionAllowed": true
+      },
+      "printable": "fully-printable",
+      "sourceWords": 17,
+      "editorialNotes": [
+        "Production uses a reviewed finite vocabulary. Unknown words are ungraded."
+      ]
+    },
+    {
+      "age": "junior",
+      "level": 3,
+      "family": "deduction",
+      "q": "Localiza a la persona que tiene tu turno en el taller del jardín.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pista 1: No corresponde a «gato»."
+        },
+        {
+          "type": "text",
+          "text": "Pista 2: No corresponde a «conejo»."
+        },
+        {
+          "type": "text",
+          "text": "Pista 3: No corresponde a «camiseta»."
+        },
+        {
+          "type": "text",
+          "text": "Pista 4: No corresponde a «taller»."
+        },
+        {
+          "type": "table",
+          "rows": [
+            [
+              "Tarjeta",
+              "Característica 1",
+              "Característica 2",
+              "Característica 3"
+            ],
+            [
+              "1",
+              "gato",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "2",
+              "gato",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "3",
+              "gato",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "4",
+              "gato",
+              "bufanda",
+              "taller"
+            ],
+            [
+              "5",
+              "perro",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "6",
+              "perro",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "7",
+              "perro",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "8",
+              "perro",
+              "bufanda",
+              "taller"
+            ],
+            [
+              "9",
+              "conejo",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "10",
+              "conejo",
+              "camiseta",
+              "taller"
+            ]
+          ]
+        }
+      ],
+      "answer": "Tarjeta 7: perro · bufanda · jardín",
+      "construct": "deductiveReasoning",
+      "functionalPurpose": "Descartar alternativas con pistas antes de tomar una decisión",
+      "difficulty": {
+        "level": 3,
+        "candidates": 10,
+        "attributes": 3,
+        "clues": 4,
+        "negativeClues": true,
+        "conditionalClues": false
+      },
+      "printable": "fully-printable",
+      "sourceWords": 71,
+      "editorialNotes": []
+    },
+    {
+      "age": "junior",
+      "level": 3,
+      "family": "change",
+      "q": "Objetivo: Preparar la merienda al aire libre. Adapta el plan sin perder el objetivo.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Plan inicial",
+          "items": [
+            "Mirar el tiempo",
+            "Preparar la merienda",
+            "Comer en el patio",
+            "Recoger la mesa",
+            "Guardar el material"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Imprevisto: El patio está mojado. La sala cubierta está libre."
+        },
+        {
+          "type": "list",
+          "label": "Acciones posibles",
+          "items": [
+            "Comer en la sala cubierta",
+            "Comer en el patio",
+            "Cancelar aunque la sala está libre"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Conserva el orden de los pasos que siguen siendo posibles. Sustituye solo la acción afectada por el imprevisto."
+        }
+      ],
+      "answer": "Mirar el tiempo → Preparar la merienda → Comer en la sala cubierta → Recoger la mesa → Guardar el material",
+      "construct": "planning",
+      "functionalPurpose": "Reorganizar acciones ante un imprevisto conservando el objetivo",
+      "difficulty": {
+        "level": 3,
+        "steps": 5,
+        "changes": 1,
+        "dependencies": 2,
+        "competingAlternatives": false
+      },
+      "printable": "fully-printable",
+      "sourceWords": 59,
+      "editorialNotes": []
+    },
+    {
+      "age": "junior",
+      "level": 3,
+      "family": "information",
+      "q": "Saber si puedes ir al taller al salir de clase. Marca solo los datos necesarios.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Datos disponibles",
+          "items": [
+            "La clase termina a las 16:00",
+            "El taller empieza a las 16:30",
+            "El camino tarda 20 minutos",
+            "El taller dura 45 minutos",
+            "El taller abre los lunes",
+            "El taller tiene una mesa grande"
+          ]
+        }
+      ],
+      "answer": "La clase termina a las 16:00; El taller empieza a las 16:30; El camino tarda 20 minutos",
+      "construct": "relevanceSelection",
+      "functionalPurpose": "Seleccionar los datos necesarios para resolver una decisión concreta",
+      "difficulty": {
+        "level": 3,
+        "necessaryFacts": 3,
+        "distractors": 3,
+        "sources": 1
+      },
+      "printable": "fully-printable",
+      "sourceWords": 33,
+      "editorialNotes": []
+    },
+    {
+      "age": "junior",
+      "level": 3,
+      "family": "contradiction",
+      "q": "Preparar el material del taller. Marca las dos informaciones que no pueden ser correctas a la vez. Antes de actuar, habría que comprobarlas.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Fuentes del mismo caso",
+          "items": [
+            "Lista de entrada: No se necesita delantal",
+            "El taller es en la sala 2",
+            "Nota de clase: Hay que llevar un delantal",
+            "La sala 2 está en la planta baja",
+            "Archivo del mismo caso: referencia confirmada; no contiene cambios de los datos discutidos",
+            "Información del edificio: entrada accesible por la puerta principal"
+          ]
+        }
+      ],
+      "answer": "Lista de entrada: No se necesita delantal ↔ Nota de clase: Hay que llevar un delantal",
+      "construct": "consistencyChecking",
+      "functionalPurpose": "Contrastar fuentes incompatibles antes de actuar",
+      "difficulty": {
+        "level": 3,
+        "facts": 6,
+        "sources": 2,
+        "conflictingFacts": 2
+      },
+      "printable": "fully-printable",
+      "sourceWords": 52,
+      "editorialNotes": []
+    },
+    {
+      "age": "primary",
+      "level": 1,
+      "family": "rules",
+      "q": "Aprende la regla y responde solo cuando corresponda.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pulsa al ver un animal. Si es un objeto, no pulses."
+        }
+      ],
+      "answer": "Actividad temporal: no se adapta a papel.",
+      "construct": "responseInhibition",
+      "functionalPurpose": "Detener una respuesta automática y adaptarse cuando cambian las instrucciones",
+      "difficulty": {
+        "level": 1,
+        "trials": 8,
+        "switches": 0,
+        "dimensions": 1
+      },
+      "printable": "interactive-only",
+      "sourceWords": 11,
+      "editorialNotes": []
+    },
+    {
+      "age": "primary",
+      "level": 1,
+      "family": "words",
+      "q": "Busca una palabra que cumpla todas las condiciones.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Condiciones",
+          "items": [
+            "Debe ser de la categoría: animales",
+            "Debe contener A"
+          ]
+        },
+        {
+          "type": "list",
+          "label": "Opciones",
+          "items": [
+            "gato",
+            "toro",
+            "oso",
+            "lobo"
+          ]
+        }
+      ],
+      "answer": "gato",
+      "construct": "lexicalSearch",
+      "functionalPurpose": "Buscar palabras precisas que cumplan las condiciones de un mensaje",
+      "difficulty": {
+        "level": 1,
+        "constraints": 2,
+        "productionAllowed": true
+      },
+      "printable": "fully-printable",
+      "sourceWords": 13,
+      "editorialNotes": [
+        "Production uses a reviewed finite vocabulary. Unknown words are ungraded."
+      ]
+    },
+    {
+      "age": "primary",
+      "level": 1,
+      "family": "deduction",
+      "q": "Localiza a la persona que tiene tu turno en el taller del jardín.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pista 1: Tiene esta característica: gato."
+        },
+        {
+          "type": "text",
+          "text": "Pista 2: Tiene esta característica: bufanda."
+        },
+        {
+          "type": "text",
+          "text": "Pista 3: Tiene esta característica: jardín."
+        },
+        {
+          "type": "table",
+          "rows": [
+            [
+              "Tarjeta",
+              "Característica 1",
+              "Característica 2",
+              "Característica 3"
+            ],
+            [
+              "1",
+              "gato",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "2",
+              "gato",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "3",
+              "gato",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "4",
+              "gato",
+              "bufanda",
+              "taller"
+            ],
+            [
+              "5",
+              "perro",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "6",
+              "perro",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "7",
+              "perro",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "8",
+              "perro",
+              "bufanda",
+              "taller"
+            ]
+          ]
+        }
+      ],
+      "answer": "Tarjeta 3: gato · bufanda · jardín",
+      "construct": "deductiveReasoning",
+      "functionalPurpose": "Descartar alternativas con pistas antes de tomar una decisión",
+      "difficulty": {
+        "level": 1,
+        "candidates": 8,
+        "attributes": 3,
+        "clues": 3,
+        "negativeClues": false,
+        "conditionalClues": false
+      },
+      "printable": "fully-printable",
+      "sourceWords": 57,
+      "editorialNotes": []
+    },
+    {
+      "age": "primary",
+      "level": 1,
+      "family": "change",
+      "q": "Objetivo: Preparar la merienda al aire libre. Adapta el plan sin perder el objetivo.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Plan inicial",
+          "items": [
+            "Mirar el tiempo",
+            "Comer en el patio",
+            "Guardar el material"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Imprevisto: El patio está mojado. La sala cubierta está libre."
+        },
+        {
+          "type": "list",
+          "label": "Acciones posibles",
+          "items": [
+            "Comer en la sala cubierta",
+            "Comer en el patio",
+            "Cancelar aunque la sala está libre"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Conserva el orden de los pasos que siguen siendo posibles. Sustituye solo la acción afectada por el imprevisto."
+        }
+      ],
+      "answer": "Mirar el tiempo → Comer en la sala cubierta → Guardar el material",
+      "construct": "planning",
+      "functionalPurpose": "Reorganizar acciones ante un imprevisto conservando el objetivo",
+      "difficulty": {
+        "level": 1,
+        "steps": 3,
+        "changes": 1,
+        "dependencies": 0,
+        "competingAlternatives": false
+      },
+      "printable": "fully-printable",
+      "sourceWords": 53,
+      "editorialNotes": []
+    },
+    {
+      "age": "primary",
+      "level": 1,
+      "family": "information",
+      "q": "Saber si puedes ir al taller al salir de clase. Marca solo los datos necesarios.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Datos disponibles",
+          "items": [
+            "La clase termina a las 16:00",
+            "El taller empieza a las 16:30",
+            "El camino tarda 20 minutos",
+            "El taller dura 45 minutos",
+            "El taller abre los lunes"
+          ]
+        }
+      ],
+      "answer": "La clase termina a las 16:00; El taller empieza a las 16:30; El camino tarda 20 minutos",
+      "construct": "relevanceSelection",
+      "functionalPurpose": "Seleccionar los datos necesarios para resolver una decisión concreta",
+      "difficulty": {
+        "level": 1,
+        "necessaryFacts": 3,
+        "distractors": 2,
+        "sources": 1
+      },
+      "printable": "fully-printable",
+      "sourceWords": 27,
+      "editorialNotes": []
+    },
+    {
+      "age": "primary",
+      "level": 1,
+      "family": "contradiction",
+      "q": "Preparar el material del taller. Marca las dos informaciones que no pueden ser correctas a la vez. Antes de actuar, habría que comprobarlas.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Fuentes del mismo caso",
+          "items": [
+            "Lista de entrada: No se necesita delantal",
+            "El taller es en la sala 2",
+            "Nota de clase: Hay que llevar un delantal"
+          ]
+        }
+      ],
+      "answer": "Lista de entrada: No se necesita delantal ↔ Nota de clase: Hay que llevar un delantal",
+      "construct": "consistencyChecking",
+      "functionalPurpose": "Contrastar fuentes incompatibles antes de actuar",
+      "difficulty": {
+        "level": 1,
+        "facts": 3,
+        "sources": 2,
+        "conflictingFacts": 2
+      },
+      "printable": "fully-printable",
+      "sourceWords": 22,
+      "editorialNotes": []
+    },
+    {
+      "age": "primary",
+      "level": 2,
+      "family": "rules",
+      "q": "Recuerda la regla. Cuando veas ↔, inviértela para las siguientes tarjetas.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pulsa al ver un animal. Si es un objeto, no pulses."
+        },
+        {
+          "type": "text",
+          "text": "↔ significa: invierte la regla que recuerdas. No indica qué debes responder a la siguiente tarjeta."
+        }
+      ],
+      "answer": "Actividad temporal: no se adapta a papel.",
+      "construct": "responseInhibition",
+      "functionalPurpose": "Detener una respuesta automática y adaptarse cuando cambian las instrucciones",
+      "difficulty": {
+        "level": 2,
+        "trials": 10,
+        "switches": 1,
+        "dimensions": 1
+      },
+      "printable": "interactive-only",
+      "sourceWords": 27,
+      "editorialNotes": []
+    },
+    {
+      "age": "primary",
+      "level": 2,
+      "family": "words",
+      "q": "Busca una palabra que cumpla todas las condiciones.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Condiciones",
+          "items": [
+            "Debe ser de la categoría: animales",
+            "Debe contener A",
+            "No puede contener R"
+          ]
+        },
+        {
+          "type": "list",
+          "label": "Opciones",
+          "items": [
+            "gato",
+            "rana",
+            "ratón",
+            "toro"
+          ]
+        }
+      ],
+      "answer": "gato",
+      "construct": "lexicalSearch",
+      "functionalPurpose": "Buscar palabras precisas que cumplan las condiciones de un mensaje",
+      "difficulty": {
+        "level": 2,
+        "constraints": 3,
+        "productionAllowed": true
+      },
+      "printable": "fully-printable",
+      "sourceWords": 17,
+      "editorialNotes": [
+        "Production uses a reviewed finite vocabulary. Unknown words are ungraded."
+      ]
+    },
+    {
+      "age": "primary",
+      "level": 2,
+      "family": "deduction",
+      "q": "Localiza a la persona que tiene tu turno en el taller del jardín.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pista 1: No corresponde a «gato»."
+        },
+        {
+          "type": "text",
+          "text": "Pista 2: No corresponde a «conejo»."
+        },
+        {
+          "type": "text",
+          "text": "Pista 3: No corresponde a «bufanda»."
+        },
+        {
+          "type": "text",
+          "text": "Pista 4: No corresponde a «taller»."
+        },
+        {
+          "type": "table",
+          "rows": [
+            [
+              "Tarjeta",
+              "Característica 1",
+              "Característica 2",
+              "Característica 3"
+            ],
+            [
+              "1",
+              "gato",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "2",
+              "gato",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "3",
+              "gato",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "4",
+              "gato",
+              "bufanda",
+              "taller"
+            ],
+            [
+              "5",
+              "perro",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "6",
+              "perro",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "7",
+              "perro",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "8",
+              "perro",
+              "bufanda",
+              "taller"
+            ],
+            [
+              "9",
+              "conejo",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "10",
+              "conejo",
+              "camiseta",
+              "taller"
+            ]
+          ]
+        }
+      ],
+      "answer": "Tarjeta 5: perro · camiseta · jardín",
+      "construct": "deductiveReasoning",
+      "functionalPurpose": "Descartar alternativas con pistas antes de tomar una decisión",
+      "difficulty": {
+        "level": 2,
+        "candidates": 10,
+        "attributes": 3,
+        "clues": 4,
+        "negativeClues": true,
+        "conditionalClues": false
+      },
+      "printable": "fully-printable",
+      "sourceWords": 71,
+      "editorialNotes": []
+    },
+    {
+      "age": "primary",
+      "level": 2,
+      "family": "change",
+      "q": "Objetivo: Preparar la merienda al aire libre. Adapta el plan sin perder el objetivo.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Plan inicial",
+          "items": [
+            "Mirar el tiempo",
+            "Preparar la merienda",
+            "Comer en el patio",
+            "Guardar el material"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Imprevisto: El patio está mojado. La sala cubierta está libre."
+        },
+        {
+          "type": "list",
+          "label": "Acciones posibles",
+          "items": [
+            "Comer en la sala cubierta",
+            "Comer en el patio",
+            "Cancelar aunque la sala está libre"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Conserva el orden de los pasos que siguen siendo posibles. Sustituye solo la acción afectada por el imprevisto."
+        }
+      ],
+      "answer": "Mirar el tiempo → Preparar la merienda → Comer en la sala cubierta → Guardar el material",
+      "construct": "planning",
+      "functionalPurpose": "Reorganizar acciones ante un imprevisto conservando el objetivo",
+      "difficulty": {
+        "level": 2,
+        "steps": 4,
+        "changes": 1,
+        "dependencies": 1,
+        "competingAlternatives": false
+      },
+      "printable": "fully-printable",
+      "sourceWords": 56,
+      "editorialNotes": []
+    },
+    {
+      "age": "primary",
+      "level": 2,
+      "family": "information",
+      "q": "Saber si puedes ir al taller al salir de clase. Marca solo los datos necesarios.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Datos disponibles",
+          "items": [
+            "La clase termina a las 16:00",
+            "El taller empieza a las 16:30",
+            "El camino tarda 20 minutos",
+            "El taller dura 45 minutos",
+            "El taller abre los lunes",
+            "El taller tiene una mesa grande"
+          ]
+        }
+      ],
+      "answer": "La clase termina a las 16:00; El taller empieza a las 16:30; El camino tarda 20 minutos",
+      "construct": "relevanceSelection",
+      "functionalPurpose": "Seleccionar los datos necesarios para resolver una decisión concreta",
+      "difficulty": {
+        "level": 2,
+        "necessaryFacts": 3,
+        "distractors": 3,
+        "sources": 1
+      },
+      "printable": "fully-printable",
+      "sourceWords": 33,
+      "editorialNotes": []
+    },
+    {
+      "age": "primary",
+      "level": 2,
+      "family": "contradiction",
+      "q": "Preparar el material del taller. Marca las dos informaciones que no pueden ser correctas a la vez. Antes de actuar, habría que comprobarlas.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Fuentes del mismo caso",
+          "items": [
+            "Lista de entrada: No se necesita delantal",
+            "El taller es en la sala 2",
+            "Nota de clase: Hay que llevar un delantal",
+            "La sala 2 está en la planta baja"
+          ]
+        }
+      ],
+      "answer": "Lista de entrada: No se necesita delantal ↔ Nota de clase: Hay que llevar un delantal",
+      "construct": "consistencyChecking",
+      "functionalPurpose": "Contrastar fuentes incompatibles antes de actuar",
+      "difficulty": {
+        "level": 2,
+        "facts": 4,
+        "sources": 2,
+        "conflictingFacts": 2
+      },
+      "printable": "fully-printable",
+      "sourceWords": 30,
+      "editorialNotes": []
+    },
+    {
+      "age": "primary",
+      "level": 3,
+      "family": "rules",
+      "q": "Recuerda la regla. Cuando veas ↔, inviértela para las siguientes tarjetas.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pulsa al ver un animal. Si es un objeto, no pulses."
+        },
+        {
+          "type": "text",
+          "text": "↔ significa: invierte la regla que recuerdas. No indica qué debes responder a la siguiente tarjeta."
+        }
+      ],
+      "answer": "Actividad temporal: no se adapta a papel.",
+      "construct": "responseInhibition",
+      "functionalPurpose": "Detener una respuesta automática y adaptarse cuando cambian las instrucciones",
+      "difficulty": {
+        "level": 3,
+        "trials": 12,
+        "switches": 2,
+        "dimensions": 1
+      },
+      "printable": "interactive-only",
+      "sourceWords": 27,
+      "editorialNotes": []
+    },
+    {
+      "age": "primary",
+      "level": 3,
+      "family": "words",
+      "q": "Busca una palabra que cumpla todas las condiciones.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Condiciones",
+          "items": [
+            "Debe ser de la categoría: animales",
+            "Debe contener A",
+            "Debe tener al menos 6 letras"
+          ]
+        },
+        {
+          "type": "list",
+          "label": "Opciones",
+          "items": [
+            "gorila",
+            "gato",
+            "pato",
+            "rana"
+          ]
+        }
+      ],
+      "answer": "gorila",
+      "construct": "lexicalSearch",
+      "functionalPurpose": "Buscar palabras precisas que cumplan las condiciones de un mensaje",
+      "difficulty": {
+        "level": 3,
+        "constraints": 3,
+        "productionAllowed": true
+      },
+      "printable": "fully-printable",
+      "sourceWords": 19,
+      "editorialNotes": [
+        "Production uses a reviewed finite vocabulary. Unknown words are ungraded."
+      ]
+    },
+    {
+      "age": "primary",
+      "level": 3,
+      "family": "deduction",
+      "q": "Localiza a la persona que tiene tu turno en el taller del jardín.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pista 1: No corresponde a «gato»."
+        },
+        {
+          "type": "text",
+          "text": "Pista 2: No corresponde a «conejo»."
+        },
+        {
+          "type": "text",
+          "text": "Pista 3: No corresponde a «camiseta»."
+        },
+        {
+          "type": "text",
+          "text": "Pista 4: No corresponde a «taller»."
+        },
+        {
+          "type": "table",
+          "rows": [
+            [
+              "Tarjeta",
+              "Característica 1",
+              "Característica 2",
+              "Característica 3"
+            ],
+            [
+              "1",
+              "gato",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "2",
+              "gato",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "3",
+              "gato",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "4",
+              "gato",
+              "bufanda",
+              "taller"
+            ],
+            [
+              "5",
+              "perro",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "6",
+              "perro",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "7",
+              "perro",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "8",
+              "perro",
+              "bufanda",
+              "taller"
+            ],
+            [
+              "9",
+              "conejo",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "10",
+              "conejo",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "11",
+              "conejo",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "12",
+              "conejo",
+              "bufanda",
+              "taller"
+            ]
+          ]
+        }
+      ],
+      "answer": "Tarjeta 7: perro · bufanda · jardín",
+      "construct": "deductiveReasoning",
+      "functionalPurpose": "Descartar alternativas con pistas antes de tomar una decisión",
+      "difficulty": {
+        "level": 3,
+        "candidates": 12,
+        "attributes": 3,
+        "clues": 4,
+        "negativeClues": true,
+        "conditionalClues": false
+      },
+      "printable": "fully-printable",
+      "sourceWords": 79,
+      "editorialNotes": []
+    },
+    {
+      "age": "primary",
+      "level": 3,
+      "family": "change",
+      "q": "Objetivo: Preparar la merienda al aire libre. Adapta el plan sin perder el objetivo.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Plan inicial",
+          "items": [
+            "Mirar el tiempo",
+            "Preparar la merienda",
+            "Comer en el patio",
+            "Recoger la mesa",
+            "Guardar el material"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Imprevisto: El patio está mojado. La sala cubierta está libre."
+        },
+        {
+          "type": "list",
+          "label": "Acciones posibles",
+          "items": [
+            "Comer en la sala cubierta",
+            "Comer en el patio",
+            "Cancelar aunque la sala está libre"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Conserva el orden de los pasos que siguen siendo posibles. Sustituye solo la acción afectada por el imprevisto."
+        }
+      ],
+      "answer": "Mirar el tiempo → Preparar la merienda → Comer en la sala cubierta → Recoger la mesa → Guardar el material",
+      "construct": "planning",
+      "functionalPurpose": "Reorganizar acciones ante un imprevisto conservando el objetivo",
+      "difficulty": {
+        "level": 3,
+        "steps": 5,
+        "changes": 1,
+        "dependencies": 2,
+        "competingAlternatives": false
+      },
+      "printable": "fully-printable",
+      "sourceWords": 59,
+      "editorialNotes": []
+    },
+    {
+      "age": "primary",
+      "level": 3,
+      "family": "information",
+      "q": "Saber si puedes ir al taller al salir de clase. Marca solo los datos necesarios.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Datos disponibles",
+          "items": [
+            "La clase termina a las 16:00",
+            "El taller empieza a las 16:30",
+            "El camino tarda 20 minutos",
+            "El taller dura 45 minutos",
+            "El taller abre los lunes",
+            "El taller tiene una mesa grande"
+          ]
+        }
+      ],
+      "answer": "La clase termina a las 16:00; El taller empieza a las 16:30; El camino tarda 20 minutos",
+      "construct": "relevanceSelection",
+      "functionalPurpose": "Seleccionar los datos necesarios para resolver una decisión concreta",
+      "difficulty": {
+        "level": 3,
+        "necessaryFacts": 3,
+        "distractors": 3,
+        "sources": 1
+      },
+      "printable": "fully-printable",
+      "sourceWords": 33,
+      "editorialNotes": []
+    },
+    {
+      "age": "primary",
+      "level": 3,
+      "family": "contradiction",
+      "q": "Preparar el material del taller. Marca las dos informaciones que no pueden ser correctas a la vez. Antes de actuar, habría que comprobarlas.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Fuentes del mismo caso",
+          "items": [
+            "Lista de entrada: No se necesita delantal",
+            "El taller es en la sala 2",
+            "Nota de clase: Hay que llevar un delantal",
+            "La sala 2 está en la planta baja",
+            "Archivo del mismo caso: referencia confirmada; no contiene cambios de los datos discutidos",
+            "Información del edificio: entrada accesible por la puerta principal"
+          ]
+        }
+      ],
+      "answer": "Lista de entrada: No se necesita delantal ↔ Nota de clase: Hay que llevar un delantal",
+      "construct": "consistencyChecking",
+      "functionalPurpose": "Contrastar fuentes incompatibles antes de actuar",
+      "difficulty": {
+        "level": 3,
+        "facts": 6,
+        "sources": 2,
+        "conflictingFacts": 2
+      },
+      "printable": "fully-printable",
+      "sourceWords": 52,
+      "editorialNotes": []
+    },
+    {
+      "age": "middle",
+      "level": 1,
+      "family": "rules",
+      "q": "Aprende la regla y responde solo cuando corresponda.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pulsa al ver un animal. Si es un objeto, no pulses."
+        }
+      ],
+      "answer": "Actividad temporal: no se adapta a papel.",
+      "construct": "responseInhibition",
+      "functionalPurpose": "Detener una respuesta automática y adaptarse cuando cambian las instrucciones",
+      "difficulty": {
+        "level": 1,
+        "trials": 8,
+        "switches": 0,
+        "dimensions": 1
+      },
+      "printable": "interactive-only",
+      "sourceWords": 11,
+      "editorialNotes": []
+    },
+    {
+      "age": "middle",
+      "level": 1,
+      "family": "words",
+      "q": "Busca una palabra que cumpla todas las condiciones.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Condiciones",
+          "items": [
+            "Debe ser de la categoría: animales",
+            "Debe contener A"
+          ]
+        },
+        {
+          "type": "list",
+          "label": "Opciones",
+          "items": [
+            "gato",
+            "toro",
+            "oso",
+            "lobo"
+          ]
+        }
+      ],
+      "answer": "gato",
+      "construct": "lexicalSearch",
+      "functionalPurpose": "Buscar palabras precisas que cumplan las condiciones de un mensaje",
+      "difficulty": {
+        "level": 1,
+        "constraints": 2,
+        "productionAllowed": true
+      },
+      "printable": "fully-printable",
+      "sourceWords": 13,
+      "editorialNotes": [
+        "Production uses a reviewed finite vocabulary. Unknown words are ungraded."
+      ]
+    },
+    {
+      "age": "middle",
+      "level": 1,
+      "family": "deduction",
+      "q": "Localiza a la persona que tiene tu turno en el taller del jardín.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pista 1: Tiene esta característica: gato."
+        },
+        {
+          "type": "text",
+          "text": "Pista 2: Tiene esta característica: bufanda."
+        },
+        {
+          "type": "text",
+          "text": "Pista 3: Tiene esta característica: jardín."
+        },
+        {
+          "type": "table",
+          "rows": [
+            [
+              "Tarjeta",
+              "Característica 1",
+              "Característica 2",
+              "Característica 3"
+            ],
+            [
+              "1",
+              "gato",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "2",
+              "gato",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "3",
+              "gato",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "4",
+              "gato",
+              "bufanda",
+              "taller"
+            ],
+            [
+              "5",
+              "perro",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "6",
+              "perro",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "7",
+              "perro",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "8",
+              "perro",
+              "bufanda",
+              "taller"
+            ],
+            [
+              "9",
+              "conejo",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "10",
+              "conejo",
+              "camiseta",
+              "taller"
+            ]
+          ]
+        }
+      ],
+      "answer": "Tarjeta 3: gato · bufanda · jardín",
+      "construct": "deductiveReasoning",
+      "functionalPurpose": "Descartar alternativas con pistas antes de tomar una decisión",
+      "difficulty": {
+        "level": 1,
+        "candidates": 10,
+        "attributes": 3,
+        "clues": 3,
+        "negativeClues": false,
+        "conditionalClues": false
+      },
+      "printable": "fully-printable",
+      "sourceWords": 65,
+      "editorialNotes": []
+    },
+    {
+      "age": "middle",
+      "level": 1,
+      "family": "change",
+      "q": "Objetivo: Llegar al taller antes de las 17:00. Adapta el plan sin perder el objetivo.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Plan inicial",
+          "items": [
+            "Confirmar el horario",
+            "Tomar el autobús",
+            "Registrar la entrada"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Imprevisto: El autobús habitual se cancela. El tren llega a las 16:40; la alternativa a pie llega a las 17:10."
+        },
+        {
+          "type": "list",
+          "label": "Acciones posibles",
+          "items": [
+            "Tomar el tren",
+            "Ir a pie",
+            "Esperar el autobús cancelado"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Conserva el orden de los pasos que siguen siendo posibles. Sustituye solo la acción afectada por el imprevisto."
+        }
+      ],
+      "answer": "Confirmar el horario → Tomar el tren → Registrar la entrada",
+      "construct": "planning",
+      "functionalPurpose": "Reorganizar acciones ante un imprevisto conservando el objetivo",
+      "difficulty": {
+        "level": 1,
+        "steps": 3,
+        "changes": 1,
+        "dependencies": 0,
+        "competingAlternatives": true
+      },
+      "printable": "fully-printable",
+      "sourceWords": 57,
+      "editorialNotes": []
+    },
+    {
+      "age": "middle",
+      "level": 1,
+      "family": "information",
+      "q": "Decidir si llegas al ensayo a las 18:00. Marca solo los datos necesarios.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Datos disponibles",
+          "items": [
+            "El ensayo empieza a las 18:00",
+            "El transporte sale a las 17:20",
+            "El trayecto dura 25 minutos",
+            "El ensayo acaba a las 19:00",
+            "Hay veinte plazas"
+          ]
+        }
+      ],
+      "answer": "El ensayo empieza a las 18:00; El transporte sale a las 17:20; El trayecto dura 25 minutos",
+      "construct": "relevanceSelection",
+      "functionalPurpose": "Seleccionar los datos necesarios para resolver una decisión concreta",
+      "difficulty": {
+        "level": 1,
+        "necessaryFacts": 3,
+        "distractors": 2,
+        "sources": 2
+      },
+      "printable": "fully-printable",
+      "sourceWords": 26,
+      "editorialNotes": []
+    },
+    {
+      "age": "middle",
+      "level": 1,
+      "family": "contradiction",
+      "q": "Comprobar el lugar de la cita. Marca las dos informaciones que no pueden ser correctas a la vez. Antes de actuar, habría que comprobarlas.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Fuentes del mismo caso",
+          "items": [
+            "Calendario de la misma reserva: Tu cita es en la sede sur",
+            "La reserva es para el martes",
+            "Confirmación de reserva: Tu cita es en la sede norte"
+          ]
+        }
+      ],
+      "answer": "Calendario de la misma reserva: Tu cita es en la sede sur ↔ Confirmación de reserva: Tu cita es en la sede norte",
+      "construct": "consistencyChecking",
+      "functionalPurpose": "Contrastar fuentes incompatibles antes de actuar",
+      "difficulty": {
+        "level": 1,
+        "facts": 3,
+        "sources": 2,
+        "conflictingFacts": 2
+      },
+      "printable": "fully-printable",
+      "sourceWords": 28,
+      "editorialNotes": []
+    },
+    {
+      "age": "middle",
+      "level": 2,
+      "family": "rules",
+      "q": "Recuerda la regla. Cuando veas ↔, inviértela para las siguientes tarjetas.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pulsa al ver un animal. Si es un objeto, no pulses."
+        },
+        {
+          "type": "text",
+          "text": "↔ significa: invierte la regla que recuerdas. No indica qué debes responder a la siguiente tarjeta."
+        }
+      ],
+      "answer": "Actividad temporal: no se adapta a papel.",
+      "construct": "responseInhibition",
+      "functionalPurpose": "Detener una respuesta automática y adaptarse cuando cambian las instrucciones",
+      "difficulty": {
+        "level": 2,
+        "trials": 10,
+        "switches": 1,
+        "dimensions": 1
+      },
+      "printable": "interactive-only",
+      "sourceWords": 27,
+      "editorialNotes": []
+    },
+    {
+      "age": "middle",
+      "level": 2,
+      "family": "words",
+      "q": "Busca una palabra que cumpla todas las condiciones.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Condiciones",
+          "items": [
+            "Debe ser de la categoría: animales",
+            "Debe contener A",
+            "No puede contener R"
+          ]
+        },
+        {
+          "type": "list",
+          "label": "Opciones",
+          "items": [
+            "gato",
+            "rana",
+            "ratón",
+            "toro"
+          ]
+        }
+      ],
+      "answer": "gato",
+      "construct": "lexicalSearch",
+      "functionalPurpose": "Buscar palabras precisas que cumplan las condiciones de un mensaje",
+      "difficulty": {
+        "level": 2,
+        "constraints": 3,
+        "productionAllowed": true
+      },
+      "printable": "fully-printable",
+      "sourceWords": 17,
+      "editorialNotes": [
+        "Production uses a reviewed finite vocabulary. Unknown words are ungraded."
+      ]
+    },
+    {
+      "age": "middle",
+      "level": 2,
+      "family": "deduction",
+      "q": "Localiza a la persona que tiene tu turno en el taller del jardín.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pista 1: No corresponde a «gato»."
+        },
+        {
+          "type": "text",
+          "text": "Pista 2: No corresponde a «conejo»."
+        },
+        {
+          "type": "text",
+          "text": "Pista 3: No corresponde a «bufanda»."
+        },
+        {
+          "type": "text",
+          "text": "Pista 4: No corresponde a «taller»."
+        },
+        {
+          "type": "table",
+          "rows": [
+            [
+              "Tarjeta",
+              "Característica 1",
+              "Característica 2",
+              "Característica 3"
+            ],
+            [
+              "1",
+              "gato",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "2",
+              "gato",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "3",
+              "gato",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "4",
+              "gato",
+              "bufanda",
+              "taller"
+            ],
+            [
+              "5",
+              "perro",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "6",
+              "perro",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "7",
+              "perro",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "8",
+              "perro",
+              "bufanda",
+              "taller"
+            ],
+            [
+              "9",
+              "conejo",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "10",
+              "conejo",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "11",
+              "conejo",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "12",
+              "conejo",
+              "bufanda",
+              "taller"
+            ]
+          ]
+        }
+      ],
+      "answer": "Tarjeta 5: perro · camiseta · jardín",
+      "construct": "deductiveReasoning",
+      "functionalPurpose": "Descartar alternativas con pistas antes de tomar una decisión",
+      "difficulty": {
+        "level": 2,
+        "candidates": 12,
+        "attributes": 3,
+        "clues": 4,
+        "negativeClues": true,
+        "conditionalClues": false
+      },
+      "printable": "fully-printable",
+      "sourceWords": 79,
+      "editorialNotes": []
+    },
+    {
+      "age": "middle",
+      "level": 2,
+      "family": "change",
+      "q": "Objetivo: Llegar al taller antes de las 17:00. Adapta el plan sin perder el objetivo.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Plan inicial",
+          "items": [
+            "Confirmar el horario",
+            "Preparar la acreditación",
+            "Tomar el autobús",
+            "Registrar la entrada"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Imprevisto: El autobús habitual se cancela. El tren llega a las 16:40; la alternativa a pie llega a las 17:10."
+        },
+        {
+          "type": "list",
+          "label": "Acciones posibles",
+          "items": [
+            "Tomar el tren",
+            "Ir a pie",
+            "Esperar el autobús cancelado"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Conserva el orden de los pasos que siguen siendo posibles. Sustituye solo la acción afectada por el imprevisto."
+        }
+      ],
+      "answer": "Confirmar el horario → Preparar la acreditación → Tomar el tren → Registrar la entrada",
+      "construct": "planning",
+      "functionalPurpose": "Reorganizar acciones ante un imprevisto conservando el objetivo",
+      "difficulty": {
+        "level": 2,
+        "steps": 4,
+        "changes": 1,
+        "dependencies": 1,
+        "competingAlternatives": true
+      },
+      "printable": "fully-printable",
+      "sourceWords": 60,
+      "editorialNotes": []
+    },
+    {
+      "age": "middle",
+      "level": 2,
+      "family": "information",
+      "q": "Decidir si llegas al ensayo a las 18:00. Marca solo los datos necesarios.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Datos disponibles",
+          "items": [
+            "El ensayo empieza a las 18:00",
+            "El transporte sale a las 17:20",
+            "El trayecto dura 25 minutos",
+            "El ensayo acaba a las 19:00",
+            "Hay veinte plazas",
+            "El abono sirve hasta el viernes"
+          ]
+        }
+      ],
+      "answer": "El ensayo empieza a las 18:00; El transporte sale a las 17:20; El trayecto dura 25 minutos",
+      "construct": "relevanceSelection",
+      "functionalPurpose": "Seleccionar los datos necesarios para resolver una decisión concreta",
+      "difficulty": {
+        "level": 2,
+        "necessaryFacts": 3,
+        "distractors": 3,
+        "sources": 2
+      },
+      "printable": "fully-printable",
+      "sourceWords": 32,
+      "editorialNotes": []
+    },
+    {
+      "age": "middle",
+      "level": 2,
+      "family": "contradiction",
+      "q": "Comprobar el lugar de la cita. Marca las dos informaciones que no pueden ser correctas a la vez. Antes de actuar, habría que comprobarlas.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Fuentes del mismo caso",
+          "items": [
+            "Calendario de la misma reserva: Tu cita es en la sede sur",
+            "La reserva es para el martes",
+            "Confirmación de reserva: Tu cita es en la sede norte",
+            "Se solicita llegar diez minutos antes"
+          ]
+        }
+      ],
+      "answer": "Calendario de la misma reserva: Tu cita es en la sede sur ↔ Confirmación de reserva: Tu cita es en la sede norte",
+      "construct": "consistencyChecking",
+      "functionalPurpose": "Contrastar fuentes incompatibles antes de actuar",
+      "difficulty": {
+        "level": 2,
+        "facts": 4,
+        "sources": 2,
+        "conflictingFacts": 2
+      },
+      "printable": "fully-printable",
+      "sourceWords": 34,
+      "editorialNotes": []
+    },
+    {
+      "age": "middle",
+      "level": 3,
+      "family": "rules",
+      "q": "Recuerda la regla. Cuando veas ↔, inviértela para las siguientes tarjetas.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pulsa al ver un animal. Si es un objeto, no pulses."
+        },
+        {
+          "type": "text",
+          "text": "↔ significa: invierte la regla que recuerdas. No indica qué debes responder a la siguiente tarjeta."
+        }
+      ],
+      "answer": "Actividad temporal: no se adapta a papel.",
+      "construct": "responseInhibition",
+      "functionalPurpose": "Detener una respuesta automática y adaptarse cuando cambian las instrucciones",
+      "difficulty": {
+        "level": 3,
+        "trials": 12,
+        "switches": 2,
+        "dimensions": 1
+      },
+      "printable": "interactive-only",
+      "sourceWords": 27,
+      "editorialNotes": []
+    },
+    {
+      "age": "middle",
+      "level": 3,
+      "family": "words",
+      "q": "Busca una palabra que cumpla todas las condiciones.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Condiciones",
+          "items": [
+            "Debe ser de la categoría: animales",
+            "Debe contener A",
+            "Debe tener al menos 6 letras"
+          ]
+        },
+        {
+          "type": "list",
+          "label": "Opciones",
+          "items": [
+            "gorila",
+            "gato",
+            "pato",
+            "rana"
+          ]
+        }
+      ],
+      "answer": "gorila",
+      "construct": "lexicalSearch",
+      "functionalPurpose": "Buscar palabras precisas que cumplan las condiciones de un mensaje",
+      "difficulty": {
+        "level": 3,
+        "constraints": 3,
+        "productionAllowed": true
+      },
+      "printable": "fully-printable",
+      "sourceWords": 19,
+      "editorialNotes": [
+        "Production uses a reviewed finite vocabulary. Unknown words are ungraded."
+      ]
+    },
+    {
+      "age": "middle",
+      "level": 3,
+      "family": "deduction",
+      "q": "Localiza a la persona que tiene tu turno en el taller del jardín.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pista 1: Si corresponde a «perro», también debe indicar «bufanda»."
+        },
+        {
+          "type": "text",
+          "text": "Pista 2: No corresponde a «gato»."
+        },
+        {
+          "type": "text",
+          "text": "Pista 3: No corresponde a «conejo»."
+        },
+        {
+          "type": "text",
+          "text": "Pista 4: No corresponde a «taller»."
+        },
+        {
+          "type": "table",
+          "rows": [
+            [
+              "Tarjeta",
+              "Característica 1",
+              "Característica 2",
+              "Característica 3"
+            ],
+            [
+              "1",
+              "gato",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "2",
+              "gato",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "3",
+              "gato",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "4",
+              "gato",
+              "bufanda",
+              "taller"
+            ],
+            [
+              "5",
+              "perro",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "6",
+              "perro",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "7",
+              "perro",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "8",
+              "perro",
+              "bufanda",
+              "taller"
+            ],
+            [
+              "9",
+              "conejo",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "10",
+              "conejo",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "11",
+              "conejo",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "12",
+              "conejo",
+              "bufanda",
+              "taller"
+            ]
+          ]
+        }
+      ],
+      "answer": "Tarjeta 7: perro · bufanda · jardín",
+      "construct": "deductiveReasoning",
+      "functionalPurpose": "Descartar alternativas con pistas antes de tomar una decisión",
+      "difficulty": {
+        "level": 3,
+        "candidates": 12,
+        "attributes": 3,
+        "clues": 4,
+        "negativeClues": true,
+        "conditionalClues": true
+      },
+      "printable": "fully-printable",
+      "sourceWords": 83,
+      "editorialNotes": []
+    },
+    {
+      "age": "middle",
+      "level": 3,
+      "family": "change",
+      "q": "Objetivo: Llegar al taller antes de las 17:00. Adapta el plan sin perder el objetivo.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Plan inicial",
+          "items": [
+            "Confirmar el horario",
+            "Preparar la acreditación",
+            "Tomar el autobús",
+            "Llegar al taller",
+            "Registrar la entrada"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Imprevisto: El autobús habitual se cancela. El tren llega a las 16:40; la alternativa a pie llega a las 17:10."
+        },
+        {
+          "type": "list",
+          "label": "Acciones posibles",
+          "items": [
+            "Tomar el tren",
+            "Ir a pie",
+            "Esperar el autobús cancelado"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Conserva el orden de los pasos que siguen siendo posibles. Sustituye solo la acción afectada por el imprevisto."
+        }
+      ],
+      "answer": "Confirmar el horario → Preparar la acreditación → Tomar el tren → Llegar al taller → Registrar la entrada",
+      "construct": "planning",
+      "functionalPurpose": "Reorganizar acciones ante un imprevisto conservando el objetivo",
+      "difficulty": {
+        "level": 3,
+        "steps": 5,
+        "changes": 1,
+        "dependencies": 2,
+        "competingAlternatives": true
+      },
+      "printable": "fully-printable",
+      "sourceWords": 63,
+      "editorialNotes": []
+    },
+    {
+      "age": "middle",
+      "level": 3,
+      "family": "information",
+      "q": "Decidir si llegas al ensayo a las 18:00. Marca solo los datos necesarios.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Datos disponibles",
+          "items": [
+            "El ensayo empieza a las 18:00",
+            "El transporte sale a las 17:20",
+            "El trayecto dura 25 minutos",
+            "El ensayo acaba a las 19:00",
+            "Hay veinte plazas",
+            "El abono sirve hasta el viernes"
+          ]
+        }
+      ],
+      "answer": "El ensayo empieza a las 18:00; El transporte sale a las 17:20; El trayecto dura 25 minutos",
+      "construct": "relevanceSelection",
+      "functionalPurpose": "Seleccionar los datos necesarios para resolver una decisión concreta",
+      "difficulty": {
+        "level": 3,
+        "necessaryFacts": 3,
+        "distractors": 3,
+        "sources": 2
+      },
+      "printable": "fully-printable",
+      "sourceWords": 32,
+      "editorialNotes": []
+    },
+    {
+      "age": "middle",
+      "level": 3,
+      "family": "contradiction",
+      "q": "Comprobar el lugar de la cita. Marca las dos informaciones que no pueden ser correctas a la vez. Antes de actuar, habría que comprobarlas.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Fuentes del mismo caso",
+          "items": [
+            "Calendario de la misma reserva: Tu cita es en la sede sur",
+            "La reserva es para el martes",
+            "Confirmación de reserva: Tu cita es en la sede norte",
+            "Se solicita llegar diez minutos antes",
+            "Archivo del mismo caso: referencia confirmada; no contiene cambios de los datos discutidos",
+            "Información del edificio: entrada accesible por la puerta principal"
+          ]
+        }
+      ],
+      "answer": "Calendario de la misma reserva: Tu cita es en la sede sur ↔ Confirmación de reserva: Tu cita es en la sede norte",
+      "construct": "consistencyChecking",
+      "functionalPurpose": "Contrastar fuentes incompatibles antes de actuar",
+      "difficulty": {
+        "level": 3,
+        "facts": 6,
+        "sources": 2,
+        "conflictingFacts": 2
+      },
+      "printable": "fully-printable",
+      "sourceWords": 56,
+      "editorialNotes": []
+    },
+    {
+      "age": "teen",
+      "level": 1,
+      "family": "rules",
+      "q": "Aprende la regla y responde solo cuando corresponda.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pulsa al ver un animal. Si es un objeto, no pulses."
+        }
+      ],
+      "answer": "Actividad temporal: no se adapta a papel.",
+      "construct": "responseInhibition",
+      "functionalPurpose": "Detener una respuesta automática y adaptarse cuando cambian las instrucciones",
+      "difficulty": {
+        "level": 1,
+        "trials": 8,
+        "switches": 0,
+        "dimensions": 1
+      },
+      "printable": "interactive-only",
+      "sourceWords": 11,
+      "editorialNotes": []
+    },
+    {
+      "age": "teen",
+      "level": 1,
+      "family": "words",
+      "q": "Busca una palabra que cumpla todas las condiciones.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Condiciones",
+          "items": [
+            "Debe ser de la categoría: animales",
+            "Debe contener A"
+          ]
+        },
+        {
+          "type": "list",
+          "label": "Opciones",
+          "items": [
+            "gato",
+            "toro",
+            "oso",
+            "lobo"
+          ]
+        }
+      ],
+      "answer": "gato",
+      "construct": "lexicalSearch",
+      "functionalPurpose": "Buscar palabras precisas que cumplan las condiciones de un mensaje",
+      "difficulty": {
+        "level": 1,
+        "constraints": 2,
+        "productionAllowed": true
+      },
+      "printable": "fully-printable",
+      "sourceWords": 13,
+      "editorialNotes": [
+        "Production uses a reviewed finite vocabulary. Unknown words are ungraded."
+      ]
+    },
+    {
+      "age": "teen",
+      "level": 1,
+      "family": "deduction",
+      "q": "Localiza a la persona que tiene tu turno en el taller del jardín.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pista 1: Tiene esta característica: gato."
+        },
+        {
+          "type": "text",
+          "text": "Pista 2: Tiene esta característica: bufanda."
+        },
+        {
+          "type": "text",
+          "text": "Pista 3: Tiene esta característica: jardín."
+        },
+        {
+          "type": "table",
+          "rows": [
+            [
+              "Tarjeta",
+              "Característica 1",
+              "Característica 2",
+              "Característica 3"
+            ],
+            [
+              "1",
+              "gato",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "2",
+              "gato",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "3",
+              "gato",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "4",
+              "gato",
+              "bufanda",
+              "taller"
+            ],
+            [
+              "5",
+              "perro",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "6",
+              "perro",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "7",
+              "perro",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "8",
+              "perro",
+              "bufanda",
+              "taller"
+            ],
+            [
+              "9",
+              "conejo",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "10",
+              "conejo",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "11",
+              "conejo",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "12",
+              "conejo",
+              "bufanda",
+              "taller"
+            ]
+          ]
+        }
+      ],
+      "answer": "Tarjeta 3: gato · bufanda · jardín",
+      "construct": "deductiveReasoning",
+      "functionalPurpose": "Descartar alternativas con pistas antes de tomar una decisión",
+      "difficulty": {
+        "level": 1,
+        "candidates": 12,
+        "attributes": 3,
+        "clues": 3,
+        "negativeClues": false,
+        "conditionalClues": false
+      },
+      "printable": "fully-printable",
+      "sourceWords": 73,
+      "editorialNotes": []
+    },
+    {
+      "age": "teen",
+      "level": 1,
+      "family": "change",
+      "q": "Objetivo: Llegar al taller antes de las 17:00. Adapta el plan sin perder el objetivo.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Plan inicial",
+          "items": [
+            "Confirmar el horario",
+            "Tomar el autobús",
+            "Registrar la entrada"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Imprevisto: El autobús habitual se cancela. El tren llega a las 16:40; la alternativa a pie llega a las 17:10."
+        },
+        {
+          "type": "list",
+          "label": "Acciones posibles",
+          "items": [
+            "Tomar el tren",
+            "Ir a pie",
+            "Esperar el autobús cancelado"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Conserva el orden de los pasos que siguen siendo posibles. Sustituye solo la acción afectada por el imprevisto."
+        }
+      ],
+      "answer": "Confirmar el horario → Tomar el tren → Registrar la entrada",
+      "construct": "planning",
+      "functionalPurpose": "Reorganizar acciones ante un imprevisto conservando el objetivo",
+      "difficulty": {
+        "level": 1,
+        "steps": 3,
+        "changes": 1,
+        "dependencies": 0,
+        "competingAlternatives": true
+      },
+      "printable": "fully-printable",
+      "sourceWords": 57,
+      "editorialNotes": []
+    },
+    {
+      "age": "teen",
+      "level": 1,
+      "family": "information",
+      "q": "Decidir si llegas al ensayo a las 18:00. Marca solo los datos necesarios.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Datos disponibles",
+          "items": [
+            "El ensayo empieza a las 18:00",
+            "El transporte sale a las 17:20",
+            "El trayecto dura 25 minutos",
+            "El ensayo acaba a las 19:00",
+            "Hay veinte plazas"
+          ]
+        }
+      ],
+      "answer": "El ensayo empieza a las 18:00; El transporte sale a las 17:20; El trayecto dura 25 minutos",
+      "construct": "relevanceSelection",
+      "functionalPurpose": "Seleccionar los datos necesarios para resolver una decisión concreta",
+      "difficulty": {
+        "level": 1,
+        "necessaryFacts": 3,
+        "distractors": 2,
+        "sources": 2
+      },
+      "printable": "fully-printable",
+      "sourceWords": 26,
+      "editorialNotes": []
+    },
+    {
+      "age": "teen",
+      "level": 1,
+      "family": "contradiction",
+      "q": "Comprobar el lugar de la cita. Marca las dos informaciones que no pueden ser correctas a la vez. Antes de actuar, habría que comprobarlas.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Fuentes del mismo caso",
+          "items": [
+            "Calendario de la misma reserva: Tu cita es en la sede sur",
+            "La reserva es para el martes",
+            "Confirmación de reserva: Tu cita es en la sede norte"
+          ]
+        }
+      ],
+      "answer": "Calendario de la misma reserva: Tu cita es en la sede sur ↔ Confirmación de reserva: Tu cita es en la sede norte",
+      "construct": "consistencyChecking",
+      "functionalPurpose": "Contrastar fuentes incompatibles antes de actuar",
+      "difficulty": {
+        "level": 1,
+        "facts": 3,
+        "sources": 2,
+        "conflictingFacts": 2
+      },
+      "printable": "fully-printable",
+      "sourceWords": 28,
+      "editorialNotes": []
+    },
+    {
+      "age": "teen",
+      "level": 2,
+      "family": "rules",
+      "q": "Recuerda la regla. Cuando veas ↔, inviértela para las siguientes tarjetas.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pulsa al ver un animal. Si es un objeto, no pulses."
+        },
+        {
+          "type": "text",
+          "text": "↔ significa: invierte la regla que recuerdas. No indica qué debes responder a la siguiente tarjeta."
+        }
+      ],
+      "answer": "Actividad temporal: no se adapta a papel.",
+      "construct": "responseInhibition",
+      "functionalPurpose": "Detener una respuesta automática y adaptarse cuando cambian las instrucciones",
+      "difficulty": {
+        "level": 2,
+        "trials": 10,
+        "switches": 1,
+        "dimensions": 1
+      },
+      "printable": "interactive-only",
+      "sourceWords": 27,
+      "editorialNotes": []
+    },
+    {
+      "age": "teen",
+      "level": 2,
+      "family": "words",
+      "q": "Busca una palabra que cumpla todas las condiciones.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Condiciones",
+          "items": [
+            "Debe ser de la categoría: animales",
+            "Debe contener A",
+            "No puede contener R"
+          ]
+        },
+        {
+          "type": "list",
+          "label": "Opciones",
+          "items": [
+            "gato",
+            "rana",
+            "ratón",
+            "toro"
+          ]
+        }
+      ],
+      "answer": "gato",
+      "construct": "lexicalSearch",
+      "functionalPurpose": "Buscar palabras precisas que cumplan las condiciones de un mensaje",
+      "difficulty": {
+        "level": 2,
+        "constraints": 3,
+        "productionAllowed": true
+      },
+      "printable": "fully-printable",
+      "sourceWords": 17,
+      "editorialNotes": [
+        "Production uses a reviewed finite vocabulary. Unknown words are ungraded."
+      ]
+    },
+    {
+      "age": "teen",
+      "level": 2,
+      "family": "deduction",
+      "q": "Localiza a la persona que tiene tu turno en el taller del jardín.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pista 1: No corresponde a «gato»."
+        },
+        {
+          "type": "text",
+          "text": "Pista 2: No corresponde a «conejo»."
+        },
+        {
+          "type": "text",
+          "text": "Pista 3: No corresponde a «bufanda»."
+        },
+        {
+          "type": "text",
+          "text": "Pista 4: No corresponde a «taller»."
+        },
+        {
+          "type": "table",
+          "rows": [
+            [
+              "Tarjeta",
+              "Característica 1",
+              "Característica 2",
+              "Característica 3"
+            ],
+            [
+              "1",
+              "gato",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "2",
+              "gato",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "3",
+              "gato",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "4",
+              "gato",
+              "bufanda",
+              "taller"
+            ],
+            [
+              "5",
+              "perro",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "6",
+              "perro",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "7",
+              "perro",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "8",
+              "perro",
+              "bufanda",
+              "taller"
+            ],
+            [
+              "9",
+              "conejo",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "10",
+              "conejo",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "11",
+              "conejo",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "12",
+              "conejo",
+              "bufanda",
+              "taller"
+            ]
+          ]
+        }
+      ],
+      "answer": "Tarjeta 5: perro · camiseta · jardín",
+      "construct": "deductiveReasoning",
+      "functionalPurpose": "Descartar alternativas con pistas antes de tomar una decisión",
+      "difficulty": {
+        "level": 2,
+        "candidates": 12,
+        "attributes": 3,
+        "clues": 4,
+        "negativeClues": true,
+        "conditionalClues": false
+      },
+      "printable": "fully-printable",
+      "sourceWords": 79,
+      "editorialNotes": []
+    },
+    {
+      "age": "teen",
+      "level": 2,
+      "family": "change",
+      "q": "Objetivo: Llegar al taller antes de las 17:00. Adapta el plan sin perder el objetivo.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Plan inicial",
+          "items": [
+            "Confirmar el horario",
+            "Preparar la acreditación",
+            "Tomar el autobús",
+            "Registrar la entrada"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Imprevisto: El autobús habitual se cancela. El tren llega a las 16:40; la alternativa a pie llega a las 17:10."
+        },
+        {
+          "type": "list",
+          "label": "Acciones posibles",
+          "items": [
+            "Tomar el tren",
+            "Ir a pie",
+            "Esperar el autobús cancelado"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Conserva el orden de los pasos que siguen siendo posibles. Sustituye solo la acción afectada por el imprevisto."
+        }
+      ],
+      "answer": "Confirmar el horario → Preparar la acreditación → Tomar el tren → Registrar la entrada",
+      "construct": "planning",
+      "functionalPurpose": "Reorganizar acciones ante un imprevisto conservando el objetivo",
+      "difficulty": {
+        "level": 2,
+        "steps": 4,
+        "changes": 1,
+        "dependencies": 1,
+        "competingAlternatives": true
+      },
+      "printable": "fully-printable",
+      "sourceWords": 60,
+      "editorialNotes": []
+    },
+    {
+      "age": "teen",
+      "level": 2,
+      "family": "information",
+      "q": "Decidir si llegas al ensayo a las 18:00. Marca solo los datos necesarios.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Datos disponibles",
+          "items": [
+            "El ensayo empieza a las 18:00",
+            "El transporte sale a las 17:20",
+            "El trayecto dura 25 minutos",
+            "El ensayo acaba a las 19:00",
+            "Hay veinte plazas",
+            "El abono sirve hasta el viernes"
+          ]
+        }
+      ],
+      "answer": "El ensayo empieza a las 18:00; El transporte sale a las 17:20; El trayecto dura 25 minutos",
+      "construct": "relevanceSelection",
+      "functionalPurpose": "Seleccionar los datos necesarios para resolver una decisión concreta",
+      "difficulty": {
+        "level": 2,
+        "necessaryFacts": 3,
+        "distractors": 3,
+        "sources": 2
+      },
+      "printable": "fully-printable",
+      "sourceWords": 32,
+      "editorialNotes": []
+    },
+    {
+      "age": "teen",
+      "level": 2,
+      "family": "contradiction",
+      "q": "Comprobar el lugar de la cita. Marca las dos informaciones que no pueden ser correctas a la vez. Antes de actuar, habría que comprobarlas.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Fuentes del mismo caso",
+          "items": [
+            "Calendario de la misma reserva: Tu cita es en la sede sur",
+            "La reserva es para el martes",
+            "Confirmación de reserva: Tu cita es en la sede norte",
+            "Se solicita llegar diez minutos antes"
+          ]
+        }
+      ],
+      "answer": "Calendario de la misma reserva: Tu cita es en la sede sur ↔ Confirmación de reserva: Tu cita es en la sede norte",
+      "construct": "consistencyChecking",
+      "functionalPurpose": "Contrastar fuentes incompatibles antes de actuar",
+      "difficulty": {
+        "level": 2,
+        "facts": 4,
+        "sources": 2,
+        "conflictingFacts": 2
+      },
+      "printable": "fully-printable",
+      "sourceWords": 34,
+      "editorialNotes": []
+    },
+    {
+      "age": "teen",
+      "level": 3,
+      "family": "rules",
+      "q": "Recuerda la regla. Cuando veas ↔, inviértela para las siguientes tarjetas.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pulsa al ver un animal. Si es un objeto, no pulses."
+        },
+        {
+          "type": "text",
+          "text": "↔ significa: invierte la regla que recuerdas. No indica qué debes responder a la siguiente tarjeta."
+        }
+      ],
+      "answer": "Actividad temporal: no se adapta a papel.",
+      "construct": "responseInhibition",
+      "functionalPurpose": "Detener una respuesta automática y adaptarse cuando cambian las instrucciones",
+      "difficulty": {
+        "level": 3,
+        "trials": 12,
+        "switches": 2,
+        "dimensions": 1
+      },
+      "printable": "interactive-only",
+      "sourceWords": 27,
+      "editorialNotes": []
+    },
+    {
+      "age": "teen",
+      "level": 3,
+      "family": "words",
+      "q": "Busca una palabra que cumpla todas las condiciones.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Condiciones",
+          "items": [
+            "Debe ser de la categoría: animales",
+            "Debe contener A",
+            "Debe tener al menos 6 letras"
+          ]
+        },
+        {
+          "type": "list",
+          "label": "Opciones",
+          "items": [
+            "gorila",
+            "gato",
+            "pato",
+            "rana"
+          ]
+        }
+      ],
+      "answer": "gorila",
+      "construct": "lexicalSearch",
+      "functionalPurpose": "Buscar palabras precisas que cumplan las condiciones de un mensaje",
+      "difficulty": {
+        "level": 3,
+        "constraints": 3,
+        "productionAllowed": true
+      },
+      "printable": "fully-printable",
+      "sourceWords": 19,
+      "editorialNotes": [
+        "Production uses a reviewed finite vocabulary. Unknown words are ungraded."
+      ]
+    },
+    {
+      "age": "teen",
+      "level": 3,
+      "family": "deduction",
+      "q": "Localiza a la persona que tiene tu turno en el taller del jardín.",
+      "stimulus": [
+        {
+          "type": "text",
+          "text": "Pista 1: Si corresponde a «perro», también debe indicar «bufanda»."
+        },
+        {
+          "type": "text",
+          "text": "Pista 2: No corresponde a «gato»."
+        },
+        {
+          "type": "text",
+          "text": "Pista 3: No corresponde a «conejo»."
+        },
+        {
+          "type": "text",
+          "text": "Pista 4: No corresponde a «taller»."
+        },
+        {
+          "type": "table",
+          "rows": [
+            [
+              "Tarjeta",
+              "Característica 1",
+              "Característica 2",
+              "Característica 3"
+            ],
+            [
+              "1",
+              "gato",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "2",
+              "gato",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "3",
+              "gato",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "4",
+              "gato",
+              "bufanda",
+              "taller"
+            ],
+            [
+              "5",
+              "perro",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "6",
+              "perro",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "7",
+              "perro",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "8",
+              "perro",
+              "bufanda",
+              "taller"
+            ],
+            [
+              "9",
+              "conejo",
+              "camiseta",
+              "jardín"
+            ],
+            [
+              "10",
+              "conejo",
+              "camiseta",
+              "taller"
+            ],
+            [
+              "11",
+              "conejo",
+              "bufanda",
+              "jardín"
+            ],
+            [
+              "12",
+              "conejo",
+              "bufanda",
+              "taller"
+            ]
+          ]
+        }
+      ],
+      "answer": "Tarjeta 7: perro · bufanda · jardín",
+      "construct": "deductiveReasoning",
+      "functionalPurpose": "Descartar alternativas con pistas antes de tomar una decisión",
+      "difficulty": {
+        "level": 3,
+        "candidates": 12,
+        "attributes": 3,
+        "clues": 4,
+        "negativeClues": true,
+        "conditionalClues": true
+      },
+      "printable": "fully-printable",
+      "sourceWords": 83,
+      "editorialNotes": []
+    },
+    {
+      "age": "teen",
+      "level": 3,
+      "family": "change",
+      "q": "Objetivo: Llegar al taller antes de las 17:00. Adapta el plan sin perder el objetivo.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Plan inicial",
+          "items": [
+            "Confirmar el horario",
+            "Preparar la acreditación",
+            "Tomar el autobús",
+            "Llegar al taller",
+            "Registrar la entrada"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Imprevisto: El autobús habitual se cancela. El tren llega a las 16:40; la alternativa a pie llega a las 17:10."
+        },
+        {
+          "type": "list",
+          "label": "Acciones posibles",
+          "items": [
+            "Tomar el tren",
+            "Ir a pie",
+            "Esperar el autobús cancelado"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Conserva el orden de los pasos que siguen siendo posibles. Sustituye solo la acción afectada por el imprevisto."
+        }
+      ],
+      "answer": "Confirmar el horario → Preparar la acreditación → Tomar el tren → Llegar al taller → Registrar la entrada",
+      "construct": "planning",
+      "functionalPurpose": "Reorganizar acciones ante un imprevisto conservando el objetivo",
+      "difficulty": {
+        "level": 3,
+        "steps": 5,
+        "changes": 1,
+        "dependencies": 2,
+        "competingAlternatives": true
+      },
+      "printable": "fully-printable",
+      "sourceWords": 63,
+      "editorialNotes": []
+    },
+    {
+      "age": "teen",
+      "level": 3,
+      "family": "information",
+      "q": "Decidir si llegas al ensayo a las 18:00. Marca solo los datos necesarios.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Datos disponibles",
+          "items": [
+            "El ensayo empieza a las 18:00",
+            "El transporte sale a las 17:20",
+            "El trayecto dura 25 minutos",
+            "El ensayo acaba a las 19:00",
+            "Hay veinte plazas",
+            "El abono sirve hasta el viernes"
+          ]
+        }
+      ],
+      "answer": "El ensayo empieza a las 18:00; El transporte sale a las 17:20; El trayecto dura 25 minutos",
+      "construct": "relevanceSelection",
+      "functionalPurpose": "Seleccionar los datos necesarios para resolver una decisión concreta",
+      "difficulty": {
+        "level": 3,
+        "necessaryFacts": 3,
+        "distractors": 3,
+        "sources": 2
+      },
+      "printable": "fully-printable",
+      "sourceWords": 32,
+      "editorialNotes": []
+    },
+    {
+      "age": "teen",
+      "level": 3,
+      "family": "contradiction",
+      "q": "Comprobar el lugar de la cita. Marca las dos informaciones que no pueden ser correctas a la vez. Antes de actuar, habría que comprobarlas.",
+      "stimulus": [
+        {
+          "type": "list",
+          "label": "Fuentes del mismo caso",
+          "items": [
+            "Calendario de la misma reserva: Tu cita es en la sede sur",
+            "La reserva es para el martes",
+            "Confirmación de reserva: Tu cita es en la sede norte",
+            "Se solicita llegar diez minutos antes",
+            "Archivo del mismo caso: referencia confirmada; no contiene cambios de los datos discutidos",
+            "Información del edificio: entrada accesible por la puerta principal"
+          ]
+        }
+      ],
+      "answer": "Calendario de la misma reserva: Tu cita es en la sede sur ↔ Confirmación de reserva: Tu cita es en la sede norte",
+      "construct": "consistencyChecking",
+      "functionalPurpose": "Contrastar fuentes incompatibles antes de actuar",
+      "difficulty": {
+        "level": 3,
+        "facts": 6,
+        "sources": 2,
+        "conflictingFacts": 2
+      },
+      "printable": "fully-printable",
+      "sourceWords": 56,
+      "editorialNotes": []
+    }
+  ]
+}

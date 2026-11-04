@@ -163,7 +163,7 @@ function describe(it,age,domain=it.domain){
  const text=blocks.filter(b=>b.type==='text').map(b=>b.text).join(' ');
  return {mechanic:it.mechanic||it.ageProfile?.mechanic||it.type||'unknown',semanticFamily,scenarioFamily:scenario(it),stimulusType,
   functionalPurpose:entry?.functionalPurpose||null,
-  difficultyProfile:{level:Number(it.level)||1,age,primaryDimension:entry?.difficultyDimension||'unreviewed',parameters:it.difficultyParameters||null,elements:it.memoryContent?.length||blocks.reduce((n,b)=>n+(b.items?.length||b.rows?.length||0),0),steps:it.answer?.length||0,sourceWords:norm(text).split(' ').filter(Boolean).length,requiresInference:entry?.difficultyDimension==='inference',timed:it.speedTask===true,exposureMs:it.revealMs||null,distractors:Math.max(0,(it.opts?.length||1)-1),transformation:it.recallEvidence?.reverse?'reverse':it.recallEvidence?.takeLast?'recent':it.selectiveRecall?'selective':null},
+  difficultyProfile:it.cognitiveTask?it.difficultyProfile:{level:Number(it.level)||1,age,primaryDimension:entry?.difficultyDimension||'unreviewed',parameters:it.difficultyParameters||null,elements:it.memoryContent?.length||blocks.reduce((n,b)=>n+(b.items?.length||b.rows?.length||0),0),steps:it.answer?.length||0,sourceWords:norm(text).split(' ').filter(Boolean).length,requiresInference:entry?.difficultyDimension==='inference',timed:it.speedTask===true,exposureMs:it.revealMs||null,distractors:Math.max(0,(it.opts?.length||1)-1),transformation:it.recallEvidence?.reverse?'reverse':it.recallEvidence?.takeLast?'recent':it.selectiveRecall?'selective':null},
   taxonomyVersion:1};
 }
 function annotate(it,age,domain){return it?{...it,...describe(it,age,domain)}:it;}

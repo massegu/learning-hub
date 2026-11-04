@@ -3059,3 +3059,29 @@ body {
 .signal-mode-control{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 0;margin-bottom:14px;font-weight:600;border-bottom:1px solid var(--line)}
 .signal-mode-control select{min-height:48px;padding:8px 12px;max-width:100%;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px}
 @media(max-width:600px){.executed-model .executed-picture .picture-icon svg,.executed-model .executed-picture .picture-icon img{width:80px;height:80px}.executed-choices .executed-picture .picture-icon svg,.executed-choices .executed-picture .picture-icon img{width:68px;height:68px}}
+
+/* Cognitive families: stable, readable controls in both Calma and Impulso. */
+#cognitiveFamilyControl{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:1rem}
+#cognitiveFamilyControl.hidden{display:none}
+#cognitiveFamilySelect,.cognitive-area input[type=text]{min-height:48px;max-width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;color:var(--ink);background:var(--card);font:inherit}
+#appShell .activity-toolbar #cognitiveMode[aria-pressed=true]{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}
+.cognitive-area{display:block!important;min-width:0}.cognitive-status,.executed-status{font-size:1.25rem;line-height:1.6}
+.cognitive-choices,.cognitive-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0}
+.cognitive-area button{min-height:52px;white-space:normal;font-size:1.1rem;padding:12px 18px;margin:6px 4px;max-width:100%;overflow-wrap:anywhere}
+.cognitive-fact{display:flex;align-items:center;gap:14px;padding:18px;border:2px solid var(--line);border-radius:12px;font-size:1.15rem;line-height:1.55;cursor:pointer}
+.cognitive-fact:has(input:checked){border-color:var(--accent);background:var(--bg)}.cognitive-fact input{flex:0 0 24px;width:24px;height:24px;margin:0}
+.cognitive-candidates{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:14px;margin-top:16px}
+.cognitive-candidate{border:2px solid var(--line);border-radius:12px;padding:16px;min-width:0}.cognitive-candidate.excluded{border-style:dashed;background:#e7e9eb}.cognitive-candidate.excluded h4::after{content:' · TACHADA'}
+.cognitive-picture{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;align-items:center;margin:10px 0;font-size:1.25rem}
+.cognitive-picture .picture-icon svg,.cognitive-picture .picture-icon img{width:112px;height:112px;max-width:100%}
+.cognitive-switch{font-size:5rem;font-weight:800;text-align:center;padding:24px}
+.cognitive-area button:focus-visible,.cognitive-area input:focus-visible{outline:3px solid #155a9d;outline-offset:4px}
+.cognitive-solution,.memory-solution{margin:22px 0;padding:18px;border:2px solid var(--accent);border-radius:12px;background:var(--card);color:var(--ink)}
+.memory-solution h4,.cognitive-solution h4{font-size:1.2rem;margin:0 0 12px}.memory-solution ol{list-style-position:inside;padding-left:8px}.cognitive-plan-slots{min-height:90px;line-height:1.8;font-size:1.2rem}
+#interactiveSeconds{font-size:clamp(1.6rem,4vw,2.2rem);font-weight:800;line-height:1.4}
+#exercise .interactive-card .word-cue{font-size:clamp(2rem,6vw,3.4rem)}
+#exerciseOptions .option-btn{font-size:1.125rem;line-height:1.55}
+#exerciseVisual .reading-passage{font-size:1.15rem;line-height:1.75}
+@media(max-width:600px){.cognitive-choices,.cognitive-facts{grid-template-columns:1fr}.cognitive-picture .picture-icon svg,.cognitive-picture .picture-icon img{width:88px;height:88px}.cognitive-area button{font-size:1.1rem;margin:6px 0}.cognitive-area form input{width:100%;box-sizing:border-box}.cognitive-fact{padding:14px}}
+
+#cognitiveFamilyControl{margin:14px 0;max-width:100%}

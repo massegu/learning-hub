@@ -13,6 +13,7 @@ await import("./photo-library.js");
 await import("./content-quality.js");
 await import("./transfer-content.js");
 await import("./functional-content.js");
+await import("./cognitive-families.js");
 await import("./executed-tasks.js");
 await import("./curriculum.js");
 await import("./data/primary.js");
@@ -976,6 +977,7 @@ function socialExercise(level:number){
 }
 
 function validateItem(item:any):boolean{
+  if(item?.type==="cognitiveTask"||String(item?.contentKey||"").startsWith("cognitive-v")){try{(globalThis as any).CognitiveFamilies.validate(item);return true;}catch(_){return false;}}
   if(item?.type==="executed"||String(item?.contentKey||"").startsWith("executed-v")){try{(globalThis as any).ExecutedTasks.validate(item);return true;}catch(_){return false;}}
   if(item?.qualityEvidence||/^functional_/.test(item?.mechanic||'')||String(item?.contentKey||'').startsWith('functional-v1:')){try{(globalThis as any).FunctionalContent.validate(item);}catch(_){return false;}}
   if(item?.roomSpeedTask){try{(globalThis as any).Curriculum.validateRoomSpeed(item);}catch(_){return false;}}
@@ -1193,7 +1195,8 @@ function generatedItems(domain:string,n:number,recentEntries:string[],factory:()
   const recentItems=new Set(recentEntries.filter((x:string)=>x.includes(":item:")).slice(-360));
   const mechanicHistory=recentEntries.filter((x:string)=>x.includes(":mechanic:")).slice(-360).map((x:string)=>x.split('|family:')[0]);
   const familyHistory=recentEntries.flatMap((x:string)=>x.includes('|family:')?[x.split('|family:')[1]]:x.includes(':semantic:')?[x.split(':semantic:')[1]]:[]).slice(-24);
-  const localFamilies:string[]=[];
+  const localFamilies:string[]=[],localScenarios:string[]=[];
+  const scenarioHistory=recentEntries.filter((x:string)=>x.includes(':scenario:')).map((x:string)=>x.split(':scenario:')[1]);
   const mechanicCounts=new Map<string,number>();
   for(const m of mechanicHistory) mechanicCounts.set(m,(mechanicCounts.get(m)||0)+1);
   const veryRecent=new Set(mechanicHistory.slice(-12));
@@ -1241,14 +1244,16 @@ function generatedItems(domain:string,n:number,recentEntries:string[],factory:()
       const family=familyOf(cand,domain),familyWindow=[...familyHistory,...localFamilies].slice(-24);
       const familyCount=familyWindow.filter((x:string)=>x===family).length;
       const semanticPenalty=family==='unclassified'?0:(family===familyWindow.at(-1)?60000:0)+Math.min(30000,familyCount*5000);
-      const score=itemPenalty+formatPenalty+semanticPenalty+recentPenalty+localPenalty+countPenalty+questionPenalty+Math.random();
+      const scenario=cand.qualityDescriptor?.scenarioFamily,sw=[...scenarioHistory,...localScenarios].slice(-4);
+      const scenarioPenalty=scenario?(sw.at(-1)===scenario?70000:sw.includes(scenario)?15000:0):0;
+      const score=scenarioPenalty+itemPenalty+formatPenalty+semanticPenalty+recentPenalty+localPenalty+countPenalty+questionPenalty+Math.random();
       if(score<bestScore){best=cand;bestScore=score;}
     }
     if(!best) break;
     const sig=signature(best), msig=mechanicSignature(domain,best);
     localItems.add(sig); localMechanics.add(msig);
     mechanicCounts.set(msig,(mechanicCounts.get(msig)||0)+1);
-    localFamilies.push(familyOf(best,domain));
+    localFamilies.push(familyOf(best,domain));if(best.qualityDescriptor?.scenarioFamily)localScenarios.push(best.qualityDescriptor.scenarioFamily);
     out.push(best);
   }
   return out;
@@ -2419,7 +2424,7 @@ Deno.serve(async (req:Request)=>{
   const requestedDomains=kind==="worksheet" ? (Array.isArray(body.domains)&&body.domains.length?body.domains:(globalThis as any).Curriculum.visible(SUBJECTS[age]||[],age)) : [body.domain];
   if(!SUBJECTS[age] || !Number.isInteger(level) || (kind!=="game" && (!Array.isArray(requestedDomains)||!requestedDomains.length||requestedDomains.some((d:any)=>!SUBJECTS[age].includes(d)))))
     return new Response(JSON.stringify({error:"Área o nivel no permitido para este perfil."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
-  if(body.client_revision!==undefined&&![1,2,3,4,5,6,7,8,9,10].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.client_revision!==undefined&&![1,2,3,4,5,6,7,8,9,10,11].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.room_speed_only!==undefined&&(typeof body.room_speed_only!=='boolean'||body.room_speed_only&&(kind!=='exercise'||body.domain!=='speedReasoning'||!['junior','primary','middle','teen'].includes(age)||body.interaction_only||body.photos_only||body.documents_only)))return new Response(JSON.stringify({error:'Modalidad de velocidad no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.room_speed_only&&Number(body.client_revision||1)<10)return new Response(JSON.stringify({error:'Actualiza la página para abrir los retos del entorno.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.interaction_only!==undefined&&(typeof body.interaction_only!=='boolean'||body.interaction_only&&(kind!=='exercise'||!['junior','primary','middle','teen'].includes(age)||!['attention','executive'].includes(body.domain)||body.documents_only||body.photos_only)))return new Response(JSON.stringify({error:'Modalidad interactiva no disponible para esta petición.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -2437,12 +2442,23 @@ Deno.serve(async (req:Request)=>{
     return new Response(JSON.stringify({error:"Habilidad de Lenguaje no válida."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
   // Cached clients do not yet know these document IDs and photographic sources.
   const compatibleSource=(item:any)=>(Number(body.client_revision||1)>=10||!['ceramics2026','music2026','bicycle2026','greenhouse2026'].includes((item?.photoTask?.sceneId||item?.photoTask?.pairId))&&!(item?.stimulus||[]).some((b:any)=>['photo','photoPair'].includes(b.type)&&['ceramics2026','music2026','bicycle2026','greenhouse2026'].includes(b.photoId||b.pairId)))&&(Number(body.client_revision||1)>=8||!(item?.stimulus||[]).some((block:any)=>block.type==='document'&&String(block.documentId).startsWith('everyday-')||block.type==='photo'&&['library2026','autumnPark2026'].includes(block.photoId)));
+  const cognitiveBank=body.cognitive_only?(globalThis as any).CognitiveFamilies.pool(age,body.domain,level,body.cognitive_family||null):[];
+  const cognitivePrint=body.cognitive_only&&kind==='worksheet'&&typeof body.cognitive_content_key==='string'?cognitiveBank.find((it:any)=>it.contentKey===body.cognitive_content_key&&it.printable!=='interactive-only'):null;
+  if(body.cognitive_content_key!==undefined&&(!body.cognitive_only||kind!=='worksheet'||!cognitivePrint))return new Response(JSON.stringify({error:'Esta actividad no está disponible en papel para este perfil.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.cognitive_only!==undefined&&(typeof body.cognitive_only!=='boolean'||body.cognitive_only&&(!['exercise','worksheet'].includes(kind)||kind==='worksheet'&&(!cognitivePrint||requestedDomains.length!==1||requestedDomains[0]!==body.domain)||body.executed_only||body.interaction_only||body.photos_only||body.documents_only||body.room_speed_only||!cognitiveBank.length)))return new Response(JSON.stringify({error:'Familia cognitiva no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.cognitive_family!==undefined&&body.cognitive_family!==null&&(typeof body.cognitive_family!=='string'||!body.cognitive_only))return new Response(JSON.stringify({error:'Selector de familia no válido.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.cognitive_only&&Number(body.client_revision||1)<11)return new Response(JSON.stringify({error:'Actualiza la página para abrir estas familias.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.executed_only!==undefined&&(typeof body.executed_only!=='boolean'||body.executed_only&&(kind!=='exercise'||!['attention','memory','executive'].includes(body.domain)||body.interaction_only||body.photos_only||body.documents_only||body.room_speed_only)))return new Response(JSON.stringify({error:'Modalidad interactiva no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
-  if(body.executed_only&&Number(body.client_revision||1)<10)return new Response(JSON.stringify({error:'Actualiza la página para abrir los retos interactivos.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.executed_only&&Number(body.client_revision||1)<11)return new Response(JSON.stringify({error:'Actualiza la página para abrir los retos interactivos.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   let items:any[]=[];
   if(kind==="game"){
     const excludeTypes=Array.isArray(body.exclude_types)?body.exclude_types.slice(-2):[];
     items=[cognitiveGame(age,level,excludeTypes)];
+  } else if(cognitivePrint){
+    const item=regionalCandidate(cognitivePrint,locale,body.domain,age);
+    if(!item||!validateItem(item))return new Response(JSON.stringify({error:'No se puede adaptar esta actividad a la variante de español.'}),{status:422,headers:{...corsHeaders,'Content-Type':'application/json'}});
+    items=[item];
+    if(!sessionOnly)await admin.from('content_seen').insert([{user_id:user.id,profile_id:profileId,domain:'worksheet:'+body.domain,item_signature:contentSignature(body.domain,item),mechanic_signature:mechanicSignature(body.domain,item)}]);
   } else if(kind==="worksheet"){
     const qn=Math.max(6,Math.min(account.subscription_status==="trial"?15:20,Number(body.questions||12)));
     const domains=(Array.isArray(body.domains)&&body.domains.length?body.domains:(globalThis as any).Curriculum.visible(SUBJECTS[age]||[],age).filter((x:string)=>x!=="games")).filter((x:string)=>x!=="games");
@@ -2514,7 +2530,10 @@ Deno.serve(async (req:Request)=>{
       if(!item||!compatibleSource(item)||Number(body.client_revision||1)<2&&(item.type==='documentReview'||item.selectiveRecall)||Number(body.client_revision||1)<3&&item.photoTask)return null;
       return regionalCandidate(item,locale,domain,age);
     };
-    if(body.executed_only===true){
+    if(body.cognitive_only===true){
+      const bank=(globalThis as any).CognitiveFamilies.pool(age,domain,level,body.cognitive_family||null).map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
+      items=generatedItems(domain,n,recentEntries,()=>null,bank);
+    }else if(body.executed_only===true){
       const bank=(globalThis as any).ExecutedTasks.pool(age,domain,level).map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
       items=generatedItems(domain,n,recentEntries,()=>null,bank);
     }else if(body.photos_only===true){
@@ -2537,7 +2556,7 @@ Deno.serve(async (req:Request)=>{
     for(const it of items){
       const generated=["attention","executive","memory","speedReasoning","applied","social","language","middleLanguage","teenLanguage","division","geometry","middleMath","teenMath","reading","middleReading","english","literacy"].includes(domain);
       const sig=generated?contentSignature(domain,it):keyOf(domain,subdomain,it);
-      delivery.seen[domain].push(sig);
+      delivery.seen[domain].push(sig);if(it.qualityDescriptor?.scenarioFamily)delivery.seen[domain].push(domain+':scenario:'+it.qualityDescriptor.scenarioFamily);
       if(generated){delivery.seen[domain].push(mechanicSignature(domain,it));delivery.seen[domain].push(domain+':semantic:'+familyOf(it,domain));}
       const question=photoQuestionSignature(domain,it);if(question)delivery.seen[domain].push(question);
     }

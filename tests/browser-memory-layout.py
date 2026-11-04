@@ -29,5 +29,11 @@ try:
    target=grid.locator('button').first;style=target.evaluate('e=>({border:getComputedStyle(e).borderTopWidth,background:getComputedStyle(e).backgroundColor,body:getComputedStyle(document.body).backgroundColor})');assert style['border']=='2px';assert style['background']!=style['body']
    grid.screenshot(path=f'/tmp/memory-locations-{width}.png')
   page.locator('.spatial-answer-grid button').evaluate_all('(els,a)=>els.find(e=>e.dataset.answer===a).click()',chosen['a']);assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
+  # A wrong reconstruction must leave the correct sequence visible with its pictures.
+  chosen=page.evaluate('window.__memoryFixture=Curriculum.pool("primary","memory",1).find(it=>it.memoryResponse==="order"&&!it.recallEvidence.takeLast)')
+  workspace(page).locator('#navMenu [data-subject=memory]').click();page.wait_for_selector('#startMemorySequence');page.locator('#startMemorySequence').click();page.clock.run_for((chosen['sequenceStepMs']+250)*len(chosen['recallSequence'])+100)
+  # Choose a deliberately reversed order from the actual token bank, independent of shuffled indices.
+  for label in reversed(chosen['answer']):page.locator('#exerciseOptions').get_by_role('button',name=label,exact=True).click()
+  page.locator('#orderCheck').click();assert 'bad' in page.locator('#exerciseFeedback').get_attribute('class');assert page.locator('.memory-solution').is_visible();assert 'Secuencia correcta' in page.locator('.memory-solution').inner_text()
   assert not errors,errors;browser.close();print('PASS: two youngest associations, compact high-contrast spatial targets at desktop/mobile sizes and correct spatial grading')
 finally:server.shutdown();server.server_close()
