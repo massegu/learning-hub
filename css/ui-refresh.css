@@ -1,0 +1,60 @@
+/* Color system and editorial hierarchy for the learner workspace. */
+#appShell[data-design]{
+  --bg:#f5f6fb;--card:#fff;--ink:#20243a;--muted:#62677d;--line:#e1e4f0;
+  --nav:#22243d;--accent:#5c55df;--accent-dark:#4039b1;--accent-soft:#efedff;
+  --green:#17866b;--design-hero:linear-gradient(118deg,#373b91 0%,#6556d9 58%,#a254b5 100%);
+  --design-hero-ink:#fff;background:var(--bg);color:var(--ink)
+}
+#appShell[data-design="calma"]{--design-hero:linear-gradient(118deg,#243c77 0%,#4c5fc5 58%,#9c4f91 100%)}
+#appShell[data-design="impulso"]{--design-hero:linear-gradient(118deg,#282b70 0%,#5d50cf 58%,#a43d8b 100%)}
+#appShell[data-subject="executive"]{--accent:#6252d6;--accent-dark:#4336a8;--accent-soft:#eeebff}
+#appShell[data-subject="attention"]{--accent:#e4535a;--accent-dark:#a93142;--accent-soft:#fff0f1}
+#appShell[data-subject="memory"]{--accent:#008f9a;--accent-dark:#00646e;--accent-soft:#e4f7f7}
+#appShell[data-subject="speedReasoning"]{--accent:#d18100;--accent-dark:#965900;--accent-soft:#fff4dc}
+#appShell[data-subject="social"]{--accent:#1377c5;--accent-dark:#0a528f;--accent-soft:#e8f4ff}
+#appShell[data-subject="reading"],#appShell[data-subject="middleReading"],#appShell[data-subject="literacy"]{--accent:#2876d1;--accent-dark:#19509a;--accent-soft:#eaf3ff}
+#appShell[data-subject="language"],#appShell[data-subject="middleLanguage"],#appShell[data-subject="teenLanguage"]{--accent:#ad438f;--accent-dark:#762d68;--accent-soft:#fbeaf7}
+#appShell[data-subject="middleMath"],#appShell[data-subject="teenMath"],#appShell[data-subject="division"],#appShell[data-subject="geometry"]{--accent:#475bc5;--accent-dark:#303e91;--accent-soft:#ebefff}
+#appShell[data-subject="english"]{--accent:#814fc1;--accent-dark:#57348f;--accent-soft:#f2ecff}
+#appShell[data-subject="applied"]{--accent:#d14d68;--accent-dark:#96384d;--accent-soft:#fff0f3}
+
+#appShell[data-design] .main-content{
+  background:radial-gradient(ellipse at 95% 0%,color-mix(in srgb,var(--accent-soft) 72%,transparent),transparent 33rem),var(--bg)!important;
+}
+#appShell[data-design] .sidebar{background:linear-gradient(165deg,#242640,#30335a 70%,#343052)!important}
+#appShell[data-design] .brand-badge{background:linear-gradient(145deg,#ffbd54,#f17a58)!important;color:#292541}
+#appShell[data-design] .nav-item{border:1px solid transparent}
+#appShell[data-design] .nav-item.active{background:linear-gradient(105deg,color-mix(in srgb,var(--accent) 76%,#fff),var(--accent))!important;border-color:#ffffff36;box-shadow:0 5px 15px color-mix(in srgb,var(--accent) 28%,transparent)}
+#appShell[data-design] .topbar{border-bottom:1px solid var(--line);padding-bottom:16px}
+#appShell[data-design] .topbar h2{font-weight:800;color:var(--ink)}
+#appShell[data-design] .topbar-actions>:is(button,.secondary-btn){border-radius:999px}
+#appShell[data-design] .section-intro{position:relative;overflow:hidden;background:var(--card);border:1px solid var(--line);border-top:0;border-radius:20px;box-shadow:0 8px 24px #2729540b}
+#appShell[data-design] .section-intro::after{content:"";position:absolute;width:180px;height:180px;right:-75px;top:-92px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 17%,transparent),transparent 70%);pointer-events:none}
+#appShell[data-design] :is(.hero,.school-hero,.early-hero){position:relative;isolation:isolate;overflow:hidden;background:var(--design-hero)!important;box-shadow:0 16px 34px color-mix(in srgb,var(--accent) 18%,transparent)}
+#appShell[data-design] :is(.hero,.school-hero,.early-hero)::before{content:"";display:block;position:absolute;z-index:-1;width:280px;height:280px;right:7%;top:-145px;border:1px solid #ffffff30;border-radius:50%;box-shadow:0 0 0 28px #ffffff0c,0 0 0 58px #ffffff08}
+#appShell[data-design] :is(.hero,.school-hero,.early-hero) .pill{background:#ffffff20!important;color:#fff!important;border-color:#ffffff32!important}
+#appShell[data-design] .activity-toolbar{align-items:stretch!important;gap:8px;padding:10px;background:#ffffffd9;border:1px solid color-mix(in srgb,var(--accent) 16%,var(--line));border-radius:17px;box-shadow:0 9px 25px #252b590d}
+#appShell[data-design] .activity-toolbar>.mode-switch:not(.hidden){display:contents!important}
+#appShell[data-design] .activity-toolbar button{min-height:54px!important;align-self:stretch!important;background:#fff;border:1px solid var(--line);border-radius:12px;color:var(--ink);font-weight:750;transition:background .16s,border-color .16s,transform .16s,box-shadow .16s}
+#appShell[data-design] .activity-toolbar button:hover{border-color:var(--accent);background:var(--accent-soft);transform:translateY(-1px)}
+#appShell[data-design] .activity-toolbar button[aria-pressed="true"]{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important;box-shadow:0 3px 0 var(--accent-dark),0 8px 16px color-mix(in srgb,var(--accent) 20%,transparent)}
+#appShell[data-design] .block-banner{background:linear-gradient(112deg,#fff 0%,var(--accent-soft) 100%)!important;border:1px solid color-mix(in srgb,var(--accent) 21%,var(--line))!important;border-left:5px solid var(--accent)!important;border-bottom:1px solid color-mix(in srgb,var(--accent) 21%,var(--line))!important}
+#appShell[data-design] .block-banner .pill{background:var(--accent)!important;color:white!important;border-color:var(--accent)!important;box-shadow:0 4px 12px color-mix(in srgb,var(--accent) 22%,transparent)}
+#appShell[data-design] #exercise .exercise-card{border-radius:20px;box-shadow:0 14px 34px #24284c10}
+#appShell[data-design] #exercise .prompt{padding:17px 21px;background:linear-gradient(105deg,var(--accent-soft),color-mix(in srgb,var(--accent-soft) 28%,#fff));border:1px solid color-mix(in srgb,var(--accent) 13%,var(--line));border-left:5px solid var(--accent);border-radius:14px;font-weight:750}
+#appShell[data-design] .option-btn{transition:transform .16s,border-color .16s,background .16s,box-shadow .16s}
+#appShell[data-design] .option-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 7px 16px color-mix(in srgb,var(--accent) 12%,transparent)}
+#appShell[data-design] .option-btn.selected{background:var(--accent-soft);border:2px solid var(--accent);color:var(--ink)}
+#appShell[data-design] #exercise .structured-stimulus-table{border-collapse:separate;border-spacing:0;overflow:hidden;border:1px solid var(--line);border-radius:12px;box-shadow:0 5px 16px #20243a0a}
+#appShell[data-design] #exercise .structured-stimulus-table th{background:var(--accent)!important;color:#fff!important;border-color:color-mix(in srgb,var(--accent-dark) 78%,#fff)!important;font-weight:800}
+#appShell[data-design] #exercise .structured-stimulus-table tbody tr:nth-child(even){background:var(--accent-soft)}
+#appShell[data-design] #exercise :is(.reading-passage,.scenario-card,.document-transcript){border-left:4px solid var(--accent);border-radius:13px}
+#appShell[data-design] :is(.card,.panel-card,.school-area-card,.early-area-card){box-shadow:0 8px 24px #20243a09}
+#appShell[data-design] .session-panel{border-top:4px solid #2876d1}
+#appShell[data-design] .progress-subject{border-top:4px solid var(--progress-color,var(--accent));background:linear-gradient(155deg,#fff,var(--progress-tint,#f2f4ff))}
+#appShell[data-design] :is(.primary-btn,.secondary-btn,.ghost-light-btn){transition:transform .16s,box-shadow .16s,background .16s}
+#appShell[data-design] .primary-btn{background:linear-gradient(105deg,var(--accent),color-mix(in srgb,var(--accent) 75%,#854cc5))!important;box-shadow:0 4px 0 var(--accent-dark),0 8px 18px color-mix(in srgb,var(--accent) 18%,transparent)!important}
+#appShell[data-design] .primary-btn:hover{transform:translateY(-1px);box-shadow:0 5px 0 var(--accent-dark),0 11px 20px color-mix(in srgb,var(--accent) 23%,transparent)!important}
+#appShell[data-design] :focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 70%,#fff);outline-offset:3px}
+@media(prefers-reduced-motion:reduce){#appShell[data-design] *{scroll-behavior:auto!important;transition:none!important}}
+@media(max-width:950px){#appShell[data-design] .activity-toolbar{gap:7px;padding:8px}#appShell[data-design] .activity-toolbar button{min-height:50px!important}}

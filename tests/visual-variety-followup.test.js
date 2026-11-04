@@ -8,17 +8,22 @@ test('approved Phosphor uses faithful licensed equivalents in adolescents and pr
  const source=[{type:'list',presentation:'cards',items:['libro']}];assert.match(model.interactiveStimulus(source,{illustrated:true,iconProfile:{age_band:'teen'}}),/data-icon-library="phosphor"/);assert.doesNotMatch(model.interactiveStimulus(source,{illustrated:true,iconProfile:{age_band:'primary'}}),/data-icon-library="phosphor"/);
  assert.notEqual(model.artFor('bottle-full-open',{age_band:'teen'}),art);assert.notEqual(model.artFor('balloon-red',{age_band:'teen'}),art);
 });
-test('four newly inspected scenes have real PNGs, six single observations and two/three-fact recall',()=>{
+test('staged object-only photos are removed and varied people-centered scenes are available',()=>{
  for(const id of ['ceramics2026','music2026','bicycle2026','greenhouse2026']){
-  const scene=photos.scenes[id],png=fs.readFileSync(scene.path);assert.equal(scene.facts.length,6);assert.equal(png.readUInt32BE(16),scene.width);assert.equal(png.readUInt32BE(20),scene.height);assert.equal(Boolean(photos.pairs[id]),['ceramics2026','music2026'].includes(id));
-  for(const level of [1,2,3]){const bank=photos.pool('teen','memory',level).filter(x=>x.photoTask.sceneId===id);assert.equal(bank.length,level===1?6:4);for(const it of bank){photos.validate(it);assert.ok(it.opts.includes(it.a));if(level>1)assert.equal(it.photoTask.evidence.length,level);}}
+  assert.equal(photos.scenes[id],undefined);assert.equal(photos.pairs[id],undefined);
+  assert.ok(!photos.pool('teen','memory',1).some(x=>x.photoTask.sceneId===id));
+  assert.ok(!photos.pool('teen','attention',1).some(x=>x.photoTask.pairId===id));
  }
+ for(const id of ['museumVisit','peacefulMarch','footballMatch','railwayRecreation','peopleMarket']){
+  assert.ok(photos.scenes[id]);assert.ok(photos.pool('teen','memory',1).some(x=>x.photoTask.sceneId===id));
+ }
+ for(const file of ['ceramics.png','ceramics-b.png','music.png','music-b.png','bicycle.png','greenhouse.png'])assert.ok(!fs.existsSync('assets/photos/everyday-variety-20261030/'+file));
 });
 test('cached photo clients never receive new scene IDs and environment followups require the current revision',()=>{
  const base={kind:'exercise',profile_id:'teen',domain:'memory',level:1,count:10,photos_only:true,client_revision:9};
  const requests=[base,{...base,client_revision:10},{...base,domain:'speedReasoning',count:1,photos_only:false,room_speed_only:true},{...base,domain:'speedReasoning',count:1,photos_only:false,room_speed_only:true,client_revision:10}];
  const rows=execFileSync(process.execPath,['tests/edge-worker.js','teen'],{input:requests.map(JSON.stringify).join('\n')+'\n',encoding:'utf8',timeout:60000}).trim().split('\n').map(JSON.parse);
- assert.equal(rows[0].status,200);assert.ok(rows[0].data.items.every(x=>!['ceramics2026','music2026','bicycle2026','greenhouse2026'].includes(x.photoTask?.sceneId)));assert.equal(rows[1].status,200);assert.equal(rows[2].status,409);assert.equal(rows[3].status,200);assert.ok(rows[3].data.items[0].roomSpeedTask.followUp);
+ assert.equal(rows[0].status,200);assert.ok(rows[0].data.items.every(x=>!['ceramics2026','music2026','bicycle2026','greenhouse2026'].includes(x.photoTask?.sceneId)));assert.equal(rows[1].status,200);assert.ok(rows[1].data.items.every(x=>!['ceramics2026','music2026','bicycle2026','greenhouse2026'].includes(x.photoTask?.sceneId)));assert.equal(rows[2].status,409);assert.equal(rows[3].status,200);assert.ok(rows[3].data.items[0].roomSpeedTask.followUp);
 });
 test('functional followups and active-rule instructions stay tied to the visible conditions',()=>{
  for(const age of ['junior','primary','middle','teen'])for(const level of [1,2,3]){
@@ -27,9 +32,10 @@ test('functional followups and active-rule instructions stay tied to the visible
  }
 });
 
-test('new difference pairs use factual quantity/presence/location changes and unique reversed choices',()=>{
- for(const id of ['ceramics2026','music2026'])for(const level of [1,2,3]){
-  const pair=photos.pairs[id];assert.equal(pair.textSelectionOnly,true);assert.ok(fs.existsSync(pair.path));const bank=photos.pool('teen','attention',level).filter(x=>x.photoTask.pairId===id);assert.equal(bank.length,level===1?3:1);
-  for(const it of bank){photos.validate(it);assert.equal(new Set(it.opts).size,it.opts.length);assert.ok(it.answers.every(x=>it.opts.includes(x)));if(level===3)assert.equal(it.answers.length,3);}
+test('remaining difference pairs keep factual changes and unique distractors',()=>{
+ for(const id of Object.keys(photos.pairs))for(const level of [1,2,3]){
+  const bank=photos.pool('teen','attention',level).filter(x=>x.photoTask.pairId===id);
+  assert.ok(bank.length);
+  for(const it of bank){photos.validate(it);assert.equal(new Set(it.opts).size,it.opts.length);assert.ok(it.answers.every(x=>it.opts.includes(x)));if(level>=2)assert.equal(it.answers.length,3);}
  }
 });

@@ -207,48 +207,65 @@ Object.assign(scenes,{
  fact('¿Qué había en la hierba del primer plano?','Una pelota amarilla',['Una mochila azul','Una cesta','Un libro'],'En la hierba había una pelota amarilla.')
  ]}
 });
-// New scenes inspected against their visible foreground; no inherited school-object captions.
+// Generated, people-centered photographs. The railway image is a period-style
+// recreation, not archival evidence or a real historical photograph.
 Object.assign(scenes,{
- ceramics2026:{title:'Preparar una pieza de cerámica',width:1448,height:1086,path:'assets/photos/everyday-variety-20261030/ceramics.png',facts:[
- fact('¿Cuántos cuencos había sobre la base rectangular del primer plano?','Tres',['Dos','Cuatro','Uno'],'Había tres cuencos sobre la base rectangular del primer plano.'),
- fact('¿Qué objeto amarillo había en el centro de la mesa?','Una esponja',['Un guante','Una vela','Una flor'],'Había una esponja amarilla en el centro.'),
- fact('¿De qué color era el jarrón de la derecha?','Turquesa',['Rojo','Amarillo','Blanco'],'El jarrón de la derecha era turquesa.'),
- fact('¿Qué prenda colgaba al fondo?','Un delantal',['Una chaqueta','Una bufanda','Una gorra'],'Al fondo colgaba un delantal claro.'),
- fact('¿Dónde estaban los tres cuencos del primer plano?','A la izquierda de la esponja',['A la derecha del jarrón','Debajo de la mesa','En el suelo'],'Los tres cuencos estaban a la izquierda de la esponja.'),
- fact('¿Había flores dentro del jarrón turquesa?','No',['Sí, flores rojas','Sí, flores amarillas','Sí, flores blancas'],'No había flores dentro del jarrón.')
+ museumVisit:{title:'Visitantes en una exposición de arte',width:1448,height:1086,path:'assets/photos/everyday-scenes-20261104/museum.png',facts:[
+  fact('¿Qué hace el niño de sudadera roja?','Señala el cuadro',['Lee una cartela','Camina hacia la salida','Habla por teléfono'],'El niño de sudadera roja señala el cuadro grande.'),
+  fact('¿Qué lleva la mujer del jersey amarillo?','Un bolso blanco',['Una mochila roja','Una cámara negra','Una carpeta azul'],'La mujer del jersey amarillo lleva un bolso blanco cruzado.'),
+  fact('¿Qué está mirando la mujer del jersey verde?','Una cartela en la pared',['El bolso blanco','El suelo','La ventana'],'La mujer del jersey verde se inclina para leer una cartela junto al cuadro.'),
+  fact('¿Dónde está colgado el cuadro grande?','En la pared',['En el suelo','En el techo','En una mesa'],'El cuadro grande está colgado en la pared.'),
+  fact('¿Qué tipo de cuadro observa el grupo?','Una pintura abstracta',['Un mapa de carreteras','Una fotografía de un estadio','Un retrato de un animal'],'El grupo observa una pintura abstracta de muchos colores.'),
+  fact('¿Qué colores destacan en el cuadro grande?','Naranja y azul',['Solo blanco y negro','Verde y marrón','Amarillo y violeta'],'En el cuadro grande destacan zonas naranjas y azules.'),
+  fact('¿Qué lleva el hombre situado junto a la niña?','Una mochila marrón',['Un paraguas amarillo','Un balón rojo','Una caja verde'],'El hombre que mira el cuadro junto a la niña lleva una mochila marrón.'),
+  fact('¿Qué hace una persona al fondo, a la izquierda?','Camina por la sala',['Se sienta en el suelo','Pinta el cuadro','Abre una ventana'],'Al fondo, a la izquierda, una persona camina por la sala.')
  ]},
- music2026:{title:'Un espacio para crear música',width:1448,height:1086,path:'assets/photos/everyday-variety-20261030/music.png',facts:[
- fact('¿Qué instrumento estaba a la izquierda de la mesa?','Un teclado musical',['Una guitarra','Un tambor','Una trompeta'],'A la izquierda estaba el teclado musical.'),
- fact('¿Qué había en el centro de la mesa, delante del micrófono?','Unos auriculares',['Unos guantes','Un mando','Una radio'],'Los auriculares estaban delante del micrófono.'),
- fact('¿De qué color era el cable visible sobre la mesa?','Rojo',['Azul','Amarillo','Verde'],'El cable visible sobre la mesa era rojo.'),
- fact('¿Dónde estaba la maraca naranja?','A la derecha de los auriculares',['Bajo el taburete','Sobre el teclado','En la ventana'],'La maraca naranja estaba a la derecha de los auriculares.'),
- fact('¿Qué había delante de la mesa?','Un taburete negro',['Un sillón rojo','Un banco verde','Una caja blanca'],'Delante de la mesa había un taburete negro.'),
- fact('¿Cómo estaba colocado el micrófono?','En un soporte sobre la mesa',['En el suelo','Colgado del techo','Sobre el taburete'],'El micrófono tenía un soporte sobre la mesa.')
+ peacefulMarch:{title:'Una manifestación pacífica en la ciudad',width:1448,height:1086,path:'assets/photos/everyday-scenes-20261104/demonstration.png',facts:[
+  fact('¿Qué hacen las personas de la escena?','Caminan juntas en una manifestación',['Esperan sentadas en una estación','Juegan un partido','Visitan una exposición'],'La multitud camina junta por una avenida durante una manifestación.'),
+  fact('¿De qué color es la bandera grande que se ve arriba?','Amarilla',['Verde','Azul','Roja'],'Una persona sostiene una bandera amarilla en la parte superior derecha.'),
+  fact('¿Qué llevan varias personas en alto?','Carteles hechos a mano',['Maletas','Raquetas','Paraguas'],'Varias personas levantan carteles hechos a mano.'),
+  fact('¿Qué aparece en los carteles?','Dibujos y formas de colores',['Horarios impresos','Fotografías en blanco y negro','Mapas de la ciudad'],'Los carteles muestran dibujos y formas de colores, sin texto legible.'),
+  fact('¿Cómo es la avenida?','Ancha y rodeada de edificios',['Estrecha y dentro de un túnel','Rural y sin edificios','Está dentro de un estadio'],'La manifestación avanza por una avenida ancha con edificios a los lados.'),
+  fact('¿Qué hace la mujer de pelo blanco cerca del centro?','Sonríe mientras camina',['Lleva una maleta','Pinta un cartel','Sostiene una cámara grande'],'La mujer de pelo blanco sonríe mientras camina entre la gente.'),
+  fact('¿Qué lleva el hombre de la camiseta verde oscura?','Una mochila',['Una bandera azul','Un casco','Una cesta'],'El hombre de camiseta verde oscura lleva una mochila.'),
+  fact('¿Qué se ve detrás de la multitud?','Árboles y edificios de la ciudad',['Montañas nevadas','Un mar abierto','Las gradas de un campo'],'Detrás de la multitud se ven árboles y edificios urbanos.')
  ]},
- bicycle2026:{title:'Poner a punto una bicicleta',width:1448,height:1086,path:'assets/photos/everyday-variety-20261030/bicycle.png',facts:[
- fact('¿De qué color era la bicicleta?','Naranja',['Azul','Verde','Roja'],'La bicicleta era naranja.'),
- fact('¿Dónde estaba la bomba de aire verde?','A la izquierda de la bicicleta',['Sobre el taburete','Detrás del casco','En la pared'],'La bomba de aire verde estaba a la izquierda.'),
- fact('¿Qué había sobre el taburete?','Un casco rojo',['Un guante amarillo','Una maceta','Un altavoz'],'Sobre el taburete había un casco rojo.'),
- fact('¿Cuántas llaves de boca colgaban en el panel del fondo?','Dos',['Una','Tres','Cuatro'],'En el panel colgaban dos llaves de boca.'),
- fact('¿Cuántas ruedas tenía la bicicleta de la imagen?','Dos',['Una','Tres','Cuatro'],'Se veían las dos ruedas de la bicicleta.'),
- fact('¿De qué color era el sillín?','Negro',['Rojo','Azul','Blanco'],'El sillín era negro.')
+ footballMatch:{title:'Un partido de fútbol en un campo local',width:1448,height:1086,path:'assets/photos/everyday-scenes-20261104/football.png',facts:[
+  fact('¿Qué deporte practican en el campo?','Fútbol',['Baloncesto','Tenis','Rugby'],'Los jugadores disputan un partido de fútbol.'),
+  fact('¿De qué color es la camiseta del portero?','Verde',['Azul','Naranja','Negra'],'El portero, delante de la portería, lleva camiseta verde.'),
+  fact('¿Qué jugador está más cerca del balón?','El jugador de azul',['El portero de verde','El árbitro de negro','El jugador naranja del fondo'],'El jugador de azul corre junto al balón.'),
+  fact('¿Dónde está la portería visible?','A la izquierda de la imagen',['A la derecha del árbitro','Detrás de las gradas','En el centro del campo'],'La portería está en el lado izquierdo de la imagen.'),
+  fact('¿Qué hace el árbitro vestido de negro?','Corre detrás de la jugada',['Defiende la portería','Está sentado en las gradas','Sostiene una bandera amarilla'],'El árbitro vestido de negro corre siguiendo la jugada.'),
+  fact('¿Quiénes observan el partido desde las gradas?','Espectadores',['Músicos','Vendedores','Jugadores de baloncesto'],'Hay espectadores sentados en las gradas detrás del campo.'),
+  fact('¿De qué color es la línea del borde del campo?','Blanca',['Roja','Amarilla','Azul'],'Una línea blanca marca el borde del campo.'),
+  fact('¿Qué dos colores distinguen a los equipos?','Naranja y azul',['Verde y negro','Rojo y amarillo','Blanco y morado'],'Un equipo viste de naranja y el otro de azul.')
  ]},
- greenhouse2026:{title:'Cuidar las plantas en un invernadero',width:1448,height:1086,path:'assets/photos/everyday-variety-20261030/greenhouse.png',facts:[
- fact('¿Cuántas macetas formaban la fila del primer plano sobre la mesa?','Tres',['Dos','Cuatro','Una'],'La fila del primer plano tenía tres macetas.'),
- fact('¿De qué color era la regadera de la izquierda?','Azul',['Roja','Amarilla','Verde'],'La regadera de la izquierda era azul.'),
- fact('¿Dónde estaban los guantes amarillos?','A la derecha de las macetas',['Bajo la mesa','Dentro de la regadera','A la izquierda de la regadera'],'Los guantes estaban a la derecha de las macetas.'),
- fact('¿De qué color era el mango de la pala de mano?','Verde',['Azul','Rojo','Negro'],'El mango de la pala de mano era verde.'),
- fact('¿Qué había en el suelo bajo la mesa?','Un saco cerrado',['Una caja abierta','Una cesta vacía','Una regadera'],'Había un saco cerrado bajo la mesa.'),
- fact('¿Qué tenían las tres macetas del primer plano?','Plantas con hojas verdes',['Flores rojas','Solo tierra sin plantas','Piedras blancas'],'Las tres macetas tenían plantas con hojas verdes.')
+ railwayRecreation:{title:'Recreación de una estación de tren de época',width:1448,height:1086,path:'assets/photos/everyday-scenes-20261104/railway-1965.png',facts:[
+  fact('¿Dónde ocurre la escena?','En el andén de una estación',['En un aeropuerto','En una parada de autobús','En un muelle'],'La escena recrea un andén de estación con un tren de pasajeros.'),
+  fact('¿Qué hace la mujer del abrigo claro?','Saluda a alguien en la ventanilla',['Lee un periódico sentada','Empuja una bicicleta','Habla con el maquinista'],'La mujer del abrigo claro levanta la mano para saludar a alguien en una ventanilla.'),
+  fact('¿Qué lleva el trabajador de uniforme oscuro?','Una maleta',['Un ramo de flores','Un paraguas abierto','Una caja de herramientas'],'El trabajador de uniforme oscuro lleva una maleta.'),
+  fact('¿Qué medio de transporte está junto al andén?','Un tren',['Un tranvía','Un barco','Un avión'],'Un tren de pasajeros está detenido junto al andén.'),
+  fact('¿Dónde está el reloj de la estación?','Colgado bajo la cubierta del andén',['Dentro de un vagón','En el suelo','Sobre una maleta'],'El reloj redondo cuelga bajo la cubierta del andén.'),
+  fact('¿Qué sale de la locomotora?','Vapor',['Agua de una manguera','Humo de una fogata','Arena'],'Se ve vapor cerca de la locomotora.'),
+  fact('¿Qué hace el hombre junto a la puerta del vagón?','Sube al tren con una maleta',['Baja una bicicleta','Limpia la ventana','Se sienta en un banco'],'Un hombre con una maleta está entrando por la puerta del vagón.'),
+  fact('¿Qué aspecto visual tiene esta recreación?','Blanco y negro, como una foto antigua',['Colores fluorescentes','Acuarela infantil','Dibujo geométrico'],'La imagen está hecha en blanco y negro con apariencia de fotografía antigua.')
+ ]},
+ peopleMarket:{title:'Personas comprando en un mercado callejero',width:1448,height:1086,path:'assets/photos/everyday-scenes-20261104/market-people.png',facts:[
+  fact('¿Qué hace la vendedora del delantal azul?','Entrega una bolsa de papel',['Pesa una maleta','Riega unas plantas','Cierra una ventana'],'La vendedora del delantal azul entrega una bolsa de papel a una clienta.'),
+  fact('¿De qué color es la chaqueta de la clienta que recibe la bolsa?','Roja',['Verde','Azul','Amarilla'],'La clienta que recibe la bolsa lleva una chaqueta roja.'),
+  fact('¿Qué lleva al hombro la mujer de la chaqueta azul?','Una bolsa verde',['Una mochila roja','Un paraguas amarillo','Una cesta blanca'],'La mujer de chaqueta azul lleva una bolsa reutilizable verde al hombro.'),
+  fact('¿Qué hace la niña de la izquierda?','Señala hacia el puesto',['Entrega una maleta','Paga con una tarjeta','Abre una sombrilla'],'La niña de la izquierda alza el brazo y señala hacia el puesto.'),
+  fact('¿Qué cubre el puesto?','Un toldo de rayas de colores',['Un techo de cristal','Una lona negra lisa','Una sombrilla azul'],'El puesto está bajo un toldo con rayas de varios colores.'),
+  fact('¿Qué se ve en los cajones del primer plano?','Verduras y tomates',['Libros y cuadernos','Pelotas y raquetas','Tazas y platos'],'En los cajones del primer plano se ven verduras y tomates.'),
+  fact('¿Cómo interactúan la clienta y la vendedora?','Se pasan una bolsa mientras conversan',['Juegan con un balón','Se sientan a leer','Suben juntas a un tren'],'La clienta y la vendedora están frente a frente mientras se pasan una bolsa.'),
+  fact('¿Qué hay al fondo de la escena?','Más puestos y compradores',['Una portería de fútbol','Una sala de museo','Una vía de tren'],'Al fondo se ven otros puestos y personas comprando.')
  ]}
 });
 // Presence/movement are answered with labelled choices: absent objects have no misleading hitbox in B.
-pairs.ceramics2026={sceneId:'ceramics2026',path:'assets/photos/everyday-variety-20261030/ceramics-b.png',varied:true,textSelectionOnly:true,regions:{},changes:[['Los cuencos','De tres cuencos a dos cuencos'],['La esponja','De una esponja visible a ninguna esponja'],['El jarrón','De la zona derecha a la zona central']],unchanged:['El delantal','La ventana']};
-pairs.music2026={sceneId:'music2026',path:'assets/photos/everyday-variety-20261030/music-b.png',varied:true,textSelectionOnly:true,regions:{},changes:[['El micrófono','De un micrófono visible a ningún micrófono'],['La maraca','De la derecha de los auriculares a la izquierda de los auriculares'],['Los auriculares','De la zona central a la zona derecha']],unchanged:['El taburete','Los paneles de la pared']};
 // Each harder question reconstructs two or three independent facts from the SAME image.
 // Distractors differ in exactly one component; colour alone cannot solve the task.
 const challenges={
- ceramics2026:[[0,1,2],[2,3,4],[1,4,5],[0,3,5]],music2026:[[0,1,2],[2,3,4],[1,4,5],[0,3,5]],bicycle2026:[[0,1,2],[2,3,4],[1,4,5],[0,3,5]],greenhouse2026:[[0,1,2],[2,3,4],[1,4,5],[0,3,5]],
+ museumVisit:[[0,1,2],[3,4,5],[6,7,0],[1,3,6]],peacefulMarch:[[0,1,2],[3,4,5],[6,7,1],[2,4,6]],footballMatch:[[0,1,2],[3,4,5],[6,7,0],[1,4,6]],railwayRecreation:[[0,1,2],[3,4,5],[6,7,0],[1,3,6]],peopleMarket:[[0,1,2],[3,4,5],[6,7,0],[1,3,6]],
  library2026:[[0,1,2],[1,2,3],[0,2,3],[0,1,3]],autumnPark2026:[[0,1,2],[1,2,3],[0,2,3],[0,1,3]],
  cafe:[[0,1,2],[3,4,5],[6,7,8],[9,10,11]],sports:[[0,1,2],[3,4,5],[6,7,8],[9,10,11]],
  kitchen:[[1,3,5],[11,9,10],[2,6,7],[4,8,5]],
