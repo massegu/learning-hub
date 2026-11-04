@@ -15,10 +15,10 @@ try:
    workspace(page).locator('#profileSelect').select_option(age);workspace(page).locator('#navMenu [data-subject=executive]').click()
    page.locator('#cognitiveMode').click();page.wait_for_function('()=>window.__current?.type==="cognitiveTask"&&document.querySelector(".cognitive-area")')
    for level in [1,2,3]:
-    page.locator('#exerciseLevelSelect').select_option(str(level))
     for kind in ['rules','words','deduction','change','information','contradiction']:
      family_domain=({'middle':'middleLanguage','teen':'teenLanguage'}.get(age,'language') if kind=='words' else 'executive')
      workspace(page).locator('#navMenu [data-subject='+family_domain+']').click()
+     page.locator('#exerciseLevelSelect').select_option(str(level))
      if kind=='words':page.locator('#wordFitMode').click()
      else:page.locator('#cognitiveMode').click();page.locator('#cognitiveFamilySelect').select_option(kind)
      page.wait_for_function('({kind,level})=>window.__current?.type==="cognitiveTask"&&__current.cognitiveTask.kind===kind&&__current.level===level&&document.querySelector(".cognitive-area")',arg={'kind':kind,'level':level})
