@@ -2564,10 +2564,9 @@ Deno.serve(async (req:Request)=>{
     // activities without one, deliberately serve an authored example.
     if(kind==='exercise'&&n===1&&!body.photos_only&&!body.interaction_only&&!body.cognitive_only&&!body.executed_only&&!body.room_speed_only&&!body.memory_audio_only&&!body.speed_mechanic&&body.documents_only!==true){
       const recentMechanics=recentEntries.filter((x:string)=>x.includes(':mechanic:')).slice(-8);
-      const dueMemoryAudio=domain==='memory'&&!recentMechanics.some((x:string)=>x.includes(':mechanic:memory_audio_'));
       const dueSpeedUnpaired=domain==='speedReasoning'&&!recentMechanics.some((x:string)=>x.includes(':mechanic:speed_unpaired'));
-      if(dueMemoryAudio||dueSpeedUnpaired){
-        const curated=(globalThis as any).Curriculum.pool(age,domain,level).filter((it:any)=>dueMemoryAudio?it.audioMemory===true:it.mechanic==='speed_unpaired').map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
+      if(dueSpeedUnpaired){
+        const curated=(globalThis as any).Curriculum.pool(age,domain,level).filter((it:any)=>it.mechanic==='speed_unpaired').map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
         if(curated.length)items=generatedItems(domain,1,recentEntries,()=>null,curated);
       }
     }

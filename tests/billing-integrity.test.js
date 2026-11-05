@@ -27,7 +27,7 @@ async function fixture({bound=true,status='active',customer='cus_A',env={}}={}){
  await db.query('insert into auth.users(id) values($1),($2)',[USER,OTHER]);
  await db.query('insert into accounts(user_id,subscription_status,stripe_customer_id,stripe_subscription_id) values($1,$2,$3,$4),($5,\'trial\',\'cus_B\',null)',[USER,status,customer,bound?'sub_A':null,OTHER]);
  const cfg={SUPABASE_URL:'https://db.invalid',SUPABASE_SERVICE_ROLE_KEY:'server-only-fixture',STRIPE_MODE:'test',STRIPE_SECRET_KEY:'sk_test_offline',STRIPE_PRICE_ID:price,BILLING_APP_URL:app,STRIPE_WEBHOOK_SECRET:secret,...env};
- const objects=new Map([['prices/'+price,{id:price,livemode:false,active:true,type:'recurring',currency:'eur',unit_amount:1999,tax_behavior:'inclusive',recurring:{interval:'month',interval_count:1}}],['subscriptions/sub_A',sub()],['customers/cus_A',{id:'cus_A',livemode:false}],['customers/cus_B',{id:'cus_B',livemode:false}]]),requests=[],idem=new Map();let failRPC=null,failFetch=null,gate=null;
+ const objects=new Map([['prices/'+price,{id:price,livemode:false,active:true,type:'recurring',currency:'eur',unit_amount:3000,tax_behavior:'inclusive',recurring:{interval:'month',interval_count:1}}],['subscriptions/sub_A',sub()],['customers/cus_A',{id:'cus_A',livemode:false}],['customers/cus_B',{id:'cus_B',livemode:false}]]),requests=[],idem=new Map();let failRPC=null,failFetch=null,gate=null;
  objects.set('subscriptions',{has_more:false,data:bound?[objects.get('subscriptions/sub_A')]:[]});
  async function callRPC(name,args){const keys=Object.keys(args),sql=`select public.${name}(${keys.map((k,i)=>k+'=> $'+(i+1)).join(',')}) as value`;return (await db.query(sql,Object.values(args))).rows[0].value;}
  const admin={auth:{getUser:async token=>token==='userA'?{data:{user:{id:USER,email:'a@example.invalid'}}}:token==='userB'?{data:{user:{id:OTHER,email:'b@example.invalid'}}}:{error:{message:'invalid'}}},
@@ -45,7 +45,7 @@ async function fixture({bound=true,status='active',customer='cus_A',env={}}={}){
    // Stripe accounts may enable Managed Payments by default. The previous request
    // was rejected, and replaying its idempotency key returns that stored failure.
    if(body['managed_payments[enabled]']!=='false'||!key?.startsWith('lh:checkout:v2:'))return Response.json({error:{message:'Unsupported parameter: payment_method_types. Managed Payments is enabled by default.'}},{status:400});
-   value={id:'cs_new',livemode:false,currency:'eur',amount_total:1999,mode:body.mode,status:'open',client_reference_id:body.client_reference_id,customer:body.customer,url:'https://checkout.stripe.com/c/pay/offline',automatic_tax:{enabled:body['automatic_tax[enabled]']==='true'},metadata:{learning_hub_attempt:body['metadata[learning_hub_attempt]']}};
+   value={id:'cs_new',livemode:false,currency:'eur',amount_total:3000,mode:body.mode,status:'open',client_reference_id:body.client_reference_id,customer:body.customer,url:'https://checkout.stripe.com/c/pay/offline',automatic_tax:{enabled:body['automatic_tax[enabled]']==='true'},metadata:{learning_hub_attempt:body['metadata[learning_hub_attempt]']}};
    objects.set('checkout/sessions/cs_new',value);
   }else if(options.method==='POST'&&path==='billing_portal/sessions')value={url:'https://billing.stripe.com/p/session/offline'};
   else value=objects.get(path);
@@ -96,13 +96,13 @@ test('existing subscriptions use the customer-bound portal, never an email or br
  assert.equal((await f.action('portal','userB',{customer:'cus_A'})).status,200);
  const call=f.requests.find(r=>r.path==='billing_portal/sessions');assert.equal(call.body.customer,'cus_B');assert.equal(call.body.return_url,app);
 });
-test('automatic tax is opt-in, collects billing address and keeps the inclusive 19.99 EUR total',async()=>{
+test('automatic tax is opt-in, collects billing address and keeps the inclusive 30 EUR total',async()=>{
  const f=await fixture({bound:false,status:'trial',customer:null,env:{STRIPE_AUTOMATIC_TAX:'enabled'}});
  const first=await f.action('checkout');assert.equal(first.status,200);
  const call=f.requests.find(r=>r.path==='checkout/sessions'&&r.body);
  assert.equal(call.body['automatic_tax[enabled]'],'true');assert.equal(call.body.billing_address_collection,'required');assert.equal(call.body['customer_update[address]'],'auto');
  assert.match(call.headers['Idempotency-Key'],/^lh:checkout:v2:tax:/);
- assert.equal(f.objects.get('checkout/sessions/cs_new').amount_total,1999);
+ assert.equal(f.objects.get('checkout/sessions/cs_new').amount_total,3000);
  assert.deepEqual(await f.action('checkout'),first);
  f.objects.get('checkout/sessions/cs_new').automatic_tax.enabled=false;
  assert.equal((await f.action('checkout')).status,409);
