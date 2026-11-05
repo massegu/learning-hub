@@ -29,6 +29,12 @@ test('missing noun icons from manual review have local printable equivalents and
   }
   assert.equal(art.forLabel('Ana'),null);assert.equal(art.forLabel('Ana',{subject:'Personas'}),'person');
 });
+test('new civic, commercial and art pictograms have local screen and worksheet assets',()=>{
+  for(const [label,key] of [['museo','museum'],['monumento','monument'],['farmacia','storefront'],['obra de arte','artwork'],['una persona','person']]){
+    assert.equal(art.forLabel(label),key);assert.ok(art.svg(key).includes('viewBox'));
+    assert.deepEqual([...art.png(key).slice(0,8)],[137,80,78,71,13,10,26,10]);
+  }
+});
 test('older calibration requires a full fresh evidence window and has distinct thresholds by age',()=>{
   for(const route of ['junior','primary','middle']){
     const p=profile(route),rule=stages.forProfile(p),good=Array(rule.minimumAttempts).fill({correct:true});

@@ -42,12 +42,12 @@
     out.splice(target,0,answer);
     return out;
   }
-  function optionParagraphs(it, TextRun, Paragraph, itemIndex, version, size=18){
+  function optionParagraphs(it, TextRun, Paragraph, itemIndex, version, size=18, color='173326'){
     const opts=balancedOptions(it,itemIndex,version);
     if(!opts.length) return [];
     return opts.map((x,i)=>new Paragraph({
       spacing:{after:55,line:270},
-      children:[new TextRun({text:`${String.fromCharCode(65+i)}. ${clean(x)}`,size,color:'173326',font:'Aptos'})]
+      children:[new TextRun({text:`${String.fromCharCode(65+i)}. ${clean(x)}`,size,color,font:'Aptos'})]
     }));
   }
   async function makeDoc(items,version,profile,models){
@@ -93,7 +93,16 @@
       if(bytes.length<24||[137,80,78,71,13,10,26,10].some((b,i)=>bytes[i]!==b))throw new Error('El documento visual no es una imagen PNG válida.');
       documentImages.set(id,bytes);
     }
-    const green='1F633B' ,green2='2F7D4A',light='EDF5E9',sand='F6F1E5',ink='173326',muted='607064',white='FFFFFF',line='D6DED6';
+    const route=profile?.progress?.ageRoute||profile?.age_band||'primary';
+    const palettes={
+      early:{accent:'D65A4A',strong:'B7453E',light:'FFF0E8',secondary:'168B8B',ink:'17324D',muted:'5F7287',line:'E7C9B8',highlight:'FFE0A8'},
+      junior:{accent:'718B51',strong:'536C3A',light:'EEF3E7',secondary:'A77D35',ink:'26364A',muted:'657367',line:'D4DEC9',highlight:'F3E4BF'},
+      primary:{accent:'5A719E',strong:'405481',light:'EAF0F8',secondary:'258A91',ink:'24354D',muted:'65758A',line:'CFD9E8',highlight:'DDEAF4'},
+      middle:{accent:'6E75AB',strong:'4B538A',light:'F0F1FA',secondary:'3F8C91',ink:'263954',muted:'69738A',line:'D3D7E8',highlight:'E4E7F5'},
+      teen:{accent:'6259C9',strong:'4E45AC',light:'EEEBFC',secondary:'258A91',ink:'242442',muted:'62627B',line:'D7D4EF',highlight:'E8E3FB'}
+    };
+    const palette=palettes[route]||palettes.primary;
+    const green=palette.accent,green2=palette.secondary,light=palette.light,sand=palette.highlight,ink=palette.ink,muted=palette.muted,white='FFFFFF',line=palette.line;
     const noBorders={top:{style:BorderStyle.NONE,size:0,color:white},bottom:{style:BorderStyle.NONE,size:0,color:white},left:{style:BorderStyle.NONE,size:0,color:white},right:{style:BorderStyle.NONE,size:0,color:white},insideHorizontal:{style:BorderStyle.NONE,size:0,color:white},insideVertical:{style:BorderStyle.NONE,size:0,color:white}};
     const softBorders={top:{style:BorderStyle.SINGLE,size:6,color:line},bottom:{style:BorderStyle.SINGLE,size:6,color:line},left:{style:BorderStyle.SINGLE,size:6,color:line},right:{style:BorderStyle.SINGLE,size:6,color:line},insideHorizontal:{style:BorderStyle.NONE,size:0,color:white},insideVertical:{style:BorderStyle.NONE,size:0,color:white}};
     const early=Boolean(window.ContentPolicy.forProfile(profile));
@@ -124,7 +133,10 @@
         const source=window.DocumentLibrary.get(material.documentId);
         const description=source.transcript.map(b=>b.type==='text'?b.text:b.rows.map(r=>r.join(' · ')).join('; ')).join(' ');
         const scale=Math.min((source.width>=source.height?560:340)/source.width,510/source.height);
-        return [new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({data:documentImages.get(material.documentId),transformation:{width:Math.round(source.width*scale),height:Math.round(source.height*scale)},altText:{name:source.title,title:source.title,description}})]}),paragraph('Contenido del documento visual:'),...source.transcript.flatMap(block=>renderMaterial(block,item))];
+        // The document image is the primary stimulus. Its transcript remains
+        // available as image alternative text, so printing it again here
+        // would duplicate the source and make the worksheet unnecessarily long.
+        return [new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({data:documentImages.get(material.documentId),transformation:{width:Math.round(source.width*scale),height:Math.round(source.height*scale)},altText:{name:source.title,title:source.title,description}})]})];
       }
       if(material.type==='text') return [...heading,paragraph(material.text)];
       if(early && material.presentation==='count' && material.items.every(x=>x==='●'))return [...heading,new Paragraph({spacing:{after:130},children:material.items.flatMap(value=>[new TextRun({text:value,size:40,color:ink}),new TextRun({text:'    '})])})];
@@ -135,9 +147,9 @@
       new TableCell({width:{size:70,type:WidthType.PERCENTAGE},shading:{fill:light},margins:{top:170,bottom:170,left:220,right:160},children:[
         new Paragraph({children:[new TextRun({text:'FICHA DE ENTRENAMIENTO',bold:true,size:34,color:green,font:'Aptos Display'})]}),
         new Paragraph({spacing:{before:40},children:[new TextRun({text:`Versión ${version} · ${profile.name} · ${ageLabel(profile)} años`,size:20,color:ink,font:'Aptos'})]})]}),
-      new TableCell({width:{size:30,type:WidthType.PERCENTAGE},shading:{fill:green},margins:{top:145,bottom:145,left:100,right:100},children:[
+      new TableCell({width:{size:30,type:WidthType.PERCENTAGE},shading:{fill:palette.strong},margins:{top:145,bottom:145,left:100,right:100},children:[
         new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'LEVEL UP',bold:true,size:25,color:white,font:'Aptos'})]}),
-        new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'LEARNING LAB',bold:true,size:12,color:'D9EAD3',font:'Aptos'})]})]})
+        new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'LEARNING LAB',bold:true,size:12,color:white,font:'Aptos'})]})]})
     ]})]});
     const identity=new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:noBorders,rows:[new TableRow({children:[
       new TableCell({width:{size:55,type:WidthType.PERCENTAGE},shading:{fill:sand},margins:{top:125,bottom:125,left:170,right:130},children:[new Paragraph({children:[new TextRun({text:'Nombre / alias: __________________________',size:19,color:ink,font:'Aptos'})]})]}),
@@ -164,7 +176,7 @@
         block.push(paragraph('Palabras o pasos disponibles:'));
         model.tokens.forEach((token,j)=>block.push(paragraph(`${j+1}. ${token}`)));
       }
-      const op=optionParagraphs(it,TextRun,Paragraph,i,version,early?28:18);
+      const op=optionParagraphs(it,TextRun,Paragraph,i,version,early?28:18,ink);
       if(op.length){
         block.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:softBorders,rows:[new TableRow({children:[new TableCell({margins:{top:130,bottom:130,left:160,right:160},children:op})]})]}));
         block.push(new Paragraph({spacing:{after:70},children:[]}));
