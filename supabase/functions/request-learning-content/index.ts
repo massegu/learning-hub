@@ -2424,13 +2424,17 @@ Deno.serve(async (req:Request)=>{
   const requestedDomains=kind==="worksheet" ? (Array.isArray(body.domains)&&body.domains.length?body.domains:(globalThis as any).Curriculum.visible(SUBJECTS[age]||[],age)) : [body.domain];
   if(!SUBJECTS[age] || !Number.isInteger(level) || (kind!=="game" && (!Array.isArray(requestedDomains)||!requestedDomains.length||requestedDomains.some((d:any)=>!SUBJECTS[age].includes(d)))))
     return new Response(JSON.stringify({error:"Área o nivel no permitido para este perfil."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
-  if(body.client_revision!==undefined&&![1,2,3,4,5,6,7,8,9,10,11].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.client_revision!==undefined&&![1,2,3,4,5,6,7,8,9,10,11,12].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.memory_audio_only!==undefined&&(typeof body.memory_audio_only!=='boolean'||body.memory_audio_only&&(kind!=='exercise'||body.domain!=='memory'||body.photos_only||body.interaction_only||body.documents_only||body.executed_only||body.cognitive_only)))return new Response(JSON.stringify({error:'Modalidad de memoria auditiva no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.memory_audio_only&&Number(body.client_revision||1)<12)return new Response(JSON.stringify({error:'Actualiza la página para abrir la memoria auditiva.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.speed_mechanic!==undefined&&(!(kind==='exercise'&&body.domain==='speedReasoning'&&body.speed_mechanic==='unpaired')||body.room_speed_only||body.photos_only||body.documents_only||body.interaction_only||body.cognitive_only||body.executed_only))return new Response(JSON.stringify({error:'Mecánica de velocidad no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.speed_mechanic==='unpaired'&&Number(body.client_revision||1)<12)return new Response(JSON.stringify({error:'Actualiza la página para abrir esta mecánica de velocidad.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.room_speed_only!==undefined&&(typeof body.room_speed_only!=='boolean'||body.room_speed_only&&(kind!=='exercise'||body.domain!=='speedReasoning'||!['junior','primary','middle','teen'].includes(age)||body.interaction_only||body.photos_only||body.documents_only)))return new Response(JSON.stringify({error:'Modalidad de velocidad no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.room_speed_only&&Number(body.client_revision||1)<10)return new Response(JSON.stringify({error:'Actualiza la página para abrir los retos del entorno.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.interaction_only!==undefined&&(typeof body.interaction_only!=='boolean'||body.interaction_only&&(kind!=='exercise'||!['junior','primary','middle','teen'].includes(age)||!['attention','executive'].includes(body.domain)||body.documents_only||body.photos_only)))return new Response(JSON.stringify({error:'Modalidad interactiva no disponible para esta petición.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.interaction_only&&Number(body.client_revision||1)<4)return new Response(JSON.stringify({error:'Actualiza la página para abrir las actividades interactivas.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.interaction_kind==='auditory'&&Number(body.client_revision||1)<5)return new Response(JSON.stringify({error:'Actualiza la página para abrir las actividades con audio.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
-  if(body.interaction_kind!==undefined&&(!body.interaction_only||!(body.domain==='attention'?['room']:['symbols','movement','auditory']).includes(body.interaction_kind)))return new Response(JSON.stringify({error:'Tipo de actividad interactiva no válido.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.interaction_kind!==undefined&&(!body.interaction_only||!(body.domain==='attention'?['room','symbols','movement','auditory']:['symbols','movement','auditory']).includes(body.interaction_kind)))return new Response(JSON.stringify({error:'Tipo de actividad interactiva no válido.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   // Existing tabs must never receive an interaction they cannot score. Old
   // clients retain established tasks; the new document audit requests a refresh.
   if(body.photos_only&&Number(body.client_revision||1)<3)return new Response(JSON.stringify({error:'Actualiza la página para abrir las escenas cotidianas.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -2441,7 +2445,7 @@ Deno.serve(async (req:Request)=>{
   if((age==="junior"||age==="primary"||age==="middle"||age==="teen")&&kind==="exercise"&&["language","middleLanguage","teenLanguage"].includes(body.domain)&&body.subdomain&&!["grammar","spelling","vocabulary","writing"].includes(body.subdomain))
     return new Response(JSON.stringify({error:"Habilidad de Lenguaje no válida."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
   // Cached clients do not yet know these document IDs and photographic sources.
-  const compatibleSource=(item:any)=>(Number(body.client_revision||1)>=8||!(item?.stimulus||[]).some((block:any)=>block.type==='document'&&String(block.documentId).startsWith('everyday-')||block.type==='photo'&&['library2026','autumnPark2026','museumVisit','peacefulMarch','footballMatch','railwayRecreation','peopleMarket'].includes(block.photoId)));
+  const compatibleSource=(item:any)=>(Number(body.client_revision||1)>=8||!(item?.stimulus||[]).some((block:any)=>block.type==='document'&&String(block.documentId).startsWith('everyday-')||block.type==='photo'&&['library2026','autumnPark2026','museumVisit','museumComparison','peacefulMarch','footballMatch','railwayRecreation','peopleMarket'].includes(block.photoId)||block.type==='photoPair'&&block.pairId==='museumComparison'));
   const cognitiveBank=body.cognitive_only?(globalThis as any).CognitiveFamilies.pool(age,body.domain,level,body.cognitive_family||null):[];
   const cognitivePrint=body.cognitive_only&&kind==='worksheet'&&typeof body.cognitive_content_key==='string'?cognitiveBank.find((it:any)=>it.contentKey===body.cognitive_content_key&&it.printable!=='interactive-only'):null;
   if(body.cognitive_content_key!==undefined&&(!body.cognitive_only||kind!=='worksheet'||!cognitivePrint))return new Response(JSON.stringify({error:'Esta actividad no está disponible en papel para este perfil.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -2530,7 +2534,13 @@ Deno.serve(async (req:Request)=>{
       if(!item||!compatibleSource(item)||Number(body.client_revision||1)<2&&(item.type==='documentReview'||item.selectiveRecall)||Number(body.client_revision||1)<3&&item.photoTask)return null;
       return regionalCandidate(item,locale,domain,age);
     };
-    if(body.cognitive_only===true){
+    if(body.memory_audio_only===true){
+      const bank=(globalThis as any).Curriculum.pool(age,'memory',level).filter((it:any)=>it.audioMemory===true).map((it:any)=>regionalCandidate(it,locale,'memory',age)).filter(Boolean);
+      items=generatedItems(domain,n,recentEntries,()=>null,bank);
+    }else if(body.speed_mechanic==='unpaired'){
+      const bank=(globalThis as any).Curriculum.pool(age,'speedReasoning',level).filter((it:any)=>it.mechanic==='speed_unpaired').map((it:any)=>regionalCandidate(it,locale,'speedReasoning',age)).filter(Boolean);
+      items=generatedItems(domain,n,recentEntries,()=>null,bank);
+    }else if(body.cognitive_only===true){
       const bank=(globalThis as any).CognitiveFamilies.pool(age,domain,level,body.cognitive_family||null).map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
       items=generatedItems(domain,n,recentEntries,()=>null,bank);
     }else if(body.executed_only===true){
@@ -2549,6 +2559,17 @@ Deno.serve(async (req:Request)=>{
       let available=pool.filter((x:any)=>!seen.has(keyOf(domain,subdomain,x)));
       if(!available.length) available=pool;
       items=shuffle(available).slice(0,n);
+    }
+    // Keep new mechanics findable in large, mixed banks. After every eight
+    // activities without one, deliberately serve an authored example.
+    if(kind==='exercise'&&n===1&&!body.photos_only&&!body.interaction_only&&!body.cognitive_only&&!body.executed_only&&!body.room_speed_only&&!body.memory_audio_only&&!body.speed_mechanic&&body.documents_only!==true){
+      const recentMechanics=recentEntries.filter((x:string)=>x.includes(':mechanic:')).slice(-8);
+      const dueMemoryAudio=domain==='memory'&&!recentMechanics.some((x:string)=>x.includes(':mechanic:memory_audio_'));
+      const dueSpeedUnpaired=domain==='speedReasoning'&&!recentMechanics.some((x:string)=>x.includes(':mechanic:speed_unpaired'));
+      if(dueMemoryAudio||dueSpeedUnpaired){
+        const curated=(globalThis as any).Curriculum.pool(age,domain,level).filter((it:any)=>dueMemoryAudio?it.audioMemory===true:it.mechanic==='speed_unpaired').map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
+        if(curated.length)items=generatedItems(domain,1,recentEntries,()=>null,curated);
+      }
     }
     if(items.length!==n)return new Response(JSON.stringify({error:"No hay actividades disponibles para esta área y variante de español. Prueba otra área."}),{status:422,headers:{...corsHeaders,"Content-Type":"application/json"}});
     delivery.seen ||= {};

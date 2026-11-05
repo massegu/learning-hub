@@ -1,6 +1,6 @@
 {
   "origin": "AI-generated photorealistic scenes using image_gen; not photographs of actual customers, their homes or workplaces.",
-  "review": "Each source and edit visually inspected against js/photo-library.js. Original 12 pairs ask about colour changes. Cafe and sports add quantity, presence, orientation, object identity and open/closed state; incidental texture changes are not assessed.",
+  "review": "Each source and edit visually inspected against js/photo-library.js. Original 12 pairs ask about colour changes. Cafe and sports add quantity, presence, orientation, object identity and open/closed state; incidental texture changes are not assessed. The museumComparison pair adds an everyday people-centred scene with three localized differences: scarf pattern, guide fold and a small lapel pin. Difference tasks progress from three labelled candidate regions at level 1 to four at level 2 and six unlabelled, directly clickable regions at level 3.",
   "images": [
     {
       "file": "bus-a.png",
@@ -75,6 +75,14 @@
       "sha256": "3d4f763cec9eb59ef5c21270a7aa563bc0326e127e8f5327af5918d6d34fe40c"
     },
     {
+      "file": "museum-comparison-a.png",
+      "sha256": "dd0c53f0a64e4eb8d1a22d94a1375796ff3ed7a7c5e9e22352460bf67d81cf61"
+    },
+    {
+      "file": "museum-comparison-b.png",
+      "sha256": "f35b1a9197d582f4c794c7fe5574a3635e74ac7216c966f4e3352d2e4e657d6a"
+    },
+    {
       "file": "nature-a.png",
       "sha256": "6c672c4c796b2ef308514d760b63b6352eb68f65381610b3476c1ee44a4c762f"
     },
@@ -114,5 +122,12 @@
       "file": "street-b.png",
       "sha256": "b90c1a518beb5d7dcb9d56c6dba6a31f8c0e9def16d4ff535faa29dc5821e693"
     }
+  ],
+  "activeDifferencePairs": [
+    "street",
+    "park",
+    "city",
+    "factory",
+    "museumComparison"
   ]
 }

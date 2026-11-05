@@ -147,8 +147,9 @@
     mode = "grammar",
     documentOnly = false,
     photoOnly = false,
+    memoryAudioOnly = false,
     interactionOnly = false,
-    roomSpeedOnly = false, cognitiveOnly=false, cognitiveFamily="", executedOnly=false, stopExecuted=null,
+    roomSpeedOnly = false, speedUnpairedOnly=false, cognitiveOnly=false, cognitiveFamily="", executedOnly=false, stopExecuted=null,
     interactionKind = 'symbols',
     currentItem = null,
     counter = 0,
@@ -356,7 +357,9 @@
   }
   document.addEventListener('visibilitychange',()=>{if(document.hidden&&currentItem?.roomSpeedTask&&!currentItem._earlyAnswered){currentItem._roomTiming&&(currentItem._roomTiming.valid=false);interruptPractice(currentItem);$('#restartInteraction').onclick=()=>renderRoomSpeed(currentItem);}});
   window.addEventListener('blur',()=>{if(currentItem?._roomTiming)currentItem._roomTiming.valid=false;});
-  $('#speedModeSwitch').onclick=event=>{const button=event.target.closest('[data-speed-mode]');if(!button)return;roomSpeedOnly=button.dataset.speedMode==='room';counter=0;setupExercise();};
+  $('#speedModeSwitch').onclick=event=>{const button=event.target.closest('[data-speed-mode]');if(!button)return;roomSpeedOnly=button.dataset.speedMode==='room';speedUnpairedOnly=false;counter=0;setupExercise();};
+  $('#speedUnpairedMode').onclick=()=>{speedUnpairedOnly=!speedUnpairedOnly;roomSpeedOnly=false;counter=0;setupExercise();};
+  $('#memoryAudioModeButton').onclick=()=>{memoryAudioOnly=!memoryAudioOnly;photoOnly=false;counter=0;setupExercise();};
   function renderSpeedExercise(it){
     $('#exerciseVisual').innerHTML=window.ContentPolicy.forProfile(profile)?'<p>Mira y responde. El reloj empieza al mostrar las figuras. También puedes practicar sin medir.</p>':'<p>Responde con precisión y agilidad. El tiempo empieza al mostrar el estímulo. Puedes usar los botones o las teclas numéricas.</p>';
     $('#exerciseOptions').innerHTML='<button id="startSpeedTrial" class="primary-btn">Mostrar y medir</button><button id="practiceSpeedTrial" class="secondary-btn">Practicar sin medir</button>';
@@ -388,6 +391,7 @@
     }
   });
   function renderMultiSelect(it) {
+    $('#exercise').classList.toggle('visual-only-differences',it.type==='photoDifference'&&it.level>=3);
     const single=subject==='attention'&&it.level===1&&it.answers?.length===1;
     $('#exerciseOptions').classList.add('structured-options');
     const selected = new Set();
@@ -402,19 +406,19 @@
         mark.disabled=option.disabled;
       }
     }
-    if(it.type==='photoDifference'&&it.level<3&&!window.PhotoLibrary.pairs[it.photoTask.pairId].textSelectionOnly){
+    if(it.type==='photoDifference'){
       const image=$('.photo-comparison figure:nth-child(2) img');
       if(image){
         const holder=document.createElement('div');holder.className='photo-hit-image';image.before(holder);holder.append(image);
         const regions=window.PhotoLibrary.pairs[it.photoTask.pairId].regions;
         for(const [object,box] of Object.entries(regions)){
           const value=window.LocaleContent.text(object,API.effectiveLocale(profile));
-          const option=$$('#exerciseOptions .multi-option').find(b=>b.dataset.value===value);if(!option)continue;
+          const option=$$('#exerciseOptions .multi-option').find(b=>b.dataset.value===value||b.dataset.value.startsWith(value+': '));if(!option)continue;
           const mark=document.createElement('button');mark.type='button';mark.className='photo-hit';mark.dataset.value=value;mark.setAttribute('aria-label','Señalar: '+value);mark.setAttribute('aria-pressed','false');
           const [left,top,width,height]=box;Object.assign(mark.style,{left:left+'%',top:top+'%',width:width+'%',height:height+'%'});
           mark.onclick=()=>option.click();holder.append(mark);photoMarks.push({mark,option});
         }
-        const help=document.createElement('p');help.className='photo-mark-help';help.textContent='Compara A con B y marca solo los cambios que pide la consigna. Por ejemplo, si se pregunta por el color, selecciona un objeto solo cuando su color cambie de A a B. Puedes pulsar el objeto en B o usar la lista.';$('.photo-comparison').after(help);
+        const help=document.createElement('p');help.className='photo-mark-help';help.textContent=it.level>=3?'Compara las dos imágenes y pulsa directamente sobre cada detalle que haya cambiado.':'Compara las escenas y pulsa en la imagen B los elementos que han cambiado. También puedes seleccionarlos en la lista.';$('.photo-comparison').after(help);
       }
     } else if(it.type==='photoDifference'){
       const help=document.createElement('p');help.className='photo-mark-help';help.textContent='Compara A con B y marca solo los cambios que pide la consigna. Por ejemplo, si se pregunta por el color, selecciona un objeto solo cuando su color cambie de A a B.';$('.photo-comparison')?.after(help);
@@ -555,18 +559,18 @@
   }
   function renderMovementExercise(it,{live,local,recordObservation}){
     const t=it.interactionTask,visual=$('#exerciseVisual'),area=$('#exerciseOptions'),reports=[];let trial=0;
-    visual.innerHTML='<div class="interactive-rules">'+window.ActivityModel.interactiveStimulus(it.stimulus.slice(0,2),{structured:true})+'<p>Observa cada señal y sigue la tabla. La pantalla te indicará cuánto esperar antes de hacer el gesto. Con PAUSA, no hagas ningún gesto.</p></div>';
+    visual.innerHTML='<div class="interactive-rules">'+window.ActivityModel.interactiveStimulus(it.stimulus.slice(0,2),{structured:true})+'<p>Observa cada señal y sigue la tabla. Cuando aparezca PAUSA, no hagas ningún gesto.</p></div>';
     area.innerHTML='<button id="startInteractive" class="primary-btn">Empezar las tarjetas</button>';
     const next=()=>{
       if(!live())return;if(trial>=t.trials.length){finishObservedPractice(it,reports,recordObservation);return;}
       const rule=t.rules[t.trials[trial]],entry={trial:trial+1,report:'unverified'};reports.push(entry);
-      const deadline=Date.now()+t.waitMs,finishAt=deadline+4000;
+      const deadline=Date.now()+(rule.target<0?t.waitMs:1000),finishAt=deadline+4000;
       visual.innerHTML=`<div class="interactive-trial"><div class="interactive-card"><strong class="word-cue">${escapeHtml(rule.label)}</strong></div><p id="movementAction"></p><p id="interactiveSeconds" role="timer" aria-live="off"></p></div>`;
       area.innerHTML='<button id="movementEarly" class="secondary-btn">Marcar un adelanto o una confusión</button><button id="stopPractice" class="secondary-btn">Detener práctica</button>';
       $('#movementEarly').onclick=()=>{entry.report='early';$('#movementEarly').disabled=true;};$('#stopPractice').onclick=()=>interruptPractice(it);
       const tick=()=>{
         if(!live())return;const now=Date.now(),remaining=Math.max(0,deadline-now);
-        $('#interactiveSeconds').textContent=remaining?`Espera ${Math.ceil(remaining/1000)} segundos.`:'';
+        if(rule.target<0)$('#interactiveSeconds').textContent=remaining?`Espera ${Math.ceil(remaining/1000)} segundos.`:'';
         if(!remaining&&rule.target>=0)$('#movementAction').textContent='Ahora: '+local(t.actions[rule.target])+'.';
         if(now>=finishAt){trial++;next();return;}interactionTimer=setTimeout(tick,100);
       };tick();
@@ -919,7 +923,7 @@
     $("#independentSessionBtn").textContent=independent?"Terminar sesión independiente":"Empezar sesión independiente";
     $("#independentSessionStatus").textContent=independent?"Los resultados de esta sesión no se guardan. El uso se contabiliza por cuenta. Al terminar o recargar se descartan.":"Seguimiento individual: los resultados se guardan en este perfil.";
     $("#deleteProfileBtn").disabled=independent;$("#profilePrivacyBtn").disabled=independent;
-    photoOnly = false;roomSpeedOnly=false;executedOnly=false;cognitiveOnly=false;cognitiveFamily='';
+    photoOnly = false;memoryAudioOnly=false;roomSpeedOnly=false;speedUnpairedOnly=false;executedOnly=false;cognitiveOnly=false;cognitiveFamily='';
     guidedSession=null;
     hideGuidedBar();
     $('#appShell').classList.toggle('early-experience',Boolean(window.ContentPolicy.forProfile(p)));
@@ -1035,27 +1039,31 @@
       b.classList.toggle('active',!cognitiveOnly&&b.dataset.mode===mode);
     });
     $("#languageModeSwitch").classList.toggle("hidden", !isLang&&!isReading);
-    if(subject!=='speedReasoning')roomSpeedOnly=false;
+    if(subject!=='speedReasoning'){roomSpeedOnly=false;speedUnpairedOnly=false;}
     const roomSpeedSupport=subject==='speedReasoning'&&['junior','primary','middle','teen'].includes(window.AgeStages.route(profile));
     if(!roomSpeedSupport)roomSpeedOnly=false;
     $('#speedModeSwitch').classList.toggle('hidden',!roomSpeedSupport);
-    $$('#speedModeSwitch button').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.speedMode==='room')===roomSpeedOnly)));
+    $$('#speedModeSwitch [data-speed-mode]').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.speedMode==='room')===roomSpeedOnly&&!speedUnpairedOnly)));
+    $('#speedUnpairedMode').setAttribute('aria-pressed',String(speedUnpairedOnly));
     const documentSupport=window.DocumentLibrary?.supports(window.AgeStages.route(profile),subject);
     if(!documentSupport||isReading)documentOnly=false;
     const photoSupport=window.PhotoLibrary.supports(window.AgeStages.route(profile),subject);
     if(!photoSupport)photoOnly=false;
+    if(subject!=='memory')memoryAudioOnly=false;
     const interactionSupport=['junior','primary','middle','teen'].includes(window.AgeStages.route(profile))&&['attention','executive'].includes(subject);
     if(!interactionSupport)interactionOnly=false;
     $('#interactionModeBtn').classList.toggle('hidden',!interactionSupport);
     $('#interactionModeBtn').textContent=subject==='executive'?'Actúa con reglas':'Busca a tu alrededor';
-    $('#interactionModeBtn').setAttribute('aria-pressed',String(interactionOnly));
-    $('#interactionKindSwitch').classList.toggle('hidden',!interactionOnly||subject!=='executive');
-    $$('#interactionKindSwitch button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.interactionKind==='signals'?['movement','auditory'].includes(interactionKind):b.dataset.interactionKind===interactionKind)));
+    $('#interactionModeBtn').setAttribute('aria-pressed',String(interactionOnly&&(subject==='attention'?interactionKind==='room':interactionKind==='symbols')));
+    $('#interactionKindSwitch').classList.toggle('hidden',!interactionSupport||executedOnly);
+    $$('#interactionKindSwitch button').forEach(b=>b.setAttribute('aria-pressed',String(interactionOnly&&(b.dataset.interactionKind==='signals'?interactionKind==='movement':b.dataset.interactionKind===interactionKind))));
     $('#photoModeSwitch').classList.toggle('hidden',!photoSupport||subject!=='memory');
+    $('#memoryAudioMode').classList.toggle('hidden',subject!=='memory');
+    $('#memoryAudioModeButton').setAttribute('aria-pressed',String(memoryAudioOnly));
     $('#attentionPhotos').classList.toggle('hidden',!photoSupport||subject!=='attention');
     $('#attentionPhotos').setAttribute('aria-pressed',String(photoOnly));
     $('#photoModeSwitch [data-photos=true]').textContent=subject==='attention'?'Encuentra las diferencias':'Escenas cotidianas';
-    $$('#photoModeSwitch button').forEach(b=>b.setAttribute('aria-pressed',String(!cognitiveOnly&&!executedOnly&&(b.dataset.photos==='true')===photoOnly)));
+    $$('#photoModeSwitch button').forEach(b=>b.setAttribute('aria-pressed',String(!memoryAudioOnly&&!cognitiveOnly&&!executedOnly&&(b.dataset.photos==='true')===photoOnly)));
 
     const availableCognitiveBank=window.CognitiveFamilies.pool(window.AgeStages.route(profile),subject,state.levels[subject]||1);
     // Attention now has one clear task family: compare sources and find contradictions.
@@ -1078,13 +1086,13 @@
     if(!['attention','memory','executive'].includes(subject))executedOnly=false;
     $('#executedMode').classList.toggle('hidden',!['attention','memory','executive'].includes(subject));
     $('#executedMode').setAttribute('aria-pressed',String(executedOnly));
-    $('#interactionKindSwitch').classList.toggle('hidden',!interactionOnly||executedOnly);
+    $('#interactionKindSwitch').classList.toggle('hidden',!interactionSupport||executedOnly);
     $('#documentModeSwitch').classList.toggle('hidden',!documentSupport||isReading);
     $('#documentModeSwitch [data-documents=false]').textContent=subject==='executive'?'Planifica y decide':'Busca y compara';
     $('#documentModeSwitch [data-documents=true]').textContent=subject==='executive'?'Resuelve con documentos':'Explora documentos';
     $('#photoModeSwitch [data-photos=false]').textContent='Recuerda imágenes y secuencias';
     $('#documentModeHint').classList.toggle('hidden',!documentSupport||isReading);
-    $('#documentModeHint').textContent=cognitiveOnly?'Elige una familia o alterna entre situaciones. Lee la consigna antes de empezar.':executedOnly?'Marca, reconstruye o actúa directamente sobre los estímulos.':interactionOnly?(subject==='executive'?'Pulsa el botón que indica cada tarjeta; en la otra modalidad, mira o escucha una señal y haz el gesto indicado. Los gestos no se miden automáticamente.':'Busca objetos de la sala y explica qué características cumplen.'):photoOnly?'Compara las dos escenas y busca los cambios de color.':subject==='executive'?(documentOnly?'Usa el documento para organizar acciones y corregir un plan.':'Ordena acciones, aplica reglas y revisa decisiones.'):(documentOnly?'Localiza y contrasta los datos del documento.':'Compara figuras, códigos y listas.');
+    $('#documentModeHint').textContent=cognitiveOnly?'Elige una familia o alterna entre situaciones. Lee la consigna antes de empezar.':executedOnly?'Marca, reconstruye o actúa directamente sobre los estímulos.':interactionOnly?(subject==='executive'?'Pulsa el botón que indica cada tarjeta; en la otra modalidad, mira o escucha una señal y haz el gesto indicado. Los gestos no se miden automáticamente.':interactionKind==='room'?'Busca objetos de la sala y explica qué características cumplen.':'Responde a las tarjetas o sigue las señales con un gesto.') :photoOnly?'Compara las escenas y pulsa en la imagen los elementos que han cambiado.':subject==='executive'?(documentOnly?'Usa el documento para organizar acciones y corregir un plan.':'Ordena acciones, aplica reglas y revisa decisiones.'):(documentOnly?'Localiza y contrasta los datos del documento.':'Compara figuras, códigos y listas.');
     $$('#documentModeSwitch [data-documents]').forEach(b=>b.setAttribute('aria-pressed',String(!cognitiveOnly&&!executedOnly&&!interactionOnly&&!photoOnly&&(b.dataset.documents==='true')===documentOnly)));
     counter = 0;
     renderEarlyTaskGuide();
@@ -1094,15 +1102,16 @@
   $('#documentModeSwitch').addEventListener('click',event=>{
     const button=event.target.closest('button[data-documents],#attentionPhotos,#interactionModeBtn');
     if(!button)return;
-    cognitiveOnly=false;executedOnly=false;photoOnly=button.id==='attentionPhotos';
+    cognitiveOnly=false;executedOnly=false;memoryAudioOnly=false;photoOnly=button.id==='attentionPhotos';
     interactionOnly=button.id==='interactionModeBtn';
+    if(interactionOnly)interactionKind=subject==='attention'?'room':'symbols';
     documentOnly=!interactionOnly&&!photoOnly&&button.dataset.documents==='true';
     setupExercise();
   });
-  $('#interactionKindSwitch').addEventListener('click',event=>{const button=event.target.closest('[data-interaction-kind]');if(!button)return;interactionKind=button.dataset.interactionKind==='signals'?'movement':button.dataset.interactionKind;setupExercise();});
+  $('#interactionKindSwitch').addEventListener('click',event=>{const button=event.target.closest('[data-interaction-kind]');if(!button)return;interactionKind=button.dataset.interactionKind==='signals'?'movement':button.dataset.interactionKind;interactionOnly=true;cognitiveOnly=false;executedOnly=false;photoOnly=false;documentOnly=false;setupExercise();});
   $('#photoModeSwitch').addEventListener('click',event=>{
     const button=event.target.closest('button[data-photos]');if(!button)return;
-    cognitiveOnly=false;executedOnly=false;photoOnly=button.dataset.photos==='true';documentOnly=false;setupExercise();
+    cognitiveOnly=false;executedOnly=false;memoryAudioOnly=false;photoOnly=button.dataset.photos==='true';documentOnly=false;setupExercise();
   });
   $('#cognitiveMode').onclick=()=>{cognitiveOnly=true;executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;setupExercise();};
   $('#wordFitMode').onclick=()=>{mode='vocabulary';cognitiveOnly=true;cognitiveFamily='words';executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;setupExercise();};
@@ -1114,7 +1123,7 @@
     const localeRevision = API.localeRevision;
     const res = await API.requestContent({
       ...payload,
-      client_revision:11,
+      client_revision:12,
       ...(targetProfile._sessionOnly?{session_only:true}:{}),
       profile_id: targetProfile.id,
       locale,
@@ -1148,11 +1157,13 @@
     const res = await requestForProfile({
       ...(kind==='exercise'&&cognitiveOnly?{cognitive_only:true,cognitive_family:cognitiveFamily||null}:{}),
       ...(kind==='exercise'&&executedOnly?{executed_only:true}:{}),
-      ...(kind==='exercise'&&interactionOnly?{interaction_only:true,interaction_kind:subject==='attention'?'room':interactionKind}:{}),
+      ...(kind==='exercise'&&interactionOnly?{interaction_only:true,interaction_kind:interactionKind}:{}),
       ...(kind==='exercise'&&['attention','executive'].includes(domain)&&window.DocumentLibrary?.supports(window.AgeStages.route(profile),domain)?{documents_only:documentOnly}:{}),
       kind,
       domain,
       ...(kind==='exercise'&&domain==='speedReasoning'?{room_speed_only:roomSpeedOnly}:{}),
+      ...(kind==='exercise'&&domain==='speedReasoning'&&speedUnpairedOnly?{speed_mechanic:'unpaired'}:{}),
+      ...(kind==='exercise'&&domain==='memory'&&memoryAudioOnly?{memory_audio_only:true}:{}),
       ...(window.PhotoLibrary.supports(window.AgeStages.route(profile),domain)?{photos_only:photoOnly}:{}),
       subdomain: ["language","middleLanguage","teenLanguage"].includes(domain) ? mode : ["reading","middleReading","literacy"].includes(domain)?(mode==='writing'?'writing':'reading'):null,
       level: state.levels[domain] || 1,
@@ -1166,6 +1177,7 @@
     return res?.items?.[0] || null;
   }
   async function newExercise() {
+    $('#exercise').classList.remove('visual-only-differences');
     stopMemoryCountdown();
     $('#printCognitive')?.remove();
     $('#exercise').classList.remove('speed-active');

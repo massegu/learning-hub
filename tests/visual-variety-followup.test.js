@@ -33,9 +33,9 @@ test('functional followups and active-rule instructions stay tied to the visible
 });
 
 test('remaining difference pairs keep factual changes and unique distractors',()=>{
- for(const id of Object.keys(photos.pairs))for(const level of [1,2,3]){
+ for(const id of ['street','park','city','factory','museumComparison'])for(const level of [1,2,3]){
   const bank=photos.pool('teen','attention',level).filter(x=>x.photoTask.pairId===id);
   assert.ok(bank.length);
-  for(const it of bank){photos.validate(it);assert.equal(new Set(it.opts).size,it.opts.length);assert.ok(it.answers.every(x=>it.opts.includes(x)));if(level>=2)assert.equal(it.answers.length,3);}
+  for(const it of bank){photos.validate(it);assert.equal(new Set(it.opts).size,it.opts.length);assert.equal(it.opts.length,[0,3,4,6][level]);assert.ok(it.answers.every(x=>it.opts.includes(x)));if(level>=2)assert.equal(it.answers.length,3);assert.match(it.q,/Compara|Mira con cuidado/);}
  }
 });

@@ -893,9 +893,9 @@ function validateSocial(item){
 }
 
 const interactionCache=new Map();
-function interactiveTemplates(age,domain,level=1){
+function interactiveTemplates(age,domain,level=1,interactionKind=null){
  if(!['junior','primary','middle','teen'].includes(age)||!['attention','executive'].includes(domain)||![1,2,3].includes(level))return [];
- const key=[age,domain,level].join(':');if(interactionCache.has(key))return interactionCache.get(key);
+ const key=[age,domain,level,interactionKind||'all'].join(':');if(interactionCache.has(key))return interactionCache.get(key);
  const out=[],count=[3,4,age==='junior'?5:6][level-1];
  for(let variant=0;variant<8;variant++){
   if(domain==='attention'){
@@ -909,9 +909,12 @@ function interactiveTemplates(age,domain,level=1){
     stimulus:[T('Mira los objetos que tienes cerca. Puedes hacer la actividad desde tu sitio. No hace falta usar cámara ni micrófono.'),T(level===1?'Di qué objeto has encontrado y qué característica cumple.':level===2?'Describe el objeto y explica cómo cumple las dos condiciones.':'Describe el objeto y comprueba cada condición. Después explica por qué otro objeto parecido no serviría.'),T('Si no encuentras ninguno, puedes indicarlo. No se cuenta como un error.')],
     sample:'Respuesta abierta: comprobar las características indicadas con la persona que acompaña la actividad. Si no hay un objeto adecuado, registrar que no se ha encontrado.',
     interactionTask:{kind:'room',age,level,variant,clue,conditions:level},requiresStimulus:true},age,domain,level,'room-'+variant,'attention_room_search'));
-   continue;
+   // Room search remains a distinct observation activity; the card and
+   // signal templates below are also available to attention as scored tasks.
+   if(interactionKind==='room')continue;
   }
   for(const kind of ['symbols','movement','auditory']){
+   if(interactionKind&&interactionKind!=='room'&&kind!==interactionKind)continue;
    const symbols=['★','●','■','▲','◆','✚'].slice(0,count),names=['estrella','círculo','cuadrado','triángulo','rombo','cruz'].slice(0,count);
    const actions=kind==='symbols'?Array.from({length:count-1},(_,i)=>'Pulsa '+String.fromCharCode(65+i)):
     rotate(['Da una palmada suave','Tócate el pelo o la cabeza','Levanta una mano','Toca un lápiz que tengas a mano','Tócate el hombro','Toca la mesa con dos dedos','Levanta las dos manos desde tu sitio','Cruza los brazos'],variant).slice(0,count-1);
@@ -928,16 +931,17 @@ function interactiveTemplates(age,domain,level=1){
     ...(secondRules?[T('A mitad de la actividad cambiarán las reglas. Lee la nueva tabla antes de continuar.'),ruleTable(secondRules)]:[]),
     {type:'list',presentation:'sequence',items:trials.map(i=>kind==='symbols'?rules[i].symbol+' · '+rules[i].label:rules[i].label)}];
    const answers=trials.map((index,i)=>action((secondRules&&i>=count?secondRules:rules)[index].target));
+   const areaName=domain==='attention'?'Atención':'Funciones ejecutivas';
    out.push(finish({type:'self',responseType:'written',assessment:kind==='symbols'?'performance':'observation',requiresStimulus:true,
-    q:kind==='symbols'?'Mira la tarjeta y sigue su regla.':kind==='auditory'?'Escucha la señal completa y después actúa.':'Espera, piensa y haz el gesto.',topic:kind==='symbols'?'Funciones ejecutivas · tarjetas con reglas':kind==='auditory'?'Funciones ejecutivas · escucha y actúa':'Funciones ejecutivas · espera antes de actuar',stimulus,
+    q:kind==='symbols'?'Mira la tarjeta y sigue su regla.':kind==='auditory'?'Escucha la señal completa y después actúa.':'Espera, piensa y haz el gesto.',topic:kind==='symbols'?areaName+' · retos con tarjetas':kind==='auditory'?areaName+' · escucha y actúa':areaName+' · espera antes de actuar',stimulus,
     sample:kind==='symbols'?answers.map((a,i)=>`${i+1}. ${a}`).join(' · '):'Práctica de observación: anotar si se ha respetado la espera antes de cada gesto. La pantalla no puede comprobar el movimiento.',
     interactionTask:{kind,age,level,variant,rules,secondRules,actions,trials,waitMs,...(kind==='auditory'?{audioMode,signals,delays:trials.map((_,i)=>1500+((i*947+variant*631)%2500))}:{})}},age,domain,level,kind+'-'+variant,'executive_interactive_'+kind));
   }
  }
  interactionCache.set(key,out);return out;
 }
-function interactivePool(age,domain,level=1){return structuredClone(interactiveTemplates(age,domain,level));}
-function generateInteractive(age,domain,level=1,kind=null){const bank=interactiveTemplates(age,domain,level).filter(it=>!kind||it.interactionTask.kind===kind);return bank.length?structuredClone(bank[Math.floor(Math.random()*bank.length)]):null;}
+function interactivePool(age,domain,level=1){return structuredClone(interactiveTemplates(age,domain,level).filter(it=>domain!=='attention'||it.interactionTask.kind==='room'));}
+function generateInteractive(age,domain,level=1,kind=null){const bank=interactiveTemplates(age,domain,level,kind).filter(it=>!kind||it.interactionTask.kind===kind);return bank.length?structuredClone(bank[Math.floor(Math.random()*bank.length)]):null;}
 function validateInteraction(item){
  const t=item.interactionTask;
  if(!t||!Number.isInteger(t.variant)||t.variant<0||t.variant>7)throw new Error('La actividad interactiva no identifica sus reglas.');

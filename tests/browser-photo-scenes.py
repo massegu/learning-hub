@@ -12,7 +12,7 @@ try:
   page.evaluate('''()=>{const old=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return old(it,...args)}}''')
   workspace(page).locator('#navMenu [data-subject=memory]').click();page.locator('#photoModeSwitch [data-photos=true]').click();page.wait_for_selector('#showMemoryPhoto')
   assert page.evaluate('__requests.at(-1).photos_only') is True
-  assert page.evaluate('__requests.at(-1).client_revision')==11
+  assert page.evaluate('__requests.at(-1).client_revision')==12
   assert 'Hoy:' in page.locator('#usageHint').inner_text()
   assert page.locator('.everyday-photo img').count()==0
   memory=page.evaluate('__current');assert memory['photoTask']['kind']=='recall'
@@ -41,11 +41,18 @@ try:
    page.set_viewport_size({'width':width,'height':1000});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
    page.locator('#exercise').screenshot(path=f'/tmp/photo-differences-{width}.png')
   assert page.locator('#multiCheck').is_disabled()
-  first=difference['answers'][0];assert page.locator('.photo-hit').count()==0
-  page.get_by_role('button',name=first,exact=True).click()
+  first=difference['answers'][0];assert page.locator('.photo-hit').count()>0
+  page.get_by_role('button',name='Señalar: '+first,exact=True).click()
   for value in difference['answers'][1:]:page.get_by_role('button',name=value,exact=True).click()
   page.locator('#multiCheck').click();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
-  page.locator('#exerciseNext').click();page.wait_for_selector('.photo-comparison img')
+  page.locator('#exerciseNext').click();page.locator('#exerciseLevelSelect').select_option('3');page.wait_for_function('()=>__current?.domain==="attention"&&__current?.level===3&&__current?.type==="photoDifference"')
+  assert page.locator('#exercise').evaluate("e=>e.classList.contains('visual-only-differences')")
+  assert not page.locator('#exerciseOptions .multi-select-grid').is_visible()
+  assert 'Pulsa sobre cada detalle' in page.locator('.photo-mark-help').inner_text()
+  task3=page.evaluate('__current');assert page.locator('.photo-hit').count()==len(task3['opts'])
+  for value in task3['answers']:page.get_by_role('button',name='Señalar: '+value,exact=True).click()
+  page.locator('#multiCheck').click();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
+  page.locator('#exerciseNext').click();page.locator('#exerciseLevelSelect').select_option('2');page.wait_for_function('()=>__current?.domain==="attention"&&__current?.level===2&&__current?.type==="photoDifference"')
   difference2=page.evaluate('__current');wrong=next(x for x in difference2['opts'] if x not in difference2['answers']);page.get_by_role('button',name=wrong,exact=True).click();page.locator('#multiCheck').click();assert 'bad' in page.locator('#exerciseFeedback').get_attribute('class')
   with page.expect_download() as download:
    page.evaluate('''({memory,difference})=>WorksheetGenerator.generate([[memory,difference],[memory,difference]],__profiles.find(x=>x.id==='teen'))''',{'memory':memory,'difference':difference})
@@ -77,7 +84,7 @@ try:
   fixture={}
   def override(route):route.fulfill(json={'status':200,'data':{'items':[fixture],'usage':{'used':1,'limit':500}}})
   page.route('**/__review/content',override)
-  new_pairs=page.evaluate('PhotoLibrary.pool("teen","attention",2).filter(x=>["street","park","bus","factory","nature","city","cafe","sports"].includes(x.photoTask.pairId))')
+  new_pairs=page.evaluate('PhotoLibrary.pool("teen","attention",2).filter(x=>["street","park","factory","city","museumComparison"].includes(x.photoTask.pairId))')
   for task in new_pairs:
    fixture.clear();fixture.update(task);workspace(page).locator('#navMenu [data-subject=attention]').click()
    page.wait_for_function('(id)=>__current?.id===id&&document.querySelectorAll(".photo-comparison img").length===2',arg=task['id'])

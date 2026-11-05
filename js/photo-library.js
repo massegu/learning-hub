@@ -192,6 +192,7 @@ Object.assign(scenes,{
 });
 pairs.cafe={sceneId:'cafe',path:'assets/photos/cafe-b.png',varied:true,regions:{'Las galletas':[7,49,30,25],'Las gafas':[70,43,26,22],'La cuchara':[57,59,11,36],'La planta':[43,0,26,32],'La taza':[41,31,25,28]},changes:[['Las galletas','De tres galletas a dos galletas'],['Las gafas','De estar sobre el libro a no estar en la mesa'],['La cuchara','De una posición diagonal a una posición vertical']],unchanged:['La planta','La taza']};
 pairs.sports={sceneId:'sports',path:'assets/photos/sports-b.png',varied:true,regions:{'El balón':[43,32,17,21],'El silbato':[77,43,9,7],'La bolsa':[58,62,40,32],'Las zapatillas':[10,74,25,20],'La botella del banco':[18,26,8,26],'El reloj':[76,0,12,15]},changes:[['El balón','De un balón de fútbol a un balón de baloncesto'],['El silbato','De estar sobre la toalla a no estar en el banco'],['La bolsa','De estar cerrada a estar abierta']],unchanged:['Las zapatillas','La botella del banco','El reloj']};
+pairs.museumComparison={sceneId:'museumComparison',path:'assets/photos/museum-comparison-b.png',regions:{'El pañuelo de la mujer':[45,28,19,23],'La guía del museo':[22,52,11,19],'La solapa del hombre':[13,22,10,11],'La correa del bolso':[43,41,12,21],'El botón del abrigo de la mujer':[52,64,9,10],'Las gafas del hombre':[14,7,15,12]},changes:[['El pañuelo de la mujer','De cuadros finos rojos y grises a liso'],['La guía del museo','De abierta a doblada en formato pequeño'],['La solapa del hombre','De no tener broche a tener un broche plateado']],unchanged:['La correa del bolso','El botón del abrigo de la mujer','Las gafas del hombre']};
 
 Object.assign(scenes,{
  library2026:{title:'Una biblioteca de barrio',width:1536,height:1024,path:'assets/scenes/everyday-es-2026/library-scene.png',facts:[
@@ -261,11 +262,21 @@ Object.assign(scenes,{
   fact('¿Qué hay al fondo de la escena?','Más puestos y compradores',['Una portería de fútbol','Una sala de museo','Una vía de tren'],'Al fondo se ven otros puestos y personas comprando.')
  ]}
 });
+Object.assign(scenes,{museumComparison:{title:'Visitantes en una exposición de arte',width:1448,height:1086,path:'assets/photos/museum-comparison-a.png',facts:[
+ fact('¿Qué estampado tenía el pañuelo de la mujer?','Cuadros finos rojos y grises',['Liso y azul','Rayas amarillas','Lunares blancos'],'El pañuelo de la mujer tenía cuadros finos rojos y grises.'),
+ fact('¿Cómo llevaba el hombre la guía del museo?','Abierta, con varias páginas visibles',['Guardada en el bolsillo','Enrollada','Cerrada en una carpeta'],'El hombre llevaba una guía abierta con varias páginas visibles.'),
+ fact('¿Llevaba un broche redondo en la solapa?','No',['Sí, uno plateado','Sí, uno dorado','No llevaba chaqueta'],'La solapa del hombre no tenía un broche redondo.'),
+ fact('¿Qué hacía el grupo?','Miraba una obra abstracta',['Leía un mapa','Esperaba en una estación','Posaba para una foto'],'Las personas miraban una obra abstracta en una galería.'),
+ fact('¿Qué llevaba la mujer del primer plano en la mano?','Un paraguas cerrado',['Un bastón blanco','Una botella','Una cámara'],'La mujer sostenía un paraguas negro cerrado.'),
+ fact('¿Qué llevaba el hombre en el rostro?','Gafas',['Gorra','Máscara','Auriculares'],'El hombre llevaba gafas.'),
+ fact('¿Qué llevaba la mujer cruzado sobre el cuerpo?','Un bolso oscuro',['Una mochila roja','Una cámara grande','Una carpeta azul'],'La mujer llevaba un bolso oscuro cruzado.'),
+ fact('¿De qué color era el abrigo de la mujer?','Negro con textura jaspeada',['Rojo liso','Amarillo','Azul claro'],'La mujer llevaba un abrigo negro con textura jaspeada.')
+]}});
 // Presence/movement are answered with labelled choices: absent objects have no misleading hitbox in B.
 // Each harder question reconstructs two or three independent facts from the SAME image.
 // Distractors differ in exactly one component; colour alone cannot solve the task.
 const challenges={
- museumVisit:[[0,1,2],[3,4,5],[6,7,0],[1,3,6]],peacefulMarch:[[0,1,2],[3,4,5],[6,7,1],[2,4,6]],footballMatch:[[0,1,2],[3,4,5],[6,7,0],[1,4,6]],railwayRecreation:[[0,1,2],[3,4,5],[6,7,0],[1,3,6]],peopleMarket:[[0,1,2],[3,4,5],[6,7,0],[1,3,6]],
+ museumVisit:[[0,1,2],[3,4,5],[6,7,0],[1,3,6]],museumComparison:[[0,1,2],[3,4,5],[6,7,0],[1,3,6]],peacefulMarch:[[0,1,2],[3,4,5],[6,7,1],[2,4,6]],footballMatch:[[0,1,2],[3,4,5],[6,7,0],[1,4,6]],railwayRecreation:[[0,1,2],[3,4,5],[6,7,0],[1,3,6]],peopleMarket:[[0,1,2],[3,4,5],[6,7,0],[1,3,6]],
  library2026:[[0,1,2],[1,2,3],[0,2,3],[0,1,3]],autumnPark2026:[[0,1,2],[1,2,3],[0,2,3],[0,1,3]],
  cafe:[[0,1,2],[3,4,5],[6,7,8],[9,10,11]],sports:[[0,1,2],[3,4,5],[6,7,8],[9,10,11]],
  kitchen:[[1,3,5],[11,9,10],[2,6,7],[4,8,5]],
@@ -302,13 +313,13 @@ function templates(age,domain,level=1){
   const id=`photo-v1:${age}:${domain}:${level}:${sceneId}:${index}`;
   out.push({...meta,id,contentKey:id,mechanic:'memory_photo',memoryMaterialKey:'photo:'+sceneId,type:'memoryReveal',responseType:'choice',topic:'Memoria · escena cotidiana',q:'Observa la imagen. Después desaparecerá y responderás una pregunta.',memoryQuestion:f.q,stimulus:[{type:'photo',photoId:sceneId}],memoryContent:[{detail:scene.title}],a:f.a,opts:f.opts.slice(0,level===1?3:4),why:f.detail,revealMs:[10000,12000,9000][level-1],photoTask:{kind:'recall',sceneId,index,...(f.evidence?{evidence:f.evidence}:{})}});
  });
- else for(const [pairId,pair] of Object.entries(pairs)){
+ else for(const [pairId,pair] of Object.entries(pairs).filter(([id])=>['street','park','city','factory','museumComparison'].includes(id))){
   for(const variant of level===1&&pair.varied?[0,1,2]:[0]){
-  const id=`photo-v1:${age}:${domain}:${level}:${pairId}${variant?':'+variant:''}`,exact=level===3;
-  const answers=level===1?[pair.changes[variant][0]]:pair.changes.map(([object,change])=>object+': '+change);
-  const nearMisses=pair.changes.map(([,change],i)=>pair.changes[(i+1)%pair.changes.length][0]+': '+change);
-  const opts=level===1?[answers[0],...pair.unchanged.slice(0,2)]:[...answers,...(exact?pair.changes.map(([object,change])=>object+': '+change.replace(/^De (.+) a (.+)$/, 'De $2 a $1')):nearMisses)];
-  out.push({...meta,id,contentKey:id,mechanic:'attention_photo_differences',type:'photoDifference',responseType:'multiple',topic:'Atención · encuentra las diferencias',q:level===1?(pair.varied?`En la imagen B, marca este cambio: ${pair.changes[variant][1].toLowerCase()}.`:`Marca el objeto que cambia ${pair.changes[0][1].toLowerCase()}.`):level===2?'Compara A y B. Marca las descripciones completas de los cambios reales; comprueba el objeto y qué ha cambiado.':pair.varied?'Compara A con B. Marca solo las descripciones que indican correctamente el cambio y su dirección. Fíjate en los objetos, su posición, cantidad y estado.':'Compara A con B. Marca solo las descripciones que indican correctamente el color inicial y el final. Las opciones con el orden invertido no son válidas.',stimulus:[{type:'photoPair',pairId}],answers,opts,why:pair.changes.map(([object,change])=>object+': '+change.toLowerCase()+'.').join(' '),photoTask:{kind:'differences',pairId,...(pair.varied?{variant}:{})}});
+  const id=`photo-v1:${age}:${domain}:${level}:${pairId}${variant?':'+variant:''}`;
+  const changed=pair.changes.map(([object])=>object),answers=level===1?[changed[variant]]:changed;
+  const opts=level===1?[answers[0],...changed.filter(object=>object!==answers[0]).slice(0,1),...pair.unchanged.slice(0,1)]:level===2?[...changed,...pair.unchanged.slice(0,1)]:[...changed,...pair.unchanged];
+  const q=level===1?`Compara A y B. Pulsa el detalle que ha cambiado en ${answers[0].toLowerCase()}.`:level===2?'Compara las escenas y pulsa los tres detalles que han cambiado.':'Mira con cuidado las dos escenas. Pulsa sobre cada detalle que haya cambiado.';
+  out.push({...meta,id,contentKey:id,mechanic:'attention_photo_differences',type:'photoDifference',responseType:'multiple',topic:'Atención · encuentra las diferencias',q,stimulus:[{type:'photoPair',pairId}],answers,opts,why:pair.changes.map(([object,change])=>object+': '+change.toLowerCase()+'.').join(' '),photoTask:{kind:'differences',pairId,...(pair.varied?{variant}:{})}});
   }
  }
  bankCache.set(key,out);return out;
