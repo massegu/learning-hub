@@ -2434,7 +2434,7 @@ Deno.serve(async (req:Request)=>{
   if(body.interaction_only!==undefined&&(typeof body.interaction_only!=='boolean'||body.interaction_only&&(kind!=='exercise'||!['junior','primary','middle','teen'].includes(age)||!['attention','executive'].includes(body.domain)||body.documents_only||body.photos_only)))return new Response(JSON.stringify({error:'Modalidad interactiva no disponible para esta petición.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.interaction_only&&Number(body.client_revision||1)<4)return new Response(JSON.stringify({error:'Actualiza la página para abrir las actividades interactivas.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.interaction_kind==='auditory'&&Number(body.client_revision||1)<5)return new Response(JSON.stringify({error:'Actualiza la página para abrir las actividades con audio.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
-  if(body.interaction_kind!==undefined&&(!body.interaction_only||!(body.domain==='attention'?['room','symbols','movement','auditory']:['symbols','movement','auditory']).includes(body.interaction_kind)))return new Response(JSON.stringify({error:'Tipo de actividad interactiva no válido.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.interaction_kind!==undefined&&(!body.interaction_only||!(body.domain==='attention'?['room','movement','auditory']:['symbols','movement','auditory']).includes(body.interaction_kind)))return new Response(JSON.stringify({error:'Tipo de actividad interactiva no válido.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   // Existing tabs must never receive an interaction they cannot score. Old
   // clients retain established tasks; the new document audit requests a refresh.
   if(body.photos_only&&Number(body.client_revision||1)<3)return new Response(JSON.stringify({error:'Actualiza la página para abrir las escenas cotidianas.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -2564,10 +2564,9 @@ Deno.serve(async (req:Request)=>{
     // activities without one, deliberately serve an authored example.
     if(kind==='exercise'&&n===1&&!body.photos_only&&!body.interaction_only&&!body.cognitive_only&&!body.executed_only&&!body.room_speed_only&&!body.memory_audio_only&&!body.speed_mechanic&&body.documents_only!==true){
       const recentMechanics=recentEntries.filter((x:string)=>x.includes(':mechanic:')).slice(-8);
-      const dueMemoryAudio=domain==='memory'&&!recentMechanics.some((x:string)=>x.includes(':mechanic:memory_audio_'));
       const dueSpeedUnpaired=domain==='speedReasoning'&&!recentMechanics.some((x:string)=>x.includes(':mechanic:speed_unpaired'));
-      if(dueMemoryAudio||dueSpeedUnpaired){
-        const curated=(globalThis as any).Curriculum.pool(age,domain,level).filter((it:any)=>dueMemoryAudio?it.audioMemory===true:it.mechanic==='speed_unpaired').map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
+      if(dueSpeedUnpaired){
+        const curated=(globalThis as any).Curriculum.pool(age,domain,level).filter((it:any)=>it.mechanic==='speed_unpaired').map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
         if(curated.length)items=generatedItems(domain,1,recentEntries,()=>null,curated);
       }
     }
