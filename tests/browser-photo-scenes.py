@@ -67,7 +67,7 @@ try:
      source=ROOT/page.evaluate('(id)=>PhotoLibrary.scenes[id].path',memory['photoTask']['sceneId']);assert source.read_bytes() in images
      pair=page.evaluate('(id)=>PhotoLibrary.pairs[id]',difference['photoTask']['pairId']);base=page.evaluate('(id)=>PhotoLibrary.scenes[id].path',pair['sceneId']);assert (ROOT/base).read_bytes() in images;assert (ROOT/pair['path']).read_bytes() in images
   page.set_viewport_size({'width':1360,'height':1000})
-  workspace(page).locator('#navMenu [data-subject=memory]').click();page.locator('#exerciseLevelSelect').select_option('3')
+  workspace(page).locator('#navMenu [data-subject=memory]').click();page.locator('#photoModeSwitch [data-photos=true]').click();page.locator('#exerciseLevelSelect').select_option('3')
   page.wait_for_function('()=>__current?.domain==="memory"&&__current?.level===3&&__current?.photoTask?.evidence?.length===3')
   advanced=page.evaluate('__current');page.locator('#showMemoryPhoto').click();page.wait_for_selector('.everyday-photo img')
   page.clock.run_for(advanced['revealMs']+100)
