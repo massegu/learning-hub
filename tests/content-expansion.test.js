@@ -1,18 +1,25 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
 const curriculum=require('../js/curriculum'),early=require('../js/early-content'),art=require('../js/stimulus-art'),model=require('../js/activity-model'),locale=require('../js/locale-content'),documents=require('../js/document-library'),load=require('./edge-harness');
 const ages=['early','junior','primary','middle','teen'],profile=age=>({age_band:['early','junior'].includes(age)?'primary':age,progress:{ageRoute:age}});
-test('object memory has complete SVG/PNG references in every country, explicit empty cells and no undefined visuals',()=>{
+test('object memory has complete SVG/PNG references in every country, visually empty cells and no undefined visuals',()=>{
  for(const age of ages)for(const country of Object.keys(locale.labels))for(const family of ['memory_sequence','memory_spatial','memory_association','memory_recognition']){
   const tasks=curriculum.pool(age,'memory',3).filter(it=>it.mechanic===family);
   for(const it of tasks){const local=locale.localizeItem(it,country,'memory');
    for(const {detail} of local.memoryContent){const key=art.forLabel(detail,local.lexicalSenses);assert.ok(key,age+'/'+country+'/'+detail);assert.match(art.svg(key),/<svg/);assert.deepEqual([...art.png(key).slice(0,8)],[137,80,78,71,13,10,26,10]);}
    const markup=model.interactiveStimulus(local.stimulus,{structured:true});assert.doesNotMatch(markup,/undefined|null/);assert.match(markup,/<svg/);
-   if(family==='memory_spatial'&&local.stimulus[0].rows.flat().includes('—'))assert.match(markup,/empty-memory-cell.*?Vacío/);
+   if(family==='memory_spatial'&&local.stimulus[0].rows.flat().includes('—')){assert.match(markup,/empty-memory-cell/);assert.doesNotMatch(markup,/Vacío/);}
   }
  }
  assert.match(model.interactiveStimulus([{type:'list',presentation:'cards',label:'Objetos para recordar',items:['el libro']}],{structured:true}),/Objetos para recordar/);
  assert.throws(()=>model.visualLabel(undefined),/etiqueta/);assert.throws(()=>art.svg('missing'),/desconocida/);
  assert.match(model.visualLabel('objeto todavía sin pictograma'),/<span>objeto todavía sin pictograma<\/span>/);
+});
+test('auditory memory, news-clipping presentation and semantic language work are generated as authored items',()=>{
+ for(const age of ages)for(const level of [1,2,3]){
+  const audio=curriculum.pool(age,'memory',level).filter(it=>it.audioMemory);assert.ok(audio.length>=8);for(const it of audio){assert.ok(it.audioScript.length>100);assert.ok(it.memoryQuestion&&it.opts.includes(it.a));assert.doesNotMatch(JSON.stringify(it.stimulus),new RegExp(it.audioScript.slice(0,24),'i'));model.printable(locale.localizeItem(it,'es_es','memory'),profile(age));}
+  const language=age==='middle'?'middleLanguage':age==='teen'?'teenLanguage':'language',vocabulary=curriculum.vocabulary(age,language,level);assert.ok(vocabulary.some(it=>it.mechanic==='vocabulary_category'));assert.ok(vocabulary.some(it=>it.mechanic==='vocabulary_relation'));for(const it of vocabulary.filter(x=>/vocabulary_(?:category|relation)/.test(x.mechanic)))model.printable(locale.localizeItem(it,'es_es',language),profile(age));
+ }
+ const reading=curriculum.pool('teen','literacy',2).find(it=>it.stimulus?.some(b=>b.presentation==='newsClipping'));assert.ok(reading);const markup=model.interactiveStimulus(reading.stimulus,{structured:true});assert.match(markup,/news-clipping/);assert.match(markup,/Material ficticio/);
 });
 test('Language has no default writing, Reading owns composition and legacy writing identities survive the move',()=>{
  const {context,api}=load();
@@ -57,7 +64,7 @@ test('speed includes geometric, object, directional and category tasks with bala
 
 test('contextual vocabulary and meaning contrasts are age-authored, printable and available in Language',()=>{
  const {api}=load();for(const age of ages)for(const level of [1,2,3]){
-  const domain={middle:'middleLanguage',teen:'teenLanguage'}[age]||'language',bank=curriculum.vocabulary(age,domain,level);assert.equal(bank.length,12);assert.equal(new Set(bank.map(it=>it.mechanic)).size,2);
+  const domain={middle:'middleLanguage',teen:'teenLanguage'}[age]||'language',bank=curriculum.vocabulary(age,domain,level);assert.equal(bank.length,20);assert.equal(new Set(bank.map(it=>it.mechanic)).size,4);
   for(const it of bank)for(const country of Object.keys(locale.labels))model.printable(locale.localizeItem(it,country,domain),profile(age));
   assert.equal(api.variantExercise(age,domain,level,'vocabulary').languageFocus,'vocabulary');
  }

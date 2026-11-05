@@ -112,7 +112,7 @@
     if(key!=='es_es'&&/taller|inscripci[oó]n|participa|curso|actividad|centro estudia/iu.test(result))result=result.replace(/(?<!\p{L})m[aá]s plazas(?!\p{L})/giu,x=>casing('más cupos',x)).replace(/(?<!\p{L})ampliar plazas(?!\p{L})/giu,x=>casing('ampliar cupos',x));
     return checkAgreement(result,key);
   }
-  const scalarFields=['q','paperQuestion','prompt','memoryQuestion','why','topic','theme','text','title','scenario','sample','model','a','detail','label','instruction','question','rule','n'];
+  const scalarFields=['q','paperQuestion','prompt','memoryQuestion','audioScript','why','topic','theme','text','title','scenario','sample','model','a','detail','label','instruction','question','rule','n'];
   const arrayFields=['opts','answers','tokens','answer','modelSequence','rows','visualItems','grid','stimuli','sequence','recallSequence','writingRubric'];
   function html(value,locale,senses) {
     if(!value || !/[<>]/.test(value))return text(value,locale,senses);
