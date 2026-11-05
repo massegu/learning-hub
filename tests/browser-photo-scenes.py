@@ -48,7 +48,7 @@ try:
   page.locator('#exerciseNext').click();page.locator('#exerciseLevelSelect').select_option('3');page.wait_for_function('()=>__current?.domain==="attention"&&__current?.level===3&&__current?.type==="photoDifference"')
   assert page.locator('#exercise').evaluate("e=>e.classList.contains('visual-only-differences')")
   assert not page.locator('#exerciseOptions .multi-select-grid').is_visible()
-  assert 'Pulsa sobre cada detalle' in page.locator('.photo-mark-help').inner_text()
+  assert 'pulsa directamente' in page.locator('.photo-mark-help').inner_text()
   task3=page.evaluate('__current');assert page.locator('.photo-hit').count()==len(task3['opts'])
   for value in task3['answers']:page.get_by_role('button',name='Señalar: '+value,exact=True).click()
   page.locator('#multiCheck').click();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
