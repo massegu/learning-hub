@@ -151,6 +151,7 @@
     interactionOnly = false,
     roomSpeedOnly = false, speedUnpairedOnly=false, cognitiveOnly=false, cognitiveFamily="", executedOnly=false, stopExecuted=null,
     interactionKind = 'symbols',
+    configuredSubject = null,
     currentItem = null,
     counter = 0,
     requestGeneration = 0,
@@ -1005,6 +1006,8 @@
     if(id==='home')renderSchoolHub();
   }
   function setupExercise() {
+    if(configuredSubject!==null&&configuredSubject!==subject){documentOnly=false;photoOnly=false;memoryAudioOnly=false;interactionOnly=false;interactionKind=subject==='attention'?'room':'symbols';roomSpeedOnly=false;speedUnpairedOnly=false;cognitiveOnly=false;cognitiveFamily='';executedOnly=false;}
+    configuredSubject=subject;
     $("#exercise").dataset.subject=subject;
     $('#appShell').dataset.subject=subject;
     const m = SUBJECT_META[subject];

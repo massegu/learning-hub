@@ -34,11 +34,12 @@ try:
   assert history()[-1]['correct'] is False;assert history()[-1]['interactionSummary']['noGoErrors']==1
   old_attempts=len(history());page.locator('[data-interaction-kind=signals]').click();page.wait_for_selector('#startInteractive');movement=page.evaluate('__current');assert movement['interactionTask']['kind']=='movement'
   page.locator('#startInteractive').click()
+  early_marked=False
   for n,rule in enumerate(movement['interactionTask']['rules'][i] for i in movement['interactionTask']['trials']):
    if rule['target']<0:
     assert 'Espera ' in page.locator('#interactiveSeconds').inner_text();assert page.locator('#movementAction').inner_text()==''
     page.clock.run_for(4900);assert 'Espera ' in page.locator('#interactiveSeconds').inner_text();assert page.locator('#movementAction').inner_text()==''
-    if n==0:page.locator('#exercise').screenshot(path='/tmp/interactive-movement-wait.png');page.locator('#movementEarly').click()
+    if not early_marked:page.locator('#exercise').screenshot(path='/tmp/interactive-movement-wait.png');page.locator('#movementEarly').click();early_marked=True
     page.clock.run_for(4100)
    else:
     assert page.locator('#interactiveSeconds').inner_text()==''
@@ -50,7 +51,7 @@ try:
   page.wait_for_function('()=>__profiles.find(p=>p.id==="primary").progress.interactiveObservations?.length===1')
   reports=page.evaluate('__profiles.find(p=>p.id==="primary").progress.interactiveObservations[0].report.trials')
   assert len(reports)==len(movement['interactionTask']['trials']);assert sum(r['report']=='early' for r in reports)==1;assert sum(r['report']=='unverified' for r in reports)==len(reports)-1
-  workspace(page).locator('#navMenu [data-subject=attention]').click();page.wait_for_selector('#roomDescription');room=page.evaluate('__current');assert room['interactionTask']['kind']=='room'
+  workspace(page).locator('#navMenu [data-subject=attention]').click();page.locator('#interactionModeBtn').click();page.wait_for_selector('#roomDescription');room=page.evaluate('__current');assert room['interactionTask']['kind']=='room'
   page.locator('#saveRoomObservation').click();assert 'Escribe' in page.locator('#roomResponseMessage').inner_text()
   page.locator('#roomDescription').fill('He encontrado una caja pequeña. Voy a comprobar las características con mi acompañante.');page.mouse.move(1,1);page.clock.run_for(200);page.locator('#saveRoomObservation').click()
   assert len(history())==old_attempts;workspace(page).locator('#navMenu [data-section=progress]').click();assert page.locator('#interactiveObservations').is_visible();assert '2 registros' in page.locator('#interactiveObservations summary').inner_text()
