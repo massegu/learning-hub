@@ -25,7 +25,7 @@ try:
      page.wait_for_function('({kind,level})=>window.__current?.type==="cognitiveTask"&&__current.cognitiveTask.kind===kind&&__current.level===level&&document.querySelector(".cognitive-area")',arg={'kind':kind,'level':level})
      item=page.evaluate('__current');task=item['cognitiveTask'];before=page.evaluate('__saves')
      if kind=='rules' and level==1 and age!='early':assert 'Adivina la regla' in page.locator('#exercisePrompt').inner_text()
-     assert page.evaluate('__lastPayload.client_revision')==11
+     assert page.evaluate('__lastPayload.client_revision')==12
      assert page.locator('#printCognitive').count()==(0 if kind=='rules' else 1)
      page.locator('.cognitive-area').get_by_role('button',name='Empezar',exact=True).press('Enter')
      if kind=='rules':

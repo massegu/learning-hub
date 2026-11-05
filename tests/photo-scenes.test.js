@@ -34,9 +34,14 @@ test('legacy code filtering material becomes separate cards without altering the
  const blocks=model.comparisonStimulus('A7   B3   B8   C6');assert.deepEqual(blocks,[{type:'list',items:['A7','B3','B8','C6'],presentation:'cards'}]);
  const html=model.interactiveStimulus(blocks,{structured:true});for(const code of ['A7','B3','B8','C6'])assert.ok(html.includes(code));assert.equal(model.comparisonStimulus('A7 B3 B8'),null);
 });
+test('single-letter counting series omit the situation caption and render as a prominent sequence',()=>{
+ const item={type:'attentionChoice',scenario:'A B A C A D B C',q:'¿Cuántas veces aparece A?',opts:['3','4'],a:'4'};
+ const html=model.interactiveStimulus(model.printable(item,{age_band:'teen'}).stimulus,{structured:true});
+ assert.match(html,/class="letter-series"/);assert.doesNotMatch(html,/Situación/);for(const letter of ['A','B','C','D'])assert.ok(html.includes('<span>'+letter+'</span>'));
+});
 
-test('twenty-one everyday settings have genuinely graded recall: one, two and three independent observations',()=>{
- assert.equal(Object.keys(photo.scenes).length,21);assert.equal(Object.keys(photo.pairs).length,14);
+test('everyday settings have genuinely graded recall: one, two and three independent observations',()=>{
+ assert.equal(Object.keys(photo.scenes).length,22);assert.equal(Object.keys(photo.pairs).length,15);
  for(const id of ['museumVisit','peacefulMarch','footballMatch','railwayRecreation','peopleMarket'])assert.ok(photo.scenes[id].facts.length>=8);
  for(const age of ['junior','primary','middle','teen'])for(const level of [1,2,3]){
   const bank=photo.pool(age,'memory',level);
@@ -52,7 +57,7 @@ test('twenty-one everyday settings have genuinely graded recall: one, two and th
     const altered=structuredClone(it);altered.photoTask.evidence.reverse();assert.throws(()=>photo.validate(altered));
    }
   }
-  const differences=photo.pool(age,'attention',level);assert.equal(differences.length,level===1?18:14);
-  for(const it of differences){assert.equal(it.answers.length,level===1?1:3);assert.equal(new Set(it.opts).size,it.opts.length);if(level>=2){const pair=photo.pairs[it.photoTask.pairId],expected=pair.changes.map(([object,change])=>object+': '+change);assert.deepEqual(it.answers,expected);assert.match(it.q,/descripciones completas|descripciones que indican correctamente/);if(level===2){const nearMisses=pair.changes.map(([,change],i)=>pair.changes[(i+1)%pair.changes.length][0]+': '+change);assert.ok(expected.every(x=>it.opts.includes(x)));assert.ok(nearMisses.every(x=>it.opts.includes(x)));}else{const reversed=pair.changes.map(([object,change])=>object+': '+change.replace(/^De (.+) a (.+)$/,'De $2 a $1'));assert.ok(reversed.every(x=>it.opts.includes(x)));}}}
+  const differences=photo.pool(age,'attention',level);assert.equal(differences.length,5);
+  for(const it of differences){assert.equal(it.answers.length,level===1?1:3);assert.equal(new Set(it.opts).size,it.opts.length);assert.equal(it.opts.length,[0,3,4,6][level]);assert.ok(it.answers.every(x=>it.opts.includes(x)));assert.match(it.q,/Compara|Mira con cuidado/);assert.ok(['street','park','city','factory','museumComparison'].includes(it.photoTask.pairId));}
  }
 });

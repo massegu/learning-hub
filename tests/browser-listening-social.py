@@ -25,11 +25,16 @@ try:
    workspace(page).locator('#profileSelect').select_option(age);assert page.locator('#navMenu [data-subject=social]').is_visible();workspace(page).locator('#navMenu [data-subject=social]').click();page.wait_for_selector('#exerciseOptions .option-btn');assert page.locator('#exercisePrompt').inner_text()
    assert not page.locator('#navMenu [data-subject=social]').evaluate('e=>e.hidden')
    page.locator('#exerciseOptions [data-answer]').evaluate_all('(els,a)=>els.find(e=>e.dataset.answer===a).click()',page.evaluate('__current.a'));assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
+  workspace(page).locator('#profileSelect').select_option('primary');workspace(page).locator('#navMenu [data-subject=attention]').click()
+  assert page.locator('#interactionKindSwitch button').all_text_contents()==['Retos con tarjetas','Mira y actúa','Escucha y actúa']
+  page.locator('#interactionModeBtn').click();page.wait_for_selector('#roomDescription');assert page.evaluate('__current.interactionTask.kind')=='room'
+  page.locator('[data-interaction-kind=auditory]').click();page.wait_for_selector('#startListening');assert page.evaluate('({domain:__current.domain,kind:__current.interactionTask.kind})')=={'domain':'attention','kind':'auditory'}
+  page.locator('[data-interaction-kind=symbols]').click();page.wait_for_selector('#startInteractive');assert page.evaluate('__current.interactionTask.kind')=='symbols'
   workspace(page).locator('#profileSelect').select_option('primary');workspace(page).locator('#navMenu [data-section=home]').click();assert 'learning-areas-3d.png' in page.locator('[data-school-area=social] .area-illustration').evaluate('e=>getComputedStyle(e).backgroundImage');page.locator('#schoolHub').screenshot(path='/tmp/new-area-icons.png')
   page.clock.install();page.clock.pause_at(page.evaluate('Date.now()+1000'));page.add_style_tag(content='*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}')
   workspace(page).locator('#navMenu [data-subject=executive]').click();page.locator('#interactionModeBtn').click();page.wait_for_selector('#startInteractive');page.locator('#exerciseLevelSelect').select_option('3');page.wait_for_function('()=>__current?.interactionTask?.level===3')
   baseline=page.evaluate('(__profiles.find(p=>p.id==="primary").progress.history||[]).length')
-  assert page.locator('#interactionKindSwitch button').all_text_contents()==['Retos con tarjetas','Mira/escucha y actúa']
+  assert page.locator('#interactionKindSwitch button').all_text_contents()==['Retos con tarjetas','Mira y actúa','Escucha y actúa']
   page.locator('[data-interaction-kind=signals]').click();page.wait_for_selector('#signalModeSelect')
   for fixture in fixtures:
    chosen.clear();chosen.update(fixture)
@@ -67,5 +72,7 @@ try:
   page.locator('#practiceSkipped').click()
   latest=page.evaluate('__profiles.find(p=>p.id==="primary").progress.interactiveObservations.at(-1)');assert all(r['report']=='audio_unavailable' for r in latest['report']['trials'])
   assert page.evaluate('(__profiles.find(p=>p.id==="primary").progress.history||[]).length')==baseline
+  workspace(page).locator('#profileSelect').select_option('teen');workspace(page).locator('#navMenu [data-subject=memory]').click();page.locator('#memoryAudioModeButton').click();page.wait_for_function('()=>__current?.audioMemory===true');assert page.evaluate('__requests.at(-1).memory_audio_only') is True;assert page.locator('#playMemoryAudio').is_visible()
+  workspace(page).locator('#navMenu [data-subject=speedReasoning]').click();page.locator('#speedUnpairedMode').click();page.wait_for_function('()=>__current?.mechanic==="speed_unpaired"');assert page.evaluate('__requests.at(-1).speed_mechanic')=='unpaired';assert 'una sola vez' in page.locator('#exercisePrompt').inner_text().lower()
   assert not errors,errors;browser.close();print('PASS: Social Lab delivery and scoring in 5 ages; explicit audio start, spoken/tonal cue timing, no visual answer cue, unscored observation, interruption cleanup, audio-error recovery/omission and mobile layout')
 finally:server.shutdown();server.server_close()

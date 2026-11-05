@@ -4,7 +4,7 @@ Imágenes generadas con IA para estas actividades, sin fotografías de usuarios 
 
 ## Ampliación: paseos, ciudad, trabajo y naturaleza
 
-Esta ampliación añadió seis escenas a las seis originales. Con la ampliación de cafetería y vestuario descrita al final, el banco completo tiene 14 escenas y 14 pares A/B (28 PNG).
+Esta ampliación añadió seis escenas a las seis originales. La app reserva las diferencias visuales para escenas con personas y contexto; las composiciones centradas en objetos siguen fuera del selector de diferencias. El banco actual tiene 22 escenas de recuerdo y cinco parejas A/B activas para «Encuentra las diferencias».
 
 - Calle A: dos personas con chaqueta roja/mochila azul y abrigo amarillo; coche rojo, bicicleta azul y toldo verde/blanco. B: chaqueta morada, abrigo verde y coche azul.
 - Parque A: persona sentada con jersey amarillo, mochila verde junto al banco, bicicleta roja, botella azul y pelota naranja; dos personas pasean al fondo con chaquetas roja y azul. B: jersey morado, bicicleta azul y botella roja.
@@ -33,4 +33,8 @@ Nivel 1: un dato; nivel 2: reconstrucción de dos datos independientes; nivel 3:
 
 ## Cafetería y vestuario deportivo
 
-Se añaden `cafe-a/b.png` y `sports-a/b.png` (1448 × 1086 cada una). Revisadas visualmente con sus preguntas y regiones. En la cafetería cambian tres a dos galletas, desaparecen las gafas y la cuchara pasa de diagonal a vertical. En el vestuario se sustituye fútbol por baloncesto, desaparece el silbato y se abre la bolsa. Las preguntas distinguen cantidad, presencia, orientación, identidad y estado; no valoran variaciones incidentales de textura o iluminación. El total es de 14 escenas y 28 fotografías originales generadas con IA.
+Se conservan `cafe-a/b.png` y `sports-a/b.png` como material histórico, pero ya no se ofrecen en el selector de diferencias.
+
+## Visitantes en un museo
+
+`museum-comparison-a.png` y `museum-comparison-b.png` (1448 × 1086) muestran la misma escena cotidiana generada y editada para la comparación. Los tres cambios revisados son el estampado del pañuelo, el pliegue de la guía y un pequeño broche en la solapa. En nivel 1 hay tres zonas para localizar un cambio; en nivel 2 hay cuatro zonas candidatas; en nivel 3 se presentan seis zonas y se ocultan las etiquetas para que la respuesta consista en localizar y pulsar los detalles en la imagen. Las zonas siguen disponibles para lectores de pantalla. La foto A también se usa para recuerdo de escenas.

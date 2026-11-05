@@ -49,7 +49,8 @@
       list(item.memoryContent.map(x => typeof x === 'string' ? x : x?.person && hasText(x.detail) ? `${x.person}: ${x.detail}` : x?.detail || ''));
     }
     const comparison=comparisonStimulus(item.scenario);
-    if(comparison)blocks.push(...comparison);else text(item.scenario);
+    const letterSeries=typeof item.scenario==='string'&&/^(?:[A-Z]\s+){5,}[A-Z]$/.test(item.scenario.trim());
+    if(comparison)blocks.push(...comparison);else if(letterSeries)blocks.push({type:'list',items:item.scenario.trim().split(/\s+/),presentation:'letterSeries'});else text(item.scenario);
     if (item.text) text(item.title ? `${item.title}: ${item.text}` : item.text);
     if (item.model) text(`Modelo: ${item.model}`);
     if (item.modelSequence) text(`Modelo: ${item.modelSequence.join(' · ')}`);
@@ -362,6 +363,7 @@
         return `<figure class="memory-route"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 ${height}" font-family="Arial, sans-serif" role="img" aria-label="Mapa con el orden de las visitas"><rect width="700" height="${height}" rx="24" fill="#eef3e9"/><path d="M0 180H700M0 340H700M230 0V${height}M470 0V${height}" stroke="#d5dfd4" stroke-width="24"/><polyline points="${points}" fill="none" stroke="#668d89" stroke-width="7" stroke-dasharray="9 8" stroke-linecap="round"/>${block.items.map((place,i)=>{const [x,y]=locations[i],icon=({Panadería:'bread',Mercado:'apple',Cafetería:'cookie',Parque:'tree',Biblioteca:'book',Estación:'train',Museo:'city',Escuela:'pencil',Polideportivo:'ball'})[place];return `<g><rect x="${x-83}" y="${y-53}" width="166" height="96" rx="15" fill="#fffdf7" stroke="#b6cbbd" stroke-width="2"/>${icon?`<svg x="${x-24}" y="${y-49}" width="48" height="48" viewBox="0 0 64 64">${artFor(icon,options.iconProfile).svg(icon).replace(/^<svg[^>]*>|<\/svg>$/g,'')}</svg>`:''}<circle cx="${x-72}" cy="${y-45}" r="16" fill="#28564b"/><text x="${x-72}" y="${y-39}" text-anchor="middle" fill="white" font-size="18">${i+1}</text><text x="${x}" y="${y+22}" text-anchor="middle" fill="#264b43" font-size="19">${escape(place)}</text></g>`;}).join('')}</svg><ol class="route-legend">${block.items.map(x=>`<li>${escape(x)}</li>`).join('')}</ol></figure>`;
       }
       if(block.presentation==='speedSearch'||block.presentation==='flanker')return `<div class="${block.presentation==='flanker'?'flanker-strip':'speed-search-grid'}" role="list">${block.items.map(x=>`<div role="listitem">${visualLabel(x,options.senses)}</div>`).join('')}</div>`;
+      if(block.presentation==='letterSeries')return `<div class="letter-series" role="group" aria-label="Serie de letras">${block.items.map(x=>`<span>${escape(x)}</span>`).join('')}</div>`;
       if(block.presentation==='pairScan')return `<table class="pair-scan"><tbody>${block.rows.map(row=>`<tr>${row.map(x=>`<td><code>${escape(x)}</code></td>`).join('')}</tr>`).join('')}</tbody></table>`;
       if(block.presentation==='associations'){
         return `<div class="association-frame"><table class="memory-associations"><thead><tr><th scope="col">Persona</th><th scope="col">Imagen</th></tr></thead><tbody>${block.rows.map(row=>`<tr><th scope="row"><span class="person-initial" aria-hidden="true">${escape(row[0].slice(0,1))}</span>${escape(row[0])}</th><td>${visualLabel(row[1],{...options.senses,memory:true})}</td></tr>`).join('')}</tbody></table></div>`;
@@ -378,6 +380,7 @@
       if(options.illustrated){
         const label=block.label?`<p class="stimulus-caption">${escape(block.label)}</p>`:'';
         if(block.type==='text')return block.presentation==='model'?`${label}<div class="early-model"><span class="stimulus-caption">Modelo</span><div>${visualLabel(block.text.slice(8),options.senses)}</div></div>`:`${label}<p>${escape(block.text)}</p>`;
+        if(block.presentation==='letterSeries')return `<div class="letter-series" role="group" aria-label="Serie de letras">${block.items.map(x=>`<span>${escape(x)}</span>`).join('')}</div>`;
         if(block.type==='list')return `${label}<div class="stimulus-cards ${block.presentation==='count'?'count-units':''} ${block.presentation==='sequence'?'ordered-cards':''}" role="list">${block.items.map((x,i)=>`<div class="stimulus-unit" role="listitem">${block.presentation==='sequence'?`<span class="unit-position" aria-hidden="true">${i+1}</span>`:''}${visualLabel(x,{...options.senses,subject:block.label})}</div>`).join('')}</div>`;
         return `${label}<table class="early-comparison">${block.rows.map(row=>`<tr>${row.map(x=>`<td>${visualLabel(x,{...options.senses,subject:block.label})}</td>`).join('')}</tr>`).join('')}</table>`;
       }

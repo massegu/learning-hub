@@ -34,21 +34,24 @@ try:
   assert history()[-1]['correct'] is False;assert history()[-1]['interactionSummary']['noGoErrors']==1
   old_attempts=len(history());page.locator('[data-interaction-kind=signals]').click();page.wait_for_selector('#startInteractive');movement=page.evaluate('__current');assert movement['interactionTask']['kind']=='movement'
   page.locator('#startInteractive').click()
+  early_marked=False
   for n,rule in enumerate(movement['interactionTask']['rules'][i] for i in movement['interactionTask']['trials']):
-   assert 'Espera ' in page.locator('#interactiveSeconds').inner_text()
-   if rule['target']<0:assert page.locator('#movementAction').inner_text()==''
-   page.clock.run_for(4900)
-   assert 'Espera ' in page.locator('#interactiveSeconds').inner_text()
-   if rule['target']<0:assert page.locator('#movementAction').inner_text()==''
-   if n==0:page.locator('#exercise').screenshot(path='/tmp/interactive-movement-wait.png');page.locator('#movementEarly').click()
-   page.clock.run_for(4100)
+   if rule['target']<0:
+    assert 'Espera ' in page.locator('#interactiveSeconds').inner_text();assert page.locator('#movementAction').inner_text()==''
+    page.clock.run_for(4900);assert 'Espera ' in page.locator('#interactiveSeconds').inner_text();assert page.locator('#movementAction').inner_text()==''
+    if not early_marked:page.locator('#exercise').screenshot(path='/tmp/interactive-movement-wait.png');page.locator('#movementEarly').click();early_marked=True
+    page.clock.run_for(4100)
+   else:
+    assert page.locator('#interactiveSeconds').inner_text()==''
+    page.clock.run_for(1100);assert page.locator('#interactiveSeconds').inner_text()=='';assert page.locator('#movementAction').inner_text().startswith('Ahora:')
+    page.clock.run_for(3900)
   assert page.locator('#practiceCompleted').is_visible();assert page.evaluate('__profiles.find(p=>p.id==="primary").progress.interactiveObservations?.length||0')==0
   page.locator('#practiceCompleted').click()
   assert len(history())==old_attempts
   page.wait_for_function('()=>__profiles.find(p=>p.id==="primary").progress.interactiveObservations?.length===1')
   reports=page.evaluate('__profiles.find(p=>p.id==="primary").progress.interactiveObservations[0].report.trials')
   assert len(reports)==len(movement['interactionTask']['trials']);assert sum(r['report']=='early' for r in reports)==1;assert sum(r['report']=='unverified' for r in reports)==len(reports)-1
-  workspace(page).locator('#navMenu [data-subject=attention]').click();page.wait_for_selector('#roomDescription');room=page.evaluate('__current');assert room['interactionTask']['kind']=='room'
+  workspace(page).locator('#navMenu [data-subject=attention]').click();page.locator('#interactionModeBtn').click();page.wait_for_selector('#roomDescription');room=page.evaluate('__current');assert room['interactionTask']['kind']=='room'
   page.locator('#saveRoomObservation').click();assert 'Escribe' in page.locator('#roomResponseMessage').inner_text()
   page.locator('#roomDescription').fill('He encontrado una caja pequeña. Voy a comprobar las características con mi acompañante.');page.mouse.move(1,1);page.clock.run_for(200);page.locator('#saveRoomObservation').click()
   assert len(history())==old_attempts;workspace(page).locator('#navMenu [data-section=progress]').click();assert page.locator('#interactiveObservations').is_visible();assert '2 registros' in page.locator('#interactiveObservations summary').inner_text()
@@ -60,17 +63,12 @@ try:
   # Exercise both supported selection modes deterministically. Presence/movement
   # scenes use text choices: an absent object cannot have a hitbox in image B.
   page.evaluate("""()=>{const original=LearningAPI.requestContent;window.__restorePhotoRequest=()=>{LearningAPI.requestContent=original;};LearningAPI.requestContent=async payload=>{const response=await original(payload);return payload.photos_only&&window.__photoFixture?{...response,items:[structuredClone(window.__photoFixture)]}:response;};}""")
-  for index,pair_id in enumerate(['kitchen','street']):
+  for index,pair_id in enumerate(['street','park']):
    fixture_id=page.evaluate("""pairId=>{window.__photoFixture=PhotoLibrary.pool('primary','attention',1).find(it=>it.photoTask.pairId===pairId);window.__current=null;return __photoFixture.id;}""",pair_id)
    page.locator('#attentionPhotos').click()
    page.wait_for_function('(id)=>__current?.id===id&&document.querySelector("#multiCheck")?.classList.contains("hidden")',arg=fixture_id)
-   photo=page.evaluate('__current');text_only=page.evaluate('PhotoLibrary.pairs[__current.photoTask.pairId].textSelectionOnly===true')
-   if text_only:
-    assert page.locator('.photo-hit').count()==0
-    page.locator('#exerciseOptions').get_by_role('button',name=photo['answers'][0],exact=True).click()
-   else:
-    assert page.locator('.photo-hit').count()>0
-    page.get_by_role('button',name='Señalar: '+photo['answers'][0],exact=True).click()
+   photo=page.evaluate('__current');assert page.locator('.photo-hit').count()>0
+   page.get_by_role('button',name='Señalar: '+photo['answers'][0],exact=True).click()
    assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class');assert page.locator('#exerciseNext').is_visible();assert len(history())==old_attempts+index+1
   page.evaluate('__restorePhotoRequest()');photo_attempts=len(history())
   # A restarted/inactive activity must never produce an automatic success.

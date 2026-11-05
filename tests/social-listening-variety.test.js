@@ -25,12 +25,12 @@ test('real endpoint delivers age-specific social tasks and gates listening on a 
  const rows=execFileSync(process.execPath,['tests/edge-worker.js','teen'],{input:[{...base,client_revision:4},{...base,client_revision:5}].map(JSON.stringify).join('\n')+'\n',encoding:'utf8',timeout:60000}).trim().split('\n').map(JSON.parse);
  assert.deepEqual(rows.map(x=>x.status),[409,200]);assert.equal(rows[1].data.items[0].interactionTask.kind,'auditory');
 });
-test('new photographic differences test quantity, absence, orientation, identity and state',()=>{
+test('photographic differences use people-centred scenes and require noticing changed regions',()=>{
  for(const level of [1,2,3]){
-  const bank=photos.pool('primary','attention',level).filter(it=>['cafe','sports'].includes(it.photoTask.pairId));assert.equal(bank.length,level===1?6:2);
+  const bank=photos.pool('primary','attention',level);assert.equal(bank.length,5);
+  for(const it of bank)assert.ok(['street','park','city','factory','museumComparison'].includes(it.photoTask.pairId));
   for(const it of bank){assert.equal(new Set(it.opts).size,it.opts.length);assert.ok(it.answers.every(x=>it.opts.includes(x)));assert.doesNotThrow(()=>photos.validate(it));}
  }
- const text=JSON.stringify(['cafe','sports'].map(id=>photos.pairs[id].changes));
- for(const concept of ['tres galletas','posición diagonal','estar sobre','baloncesto','estar abierta'])assert.ok(text.includes(concept));
+ for(const id of ['kitchen','living','picnic','desk','entry','cafe','sports'])assert.ok(!photos.pool('teen','attention',2).some(x=>x.photoTask.pairId===id));
  for(const file of ['curriculum.js','photo-library.js'])assert.equal(fs.readFileSync('js/'+file,'utf8'),fs.readFileSync('supabase/functions/request-learning-content/'+file,'utf8'));
 });
