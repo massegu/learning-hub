@@ -16,10 +16,11 @@ try:
    page.locator('#cognitiveMode').click();page.wait_for_function('()=>window.__current?.type==="cognitiveTask"&&document.querySelector(".cognitive-area")')
    for level in [1,2,3]:
     for kind in ['rules','words','deduction','change','information','contradiction']:
-     family_domain=({'middle':'middleLanguage','teen':'teenLanguage'}.get(age,'language') if kind=='words' else 'executive')
+     family_domain=({'middle':'middleLanguage','teen':'teenLanguage'}.get(age,'language') if kind=='words' else 'attention' if kind=='contradiction' else 'executive')
      workspace(page).locator('#navMenu [data-subject='+family_domain+']').click()
      page.locator('#exerciseLevelSelect').select_option(str(level))
      if kind=='words':page.locator('#wordFitMode').click()
+     elif kind=='contradiction':page.locator('#cognitiveMode').click()
      else:page.locator('#cognitiveMode').click();page.locator('#cognitiveFamilySelect').select_option(kind)
      page.wait_for_function('({kind,level})=>window.__current?.type==="cognitiveTask"&&__current.cognitiveTask.kind===kind&&__current.level===level&&document.querySelector(".cognitive-area")',arg={'kind':kind,'level':level})
      item=page.evaluate('__current');task=item['cognitiveTask'];before=page.evaluate('__saves')
@@ -39,7 +40,8 @@ try:
         assert page.locator('#exerciseVisual [role=timer]').count()==0
         page.locator('.cognitive-area').get_by_role('button',name='Responder',exact=True).press('Enter')
        else:
-        assert page.locator('#exerciseVisual [role=timer]').inner_text().startswith('Espera ')
+        if level==1 and age!='early':assert page.locator('#exerciseVisual [role=timer]').count()==0
+        else:assert page.locator('#exerciseVisual [role=timer]').inner_text().startswith('Espera ')
         page.clock.fast_forward(task['trialMs']+10)
        assert page.locator('#exerciseVisual .cognitive-picture').count()==0
        page.clock.fast_forward(task['gapMs']+10)

@@ -3,7 +3,7 @@ const families=require('../js/cognitive-families'),locale=require('../js/locale-
 const ages=['early','junior','primary','middle','teen'];
 const profile=age=>({age_band:['early','junior'].includes(age)?'primary':age,progress:{ageRoute:age}});
 const languageDomain=age=>age==='middle'?'middleLanguage':age==='teen'?'teenLanguage':'language';
-test('six cognitive families keep canonical age/level metadata and localized delivery/print integrity',()=>{
+test('cognitive families keep canonical age/level metadata and localized delivery/print integrity',()=>{
  assert.equal(fs.readFileSync('js/cognitive-families.js','utf8'),fs.readFileSync('supabase/functions/request-learning-content/cognitive-families.js','utf8'));
  let variants=0;const scenarios=new Map();
  for(const age of ages)for(const level of [1,2,3])for(const it of families.pool(age,'executive',level)){
@@ -16,16 +16,17 @@ test('six cognitive families keep canonical age/level metadata and localized del
   for(const field of ['q','sample','cognitiveTask','ageRoute'])assert.throws(()=>families.validate({...it,[field]:'tampered'},age));
   assert.throws(()=>families.validate(it,age==='teen'?'early':'teen'));
  }
- assert.equal(variants,330);assert.equal(scenarios.size,5);assert.ok([...scenarios.values()].every(s=>s.size>=4));
+ assert.equal(variants,330);assert.equal(scenarios.size,4);assert.ok([...scenarios.values()].every(s=>s.size>=4));
  const teenRules=families.pool('teen','executive',1,'rules').map(it=>JSON.stringify(it.cognitiveTask));for(const label of ['cámara','teléfono','auriculares','calculadora','brújula','regla'])assert.ok(teenRules.some(task=>task.includes(label)),label);
  for(const label of ['Cámara','Teléfono','Auriculares','Calculadora','Brújula','Regla'])assert.match(model.visualLabel(label,{iconProfile:profile('teen')}),/class="picture-icon"/);
  for(const age of ages)for(const level of [1,2,3])assert.equal(families.pool(age,'executive',level).some(it=>it.cognitiveTask.kind==='words'),false);
+ for(const age of ages)for(const level of [1,2,3]){assert.equal(families.pool(age,'executive',level).some(it=>it.cognitiveTask.kind==='contradiction'),false);assert.equal(families.pool(age,'attention',level).some(it=>it.cognitiveTask.kind==='information'),false);assert.ok(families.pool(age,'attention',level).every(it=>it.cognitiveTask.kind==='contradiction'));}
  for(const age of ages)for(const level of [1,2,3])assert.ok(families.pool(age,'language',level,'words').length>0);
 });
 test('solutions derive independently from clues, facts, constraints, dependencies and rule history',()=>{
- for(const age of ages)for(const level of [1,2,3])for(const it of [...families.pool(age,'executive',level),...families.pool(age,'language',level,'words')]){
+ for(const age of ages)for(const level of [1,2,3])for(const it of [...families.pool(age,'executive',level),...families.pool(age,'attention',level),...families.pool(age,'language',level,'words')]){
   const t=it.cognitiveTask;let answer;
-  if(t.kind==='information')assert.match(it.q,new RegExp(`Situación: .+marca exactamente ${t.answer.length} datos necesarios`,'i'));
+  if(t.kind==='information')assert.match(it.q,new RegExp(`Situación: .+marca exactamente ${t.answer.length} datos que necesitas`,'i'));
   if(t.kind==='rules'){let inverted=false;answer=t.trials.map(trial=>{if(trial.switchBefore)inverted=!inverted;assert.equal(trial.inverted,inverted);return trial.target!==inverted?'act':'wait';});assert.equal(t.trials.filter(x=>x.switchBefore).length,level-1);}
   if(t.kind==='words'){
    const valid=t.options.filter(word=>families.wordFits(word,t));assert.equal(valid.length,1);answer=[valid[0]];
@@ -49,7 +50,7 @@ test('solutions derive independently from clues, facts, constraints, dependencie
 });
 test('difficulty changes actual loads while elementary recognition, distinct pictures and language stay accessible',()=>{
  for(const age of ages)for(const family of Object.keys(families.definitions)){
-  const domain=family==='words'?languageDomain(age):'executive';const rows=[1,2,3].map(l=>families.pool(age,domain,l,family)[0]);
+  const domain=family==='words'?languageDomain(age):family==='contradiction'?'attention':'executive';const rows=[1,2,3].map(l=>families.pool(age,domain,l,family)[0]);
   assert.notDeepEqual(rows[0].difficultyProfile,rows[1].difficultyProfile);assert.notDeepEqual(rows[1].difficultyProfile,rows[2].difficultyProfile);
   if(family==='change')assert.ok(rows[2].cognitiveTask.steps.length>rows[0].cognitiveTask.steps.length);
   if(family==='contradiction'||family==='information')assert.ok(rows[2].cognitiveTask.facts.length>rows[0].cognitiveTask.facts.length);
@@ -67,7 +68,7 @@ test('authenticated delivery persists usage/history, gates cached clients and ro
  const rows=requests('teen',Array.from({length:18},()=>base));const items=rows.map(r=>{assert.equal(r.status,200);return r.data.items[0];});
  assert.equal(new Set(items.map(x=>x.id)).size,18);for(let i=1;i<items.length;i++){assert.notEqual(items[i].semanticFamily,items[i-1].semanticFamily);assert.notEqual(items[i].scenarioFamily,items[i-1].scenarioFamily);assert.equal(rows[i].data.usage.used,rows[i-1].data.usage.used+1);}
  for(const age of ages)for(const family of Object.keys(families.definitions)){
-  const domain=family==='words'?languageDomain(age):'executive';const [row]=requests(age,[{...base,domain,profile_id:age,cognitive_family:family,locale:'es_ar'}]);assert.equal(row.status,200);assert.equal(row.data.items[0].ageRoute,age);families.validate(row.data.items[0]);
+  const domain=family==='words'?languageDomain(age):family==='contradiction'?'attention':'executive';const [row]=requests(age,[{...base,domain,profile_id:age,cognitive_family:family,locale:'es_ar'}]);assert.equal(row.status,200);assert.equal(row.data.items[0].ageRoute,age);families.validate(row.data.items[0]);
  }
 });
 test('individual paper export honors canonical age, same-source integrity and the existing worksheet quota',()=>{

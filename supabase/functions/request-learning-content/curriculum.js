@@ -23,7 +23,7 @@ function finish(item,age,domain,level,key,mechanic){
 }
 function reading(age,domain,level){
  const bank=library[age].flatMap((entry,i)=>{
-  const [title,text,q,a,b,iq,ia,ib]=entry,source=[T(text)],passageKey=`reading-v2-${age}-${i}`;
+  const [title,text,q,a,b,iq,ia,ib]=entry,source=[age!=='early'&&i%4===0?{...T(text),presentation:'newsClipping',headline:title,dateline:'EDICIÓN ESCOLAR · NOTICIA DE EJEMPLO'}:T(text)],passageKey=`reading-v2-${age}-${i}`;
   const base={topic:title,passageKey,why:age==='early'?'Busca la pista en la historia.':ia+'. La explicación debe apoyarse en lo que cuenta el texto.'};
   const tasks=[choice(q,source,a,[b],{...base,why:`La respuesta se encuentra en el texto: ${a}.`})];
   if(age!=='early')tasks.push(choice(iq,source,ia,[ib],base));
@@ -73,6 +73,20 @@ function vocabulary(age,domain,level){
   tasks.push(finish(choice(level===3?`En esta frase, ¿qué significa «${word}»? Fíjate en la información que la acompaña.`:`¿Qué significa «${word}» en esta frase?`,[T(source)],meaning,[opposite,...(age==='early'?[]:[other])],{languageFocus:'vocabulary',...(age==='teen'?{teenReview:{version:2,context:'lexical'}}:{}),topic:'Lenguaje · significado de palabras',why:`Aquí, «${word}» significa «${meaning}».`}),age,domain,level,'lexical-context-'+i,'vocabulary_context'));
   tasks.push(finish(choice(`Elige la palabra o expresión contraria a «${word}».`,[T(source)],opposite,[meaning,...(age==='early'?[]:[other])],{languageFocus:'vocabulary',...(age==='teen'?{teenReview:{version:2,context:'lexical'}}:{}),topic:'Lenguaje · palabras contrarias',why:`En esta frase, lo contrario de «${word}» es «${opposite}».`}),age,domain,level,'lexical-contrast-'+i,'vocabulary_contrast'));
  });
+ const semantic=age==='early'?[
+  [['perro','gato','conejo','cuchara'],'cuchara','¿Qué palabra no pertenece al grupo de animales?'],
+  [['manzana','pera','plátano','zapato'],'zapato','¿Qué palabra no pertenece al grupo de frutas?'],
+  [['autobús','tren','bicicleta','almohada'],'almohada','¿Qué palabra no pertenece al grupo de transportes?'],
+  [['camisa','bufanda','guante','naranja'],'naranja','¿Qué palabra no pertenece al grupo de ropa?']
+ ]:[
+  [['guitarra','tambor','piano','termómetro'],'termómetro','¿Qué palabra no pertenece al grupo de instrumentos musicales?'],
+  [['novela','poema','cuento','brújula'],'brújula','¿Qué palabra no pertenece al grupo de textos literarios?'],
+  [['brújula','mapa','señal','colmena'],'colmena','¿Qué palabra no pertenece al grupo de recursos para orientarse?'],
+  [['microscopio','telescopio','lupa','pincel'],'pincel','¿Qué palabra no pertenece al grupo de instrumentos para observar?']
+ ];
+ semantic.forEach(([items,answer,q],i)=>tasks.push(finish(choice(q,[{type:'list',label:'Categoría',items,presentation:'cards'}],answer,items.filter(x=>x!==answer).slice(0,age==='early'?2:3),{languageFocus:'vocabulary',topic:'Lenguaje · categorización semántica',why:`${answer} no pertenece a esa categoría; las otras palabras sí comparten ese significado.`}),age,domain,level,'semantic-category-'+i,'vocabulary_category')));
+ const analogies=age==='early'?[['Pájaro es a nido como abeja es a…','colmena',['nido','cueva']],['Zapato es a pie como guante es a…','mano',['cabeza','rodilla']],['Libro es a leer como canción es a…','escuchar',['dibujar','correr']],['Día es a sol como noche es a…','luna',['nube','lluvia']]]:[['Termómetro es a temperatura como balanza es a…','peso',['distancia','velocidad']],['Semilla es a planta como huevo es a…','ave',['nido','pluma']],['Brújula es a orientación como reloj es a…','tiempo',['distancia','tamaño']],['Autor es a novela como compositor es a…','música',['escenario','instrumento']]];
+ analogies.forEach(([q,a,wrong],i)=>tasks.push(finish(choice(`Completa la relación: ${q}`,[T('Observa cómo se relacionan los dos conceptos y completa la comparación.')],a,wrong,{languageFocus:'vocabulary',topic:'Lenguaje · relacionar conceptos',why:`La relación se basa en el uso o la función: ${a}.`}),age,domain,level,'semantic-relation-'+i,'vocabulary_relation')));
  return tasks;
 }
 const objects=['el libro','la pelota','el lápiz','la manzana','la botella','la gorra','el cuaderno','el regalo','la galleta','el oso de peluche','la muñeca','el coche de juguete'];
@@ -168,6 +182,26 @@ function memory(age,level){
   const people=['Ana','Leo','Sol','Dani','Mar','Hugo','Lola','Nora','Eva'].slice(0,count),pairs=people.map((n,i)=>[n,values[i]]),ask=v%count;
   items.push(finish({type:'memoryReveal',responseType:'choice',requiresStimulus:true,q:'Mira la imagen que acompaña a cada persona. Después la taparemos.',memoryQuestion:`¿Qué imagen acompañaba a ${people[ask]}?`,stimulus:[{...R(pairs),presentation:'associations'}],memoryContent:pairs.map(([person,detail])=>({person,detail})),a:values[ask],opts:rotate(values,ask).slice(0,rank===0?Math.min(3,count):4),revealMs:Math.max(6000,count*1700),answerEvidence:{type:'tableCell',block:0,row:ask,column:1,subjectColumn:0},topic:'Memoria · personas y objetos'},age,'memory',level,`association-${v}`,'memory_association'));
  }
+ const audioCases=rank>=3?[
+  ['Noticia del barrio','Esta mañana, el centro cultural abrió una exposición de fotografías históricas. La muestra podrá visitarse hasta el viernes y la entrada es gratuita. El sábado, el equipo trasladará las imágenes a la biblioteca.','¿Hasta qué día puede visitarse la exposición?','Hasta el viernes',['Hasta el sábado','Hasta el domingo'],'audio_news'],
+  ['Conversación en la estación','—¿Sale ya el tren de las seis? —No, han anunciado diez minutos de retraso. —Entonces avisaré a Marta de que llegaré a las seis y diez. —La cafetería sigue abierta si quieres esperar allí.','¿A qué hora calcula llegar la persona?','A las seis y diez',['A las seis','A las seis y veinte'],'audio_dialogue'],
+  ['Instrucciones del taller','Primero recoge una hoja azul en la entrada. Después escribe tu nombre en la parte superior. Cuando termines, deja la hoja en la bandeja junto a la puerta, no en la mesa del fondo.','¿Dónde hay que dejar la hoja?','En la bandeja junto a la puerta',['En la mesa del fondo','En la entrada'],'audio_instructions'],
+  ['Aviso de transporte','La línea 4 no se detendrá en la plaza durante las obras del martes. Para llegar al museo, se recomienda bajar en la parada del mercado y caminar tres minutos. El servicio recuperará su recorrido habitual el miércoles.','¿Qué día vuelve la línea a su recorrido habitual?','El miércoles',['El martes','El jueves'],'audio_notice'],
+  ['Mensaje de equipo','—He terminado el cartel. —Genial, pero aún falta confirmar la hora con el polideportivo. —Llamaré después de comer. Si no contestan, enviaremos el cartel sin hora y añadiremos el dato más tarde.','¿Qué falta confirmar antes de completar el cartel?','La hora',['El diseño del cartel','La dirección del polideportivo'],'audio_dialogue'],
+  ['Visita al museo','El grupo entró por la puerta lateral a las once. La guía explicó primero la sala de mapas y luego la exposición de pintura. Antes de salir, cada visitante devolvió su audioguía en el mostrador de recepción.','¿Qué sala visitó el grupo primero?','La sala de mapas',['La exposición de pintura','La recepción'],'audio_story'],
+  ['Boletín deportivo','El equipo local marcó el primer gol en el minuto doce. El equipo visitante empató después del descanso. A cinco minutos del final, una jugadora anotó el tanto decisivo. El partido terminó dos a uno.','¿Cuándo se marcó el gol decisivo?','A cinco minutos del final',['En el minuto doce','Después del descanso'],'audio_news'],
+  ['Recordatorio de cita','La consulta se ha cambiado al jueves a las nueve y media. Hay que llevar la tarjeta sanitaria y llegar diez minutos antes. Si no puedes acudir, llama al centro antes del miércoles por la tarde.','¿Qué documento hay que llevar?','La tarjeta sanitaria',['El informe del centro','El justificante de pago'],'audio_instructions']
+ ]:[
+  ['Conversación en el patio','—¿Trajiste la pelota? —Sí, está en mi mochila. —Entonces podemos jugar en la pista después de merendar. —Vale, primero aviso a Leo para que venga.','¿Dónde está la pelota?','En mi mochila',['En la pista','En la mesa'],'audio_dialogue'],
+  ['Instrucciones para el huerto','Busca una regadera pequeña. Llénala hasta la mitad y riega solo la planta que está junto a la ventana. Después, deja la regadera debajo del banco.','¿Dónde hay que dejar la regadera?','Debajo del banco',['Junto a la ventana','Sobre la mesa'],'audio_instructions'],
+  ['Noticia de la escuela','Hoy llegó una caja de libros nuevos a la biblioteca de la escuela. El grupo de sexto ayudó a colocarlos en una estantería. Mañana, durante el recreo, se podrá elegir uno para leer.','¿Cuándo se podrá elegir un libro?','Mañana, durante el recreo',['Hoy al llegar','Mañana al salir'],'audio_news'],
+  ['Paseo de clase','La clase salió a las diez para visitar el parque. Primero observó los árboles cerca del estanque y luego dibujó hojas en sus cuadernos. Antes de volver, bebieron agua en la fuente.','¿Qué hizo el grupo después de observar los árboles?','Dibujó hojas en sus cuadernos',['Bebió agua en la fuente','Volvió a clase'],'audio_story'],
+  ['Conversación en la biblioteca','—¿Has visto mi cuaderno rojo? —Está en la mesa de lectura, junto a la ventana. —Gracias. Voy a guardarlo antes de sacar el libro.','¿De qué color es el cuaderno?','Rojo',['Azul','Verde'],'audio_dialogue'],
+  ['Aviso de la excursión','El autobús saldrá de la puerta principal a las nueve. Cada persona debe llevar una botella de agua y una gorra. La comida se repartirá al llegar al parque.','¿Dónde se repartirá la comida?','Al llegar al parque',['En el autobús','En la puerta principal'],'audio_notice'],
+  ['Partido escolar','El partido empezó después del recreo. El primer equipo marcó un gol y el segundo empató antes del final. Al terminar, ambos grupos guardaron los petos en la caja azul.','¿Dónde guardaron los petos?','En la caja azul',['En la mochila','En el armario verde'],'audio_story'],
+  ['Recordatorio de clase','El martes traeremos tijeras y pegamento para hacer una tarjeta. El papel de colores lo pondrá la profesora. Cuando acabemos, guardaremos los recortes en una bolsa.','¿Qué material pondrá la profesora?','El papel de colores',['Las tijeras','El pegamento'],'audio_instructions']
+ ];
+ audioCases.forEach(([title,audioScript,memoryQuestion,a,wrong,kind],i)=>items.push(finish({type:'memoryReveal',responseType:'choice',memoryResponse:'audio',audioMemory:true,audioScript,audioTitle:title,requiresStimulus:true,q:'Escucha con atención. Después responderás una pregunta sobre lo que has oído.',memoryQuestion,stimulus:[{type:'list',label:'Audio',items:[title],presentation:'cards'}],memoryContent:[{detail:title}],recallEvidence:{kind:'audio'},a,opts:[a,...wrong],revealMs:6000,topic:'Memoria auditiva · '+title,why:kind==='audio_dialogue'?'La conversación contiene esa información de forma explícita.':kind==='audio_instructions'?'La respuesta se encuentra en el orden y el detalle de las instrucciones.':'El dato se menciona en el audio; recuerda quién, qué, dónde o cuándo.'},age,'memory',level,`audio-${i}-${kind}`,'memory_audio_'+kind)));
  const photos=root.PhotoLibrary || (typeof require==='function'&&require('./photo-library'));
  if(photos?.supports(age,'memory'))items.push(...photos.pool(age,'memory',level));
  return items;
@@ -182,6 +216,8 @@ function speed(age,level){
   const second=[...first],same=v%2===0;
   if(!same){const index=(v+level)%n;second[index]=glyphs[(glyphs.indexOf(second[index])+1)%4];}
   pool.push(finish(choice('¿Son iguales?',[{...R([[first.join(' · '),second.join(' · ')]]),presentation:'speedComparison'}],same?'Sí':'No',[same?'No':'Sí'],{topic:'Velocidad · comparar figuras',speedTask:true,speedFamily:visualFamily,speedEvidence:{kind:'equal',block:0},why:same?'Las dos series son iguales.':'Hay una figura diferente.'}),age,'speedReasoning',level,`compare-${v}`,'speed_compare_'+visualFamily));
+  const scanGlyphs=['○','□','△','☆'],odd=scanGlyphs[(v+level)%scanGlyphs.length],repeated=scanGlyphs.filter(x=>x!==odd).slice(0,age==='early'?2:3),unpaired=shuffled([odd,...repeated.flatMap(x=>[x,x])],v+level*19);
+  pool.push(finish(choice('Encuentra el símbolo que aparece una sola vez.',[{type:'list',items:unpaired,presentation:'speedSearch'}],odd,repeated,{topic:'Velocidad · buscar el símbolo sin pareja',speedTask:true,speedFamily:'unpaired',speedEvidence:{kind:'unpaired',block:0},why:`${odd} no tiene pareja; los otros símbolos aparecen dos veces.`}),age,'speedReasoning',level,`unpaired-${v}`,'speed_unpaired'));
   if(v<48){
    const animals=['gato','perro','conejo','pájaro'],tools=['lápiz','regla','tijeras','pegamento'],sameCategory=v%2===0;
    const categoryItems=Array.from({length:rank===0?level*2:level*2+rank},(_,i)=>animals[(v+i)%animals.length]);if(!sameCategory)categoryItems[(v+level)%categoryItems.length]=tools[Math.floor(v/2)%4];
@@ -568,6 +604,7 @@ function validateSpeed(item){
   if(!['LETRA','NÚMERO'].includes(e.rule)||b?.items?.length!==2||!Number.isInteger(Number(b.items[1]))||!/^[A-Z]$/.test(b.items[0])||item.stimulus?.[e.ruleBlock]?.text!=='Regla activa: '+e.rule+(item.level===3?(e.reverse?' · Invierte la respuesta':' · Mantén la respuesta'):''))throw new Error('Falta el criterio activo.');const left=e.rule==='LETRA'?/[AEIOU]/.test(b.items[0]):Number(b.items[1])%2===0;answer=(e.reverse?!left:left)?'Izquierda':'Derecha';
  }else if(e.kind==='category'){if(e.category!=='animals'||item.paperQuestion&&item.paperQuestion!=='¿Son animales todos los elementos de la lista?')throw new Error('La pregunta de papel no coincide con la categoría.');if(b?.type!=='list')throw new Error('Falta el grupo de imágenes.');answer=b.items.every(x=>['gato','perro','conejo','pájaro'].includes(x))?'Sí':'No';}
  else if(e.kind==='targetCount')answer=String(b?.items?.filter(x=>x===e.target).length);
+ else if(e.kind==='unpaired'){const early=item.ageProfile?.id==='early',pairCount=early?2:3;if(b?.type!=='list'||b.items.length!==1+pairCount*2||!b.items.every(x=>['○','□','△','☆'].includes(x)))throw new Error('Falta la serie de símbolos.');const singles=[...new Set(b.items)].filter(x=>b.items.filter(y=>y===x).length===1),pairs=[...new Set(b.items)].filter(x=>b.items.filter(y=>y===x).length===2);if(singles.length!==1||pairs.length!==pairCount)throw new Error('La serie no tiene un único símbolo sin pareja.');answer=singles[0];}
  else if(e.kind==='pairCount')answer=String(b?.rows?.filter(r=>r.length===2&&r[0]===r[1]).length);
  else if(e.kind==='central'){
   if(b?.type!=='list'||b.items.length<3||b.items.length%2!==1||!b.items.every(x=>x==='←'||x==='→'))throw new Error('Falta una flecha central única.');

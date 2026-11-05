@@ -34,7 +34,7 @@ test('natural copulas, nonhuman subjects and elementary vocabulary are distinct 
   assert.doesNotMatch(repair.q+' '+repair.why,/personas/);
  }
  for(const age of ['junior','primary']){
-  const wordsets=[1,2,3].map(level=>new Set(curriculum.vocabulary(age,'language',level).map(x=>x.stimulus[0].text)));
+  const wordsets=[1,2,3].map(level=>new Set(curriculum.vocabulary(age,'language',level).filter(x=>['vocabulary_context','vocabulary_contrast'].includes(x.mechanic)).map(x=>x.stimulus[0].text)));
   assert.ok([...wordsets[0]].every(x=>!wordsets[1].has(x)&&!wordsets[2].has(x)));
   for(const level of [1,2,3])for(const it of curriculum.vocabulary(age,'language',level))assert.ok(!it.opts.some(x=>['Tiene el mismo significado','No se puede saber'].includes(x)));
  }

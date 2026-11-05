@@ -10,14 +10,14 @@ const definitions=[
  ['language.description','Describir personas y objetos de forma precisa','grammaticalRelations',['grammar_adjective','lang_description']],
  ['language.tense','Situar acciones en el tiempo','temporalRelations',['grammar_tense']],
  ['language.reference','Comprender a quién se refiere un mensaje','referents',['grammar_reference']],
- ['language.connectors','Expresar relaciones entre ideas','logicalRelations',['grammar_connectors','lang_temporal_connector']],
+ ['language.connectors','Expresar relaciones entre ideas','logicalRelations',['grammar_connectors','lang_temporal_connector','vocabulary_relation']],
  ['language.structure','Completar una frase respetando su sentido','grammaticalRelations',['grammar_structure']],
  ['language.context_meaning','Comprender una palabra usando su contexto','inference',['vocabulary_context','lang_synonym']],
  ['language.opposites','Distinguir significados opuestos','semanticContrast',['vocabulary_contrast','lang_antonym']],
  ['language.phonology','Relacionar sonidos y palabras al leer','soundUnits',['lang_initial_sound','lang_rhyme','lang_syllable_count']],
  ['language.spelling','Escribir palabras reconocibles','spellingRules',['lang_build_word','lang_word_spacing']],
  ['language.punctuation','Hacer comprensible un mensaje con signos','punctuationRules',['lang_capital_period','lang_question_mark','lang_sentence_type','lang_dialogue','lang_revision']],
- ['language.classification','Organizar palabras según su significado','criteria',['lang_vocabulary_category']],
+ ['language.classification','Organizar palabras según su significado','criteria',['lang_vocabulary_category','vocabulary_category']],
  ['reading.literal','Localizar información que aparece en una fuente','sourceDetails',['reading_literal','lang_note_read','lang_list_read','lang_story_sequence']],
  ['reading.inference','Relacionar pistas sin inventar información','inference',['reading_inference']],
  ['reading.compose','Expresar una idea siguiendo una fuente','messageParts',['reading_writing']],
@@ -83,7 +83,7 @@ const definitions=[
  ['speed.category','Decidir si varios estímulos pertenecen a una categoría','elements',['speed_category']],
  ['speed.key','Aplicar una clave visible para responder','keyEntries',['speed_key']],
  ['speed.match','Reconocer un modelo entre alternativas','distractorSimilarity',['speed_match']],
- ['speed.search','Localizar un objetivo entre distractores','distractors',['speed_search']],
+ ['speed.search','Localizar un objetivo entre distractores','distractors',['speed_search','speed_unpaired']],
  ['speed.pairs','Comparar varias parejas y localizar una discrepancia','pairs',['speed_pairs']],
  ['speed.flanker','Responder al objetivo central ignorando distractores','distractors',['speed_flanker']],
  ['speed.translation','Transformar una secuencia usando una clave','steps',['speed_translation']],
@@ -124,6 +124,7 @@ function family(it,domain){
   if(domain==='language'){const n=Number((it.ageProfile.family||'').split('-').at(-1));return ({0:'language.context_meaning',1:'language.classification',2:'language.opposites',3:'reading.literal',4:'language.context_meaning',5:'language.spelling',6:'language.spelling',7:'language.phonology',8:'language.agreement',9:'language.structure'})[n]||'unclassified';}
   if(domain==='division')return ({count:'math.count',addition:'math.add',subtraction:'math.subtract',compare:'math.compare'})[x]||'unclassified';}
  if(m.startsWith('speed_compare_'))return 'speed.compare';
+ if(m.startsWith('memory_audio_'))return 'memory.recognition';
  if(m==='memory_sequence'&&it.recallEvidence?.reverse)return 'memory.reverse';
  if(m==='memory_sequence'&&it.recallEvidence?.takeLast)return 'memory.recent';
  if(m.startsWith('document_attention_'))return 'attention.document_lookup';

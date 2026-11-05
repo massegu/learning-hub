@@ -74,7 +74,7 @@ function extend({age,domain,level,add,T,L,table}){
    ['Pides las propuestas revisadas y viables. Algunas propuestas revisadas superan el presupuesto.','Las propuestas revisadas y viables',['Todas las propuestas revisadas','Todas las propuestas caras']],
    ['Hay propuestas viables sin revisar y propuestas revisadas inviables. Buscas una que reúna ambas condiciones.','Una propuesta revisada y viable',['Cualquier propuesta viable','Cualquier propuesta revisada']]
   ];
-  [source,a,wrong]=description[level-1];emit('language.description',sc,'¿Qué descripción permite pedir exactamente lo necesario?',[T(source)],a,wrong,{difficultyParameters:{qualifiers:level===1?1:2,excludedGeneralization:level===3}});
+  [source,a,wrong]=description[level-1];emit('language.description',sc,'¿Qué opción permite pedir exactamente lo necesario?',[T(source)],a,wrong,{difficultyParameters:{qualifiers:level===1?1:2,excludedGeneralization:level===3}});
   let tense=home?[
    ['La cena terminó ayer. Completa: «Ayer ___ juntos».','cenamos',['cenaremos','cenar']],
    ['La visita será mañana. Completa: «Mañana ___ a la abuela».','visitaremos',['visitamos ayer','visitábamos antes']],

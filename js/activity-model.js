@@ -156,7 +156,12 @@
     if(early)validateEvidence(item,stimulus);
     if(item.recallEvidence){
       const e=item.recallEvidence,b=stimulus[e.block];
-      if(e.kind==='sequence'){
+      if(e.kind==='audio'){
+        const script=String(item.audioScript||'');
+        const normalized=script.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+        const answer=String(item.a||'').toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+        if(!item.audioMemory||!script.trim()||!answer||!normalized.includes(answer.normalize('NFD').replace(/[\u0300-\u036f]/g,'')))fail('la respuesta auditiva no aparece en el audio.');
+      }else if(e.kind==='sequence'){
         if(b?.type!=='list'||!Array.isArray(item.answer)||JSON.stringify(item.answer)!==JSON.stringify(e.takeLast?b.items.slice(-e.takeLast):e.reverse?[...b.items].reverse():b.items))fail('el orden de memoria no corresponde al estímulo.');
       }else if(e.kind==='spatial'){
         if(b?.type!=='table'||!e.targets?.length)fail('falta la cuadrícula de memoria.');
@@ -179,7 +184,8 @@
       }
       if (value === undefined || value !== item.a) fail('la respuesta de memoria no se deriva del estímulo.');
     }
-    return { question, stimulus, options:options.map(String), tokens, writingRubric:item.writingRubric||[], responseType:item.type === 'order' || item.memoryResponse === 'order' ? 'order' : options.length ? 'choice' : 'written' };
+    const printableStimulus=item.audioMemory?[...stimulus,{type:'text',label:'Transcripción para la ficha',text:item.audioScript}]:stimulus;
+    return { question, stimulus:printableStimulus, options:options.map(String), tokens, writingRubric:item.writingRubric||[], responseType:item.type === 'order' || item.memoryResponse === 'order' ? 'order' : options.length ? 'choice' : 'written' };
   }
   function validateEvidence(item,stimulus){
     if(item.qualityEvidence||/^functional_/.test(item.mechanic||'')||String(item.contentKey||'').startsWith('functional-v1:')){(root.FunctionalContent||(typeof require==='function'&&require('./functional-content'))).validate(item);return;}
@@ -312,7 +318,7 @@
   }
   function visualLabel(value,senses={}){
     if(value===undefined||value===null||!String(value).trim())throw new Error('Falta la etiqueta visual.');
-    if(value==='—')return '<span class="empty-memory-cell">Vacío</span>';
+    if(value==='—')return '<span class="empty-memory-cell" aria-hidden="true"></span>';
     const raw=String(value),glyphs=/^[●○□△☆\s·]+$/.test(raw)?raw.match(/[●○□△☆]/g):null;
     if(glyphs)return `<span class="picture-glyphs" aria-hidden="true">${glyphs.map(x=>art.svg(art.forLabel(x))).join('')}</span><span class="stimulus-only-text">${escape(raw)}</span>`;
     const key=art?.forLabel(raw,senses);
@@ -342,6 +348,7 @@
         const picture=(path,label)=>`<figure><img src="${escape(path)}" width="${source.width}" height="${source.height}" alt="${escape(source.title)}${label?' · imagen '+label:''}" loading="eager" decoding="async">${label?`<figcaption>Imagen ${label}</figcaption>`:''}</figure>`;
         return pair?`<div class="photo-comparison">${picture(source.path,'A')}${picture(pair.path,'B')}</div>`:`<div class="everyday-photo">${picture(source.path,'')}</div>`;
       }
+      if(block.type==='text'&&block.presentation==='newsClipping')return `<article class="news-clipping"><header><span class="news-masthead">${escape(block.dateline||'RECORTE DE NOTICIA · EJEMPLO')}</span><h3>${escape(block.headline||'Noticias de la comunidad')}</h3><span class="news-section">Actualidad · Lectura</span></header><p class="stimulus-paragraph">${escape(block.text)}</p><footer>Material ficticio para practicar la comprensión lectora.</footer></article>`;
       if(block.type==='document'){
         const doc=documents.get(block.documentId);
         return `<figure class="practice-document${doc.design?' editorial-document':''}${doc.width>=doc.height?' landscape-document':doc.kind==='Recibo de compra'?' receipt-document':''}"><img src="${escape(doc.path)}" width="${doc.width}" height="${doc.height}" alt="${escape(doc.title)}" loading="eager"><figcaption><a href="${escape(doc.path)}" target="_blank" rel="noopener">Ampliar documento</a></figcaption></figure><details class="document-transcript"><summary>Ver versión en texto</summary>${interactiveStimulus(doc.transcript,{structured:true})}</details>`;
@@ -361,7 +368,7 @@
       }
       if(block.type==='list'&&['sequence','cards'].includes(block.presentation))return `${block.label?`<p class="stimulus-caption">${escape(block.label)}</p>`:''}<div class="memory-object-sequence" role="list">${block.items.map((x,i)=>`<div class="stimulus-unit" role="listitem">${block.presentation==='sequence'?`<span class="unit-position">${i+1}</span>`:''}${visualLabel(x,{...options.senses,subject:block.label,memory:options.memory})}</div>`).join('')}</div>`;
       if(block.presentation==='spatial'){
-        return `<div class="recall-grid" style="--grid-size:${block.rows[0].length}" role="table" aria-label="${escape(block.label||'Cuadrícula para recordar')}">${block.rows.map((row,r)=>`<div role="row">${row.map((x,c)=>`<div role="cell" aria-label="Fila ${r+1}, columna ${c+1}: ${escape(x)}">${visualLabel(x,{...options.senses,memory:true})}</div>`).join('')}</div>`).join('')}</div>`;
+        return `<div class="recall-grid" style="--grid-size:${block.rows[0].length}" role="table" aria-label="${escape(block.label||'Cuadrícula para recordar')}">${block.rows.map((row,r)=>`<div role="row">${row.map((x,c)=>`<div role="cell" aria-label="Fila ${r+1}, columna ${c+1}${x==='—'?': casilla vacía':': '+escape(x)}">${visualLabel(x,{...options.senses,memory:true})}</div>`).join('')}</div>`).join('')}</div>`;
       }
       if(block.presentation==='speedComparison')return `<div class="speed-comparison" role="group" aria-label="Dos series para comparar">${block.rows[0].map((series,i)=>`<div class="speed-series" aria-label="Serie ${i+1}">${series.split(' · ').map(x=>`<span class="speed-symbol">${visualLabel(x,options.senses)}</span>`).join('')}</div>`).join('')}</div>`;
       if(block.presentation==='reviewPlan')return `${block.label?`<p class="stimulus-caption">${escape(block.label)}</p>`:''}<div class="stimulus-table-scroll" tabindex="0" role="region" aria-label="Compara las condiciones y el plan"><table class="structured-stimulus-table review-plan-table"><thead><tr>${block.rows[0].map(x=>`<th scope="col">${escape(x)}</th>`).join('')}</tr></thead><tbody>${block.rows.slice(1).map(row=>`<tr><th scope="row">${escape(row[0])}</th>${row.slice(1).map((value,i)=>`<td><span class="review-column-label" aria-hidden="true">${escape(block.rows[0][i+1])}</span>${escape(value)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
@@ -376,11 +383,11 @@
       }
       if(options.structured){
         const label=block.label?`<p class="stimulus-caption">${escape(block.label)}</p>`:'';
-        if(block.type==='text')return `${label}<p class="stimulus-paragraph">${escape(block.text)}</p>`;
+        if(block.type==='text')return block.presentation==='newsClipping'?`<article class="news-clipping"><header><span class="news-masthead">${escape(block.dateline||'RECORTE DE NOTICIA · EJEMPLO')}</span><h3>${escape(block.headline||'Noticias de la comunidad')}</h3><span class="news-section">Actualidad · Lectura</span></header><p class="stimulus-paragraph">${escape(block.text)}</p><footer>Material ficticio para practicar la comprensión lectora.</footer></article>`:`${label}<p class="stimulus-paragraph">${escape(block.text)}</p>`;
         if(block.type==='list')return `${label}<ul class="structured-stimulus-list">${block.items.map(x=>`<li>${escape(x)}</li>`).join('')}</ul>`;
         return `${label}${block.rows[0].length>3?'<p class="table-scroll-hint">Desliza la tabla para ver todas las columnas.</p>':''}<div class="stimulus-table-scroll" tabindex="0" role="region" aria-label="Tabla de datos"><table class="structured-stimulus-table">${block.rows.map((row,i)=>`<tr>${row.map(x=>i===0&&block.header===true?`<th scope="col">${escape(x)}</th>`:`<td>${escape(x)}</td>`).join('')}</tr>`).join('')}</table></div>`;
       }
-      if (block.type === 'text') return `<p>${escape(block.text)}</p>`;
+      if (block.type === 'text') return block.presentation==='newsClipping'?`<article class="news-clipping"><header><span class="news-masthead">${escape(block.dateline||'RECORTE DE NOTICIA · EJEMPLO')}</span><h3>${escape(block.headline||'Noticias de la comunidad')}</h3><span class="news-section">Actualidad · Lectura</span></header><p>${escape(block.text)}</p><footer>Material ficticio para practicar la comprensión lectora.</footer></article>`:`<p>${escape(block.text)}</p>`;
       if (block.type === 'list') return `<ul>${block.items.map(x => `<li>${escape(x)}</li>`).join('')}</ul>`;
       return `<table>${block.rows.map(row => `<tr>${row.map(x => `<td>${escape(x)}</td>`).join('')}</tr>`).join('')}</table>`;
     }).join('');

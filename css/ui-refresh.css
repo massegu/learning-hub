@@ -58,3 +58,30 @@
 #appShell[data-design] :focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 70%,#fff);outline-offset:3px}
 @media(prefers-reduced-motion:reduce){#appShell[data-design] *{scroll-behavior:auto!important;transition:none!important}}
 @media(max-width:950px){#appShell[data-design] .activity-toolbar{gap:7px;padding:8px}#appShell[data-design] .activity-toolbar button{min-height:50px!important}}
+
+/* Use the available desktop canvas instead of centering a narrow fixed-width app. */
+#appShell[data-design]{width:100%;min-width:0;grid-template-columns:238px minmax(0,1fr)}
+#appShell[data-design] .main-content{width:100%;max-width:none;min-width:0;margin:0;padding-inline:clamp(20px,2.4vw,48px)}
+#appShell[data-design] .section,#appShell[data-design] .exercise-layout,#appShell[data-design] .exercise-card{min-width:0;width:100%}
+#appShell[data-design] .exercise-card{max-width:none}
+.empty-memory-cell{display:inline-block;width:2rem;height:2rem;border:0!important;padding:0!important}
+.cognitive-candidates{align-items:stretch;grid-auto-rows:1fr}
+.cognitive-candidate{height:100%;min-height:250px}
+.cognitive-source-copy{font-size:1.05rem;line-height:1.55}
+.cognitive-source-copy strong{font-size:1rem;color:var(--ink)}
+.cognitive-plan-context{display:grid;gap:14px}
+.cognitive-plan-context p{font-size:clamp(1.2rem,1.65vw,1.5rem);line-height:1.7}
+.cognitive-plan-context h4{display:none}
+.cognitive-plan-updated>p{font-size:1.12rem;font-weight:700;color:#55304b;line-height:1.5;background:#f3dce9;border-radius:8px;padding:10px 12px}
+.audio-memory-card{max-width:54rem;margin:22px auto;padding:clamp(22px,4vw,42px);text-align:center;border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line));border-radius:20px;background:linear-gradient(140deg,#fff,color-mix(in srgb,var(--accent-soft) 65%,#fff));box-shadow:0 12px 30px color-mix(in srgb,var(--accent) 12%,transparent)}
+.audio-memory-icon{display:grid;place-items:center;width:76px;height:76px;margin:0 auto 14px;border-radius:50%;background:var(--accent);color:#fff;font-size:2.6rem}
+.audio-memory-title{font-size:1.35rem;font-weight:800;margin:.4rem 0}
+.news-clipping{max-width:58rem;margin:12px auto;padding:clamp(20px,3vw,34px);border:1px solid #d4d8df;border-top:7px solid #2f4e67;border-radius:4px;background:#fffefa;box-shadow:0 10px 24px #27374b14;color:#263443}
+.news-clipping header{padding-bottom:14px;border-bottom:2px solid #9aa8b4}
+.news-masthead{display:block;color:#314d65;font-size:.78rem;font-weight:900;letter-spacing:.12em}
+.news-clipping header h3{margin:.45rem 0;font-family:Georgia,serif;font-size:clamp(1.5rem,2.3vw,2rem);line-height:1.2}
+.news-section{font-size:.9rem;color:#596d7f;font-weight:700}
+.news-clipping>p{font-family:Georgia,serif;font-size:1.12rem;line-height:1.75;margin:18px 0}
+.news-clipping footer{padding-top:10px;border-top:1px solid #d7dce2;color:#5a6977;font-size:.85rem}
+@media(max-width:950px){#appShell[data-design]{grid-template-columns:minmax(0,1fr)}#appShell[data-design] .main-content{grid-column:1;padding-inline:20px}}
+@media(max-width:560px){#appShell[data-design] .main-content{padding-inline:14px}.cognitive-candidates{grid-template-columns:minmax(0,1fr);grid-auto-rows:auto}.cognitive-candidate{min-height:0}.news-clipping>p{font-size:1.05rem}}

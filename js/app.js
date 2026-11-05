@@ -236,6 +236,25 @@
   }
   function displayMemoryQuestion(it){return it.photoTask?.kind==='recall'?String(it.memoryQuestion||'¿Qué recuerdas?').replace(/\s(?=\d+\))/g,'\n'):it.memoryQuestion||'¿Qué recuerdas?';}
   function renderMemoryExercise(it) {
+    if(it.audioMemory){
+      const visual=$('#exerciseVisual'),area=$('#exerciseOptions');let heard=false;
+      stopInteraction();
+      visual.innerHTML=`<section class="audio-memory-card"><span class="audio-memory-icon" aria-hidden="true">♫</span><p class="audio-memory-title">${escapeHtml(it.audioTitle)}</p><p>Escucha el audio. Puedes reproducirlo otra vez si lo necesitas.</p><p id="memoryAudioStatus" role="status" aria-live="polite">Pulsa «Reproducir audio» para empezar.</p></section>`;
+      area.innerHTML='<button id="playMemoryAudio" class="primary-btn">Reproducir audio</button><button id="answerMemoryAudio" class="secondary-btn" disabled>Responder</button>';
+      const speak=()=>{
+        if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){$('#memoryAudioStatus').textContent='Este navegador no puede reproducir voz. Puedes pasar a otra actividad.';$('#exerciseNext').classList.remove('hidden');return;}
+        stopInteraction();const version=interactionVersion,live=()=>currentItem===it&&interactionVersion===version,status=$('#memoryAudioStatus'),play=$('#playMemoryAudio'),answer=$('#answerMemoryAudio');
+        window.speechSynthesis.cancel();heard=false;answer.disabled=true;play.disabled=true;play.textContent='Reproduciendo…';status.textContent='Escucha con atención.';
+        const voice=new SpeechSynthesisUtterance(it.audioScript);voice.lang='es-ES';voice.rate=.94;voice.pitch=1;
+        const voices=window.speechSynthesis.getVoices(),spanish=voices.find(v=>v.lang==='es-ES')||voices.find(v=>v.lang.toLowerCase().startsWith('es'));if(spanish)voice.voice=spanish;
+        interactionVoice=voice;voice.onend=()=>{if(!live())return;interactionVoice=null;heard=true;play.disabled=false;play.textContent='Reproducir otra vez';answer.disabled=false;status.textContent='Audio terminado. Cuando estés preparado, pulsa «Responder».';};
+        voice.onerror=()=>{if(!live())return;interactionVoice=null;play.disabled=false;play.textContent='Volver a intentar';status.textContent='No se ha podido reproducir el audio. Comprueba el sonido e inténtalo de nuevo.';};
+        window.speechSynthesis.speak(voice);
+      };
+      $('#playMemoryAudio').onclick=speak;
+      $('#answerMemoryAudio').onclick=()=>{if(!heard||currentItem!==it)return;stopInteraction();visual.replaceChildren();$('#exercisePrompt').textContent=displayMemoryQuestion(it);renderOptions(it);$('#exercisePrompt').scrollIntoView({block:'center',behavior:'smooth'});};
+      return;
+    }
     if(it.photoTask?.kind==='recall'){
       const visual=$('#exerciseVisual'),area=$('#exerciseOptions');
       visual.innerHTML='<p class="photo-ready">Cuando estés preparado, muestra la imagen. Después se ocultará y aparecerá una pregunta sobre sus detalles.</p>';
@@ -1040,7 +1059,7 @@
 
     const availableCognitiveBank=window.CognitiveFamilies.pool(window.AgeStages.route(profile),subject,state.levels[subject]||1);
     // Attention now has one clear task family: compare sources and find contradictions.
-    const cognitiveBank=subject==='attention'?availableCognitiveBank.filter(it=>it.cognitiveTask.kind==='contradiction'):availableCognitiveBank;
+    const cognitiveBank=subject==='attention'?availableCognitiveBank.filter(it=>it.cognitiveTask.kind==='contradiction'):subject==='executive'?availableCognitiveBank.filter(it=>it.cognitiveTask.kind!=='contradiction'):availableCognitiveBank;
     const wordFitAvailable=isLang&&cognitiveBank.some(it=>it.cognitiveTask.kind==='words');
     $('#wordFitMode').classList.toggle('hidden',!wordFitAvailable);
     $('#wordFitMode').classList.toggle('active',cognitiveOnly&&cognitiveFamily==='words');
