@@ -195,7 +195,7 @@ test('old renderer upgrades cannot replace the canonical integrity renderer', ()
   assert.ok(!fs.readFileSync(require.resolve('../js/config.js'),'utf8').includes('v16_17.js'));
 });
 
-test('document worksheets embed all original PNGs and visible source transcripts; failed images produce no download',async()=>{
+test('document worksheets embed each original PNG once without duplicating its transcript as visible text',async()=>{
  const documents=require('../js/document-library');
  const {generator,downloads,context}=harness();context.window.DocumentLibrary=documents;
  context.fetch=async path=>({ok:true,arrayBuffer:async()=>{const b=fs.readFileSync(require('node:path').join(__dirname,'..',path));return b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength);}});
@@ -208,11 +208,24 @@ test('document worksheets embed all original PNGs and visible source transcripts
  for(const doc of Object.values(documents.documents)){
   const original=fs.readFileSync(require('node:path').join(__dirname,'..',doc.path));assert.ok(media.some(bytes=>bytes.equals(original)),doc.title);
   assert.ok(xml.includes(doc.title));
-  const nodes=textNodes(xml);for(const block of doc.transcript)for(const text of block.type==='text'?[block.text]:block.rows.flat())assert.ok(nodes.includes(text),'missing visible source: '+text);
+  const nodes=textNodes(xml);for(const block of doc.transcript)for(const text of block.type==='text'?[block.text]:block.rows.flat())assert.ok(!nodes.includes(text),'document transcript should not be printed again: '+text);
  }
- assert.ok(xml.includes('25.000'));assert.ok(xml.includes('22/10/2026'));
+ assert.ok(!xml.includes('Contenido del documento visual:'));
+ assert.ok(!textNodes(xml).includes('Ver versión en texto'));
  const failing=harness();failing.context.window.DocumentLibrary=documents;failing.context.fetch=async()=>({ok:false});
  await assert.rejects(()=>failing.generator.generate([items],{name:'Reviewer',age_band:'teen'}),/cargar el documento/);assert.equal(failing.downloads.length,0);
+});
+
+test('worksheet headers and stimulus panels use the selected age-band palette',async()=>{
+ const cases=[['early','B7453E','FFF0E8'],['junior','536C3A','EEF3E7'],['primary','405481','EAF0F8'],['middle','4B538A','F0F1FA'],['teen','4E45AC','EEEBFC']];
+ for(const [band,accent,soft] of cases){
+  const {generator,downloads}=harness(),profile={name:'Perfil',age_band:band,...(band==='early'?{progress:{ageRoute:'early'}}:{})};
+  const item=band==='early'?early.pool('reading',1)[0]:{q:'¿Qué opción corresponde?',opts:['A','B'],a:'A',stimulus:[{type:'text',text:'Lee la pista.'}]};
+  await generator.generate([[item]],profile);
+  const document=await xml(downloads[0].blob);
+  assert.ok(document.includes(`w:fill="${accent}"`),`${band} needs its age-band heading color`);
+  assert.ok(document.includes(`w:fill="${soft}"`),`${band} needs its age-band panel color`);
+ }
 });
 
 test('late-invalid candidates are replaced at the real exporter boundary for single and ZIP in all countries',async()=>{
