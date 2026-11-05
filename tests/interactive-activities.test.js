@@ -39,16 +39,17 @@ test('natural copulas, nonhuman subjects and elementary vocabulary are distinct 
   for(const level of [1,2,3])for(const it of curriculum.vocabulary(age,'language',level))assert.ok(!it.opts.some(x=>['Tiene el mismo significado','No se puede saber'].includes(x)));
  }
 });
-test('attention exposes distinct object search, graded cards and listen-or-act variants',()=>{
+test('attention exposes distinct object search and visual or auditory listen-and-act variants',()=>{
  for(const age of ['junior','primary','middle','teen'])for(const level of [1,2,3]){
   assert.equal(curriculum.interactivePool(age,'attention',level).every(x=>x.interactionTask.kind==='room'),true);
-  for(const kind of ['symbols','movement','auditory']){const item=curriculum.generateInteractive(age,'attention',level,kind);assert.equal(item.interactionTask.kind,kind);assert.equal(curriculum.validateInteraction(item),true);}
+  assert.equal(curriculum.generateInteractive(age,'attention',level,'symbols'),null);
+  for(const kind of ['movement','auditory']){const item=curriculum.generateInteractive(age,'attention',level,kind);assert.equal(item.interactionTask.kind,kind);assert.ok(item.interactionTask.rules.every(rule=>rule.target>=0));assert.equal(curriculum.validateInteraction(item),true);}
  }
 });
 test('real endpoint gates interactive mode by client, domain, age and incompatible modes',()=>{
  const base={kind:'exercise',profile_id:'teen',domain:'executive',level:3,count:1,locale:'es_es',client_revision:5,interaction_only:true};
  const reqs=[{...base,interaction_kind:'symbols'},{...base,interaction_kind:'movement'},{...base,domain:'attention',interaction_kind:'room'},{...base,domain:'attention',interaction_kind:'symbols'},{...base,domain:'attention',interaction_kind:'auditory'},{...base,client_revision:3},{...base,photos_only:true},{...base,documents_only:true},{...base,domain:'memory'},{...base,interaction_kind:'room'}];
  const rows=execFileSync(process.execPath,['tests/edge-worker.js','teen'],{input:reqs.map(x=>JSON.stringify(x)).join('\n')+'\n',encoding:'utf8',timeout:60000}).trim().split('\n').map(JSON.parse);
- assert.deepEqual(rows.map(x=>x.status),[200,200,200,200,200,409,400,400,400,400]);
- assert.deepEqual(rows.slice(0,5).map(x=>x.data.items[0].interactionTask.kind),['symbols','movement','room','symbols','auditory']);
+ assert.deepEqual(rows.map(x=>x.status),[200,200,200,400,200,409,400,400,400,400]);
+ assert.deepEqual([rows[0],rows[1],rows[2],rows[4]].map(x=>x.data.items[0].interactionTask.kind),['symbols','movement','room','auditory']);
 });

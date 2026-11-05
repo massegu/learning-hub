@@ -1059,6 +1059,7 @@
     $('#interactionModeBtn').textContent=subject==='executive'?'Actúa con reglas':'Busca a tu alrededor';
     $('#interactionModeBtn').setAttribute('aria-pressed',String(interactionOnly&&(subject==='attention'?interactionKind==='room':interactionKind==='symbols')));
     $('#interactionKindSwitch').classList.toggle('hidden',!interactionSupport||executedOnly);
+    $('#interactionKindSwitch [data-interaction-kind="symbols"]').classList.toggle('hidden',subject==='attention');
     $$('#interactionKindSwitch button').forEach(b=>b.setAttribute('aria-pressed',String(interactionOnly&&(b.dataset.interactionKind==='signals'?interactionKind==='movement':b.dataset.interactionKind===interactionKind))));
     $('#photoModeSwitch').classList.toggle('hidden',!photoSupport||subject!=='memory');
     $('#memoryAudioMode').classList.toggle('hidden',subject!=='memory');
@@ -1090,6 +1091,7 @@
     $('#executedMode').classList.toggle('hidden',!['attention','memory','executive'].includes(subject));
     $('#executedMode').setAttribute('aria-pressed',String(executedOnly));
     $('#interactionKindSwitch').classList.toggle('hidden',!interactionSupport||executedOnly);
+    $('#interactionKindSwitch [data-interaction-kind="symbols"]').classList.toggle('hidden',subject==='attention');
     $('#documentModeSwitch').classList.toggle('hidden',!documentSupport||isReading);
     $('#documentModeSwitch [data-documents=false]').textContent=subject==='executive'?'Planifica y decide':'Busca y compara';
     $('#documentModeSwitch [data-documents=true]').textContent=subject==='executive'?'Resuelve con documentos':'Explora documentos';
