@@ -42,7 +42,8 @@ try:
   with zipfile.ZipFile(path) as doc:
    root=ET.fromstring(doc.read('word/document.xml'));ns={'w':'http://schemas.openxmlformats.org/wordprocessingml/2006/main','wp':'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing'}
    extent=root.find('.//wp:extent',ns);assert abs(int(extent.get('cx'))/int(extent.get('cy'))-source['width']/source['height'])<.01
-   text=' '.join(e.text or '' for e in root.findall('.//w:t',ns));assert 'Documento ficticio' not in text;assert 'MUSEO ABIERTO' in text
+   text=' '.join(e.text or '' for e in root.findall('.//w:t',ns));assert 'Documento ficticio' not in text;assert 'MUSEO ABIERTO' not in text
+   assert root.find('.//wp:docPr',ns) is not None,'the worksheet must keep the document image instead of duplicating its transcript'
   # Reproduce the reported legacy attention source through the service boundary.
   def source_override(route):
    body=route.request.post_data_json;domain=body.get('domain')
