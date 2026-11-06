@@ -303,6 +303,7 @@ function questions(sceneId,level){
  });
 }
 const supports=(age,domain)=>['junior','primary','middle','teen'].includes(age)&&['memory','attention'].includes(domain);
+for(const image of [...Object.values(scenes),...Object.values(pairs)])if(image.path?.endsWith('.png'))image.webPath=image.path.replace(/\.png$/i,'.webp');
 const bankCache=new Map();
 function templates(age,domain,level=1){
  const key=[age,domain,level].join(':');if(bankCache.has(key))return bankCache.get(key);

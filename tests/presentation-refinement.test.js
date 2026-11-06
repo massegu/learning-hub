@@ -32,4 +32,6 @@ test('reviewed Fluent SVGs remain local, licensed, identifiable and printable',(
  }
  for(const [label,key] of [['gato','cat'],['zanahoria','carrot'],['tulipán','tulip'],['tortuga','turtle'],['pulpo','octopus']])assert.equal(art.forLabel(label),key);
  assert.doesNotMatch(art.svg('balloon-red'),/fluent-emoji-flat/);assert.doesNotMatch(art.svg('dot'),/fluent-emoji-flat/);
+ for(const [label,key] of [['museo','museum'],['monumento','monument'],['obra de arte','artwork'],['comercio','storefront'],['visitante','person']]){assert.equal(art.forLabel(label),key);assert.match(model.visualLabel(label),/class="picture-icon"/);}
+ const route=model.interactiveStimulus([{type:'list',items:['Museo','Mercado'],positions:[0,1],presentation:'routeMap'}]);assert.match(route,/memory-route/);assert.ok((route.match(/<svg /g)||[]).length>=3,'museum and commerce pictograms render in the visit map');
 });

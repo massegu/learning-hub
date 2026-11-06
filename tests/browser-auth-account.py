@@ -5,11 +5,12 @@ from playwright.sync_api import sync_playwright
 from browser_support import workspace, ROOT,SDK
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');preview=importlib.util.module_from_spec(spec);spec.loader.exec_module(preview)
 AUTH=r'''
-window.__authEvents=[];window.__changes=[];window.__resets=[];
+window.__authEvents=[];window.__changes=[];window.__resets=[];window.__signUps=[];
 client.auth.getSession=async()=>({data:{session:window.__signedIn===false?null:{user:{id:'account',email:'review@example.invalid'}}}});
 client.auth.onAuthStateChange=callback=>{__authEvents.push(callback);return {data:{subscription:{unsubscribe(){}}}}};
 client.auth.signOut=async()=>{window.__signedIn=false};
 client.auth.signInWithPassword=async()=>{window.__signedIn=true;return {data:{session:{user:{id:'account'}},user:{id:'account'}}}};
+client.auth.signUp=async({email,password})=>{__signUps.push({email,password});return {data:{user:{id:'new-account'},session:null},error:null}};
 client.auth.updateUser=async({password})=>{if(window.__updateFail)return {error:{message:'Error de prueba recuperable'}};__changes.push(password);return {data:{user:{id:'account'}}}};
 client.auth.resetPasswordForEmail=async(email,options)=>{__resets.push({email,...options});return {data:{}}};
 return client;
@@ -43,6 +44,8 @@ try:
   page.evaluate('window.__updateFail=false');page.locator('#savePassword').click();page.wait_for_function('__changes.length===1')
   assert 'actualizada' in page.locator('#passwordMessage').inner_text();assert page.locator('#newPassword').input_value()==''
   page.locator('#closePassword').click();page.locator('#signOutBtn').click();page.wait_for_selector('#authForgotPassword')
+  page.locator('#authSignUp').click();assert 'correo electrónico' in page.locator('#authMessage').inner_text();assert page.evaluate('__signUps.length')==0
+  page.locator('#authEmail').fill('new@example.invalid');page.locator('#authPassword').fill('LocalTest123!');page.locator('#authSignUp').click();page.wait_for_function('__signUps.length===1');assert 'Cuenta creada' in page.locator('#authMessage').inner_text();assert page.locator('#authSignUp').is_enabled()
   # Sign in with a different owned profile list in the same tab. Previously
   # the old navigation stayed visible with profile=null and every area failed.
   page.evaluate("__profiles=__profiles.map(p=>({...p,id:'another-'+p.id}))")

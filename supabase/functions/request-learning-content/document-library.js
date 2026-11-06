@@ -2695,7 +2695,7 @@ function pool(age,domain,level=1){
   const doc=get(id),tuple=domain==='attention'&&level===3?(attentionAdvanced[id]||doc.questions[2]):domain!=='attention'?readingQuestions[id][level-1]:doc.questions[level-1],q=tuple[0],a=tuple[1],opts=[a,...tuple[2]];
   return {id:`document-${age}-${domain}-${level}-${id}`,contentKey:`document-v1:${age}:${domain}:${level}:${id}`,passageKey:`document:${id}`,domain,level,
    type:'standard',responseType:'choice',requiresStimulus:true,currencyContext:'foreign',taskFocus:domain==='attention'?'localizar y contrastar datos':domain==='executive'?'supervisar decisiones':'comprender propósito, relaciones y límites',topic:doc.kind+' · interpretar un documento',
-   stimulus:[text(`Documento de ${doc.country}. ${['invoice-co-v1','receipt-co-v1','catalogue-co-v1'].includes(id)?'Los importes están en pesos colombianos (COP).':''}`),{type:'document',documentId:id}],q,a,opts,
+   stimulus:[...(['invoice-co-v1','receipt-co-v1','catalogue-co-v1'].includes(id)?[text('Los importes están en pesos colombianos (COP).')]:[]),{type:'document',documentId:id}],q,a,opts,
    why:a+'. Comprueba los datos directamente en el documento.',mechanic:`document_${domain}_${doc.kind.replace(/\s/g,'_')}_${level}`,
    ...(age==='junior'?{juniorProfile:{route:age,level}}:{}),...(['primary','middle'].includes(age)?{schoolProfile:{route:age,level}}:{})};
  });

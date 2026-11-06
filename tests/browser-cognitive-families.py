@@ -52,8 +52,10 @@ try:
       else:page.locator('.cognitive-area').get_by_role('button',name=task['answer'][0],exact=True).click()
      elif kind=='deduction':
       for _ in range(len(task['clues'])-1):page.locator('.cognitive-area').get_by_role('button',name='Ver siguiente pista',exact=True).click()
-      target=int(task['answer'][0][1:]);page.locator('.cognitive-area').get_by_role('button',name=f'Tachar tarjeta {(target+1)%len(task["candidates"])+1}',exact=True).click()
-      page.locator('.cognitive-area').get_by_role('button',name=f'Elegir tarjeta {target+1}',exact=True).press('Enter')
+      target=int(task['answer'][0][1:])
+      for index in range(len(task['candidates'])):
+       if index!=target:page.locator('.cognitive-area').get_by_role('button',name=f'Tachar tarjeta {index+1}',exact=True).click()
+      assert page.locator('.cognitive-candidate.cognitive-answer-correct').count()==1
      elif kind=='change':
       page.locator('.cognitive-area').get_by_role('button',name=task['replacement'],exact=True).click()
       for step in task['answer']:page.locator('.cognitive-choices').get_by_role('button',name=step,exact=True).click()

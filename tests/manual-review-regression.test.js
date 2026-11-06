@@ -57,8 +57,9 @@ test('teen quantitative reasoning answers follow the displayed percentages, rati
       assert.equal(Number(it.a),level===1?reviewed:level===2?total-reviewed:reviewed*3/4);
     }
     if(it.mechanic.endsWith('_1')){
-      const [n1,p1,n2,p2]=it.stimulus[1].text.match(/\d+/g).map(Number),a=p1/n1,b=p2/n2;
-      assert.equal(it.a,a===b?'Tienen el mismo coste por unidad.':a<b?'La oferta A.':'La oferta B.');
+      const table=it.stimulus.find(block=>block.presentation==='offerComparison'),[[,offerA],[,offerB]]=table.rows,unitPrice=row=>Number(row.match(/(\d+) unidades · (\d+) puntos/)[2])/Number(row.match(/(\d+) unidades · (\d+) puntos/)[1]),a=unitPrice(offerA),b=unitPrice(offerB);
+      assert.equal(it.stimulus.some(block=>block.type==='text'),false);assert.equal(it.a,a===b?'Tienen el mismo coste por unidad.':a<b?'La oferta A.':'La oferta B.');
+      const markup=model.interactiveStimulus(it.stimulus);assert.match(markup,/class="offer-comparison"/);assert.match(markup,/Oferta A/);assert.match(markup,/Oferta B/);assert.doesNotMatch(markup,/Una encuesta con límites/);
     }
     if(it.mechanic.endsWith('_3')){
       const xs=it.stimulus[1].text.match(/\d+/g).map(Number);
