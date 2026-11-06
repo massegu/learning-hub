@@ -62,9 +62,39 @@
 #appShell[data-design] .progress-chart-data{overflow-x:auto}
 #appShell[data-design] .progress-chart-data td{white-space:nowrap}
 #appShell[data-design] :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+#appShell[data-design] .account-tools{border:1px solid #ffffff28;border-radius:13px;background:#ffffff08;padding:10px 12px;color:#f4f3ff}
+#appShell[data-design] .account-tools>summary{font-weight:750;cursor:pointer;list-style:none;padding:5px 2px}
+#appShell[data-design] .account-tools>summary::-webkit-details-marker{display:none}
+#appShell[data-design] .account-tools>summary::after{content:'⌄';float:right;opacity:.75}
+#appShell[data-design] .account-tools[open]>summary::after{content:'⌃'}
+#appShell[data-design] .account-tools .profile-panel{margin:10px 0;border:0;padding:10px;background:#ffffff0b}
+#appShell[data-design] .account-tools .privacy-panel{padding:4px 2px}
+#appShell[data-design] .account-tools .sidebar-footer{margin-top:10px}
+#appShell[data-design] .home-progress{margin-top:22px;border:1px solid var(--line);border-radius:14px;background:var(--card);padding:14px 18px}
+#appShell[data-design] .home-progress>summary{cursor:pointer;color:var(--muted);font-size:.9rem;font-weight:700}
+#appShell[data-design] .home-progress[open]>.dashboard-grid{margin-top:14px}
+#appShell[data-design] .home-progress .focus-card{margin-top:12px;padding:16px 20px}
+#appShell[data-design] #training .section-intro{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px 22px}
+#appShell[data-design] #training .section-intro h3{margin:.35rem 0}
+#appShell[data-design] #training .section-intro p{margin:.25rem 0;color:var(--muted)}
+#appShell[data-design] .training-area-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,255px),1fr));gap:12px;margin-top:18px}
+#appShell[data-design] .training-area-list .level-row{display:grid;grid-template-columns:42px minmax(0,1fr);gap:6px 12px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:15px;background:var(--card);color:var(--ink);text-align:left;cursor:pointer;min-width:0}
+#appShell[data-design] .training-area-list .level-row:hover{border-color:var(--accent);background:var(--accent-soft)}
+#appShell[data-design] .training-area-list .area-illustration{width:40px;height:40px;grid-row:1/4}
+#appShell[data-design] .training-area-list .level-track{grid-column:2;width:100%;background:var(--accent-soft)}
+#appShell[data-design] .training-area-list .level-track span{background:var(--accent)}
+#appShell[data-design] .training-area-list .level-tag{font-size:.68rem;color:var(--muted)}
+#appShell[data-design] .school-summary{display:flex;align-items:baseline;gap:10px;margin-top:18px;padding:12px 16px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--muted)}
+#appShell[data-design] .school-summary strong{font-size:1.3rem;color:var(--ink)}
+#appShell[data-design] .school-summary small{margin-left:auto}
+#appShell[data-design] .discovery-trail{margin-top:18px}
+#appShell[data-design]:is(.school-experience,.early-experience) #home>.home-welcome,
+#appShell[data-design]:is(.school-experience,.early-experience) #home>.hero,
+#appShell[data-design]:is(.school-experience,.early-experience) #home>.home-session-notice,
+#appShell[data-design]:is(.school-experience,.early-experience) #home>.home-progress{display:none!important}
 .workspace-menu{display:none}
 @media(min-width:951px){#appShell[data-design]{grid-template-columns:238px minmax(0,1fr)}#appShell[data-design] .sidebar{overflow-y:auto;position:sticky;height:100vh}}
-@media(max-width:950px){#appShell[data-design] .main-content{padding:20px}#appShell[data-design] .sidebar{padding:14px 18px;gap:12px;height:auto;position:relative}#appShell[data-design] .brand{max-width:calc(100% - 150px)}#appShell[data-design] .workspace-menu{display:block;position:absolute;right:18px;top:21px;background:#ffffff18;color:white;padding:10px 13px;border:1px solid #ffffff40;border-radius:9px;font:inherit;font-size:.8rem}#appShell[data-design]:not(.mobile-nav-open) .sidebar :is(.profile-panel,.privacy-panel,.nav-menu,.sidebar-footer,.support-contact){display:none!important}#appShell[data-design].mobile-nav-open .nav-menu{grid-template-columns:repeat(2,minmax(0,1fr))}#appShell[data-design] .topbar{align-items:flex-start;flex-wrap:wrap;gap:12px}#appShell[data-design] .topbar-actions{flex-direction:row;justify-content:flex-start}#appShell[data-design] .home-welcome{align-items:flex-start;flex-direction:column}#appShell[data-design] .hero-visual{display:none}#appShell[data-design] :is(.hero,.school-hero,.early-hero){padding:25px}#appShell[data-design] .school-area-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:950px){#appShell[data-design] .main-content{padding:20px}#appShell[data-design] .sidebar{padding:14px 18px;gap:12px;height:auto;position:relative}#appShell[data-design] .brand{max-width:calc(100% - 150px)}#appShell[data-design] .workspace-menu{display:block;position:absolute;right:18px;top:21px;background:#ffffff18;color:white;padding:10px 13px;border:1px solid #ffffff40;border-radius:9px;font:inherit;font-size:.8rem}#appShell[data-design]:not(.mobile-nav-open) .sidebar :is(.account-tools,.profile-panel,.privacy-panel,.nav-menu,.sidebar-footer,.support-contact){display:none!important}#appShell[data-design].mobile-nav-open .nav-menu{grid-template-columns:repeat(2,minmax(0,1fr))}#appShell[data-design] .topbar{align-items:flex-start;flex-wrap:wrap;gap:12px}#appShell[data-design] .topbar-actions{flex-direction:row;justify-content:flex-start}#appShell[data-design] .home-welcome{align-items:flex-start;flex-direction:column}#appShell[data-design] .hero-visual{display:none}#appShell[data-design] :is(.hero,.school-hero,.early-hero){padding:25px}#appShell[data-design] .school-area-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){#appShell[data-design] .main-content{padding:18px 14px}#appShell[data-design] .block-banner,#appShell[data-design] #exercise .exercise-card{padding:18px}#appShell[data-design] #exercise .prompt{font-size:1.2rem}#appShell[data-design] .school-area-grid{grid-template-columns:minmax(0,1fr)}#appShell[data-design] #homeLevels{grid-template-columns:minmax(0,1fr)}#appShell[data-design] .home-welcome p{font-size:.9rem}#appShell[data-design] .home-welcome .secondary-btn{width:100%}#appShell[data-design] .options-grid{grid-template-columns:minmax(0,1fr)}}
 /* Replace the legacy fixed-sidebar offset as a unit; do not mix both layouts. */
 @media(min-width:951px){#appShell[data-design]{display:grid}#appShell[data-design] .sidebar{grid-column:1;width:auto;left:auto;bottom:auto;z-index:10;align-self:start}#appShell[data-design] .main-content{grid-column:2;margin-left:0}}

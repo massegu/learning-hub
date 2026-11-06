@@ -9,16 +9,10 @@
   const routeMap=new Map();
   const $=s=>document.querySelector(s);
   const $$=s=>[...document.querySelectorAll(s)];
-  let apiPatched=false, worksheetPatched=false;
+  let apiPatched=false;
 
   function routeOfProfileId(id){ return routeMap.get(String(id))||null; }
   function currentRoute(){ return routeOfProfileId($('#profileSelect')?.value); }
-  function stamp(){ const d=new Date(),pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`; }
-  function ageSlug(profile){
-    const route=routeOfProfileId(profile?.id)||profile?.progress?.ageRoute||profile?.age_band;
-    const label=AGE_ROUTES[route]?.label||AGE_ROUTES[profile?.age_band]?.label||'perfil';
-    return label.replace(/\s*años/i,'').trim().replace(/\s+/g,'-');
-  }
 
   function installAgeOptions(){
     const sel=$('#newProfileAge'); if(!sel) return;
@@ -112,23 +106,10 @@
 
   function patchUI(){ installAgeOptions(); renameProfileOptions(); const route=currentRoute(); if(route){patchAgeEyebrow(route);patchNavigation(route);patchExerciseHeading(route);} }
 
-  function patchWorksheetNames(){
-    if(worksheetPatched||!window.WorksheetGenerator?.generate||!window.JSZip) return;
-    const orig=window.WorksheetGenerator.generate.bind(window.WorksheetGenerator);
-    window.WorksheetGenerator.generate=async(itemsByVersion,profile,...options)=>{
-      const prefix=`LearningLab_${ageSlug(profile)}_${stamp()}`;
-      const oldClick=HTMLAnchorElement.prototype.click, oldFile=window.JSZip.prototype.file;
-      HTMLAnchorElement.prototype.click=function(){ const d=String(this.download||''); if(/_fichas\.zip$/i.test(d)) this.download=`${prefix}_fichas.zip`; else if(/\.docx$/i.test(d)) this.download=`${prefix}_ficha_01.docx`; return oldClick.call(this); };
-      window.JSZip.prototype.file=function(name,...rest){ let next=name; const m=String(name).match(/^LearningLab_ficha_version_(\d+)\.docx$/i); if(m) next=`${prefix}_ficha_${String(m[1]).padStart(2,'0')}.docx`; return oldFile.call(this,next,...rest); };
-      try{return await orig(itemsByVersion,profile,...options);} finally{HTMLAnchorElement.prototype.click=oldClick;window.JSZip.prototype.file=oldFile;}
-    };
-    worksheetPatched=true;
-  }
-
   function start(){
     installAgeOptions();
-    let ticks=0;
-    const timer=setInterval(()=>{ticks++;patchAPI();patchWorksheetNames();patchUI();if(ticks>160)clearInterval(timer);},100);
+    patchAPI();
+    patchUI();
     document.addEventListener('change',e=>{if(e.target?.id==='profileSelect'||e.target?.id==='newProfileAge')setTimeout(patchUI,30);},true);
     document.addEventListener('click',e=>{if(e.target?.closest?.('.nav-item,#newProfileBtn,#createProfileBtn'))setTimeout(patchUI,80);},true);
   }

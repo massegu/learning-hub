@@ -728,23 +728,39 @@
     else if (acc <= 0.42 && l > 1) l--;
     state.levels[s] = l;
   }
-  async function persist() {
-    if (profile && state) {
-      profile.progress = {
-        ...profile.progress,
-        scores: state.scores,
-        levels: state.levels,
-        totalCorrect: state.totalCorrect,
-        totalAttempts: state.totalAttempts,
-        history: state.history.slice(-5000),
-        sessions: state.sessions.slice(-30),
-        _delivery: profile.progress?._delivery,
-      };
-      try {
-        await API.saveProgress(profile.id, profile.progress);
-      } catch (e) {
-        console.warn(e);
-      }
+  let progressSaveRevision=0;
+  function setProgressSaveStatus(message,kind=''){
+    const status=$('#progressSaveStatus'),retry=$('#retryProgressSave');
+    if(!status)return;
+    status.textContent=message;status.className=`progress-save-status${kind?` ${kind}`:''}`;
+    if(retry)retry.classList.toggle('hidden',kind!=='error');
+  }
+  async function persist(announce=false) {
+    if(!profile||!state)return false;
+    profile.progress = {
+      ...profile.progress,
+      scores: state.scores,
+      levels: state.levels,
+      totalCorrect: state.totalCorrect,
+      totalAttempts: state.totalAttempts,
+      history: state.history.slice(-5000),
+      sessions: state.sessions.slice(-30),
+      _delivery: profile.progress?._delivery,
+    };
+    const revision=++progressSaveRevision;
+    if(profile._sessionOnly===true||API.isIndependent?.(profile.id)){
+      if(announce)setProgressSaveStatus('Esta sesión independiente no se guarda en el perfil.','info');
+      return false;
+    }
+    if(announce)setProgressSaveStatus('Guardando progreso…','pending');
+    try{
+      await API.saveProgress(profile.id,profile.progress);
+      if(announce&&revision===progressSaveRevision)setProgressSaveStatus('Progreso guardado en este perfil.','success');
+      return true;
+    }catch(e){
+      console.warn(e);
+      if(announce&&revision===progressSaveRevision)setProgressSaveStatus('No se pudo guardar el progreso. Comprueba la conexión y vuelve a intentarlo.','error');
+      return false;
     }
   }
   function saveResult(s, correct, itemId, detail = "standard") {
@@ -787,7 +803,7 @@
     state.history.push(row);
     state.history = state.history.slice(-5000);
     recalcLevel(s);
-    persist();
+    persist(true);
     API.saveResult(profile.id, row);
     updateGlobalUI();
     return pts;
@@ -915,6 +931,7 @@
   }
   function activateProfile(id,independent=false) {
     stopMemoryCountdown();
+    progressSaveRevision++;setProgressSaveStatus('');
     $('#privacyDialog').close();privacyTarget=null;
     const p = profiles.find((x) => x.id === id);
     if (!p) return;
@@ -952,19 +969,16 @@
   $('#prepareSessionBtn').onclick=()=>switchSection('sessionBuilder');
   function buildNavigation() {
     const nav = $("#navMenu");
-    const items = [["home", "⌂", "Inicio"]];
-    ageData().subjects.forEach((s) =>
-      items.push(["exercise", SUBJECT_META[s].icon, SUBJECT_META[s].name, s]),
-    );
-    items.push(
-      ["sessionBuilder", "▦", "Crear sesión"],
-      ["progress", "↗", "Progreso"],
+    const items = [
+      ["home", "⌂", "Inicio"],
+      ["training", "→", "Entrenar"],
       ["homework", "⇩", "Fichas"],
-    );
+      ["progress", "↗", "Progreso"],
+    ];
     nav.innerHTML = items
       .map(
         (x, i) =>
-          `<button class="nav-item ${i === 0 ? "active" : ""}" data-section="${x[0]}" ${x[3] ? `data-subject="${x[3]}"` : ""}>${x[3]?`<span class="nav-area-icon" aria-hidden="true"></span>`:x[1]} ${x[3]?`<span class="nav-area-label">${subjectLabel(x[3])}</span>`:x[2]}</button>`,
+          `<button class="nav-item ${i === 0 ? "active" : ""}" data-section="${x[0]}"><span aria-hidden="true">${x[1]}</span> ${x[2]}</button>`,
       )
       .join("");
     $$(".nav-item").forEach(
@@ -982,6 +996,7 @@
   }
   const titles = {
     home: "Panel",
+    training: "Entrenar",
     exercise: "Entrenamiento",
     division: "Divisiones",
     sessionBuilder: "Crear sesión",
@@ -1004,6 +1019,22 @@
     if (id === "progress") renderProgress();
     if(id==='home')renderEarlyHub();
     if(id==='home')renderSchoolHub();
+  }
+  function syncActivitySettings() {
+    const settings = $('#activityOptions');
+    if (!settings) return;
+    const available = [...settings.querySelectorAll('.activity-toolbar > button, .activity-toolbar > .mode-switch, #cognitiveFamilyControl, #documentModeHint, #languageModeSwitch')]
+      .some(control => !control.classList.contains('hidden'));
+    settings.classList.toggle('hidden', !available);
+    if (!available) {
+      settings.open = false;
+      return;
+    }
+    const selected = [...settings.querySelectorAll('button[aria-pressed="true"], .language-mode-btn.active')]
+      .find(button => !button.classList.contains('hidden') && !button.closest('.mode-switch.hidden'));
+    $('#activityOptionsSummary').textContent = selected
+      ? `Opciones · ${selected.textContent.trim()}`
+      : 'Opciones de actividad';
   }
   function setupExercise() {
     if(configuredSubject!==null&&configuredSubject!==subject){documentOnly=false;photoOnly=false;memoryAudioOnly=false;interactionOnly=false;interactionKind=subject==='attention'?'room':'symbols';roomSpeedOnly=false;speedUnpairedOnly=false;cognitiveOnly=false;cognitiveFamily='';executedOnly=false;}
@@ -1101,6 +1132,7 @@
     $('#documentModeHint').classList.toggle('hidden',!documentSupport||isReading);
     $('#documentModeHint').textContent=cognitiveOnly?'Elige una familia o alterna entre situaciones. Lee la consigna antes de empezar.':executedOnly?'Marca, reconstruye o actúa directamente sobre los estímulos.':interactionOnly?(subject==='executive'?'Pulsa el botón que indica cada tarjeta; en la otra modalidad, mira o escucha una señal y haz el gesto indicado. Los gestos no se miden automáticamente.':interactionKind==='room'?'Busca objetos de la sala y explica qué características cumplen.':'Responde a las tarjetas o sigue las señales con un gesto.') :photoOnly?'Compara las escenas y pulsa en la imagen los elementos que han cambiado.':subject==='executive'?(documentOnly?'Usa el documento para organizar acciones y corregir un plan.':'Ordena acciones, aplica reglas y revisa decisiones.'):(documentOnly?'Localiza y contrasta los datos del documento.':'Compara figuras, códigos y listas.');
     $$('#documentModeSwitch [data-documents]').forEach(b=>b.setAttribute('aria-pressed',String(!cognitiveOnly&&!executedOnly&&!interactionOnly&&!photoOnly&&(b.dataset.documents==='true')===documentOnly)));
+    syncActivitySettings();
     counter = 0;
     renderEarlyTaskGuide();
     renderSchoolTaskGuide();
@@ -1527,6 +1559,7 @@
       advanceGuidedSession();
     } else newExercise();
   };
+  $("#retryProgressSave").onclick=()=>{persist(true);};
   $$(".language-mode-btn[data-mode]").forEach(
     (b) =>
       (b.onclick = () => {
@@ -1535,6 +1568,7 @@
         $$(".language-mode-btn").forEach((x) =>
           x.classList.toggle("active", x === b),
         );
+        syncActivitySettings();
         newExercise();
       }),
   );
@@ -1620,10 +1654,10 @@
     const journey=window.SchoolJourney,saved=journey.normalize(profile.progress?._schoolJourney),active=saved.active;
     const domains=ageData().subjects,suggested=$('#recommendedBtn').dataset.subject;
     const next=active?journey.definition(active.id,profile).plan[active.index]:domains.includes(suggested)?suggested:domains[0];
-    hub.innerHTML=`<div class="school-hero card"><div><p class="eyebrow">LEARNING LAB · ${stage.label}</p><h3>${stage.title}</h3><p>${stage.description}</p><button id="schoolContinue" class="primary-btn">${active?'Continuar misión':'Explorar '+journey.all[next].title} →</button></div><div class="school-summary"><strong>${state.totalAttempts}</strong><span>actividades realizadas</span><small>${saved.completed.length} misiones completadas</small></div></div><div class="hub-heading"><h3>Áreas de entrenamiento</h3><span>Acceso directo o misiones de 3 a 5 actividades</span></div><div class="school-area-grid">${domains.map(domain=>{
+    hub.innerHTML=`<div class="school-hero card"><div><p class="eyebrow">LEARNING LAB · ${stage.label}</p><h3>${stage.title}</h3><p>${stage.description}</p><button id="schoolContinue" class="primary-btn">${active?'Continuar misión':'Explorar '+journey.all[next].title} →</button></div></div><div class="hub-heading"><h3>Áreas de entrenamiento</h3><span>Acceso directo o misiones de 3 a 5 actividades</span></div><div class="school-area-grid">${domains.map(domain=>{
       const area=journey.all[domain],results=state.history.filter(x=>x.subject===domain);
       return `<button class="school-area-card card" data-school-area="${domain}" data-area="${domain}"><span class="school-icon area-illustration" aria-hidden="true">${window.StimulusArt.svg(area.icon)}</span><span><strong>${area.title}</strong><small>${results.length} actividades · nivel ${state.levels[domain]||1}</small></span><span aria-hidden="true">→</span></button>`;
-    }).join('')}</div><div class="hub-heading"><h3>Misiones</h3><span>El progreso se guarda con tu perfil.</span></div>${active?`<p class="mission-resume">${journey.definition(active.id).title}: ${active.index} actividades realizadas.</p>`:''}<div class="school-mission-grid">${journey.forMissions(profile).map(m=>`<div class="school-mission-card card"><h4>${m.title}</h4><p>${m.plan.length} actividades · ${[...new Set(m.plan)].map(d=>journey.all[d].title).join(', ')}</p><button class="secondary-btn" data-school-mission="${m.id}" ${active&&active.id!==m.id?'disabled':''}>${active?.id===m.id?'Continuar':'Empezar'} →</button></div>`).join('')}</div>`;
+    }).join('')}</div><div class="hub-heading"><h3>Misiones opcionales</h3><span>${saved.completed.length} completadas</span></div>${active?`<p class="mission-resume">${journey.definition(active.id).title}: ${active.index} actividades realizadas.</p>`:''}<div class="school-mission-grid">${journey.forMissions(profile).map(m=>`<div class="school-mission-card card"><h4>${m.title}</h4><p>${m.plan.length} actividades · ${[...new Set(m.plan)].map(d=>journey.all[d].title).join(', ')}</p><button class="secondary-btn" data-school-mission="${m.id}" ${active&&active.id!==m.id?'disabled':''}>${active?.id===m.id?'Continuar':'Empezar'} →</button></div>`).join('')}</div><div class="school-summary" aria-label="Resumen de progreso"><strong>${state.totalAttempts}</strong><span>actividades realizadas</span><small>${saved.completed.length} misiones completadas</small></div>`;
     function open(domain){guidedSession=null;hideGuidedBar();subject=domain;switchSection('exercise');setupExercise();}
     $('#schoolContinue').onclick=()=>active?startSchoolMission(active.id):open(next);
     $$('[data-school-area]').forEach(b=>b.onclick=()=>open(b.dataset.schoolArea));
@@ -1656,13 +1690,13 @@
     const next=active?journey.definition(active.id).plan[active.index]:journey.suggest(state.history,ageData().subjects,suggested);
     const discovery=journey.overview(state.history,ageData().subjects,saved.completed);
     const explored=ageData().subjects.filter(d=>stats[d]?.attempts>=3).length;
-    hub.innerHTML=`<div class="explore-welcome card"><div><p class="eyebrow">LEARNING LAB · MIS DESCUBRIMIENTOS</p><h3>Un lugar para explorar</h3><p>Elige un área o prueba una misión corta. Vamos paso a paso.</p><button id="earlyContinue" class="primary-btn">${active?'Continuar misión':'Explorar '+journey.areas[next].title} →</button></div><div class="explore-summary"><span class="hub-illustration" aria-hidden="true">${window.StimulusArt.svg('compass')}</span><strong>${explored} de ${ageData().subjects.length} áreas exploradas</strong><span>${state.totalAttempts} actividades realizadas</span><small>Tres actividades para explorar un área.</small></div></div>
-      <section class="discovery-trail" aria-label="Tus descubrimientos"><div><strong>Tu camino de descubrimientos</strong><span>${discovery.discoveries} de ${discovery.goal} pasos explorados</span><progress value="${discovery.discoveries}" max="${discovery.goal}" aria-label="Actividades para explorar todas las áreas"></progress></div><ol>${discovery.milestones.map(m=>`<li class="${m.done?'discovered':''}"><span aria-hidden="true">${m.done?'✓':'○'}</span><span>${m.title}<small>${m.done?'Conseguido':'Por descubrir'}</small></span></li>`).join('')}</ol></section>
-      <div class="hub-heading"><div><p class="eyebrow">ELIGE TU CAMINO</p><h3>Mis áreas</h3></div><span>También puedes entrar desde el menú.</span></div>
+    hub.innerHTML=`<div class="explore-welcome card"><div><p class="eyebrow">LEARNING LAB · MIS DESCUBRIMIENTOS</p><h3>Un lugar para explorar</h3><p>Elige un área o prueba una misión corta. Vamos paso a paso.</p><button id="earlyContinue" class="primary-btn">${active?'Continuar misión':'Explorar '+journey.areas[next].title} →</button></div></div>
+      <div class="hub-heading"><div><p class="eyebrow">ELIGE TU CAMINO</p><h3>Mis áreas</h3></div><span>También puedes verlas en Entrenar.</span></div>
       <div class="early-area-grid">${Object.entries(journey.areas).filter(([d])=>ageData().subjects.includes(d)).map(([domain,area])=>`<button class="early-area-card card" data-early-area="${domain}" data-area="${domain}"><span class="area-illustration" aria-hidden="true">${window.StimulusArt.svg(area.icon)}</span><span class="area-copy"><small>${area.theme}</small><strong>${area.title}</strong><span>${area.description}</span><span class="area-progress" aria-label="Primera exploración: ${stats[domain].firstExploration} de 3 actividades">${[1,2,3].map(i=>`<i class="${stats[domain].firstExploration>=i?'done':''}" aria-hidden="true"></i>`).join('')}<small>${stats[domain].attempts} actividades · nivel ${state.levels[domain]||1}</small></span></span><span aria-hidden="true">→</span></button>`).join('')}</div>
       <div class="hub-heading"><div><p class="eyebrow">PASO A PASO</p><h3>Misiones cortas</h3></div><span>${saved.completed.length} misiones terminadas</span></div>
       ${active?`<p class="mission-resume" role="status">${journey.definition(active.id).title}: ${active.index} de ${journey.definition(active.id).plan.length} actividades realizadas. Puedes continuar cuando quieras.</p>`:''}
-      <div class="early-mission-grid">${journey.missions.map(m=>`<div class="mission-card card"><span aria-hidden="true">${window.StimulusArt.svg(m.icon)}</span><div><h4>${m.title}</h4><p>${m.description}</p><button class="secondary-btn" data-early-mission="${m.id}" ${active&&active.id!==m.id?'disabled':''}>${active?.id===m.id?'Continuar':'Empezar'} →</button></div></div>`).join('')}</div>`;
+      <div class="early-mission-grid">${journey.missions.map(m=>`<div class="mission-card card"><span aria-hidden="true">${window.StimulusArt.svg(m.icon)}</span><div><h4>${m.title}</h4><p>${m.description}</p><button class="secondary-btn" data-early-mission="${m.id}" ${active&&active.id!==m.id?'disabled':''}>${active?.id===m.id?'Continuar':'Empezar'} →</button></div></div>`).join('')}</div>
+      <section class="discovery-trail" aria-label="Tu progreso en descubrimientos"><div><strong>Tu camino de descubrimientos</strong><span>${discovery.discoveries} de ${discovery.goal} pasos explorados · ${explored} de ${ageData().subjects.length} áreas iniciadas · ${state.totalAttempts} actividades</span><progress value="${discovery.discoveries}" max="${discovery.goal}" aria-label="Actividades para explorar todas las áreas"></progress></div><ol>${discovery.milestones.map(m=>`<li class="${m.done?'discovered':''}"><span aria-hidden="true">${m.done?'✓':'○'}</span><span>${m.title}<small>${m.done?'Conseguido':'Por descubrir'}</small></span></li>`).join('')}</ol></section>`;
     $('#earlyContinue').onclick=()=>active?startEarlyMission(active.id):openEarlyArea(next);
     $$('[data-early-area]').forEach(b=>b.onclick=()=>openEarlyArea(b.dataset.earlyArea));
     $$('[data-early-mission]').forEach(b=>b.onclick=()=>startEarlyMission(b.dataset.earlyMission));
@@ -1976,7 +2010,7 @@
       if(mission){switchSection('home');renderEarlyHub();return;}
       switchSection("sessionBuilder");
       $("#sessionPlanPreview").innerHTML =
-        `<div class="session-complete"><strong>Sesión completada</strong><span>${completed} actividades realizadas. Los resultados ya están guardados en Progreso.</span></div>`;
+        `<div class="session-complete"><strong>Sesión completada</strong><span>${completed} actividades realizadas.</span></div>`;
       return;
     }
     subject = guidedSession.plan[guidedSession.index];
