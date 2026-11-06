@@ -14,7 +14,7 @@
   API.saveContentLocale=async locale=>{const normalized=window.LocaleContent.normalize(locale);const {error}=await client.from('accounts').update({content_locale:normalized}).eq('user_id',API.user.id);if(error)throw error;API.setContentLocale(normalized);return normalized;};
   API.getSession=async()=>{const {data}=await client.auth.getSession();API.session=data.session||null;API.user=API.session?.user||null;return API.session};
   API.signIn=async(email,password)=>{const {data,error}=await client.auth.signInWithPassword({email,password});if(error)throw error;API.session=data.session;API.user=data.user;return data};
-  API.signUp=async(email,password)=>{const {data,error}=await client.auth.signUp({email,password});if(error)throw error;API.session=data.session;API.user=data.user;return data};
+  API.signUp=async(email,password)=>{const redirectTo=new URL(window.location.pathname,window.location.origin).href;const {data,error}=await client.auth.signUp({email,password,options:{emailRedirectTo:redirectTo}});if(error)throw error;API.session=data.session;API.user=data.user;return data};
   API.resetPassword=async(email)=>{
     const redirect=new URL(window.location.pathname,window.location.origin);
     redirect.searchParams.set('recuperar','1');

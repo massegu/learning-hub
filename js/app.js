@@ -868,9 +868,9 @@
     if (sub) {
       sub.textContent =
         window.LH_CONFIG?.stripeMode === "test"
-          ? "Probar pago · 19,99 €/mes"
-          : "Suscribirme · 19,99 €/mes";
-      sub.title = "Precio final: 19,99 € al mes, impuestos incluidos.";
+          ? "Probar pago · 30,00 €/mes"
+          : "Suscribirme · 30,00 €/mes";
+      sub.title = "Precio final: 30,00 € al mes, impuestos incluidos.";
       const canSubscribe = ["trial", "cancelled", "complimentary"].includes(st);
       sub.classList.toggle("hidden", !canSubscribe);
     }
@@ -2103,13 +2103,14 @@
   $("#authSignUp").onclick = async () => {
     const button=$("#authSignUp"),email=$("#authEmail").value.trim(),password=$("#authPassword").value;
     if(!email||!password){$("#authMessage").textContent="Escribe tu correo electrónico y una contraseña para crear la cuenta.";return;}
+    if(password.length<8){$("#authMessage").textContent="La contraseña debe tener al menos 8 caracteres.";return;}
     button.disabled=true;button.textContent="Creando cuenta…";$("#authMessage").textContent="Conectando con el servicio de cuentas…";
     try {
       const d = await API.signUp(email,password);
       if (d.session) await loadWorkspace();
       else
         $("#authMessage").textContent =
-          "Cuenta creada. Revisa tu correo para confirmar el registro.";
+          `Cuenta creada. Revisa ${email} y pulsa el enlace de confirmación. Después, vuelve aquí e inicia sesión.`;
     } catch (e) {
       $("#authMessage").textContent = e.message||"No se pudo crear la cuenta. Comprueba la conexión e inténtalo de nuevo.";
     } finally {

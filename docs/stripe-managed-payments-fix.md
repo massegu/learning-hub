@@ -6,7 +6,7 @@ está activado por defecto en la cuenta y permite desactivarlo para esta petici�
 mediante `managed_payments[enabled]=false`.
 
 La corrección conserva el flujo de suscripción directa, tarjeta, precio mensual
-de 19,99 EUR con impuestos incluidos y verificación del pago mediante webhook.
+vigente de 30,00 EUR con impuestos incluidos y verificación del pago mediante webhook.
 No cambia la configuración general de la cuenta de Stripe. Versiona la clave de
 idempotencia de creación de Checkout (`lh:checkout:v2:`) porque el registro de Stripe
 muestra que el reintento anterior devolvía la respuesta fallida almacenada.
@@ -24,7 +24,7 @@ la comprobación de suscripciones existentes sigue impidiendo otro cobro.
 3. No cambiar secretos, precio, SQL, clientes ni configuración general de Stripe.
 4. En la URL estable de pruebas, usar la misma cuenta y pulsar Probar pago.
    Comprobar que Checkout se abre en entorno de prueba y muestra un total de
-   19,99 EUR al mes. Usar únicamente una tarjeta de prueba de Stripe.
+   30,00 EUR al mes. Usar únicamente una tarjeta de prueba de Stripe.
 5. Confirmar después factura pagada, suscripción activa, webhook entregado y
    activación de esa cuenta en Learning Hub. Si falla, revisar el nuevo registro
    de Stripe; no marcar manualmente la cuenta como activa.
