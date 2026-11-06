@@ -1,5 +1,9 @@
 # Revisión de la corrección de Stripe
 
+Nota histórica: el precio de 19,99 EUR descrito en esta revisión fue sustituido
+posteriormente por el precio vigente de 30,00 EUR/mes. La función actual valida
+30,00 EUR inclusivos; véase `stripe-webhook/README.md` y `stripe-test-installation.md`.
+
 Base: `desarrollo` (`00ce974`, PR #12 ya fusionada). Rama: `fix/stripe-payment-integrity`.
 
 ## Resultado preparado

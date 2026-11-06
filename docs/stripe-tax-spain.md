@@ -32,8 +32,8 @@ las nuevas sesiones envían:
 - `billing_address_collection=required`.
 - `customer_update[address]=auto` para conservar la ubicación fiscal del cliente.
 
-Se conserva el precio inclusivo de 19,99 EUR y el rechazo de una sesión cuyo total
-no sea exactamente 1999 céntimos. No se introduce un porcentaje fijo ni se activa
+El precio objetivo vigente es 30,00 EUR, inclusivo; se rechaza una sesión cuyo total
+no sea exactamente 3000 céntimos. No se introduce un porcentaje fijo ni se activa
 Managed Payments. La integración usa suscripciones directas: no asumir que Stripe
 actúa como vendedor y se encarga de todas las obligaciones fiscales de la titular.
 
@@ -47,10 +47,11 @@ las declaraciones ni el ingreso de impuestos. Revisar también las tarifas de Ta
    de la actividad y revisar los registros fiscales de prueba conforme al caso
    confirmado con asesoría. Un registro dentro del sandbox no es un alta fiscal real.
 2. En Catálogo → Learning Hub, revisar el código fiscal del producto. Conservar
-   el precio mensual `price_1UMqnbPtYdHU5MK2t0pQ4Xjz`, 19,99 EUR, impuestos incluidos.
+   el precio mensual actual de 30,00 EUR, impuestos incluidos. El ID vigente se guarda
+   como `STRIPE_PRICE_ID` en Supabase y no se duplica en este documento.
    No añadir una tasa manual a la vez que el cálculo automático.
-3. Instalar el archivo completo `supabase/functions/stripe-webhook/index.ts` de
-   esta rama en la función homónima. Mantener su Verify JWT desactivado: valida
+3. En beta, `stripe-webhook` se publica mediante el workflow de GitHub al integrar
+   cambios en `desarrollo`. Mantener Verify JWT desactivado en esta función: valida
    explícitamente la sesión o la firma de Stripe. No modificar otras funciones.
 4. En Supabase → Edge Functions → Secrets guardar `STRIPE_AUTOMATIC_TAX=enabled`.
    Conservar `STRIPE_MODE=test` y las claves del mismo sandbox.
@@ -61,7 +62,7 @@ las declaraciones ni el ingreso de impuestos. Revisar también las tarifas de Ta
    cobrar sin cálculo. Revisarla y caducarla en Stripe, esperar el vencimiento del
    intento y reintentar; no borrar tablas ni reutilizar un intento con datos alterados.
 7. Comprobar la dirección de facturación, el desglose que corresponde al caso
-   fiscal y **el total final de 19,99 EUR**. Pagar con tarjeta de prueba y comprobar
+   fiscal y **el total final de 30,00 EUR**. Pagar con tarjeta de prueba y comprobar
    factura pagada, datos de emisor y cliente, impuesto/base, próxima renovación,
    avisos de webhook y estado activo de la cuenta correcta.
 8. Probar las demás ubicaciones y tipos de cliente que realmente se admitirán.
