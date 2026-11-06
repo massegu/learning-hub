@@ -26,11 +26,11 @@ try:
    assert not page.locator('#navMenu [data-subject=social]').evaluate('e=>e.hidden')
    page.locator('#exerciseOptions [data-answer]').evaluate_all('(els,a)=>els.find(e=>e.dataset.answer===a).click()',page.evaluate('__current.a'));assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
   workspace(page).locator('#profileSelect').select_option('primary');workspace(page).locator('#navMenu [data-subject=attention]').click()
-  assert page.locator('#interactionKindSwitch button:visible').all_text_contents()==['Mira y actúa','Escucha y actúa']
-  assert page.locator('[data-interaction-kind=symbols]').is_hidden()
+  assert page.locator('#interactionKindSwitch button:visible').all_text_contents()==['Retos con tarjetas']
+  assert page.locator('[data-interaction-kind=symbols]').is_visible()
   page.locator('#interactionModeBtn').click();page.wait_for_selector('#roomDescription');assert page.evaluate('__current.interactionTask.kind')=='room'
-  page.locator('[data-interaction-kind=auditory]').click();page.wait_for_selector('#startListening');assert page.evaluate('({domain:__current.domain,kind:__current.interactionTask.kind,mode:__current.interactionTask.audioMode,labels:__current.interactionTask.signals.map(x=>x.label)})')=={'domain':'attention','kind':'auditory','mode':'tones','labels':['Un sonido grave','Un sonido agudo']}
-  page.locator('[data-interaction-kind=signals]').click();page.wait_for_selector('#startInteractive');assert page.evaluate('__current.interactionTask.kind')=='movement';assert page.evaluate('__current.interactionTask.rules.every(x=>x.target>=0)')
+  assert page.locator('#interactionKindSwitch [data-interaction-kind="auditory"]').is_hidden()
+  assert page.locator('#interactionKindSwitch [data-interaction-kind="signals"]').is_hidden()
   workspace(page).locator('#profileSelect').select_option('primary');workspace(page).locator('#navMenu [data-section=home]').click();assert 'learning-areas-3d.png' in page.locator('[data-school-area=social] .area-illustration').evaluate('e=>getComputedStyle(e).backgroundImage');page.locator('#schoolHub').screenshot(path='/tmp/new-area-icons.png')
   page.clock.install();page.clock.pause_at(page.evaluate('Date.now()+1000'));page.add_style_tag(content='*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}')
   workspace(page).locator('#navMenu [data-subject=executive]').click();page.locator('#interactionModeBtn').click();page.wait_for_selector('#startInteractive');page.locator('#exerciseLevelSelect').select_option('3');page.wait_for_function('()=>__current?.interactionTask?.level===3')

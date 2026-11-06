@@ -11,8 +11,8 @@ test('thirty-four reviewed document assets have matching PNG dimensions, consist
  assert.equal(f.total,f.subtotal+f.delivery);assert.equal(r.change,r.paid-r.total);
  for(const age of ['junior','primary','middle','teen'])for(const domain of ['attention','executive','literacy'])for(const level of [1,2,3])for(const it of docs.pool(age,domain,level))for(const country of Object.keys(locale.labels)){
   const local=locale.localizeItem(it,country,domain),printed=model.printable(local,{age_band:age==='junior'?'primary':age,progress:{ageRoute:age}});
-  assert.equal(printed.stimulus[1].documentId,it.stimulus[1].documentId);if(local.opts)assert.ok((local.answers||[local.a]).every(a=>local.opts.includes(a)));else assert.deepEqual([...local.tokens].sort(),[...local.answer].sort());
-  const markup=model.interactiveStimulus(local.stimulus,{structured:true});assert.match(markup,/<img /);assert.match(markup,/Ver versión en texto/);
+  const documentId=it.stimulus.find(block=>block.type==='document').documentId;assert.ok(printed.stimulus.some(block=>block.documentId===documentId));assert.doesNotMatch(JSON.stringify(local.stimulus),/Documento de [\p{L} ]+\./u);if(local.opts)assert.ok((local.answers||[local.a]).every(a=>local.opts.includes(a)));else assert.deepEqual([...local.tokens].sort(),[...local.answer].sort());
+  const markup=model.interactiveStimulus(local.stimulus,{structured:true});assert.match(markup,/<img /);assert.match(markup,/Ver versión en texto/);assert.doesNotMatch(markup,/Documento de [\p{L} ]+\./u);
  }
  assert.throws(()=>model.printable({requiresStimulus:true,q:'¿Qué aparece?',stimulus:[{type:'document',documentId:'unknown'}],opts:['A','B'],a:'A'},{age_band:'teen'}),/desconocido/);
  assert.equal(docs.supports('early','attention'),false);

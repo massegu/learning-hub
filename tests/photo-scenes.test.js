@@ -14,9 +14,9 @@ test('photo questions and difference answers are bound to reviewed scene facts i
 });
 test('source images are local PNGs with reviewed dimensions and captions reveal no memory answer',()=>{
  for(const scene of Object.values(photo.scenes)){
-  const bytes=fs.readFileSync(scene.path);assert.equal(bytes.readUInt32BE(16),scene.width);assert.equal(bytes.readUInt32BE(20),scene.height);
+  const bytes=fs.readFileSync(scene.path),webp=fs.readFileSync(scene.webPath);assert.equal(bytes.readUInt32BE(16),scene.width);assert.equal(bytes.readUInt32BE(20),scene.height);assert.ok(webp.length<bytes.length*.35,scene.path);assert.equal(webp.toString('ascii',0,4),'RIFF');
  }
- for(const pair of Object.values(photo.pairs)){const bytes=fs.readFileSync(pair.path);assert.equal(bytes.readUInt32BE(16),1448);assert.equal(bytes.readUInt32BE(20),1086);assert.equal(pair.changes.length,3);}
+ for(const pair of Object.values(photo.pairs)){const bytes=fs.readFileSync(pair.path);assert.equal(bytes.readUInt32BE(16),1448);assert.equal(bytes.readUInt32BE(20),1086);assert.equal(pair.changes.length,3);assert.ok(fs.statSync(pair.webPath).size<bytes.length*.35);}
  const it=photo.pool('teen','memory',1)[0],markup=model.interactiveStimulus(it.stimulus);assert.ok(!markup.includes(it.a));assert.ok(!markup.includes(it.why));
  assert.equal(fs.readFileSync('js/photo-library.js','utf8'),fs.readFileSync('supabase/functions/request-learning-content/photo-library.js','utf8'));
 });

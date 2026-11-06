@@ -23,7 +23,7 @@ function finish(item,age,domain,level,key,mechanic){
 }
 function reading(age,domain,level){
  const bank=library[age].flatMap((entry,i)=>{
-  const [title,text,q,a,b,iq,ia,ib]=entry,source=[age!=='early'&&i%4===0?{...T(text),presentation:'newsClipping',headline:title,dateline:'EDICIÓN ESCOLAR · NOTICIA DE EJEMPLO'}:T(text)],passageKey=`reading-v2-${age}-${i}`;
+  const [title,text,q,a,b,iq,ia,ib]=entry,format=age==='early'?null:['newsClipping','poster','marquee'][i%3],source=[format?{...T(text),presentation:format,headline:title,dateline:'EDICIÓN ESCOLAR · NOTICIA DE EJEMPLO'}:T(text)],passageKey=`reading-v2-${age}-${i}`;
   const base={topic:title,passageKey,why:age==='early'?'Busca la pista en la historia.':ia+'. La explicación debe apoyarse en lo que cuenta el texto.'};
   const tasks=[choice(q,source,a,[b],{...base,why:`La respuesta se encuentra en el texto: ${a}.`})];
   if(age!=='early')tasks.push(choice(iq,source,ia,[ib],base));

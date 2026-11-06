@@ -1,5 +1,5 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
-const curriculum=require('../js/curriculum'),early=require('../js/early-content'),art=require('../js/stimulus-art'),model=require('../js/activity-model'),locale=require('../js/locale-content'),documents=require('../js/document-library'),load=require('./edge-harness');
+const curriculum=require('../js/curriculum'),transfer=require('../js/transfer-content'),early=require('../js/early-content'),art=require('../js/stimulus-art'),model=require('../js/activity-model'),locale=require('../js/locale-content'),documents=require('../js/document-library'),load=require('./edge-harness');
 const ages=['early','junior','primary','middle','teen'],profile=age=>({age_band:['early','junior'].includes(age)?'primary':age,progress:{ageRoute:age}});
 test('object memory has complete SVG/PNG references in every country, visually empty cells and no undefined visuals',()=>{
  for(const age of ages)for(const country of Object.keys(locale.labels))for(const family of ['memory_sequence','memory_spatial','memory_association','memory_recognition']){
@@ -19,7 +19,11 @@ test('auditory memory, news-clipping presentation and semantic language work are
   const audio=curriculum.pool(age,'memory',level).filter(it=>it.audioMemory);assert.ok(audio.length>=8);for(const it of audio){assert.ok(it.audioScript.length>100);assert.ok(it.memoryQuestion&&it.opts.includes(it.a));assert.doesNotMatch(JSON.stringify(it.stimulus),new RegExp(it.audioScript.slice(0,24),'i'));model.printable(locale.localizeItem(it,'es_es','memory'),profile(age));}
   const language=age==='middle'?'middleLanguage':age==='teen'?'teenLanguage':'language',vocabulary=curriculum.vocabulary(age,language,level);assert.ok(vocabulary.some(it=>it.mechanic==='vocabulary_category'));assert.ok(vocabulary.some(it=>it.mechanic==='vocabulary_relation'));for(const it of vocabulary.filter(x=>/vocabulary_(?:category|relation)/.test(x.mechanic)))model.printable(locale.localizeItem(it,'es_es',language),profile(age));
  }
- const reading=curriculum.pool('teen','literacy',2).find(it=>it.stimulus?.some(b=>b.presentation==='newsClipping'));assert.ok(reading);const markup=model.interactiveStimulus(reading.stimulus,{structured:true});assert.match(markup,/news-clipping/);assert.match(markup,/Material ficticio/);
+ const readingPool=curriculum.pool('teen','literacy',2),reading=readingPool.find(it=>it.stimulus?.some(b=>b.presentation==='newsClipping')),poster=readingPool.find(it=>it.stimulus?.some(b=>b.presentation==='poster')),marquee=readingPool.find(it=>it.stimulus?.some(b=>b.presentation==='marquee'));assert.ok(reading&&poster&&marquee);const markup=model.interactiveStimulus(reading.stimulus,{structured:true});assert.match(markup,/news-clipping/);assert.match(markup,/Material ficticio/);assert.match(model.interactiveStimulus(poster.stimulus),/reading-poster/);assert.match(model.interactiveStimulus(marquee.stimulus),/reading-marquee/);
+});
+test('Attention text-search wording names the target letter and the phrase it appears in',()=>{
+ const generated=[],T=text=>({type:'text',text}),L=items=>({type:'list',items}),table=rows=>({type:'table',rows});transfer.extend({age:'teen',domain:'attention',level:2,add:(family,scenario,q,stimulus,a,opts,extra)=>generated.push({family,scenario,q,stimulus,a,opts,extra}),T,L,table});
+ const item=generated.find(x=>x.q.includes('siguiente frase'));assert.ok(item);assert.match(item.q,/letra «a» en la siguiente frase/);assert.equal(item.stimulus.length,1);assert.equal([...item.stimulus[0].text.toLocaleLowerCase('es')].filter(ch=>ch==='a').length,Number(item.a));assert.deepEqual(item.opts,[String(Number(item.a)+1),String(Number(item.a)-1)]);
 });
 test('Language has no default writing, Reading owns composition and legacy writing identities survive the move',()=>{
  const {context,api}=load();
@@ -42,7 +46,7 @@ test('thirty-four authored document types retain exact transcripts, multiple pur
  }
  const bank=curriculum.pool('teen','literacy',2).filter(it=>it.stimulus.some(b=>b.type==='document')&&it.writingPurpose);assert.equal(bank.length,14);assert.equal(new Set(bank.map(it=>it.mechanic)).size,14);
  for(const it of bank){assert.ok(it.writingAudience);assert.equal(it.writingRubric.length,3);assert.ok(it.sample);for(const country of Object.keys(locale.labels)){const local=locale.localizeItem(it,country,'literacy');model.printable(local,profile('teen'));assert.equal(local.stimulus[1].documentId,it.stimulus[1].documentId);}}
- const co=documents.pool('teen','literacy',2).find(x=>x.stimulus[1].documentId==='advert-co');const international=locale.localizeItem(co,'es_intl','literacy');assert.match(international.stimulus[0].text,/Colombia/);assert.match(documents.get('advert-co').transcript.map(x=>x.text).join(' '),/20.000 COP/);
+ const co=documents.pool('teen','literacy',2).find(x=>x.stimulus.some(b=>b.documentId==='advert-co'));const international=locale.localizeItem(co,'es_intl','literacy');assert.ok(international.stimulus.some(b=>b.documentId==='advert-co'));assert.doesNotMatch(JSON.stringify(international.stimulus),/Documento de (?:Argentina|Colombia|España)/);assert.match(documents.get('advert-co').transcript.map(x=>x.text).join(' '),/20.000 COP/);
 });
 test('spelling rejects duplicate meanings, case, spacing and unintentional punctuation before display and print',()=>{
  const base={domain:'teenLanguage',type:'standard',requiresStimulus:false,languageFocus:'spelling',q:'Elige la palabra correcta.',a:'árbol'};

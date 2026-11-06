@@ -1059,7 +1059,8 @@
     $('#interactionModeBtn').textContent=subject==='executive'?'Actúa con reglas':'Busca a tu alrededor';
     $('#interactionModeBtn').setAttribute('aria-pressed',String(interactionOnly&&(subject==='attention'?interactionKind==='room':interactionKind==='symbols')));
     $('#interactionKindSwitch').classList.toggle('hidden',!interactionSupport||executedOnly);
-    $('#interactionKindSwitch [data-interaction-kind="symbols"]').classList.toggle('hidden',subject==='attention');
+    $('#interactionKindSwitch [data-interaction-kind="symbols"]').classList.remove('hidden');
+    $$('#interactionKindSwitch [data-interaction-kind="signals"],#interactionKindSwitch [data-interaction-kind="auditory"]').forEach(b=>b.classList.toggle('hidden',subject==='attention'));
     $$('#interactionKindSwitch button').forEach(b=>b.setAttribute('aria-pressed',String(interactionOnly&&(b.dataset.interactionKind==='signals'?interactionKind==='movement':b.dataset.interactionKind===interactionKind))));
     $('#photoModeSwitch').classList.toggle('hidden',!photoSupport||subject!=='memory');
     $('#memoryAudioMode').classList.toggle('hidden',subject!=='memory');
@@ -1091,7 +1092,8 @@
     $('#executedMode').classList.toggle('hidden',!['attention','memory','executive'].includes(subject));
     $('#executedMode').setAttribute('aria-pressed',String(executedOnly));
     $('#interactionKindSwitch').classList.toggle('hidden',!interactionSupport||executedOnly);
-    $('#interactionKindSwitch [data-interaction-kind="symbols"]').classList.toggle('hidden',subject==='attention');
+    $('#interactionKindSwitch [data-interaction-kind="symbols"]').classList.remove('hidden');
+    $$('#interactionKindSwitch [data-interaction-kind="signals"],#interactionKindSwitch [data-interaction-kind="auditory"]').forEach(b=>b.classList.toggle('hidden',subject==='attention'));
     $('#documentModeSwitch').classList.toggle('hidden',!documentSupport||isReading);
     $('#documentModeSwitch [data-documents=false]').textContent=subject==='executive'?'Planifica y decide':'Busca y compara';
     $('#documentModeSwitch [data-documents=true]').textContent=subject==='executive'?'Resuelve con documentos':'Explora documentos';
@@ -2099,17 +2101,19 @@
     }
   };
   $("#authSignUp").onclick = async () => {
+    const button=$("#authSignUp"),email=$("#authEmail").value.trim(),password=$("#authPassword").value;
+    if(!email||!password){$("#authMessage").textContent="Escribe tu correo electrónico y una contraseña para crear la cuenta.";return;}
+    button.disabled=true;button.textContent="Creando cuenta…";$("#authMessage").textContent="Conectando con el servicio de cuentas…";
     try {
-      const d = await API.signUp(
-        $("#authEmail").value.trim(),
-        $("#authPassword").value,
-      );
+      const d = await API.signUp(email,password);
       if (d.session) await loadWorkspace();
       else
         $("#authMessage").textContent =
           "Cuenta creada. Revisa tu correo para confirmar el registro.";
     } catch (e) {
-      $("#authMessage").textContent = e.message;
+      $("#authMessage").textContent = e.message||"No se pudo crear la cuenta. Comprueba la conexión e inténtalo de nuevo.";
+    } finally {
+      button.disabled=false;button.textContent="Crear cuenta";
     }
   };
   $("#signOutBtn").onclick = async () => {
