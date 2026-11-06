@@ -2,7 +2,7 @@
 import importlib.util,threading,tempfile,zipfile,xml.etree.ElementTree as ET,json,subprocess,os
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import workspace, ROOT
+from browser_support import workspace, ROOT, area, training_areas, wait_for_area
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');review=importlib.util.module_from_spec(spec);spec.loader.exec_module(review)
 tasks=json.loads(subprocess.check_output(['node','-e',"const c=require('./js/curriculum');console.log(JSON.stringify(Object.fromEntries(['junior','primary','middle','teen'].map(age=>[age,Object.fromEntries([1,2,3].map(level=>[level,c.pool(age,'executive',level).filter(x=>x.type==='multiSelect')]))]))))"],cwd=ROOT))
 server=review.ReviewServer(('127.0.0.1',0),review.prepare());threading.Thread(target=server.serve_forever,daemon=True).start()
@@ -17,12 +17,12 @@ try:
    if body.get('domain')!='executive':return route.continue_()
    task=tasks[body['profile_id']][str(body['level'])][counter%6];counter+=1
    route.fulfill(json={'status':200,'data':{'items':[task],'usage':{'used':counter,'limit':500}}})
-  page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#profileSelect');page.wait_for_timeout(1000)
+  page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#profileSelect',state='attached');page.wait_for_timeout(1000)
   page.route('**/__review/content',override)
   page.evaluate('''()=>{const old=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return old(it,...args)}}''')
   checks=0
   for age in ['junior','primary','middle','teen']:
-   workspace(page).locator('#profileSelect').select_option(age);workspace(page).locator('#navMenu [data-subject=executive]').click()
+   workspace(page).locator('#profileSelect').select_option(age);area(page, 'executive').click()
    for level in [1,3]:
     page.locator('#exerciseLevelSelect').select_option(str(level));page.wait_for_selector('#multiCheck');page.wait_for_function('(level)=>__current?.level===level',arg=level)
     for correct in [False,True]:

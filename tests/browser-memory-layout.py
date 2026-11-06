@@ -2,7 +2,7 @@
 import importlib.util,threading,os
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import workspace, ROOT
+from browser_support import workspace, ROOT, area, training_areas, wait_for_area
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');review=importlib.util.module_from_spec(spec);spec.loader.exec_module(review)
 server=review.ReviewServer(('127.0.0.1',0),review.prepare());threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
@@ -16,13 +16,13 @@ try:
   # The 6–7 adapter deliberately selects locally after authorization. Exercise
   # its real rotation until associations appear instead of bypassing that gate.
   for _ in range(12):
-   page.evaluate('window.__current=null');workspace(page).locator('#navMenu [data-subject=memory]').click()
+   page.evaluate('window.__current=null');area(page, 'memory').click()
    page.wait_for_function('()=>__current&&document.querySelector("#exercisePrompt").textContent===__current.q')
    if page.locator('.memory-associations').count():break
   assert page.locator('.memory-associations tbody tr').count()==2
   page.locator('#exercise').screenshot(path='/tmp/memory-youngest-two-pairs.png')
   chosen=page.evaluate('window.__memoryFixture=Curriculum.pool("primary","memory",1).find(it=>it.memoryResponse==="spatial"&&it.spatialAnswer==="grid")')
-  workspace(page).locator('#profileSelect').select_option('primary');workspace(page).locator('#navMenu [data-subject=memory]').click();page.wait_for_selector('.recall-grid');page.clock.run_for(chosen['revealMs']+100);page.wait_for_selector('.spatial-answer-grid')
+  workspace(page).locator('#profileSelect').select_option('primary');area(page, 'memory').click();page.wait_for_selector('.recall-grid');page.clock.run_for(chosen['revealMs']+100);page.wait_for_selector('.spatial-answer-grid')
   for width in [1360,390]:
    page.set_viewport_size({'width':width,'height':900});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
    grid=page.locator('.spatial-answer-grid');box=grid.bounding_box();assert box['width']<=385 and box['height']<=330,box
@@ -31,7 +31,7 @@ try:
   page.locator('.spatial-answer-grid button').evaluate_all('(els,a)=>els.find(e=>e.dataset.answer===a).click()',chosen['a']);assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
   # A wrong reconstruction must leave the correct sequence visible with its pictures.
   chosen=page.evaluate('window.__memoryFixture=Curriculum.pool("primary","memory",1).find(it=>it.memoryResponse==="order"&&!it.recallEvidence.takeLast)')
-  workspace(page).locator('#navMenu [data-subject=memory]').click();page.wait_for_selector('#startMemorySequence');page.locator('#startMemorySequence').click();page.clock.run_for((chosen['sequenceStepMs']+250)*len(chosen['recallSequence'])+100)
+  area(page, 'memory').click();page.wait_for_selector('#startMemorySequence');page.locator('#startMemorySequence').click();page.clock.run_for((chosen['sequenceStepMs']+250)*len(chosen['recallSequence'])+100)
   # Choose a deliberately reversed order from the actual token bank, independent of shuffled indices.
   for label in reversed(chosen['answer']):page.locator('#exerciseOptions').get_by_role('button',name=label,exact=True).click()
   page.locator('#orderCheck').click();assert 'bad' in page.locator('#exerciseFeedback').get_attribute('class');assert page.locator('.memory-solution').is_visible();assert 'Secuencia correcta' in page.locator('.memory-solution').inner_text();assert 'La secuencia correcta era:' in page.locator('#exerciseFeedback').inner_text()

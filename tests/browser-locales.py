@@ -9,7 +9,7 @@ import re
 import tempfile
 import threading
 from playwright.sync_api import sync_playwright
-from browser_support import workspace, ROOT, SDK, QuietHandler, doc_text
+from browser_support import workspace, ROOT, SDK, QuietHandler, doc_text, area, training_areas, wait_for_area
 
 COUNTRIES=['es_es','es_mx','es_co','es_ar','es_cl','es_pa','es_cr']
 BANDS=['early','junior','primary','middle','teen']
@@ -73,7 +73,7 @@ try:
         page.add_init_script((ROOT/'tests/locale-fixtures.js').read_text())
         page.add_init_script("window.__localeMode=true;")
         page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle')
-        page.wait_for_selector('#v16ContentLocale');page.wait_for_timeout(3500)
+        page.wait_for_selector('#v16ContentLocale',state='attached');page.wait_for_timeout(3500)
         journal(page)
         for key in COUNTRIES:
             workspace(page).locator('#v16ContentLocale').select_option(key)
@@ -82,12 +82,12 @@ try:
             for band in BANDS:
                 workspace(page).locator('#profileSelect').select_option(band)
                 page.wait_for_timeout(300)  # Existing age-route UI patches settle.
-                domains=page.locator('#navMenu [data-subject]:visible').evaluate_all('(els)=>els.map(e=>e.dataset.subject)')
+                domains=[item['domain'] for item in training_areas(page)]
                 schedule=(domains+domains)[:max(10,len(domains))]
                 activities=[]
                 for domain in schedule:
                     before=page.evaluate('__requests.length')
-                    page.locator(f'#navMenu [data-subject="{domain}"]').click()
+                    area(page, domain).click()
                     page.wait_for_function('(n)=>__requests.length>n && document.querySelectorAll("#exerciseOptions button").length>0',arg=before,timeout=20000)
                     item=page.evaluate('__observed[__observed.length-1]')
                     consistent(page,item,key,band=='early')
@@ -145,7 +145,7 @@ try:
         # it never triggers an extra quota-consuming request automatically.
         workspace(page).locator('#profileSelect').select_option('primary')
         page.evaluate('window.__delayNext=true')
-        page.locator('#navMenu [data-subject="reading"]').click()
+        area(page, 'reading').click()
         page.wait_for_function('__pending')
         n=page.evaluate('__requests.length')
         workspace(page).locator('#v16ContentLocale').select_option('es_mx')

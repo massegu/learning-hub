@@ -729,14 +729,18 @@
     state.levels[s] = l;
   }
   let progressSaveRevision=0;
-  function setProgressSaveStatus(message,kind=''){
+  let resultSaveRevision=0;
+  const unconfirmedResultWrites=new Map();
+  let latestProgressSave=Promise.resolve(true);
+  const unconfirmedResultsFor=id=>unconfirmedResultWrites.get(id)||0;
+  function setProgressSaveStatus(message,kind='',retryable=false){
     const status=$('#progressSaveStatus'),retry=$('#retryProgressSave');
     if(!status)return;
     status.textContent=message;status.className=`progress-save-status${kind?` ${kind}`:''}`;
-    if(retry)retry.classList.toggle('hidden',kind!=='error');
+    if(retry)retry.classList.toggle('hidden',!retryable);
   }
-  async function persist(announce=false) {
-    if(!profile||!state)return false;
+  function persist(announce=false) {
+    if(!profile||!state)return Promise.resolve(false);
     profile.progress = {
       ...profile.progress,
       scores: state.scores,
@@ -750,18 +754,23 @@
     const revision=++progressSaveRevision;
     if(profile._sessionOnly===true||API.isIndependent?.(profile.id)){
       if(announce)setProgressSaveStatus('Esta sesión independiente no se guarda en el perfil.','info');
-      return false;
+      return Promise.resolve(false);
     }
     if(announce)setProgressSaveStatus('Guardando progreso…','pending');
-    try{
-      await API.saveProgress(profile.id,profile.progress);
-      if(announce&&revision===progressSaveRevision)setProgressSaveStatus('Progreso guardado en este perfil.','success');
-      return true;
-    }catch(e){
-      console.warn(e);
-      if(announce&&revision===progressSaveRevision)setProgressSaveStatus('No se pudo guardar el progreso. Comprueba la conexión y vuelve a intentarlo.','error');
-      return false;
-    }
+    const save=(async()=>{
+      try{
+        await API.saveProgress(profile.id,profile.progress);
+        const unconfirmed=unconfirmedResultsFor(profile.id);
+        if(announce&&revision===progressSaveRevision)setProgressSaveStatus(unconfirmed?`Progreso guardado. ${unconfirmed} resultado(s) anterior(es) siguen sin confirmar y no se reintentaron.`:'Progreso guardado en este perfil.','success');
+        return true;
+      }catch(e){
+        console.warn(e);
+        if(announce&&revision===progressSaveRevision)setProgressSaveStatus('No se pudo guardar el progreso. Puedes reintentar este guardado.','error',true);
+        return false;
+      }
+    })();
+    latestProgressSave=save;
+    return save;
   }
   function saveResult(s, correct, itemId, detail = "standard") {
     const earlyAnswer=currentItem?.id===itemId && s===subject;
@@ -803,8 +812,25 @@
     state.history.push(row);
     state.history = state.history.slice(-5000);
     recalcLevel(s);
-    persist(true);
-    API.saveResult(profile.id, row);
+    const resultProfileId=profile.id;
+    const tracked=profile._sessionOnly!==true&&!API.isIndependent?.(resultProfileId);
+    persist(false);
+    const resultSave=Promise.resolve().then(()=>API.saveResult(resultProfileId,row)).then(result=>Boolean(result),error=>{console.warn('Result insert failed',error);unconfirmedResultWrites.set(resultProfileId,unconfirmedResultsFor(resultProfileId)+1);return false;});
+    const saveRevision=++resultSaveRevision;
+    if(tracked){
+      setProgressSaveStatus('Guardando progreso y resultado…','pending');
+      const waitForLatestProgress=async()=>{
+        while(true){const revision=progressSaveRevision,latest=latestProgressSave,ok=await latest;if(revision===progressSaveRevision)return ok;}
+      };
+      Promise.all([waitForLatestProgress(),resultSave]).then(([progressOk,resultOk])=>{
+        if(saveRevision!==resultSaveRevision)return;
+        const unconfirmed=unconfirmedResultsFor(resultProfileId);
+        if(progressOk&&resultOk)setProgressSaveStatus(unconfirmed?`Progreso y resultado guardados. ${unconfirmed} resultado(s) anterior(es) siguen sin confirmar y no se reintentaron.`:'Progreso y resultado guardados en este perfil.','success');
+        else if(!progressOk&&resultOk)setProgressSaveStatus('El resultado se guardó, pero el progreso no. Puedes reintentar solo el progreso.','error',true);
+        else if(progressOk&&!resultOk)setProgressSaveStatus('El progreso se guardó, pero no se pudo confirmar el resultado. Puede haberse guardado; no lo reintentes.','error');
+        else setProgressSaveStatus('No se pudo confirmar el progreso. El resultado puede haberse guardado; solo es seguro reintentar el progreso.','error',true);
+      });
+    }
     updateGlobalUI();
     return pts;
   }
@@ -931,7 +957,7 @@
   }
   function activateProfile(id,independent=false) {
     stopMemoryCountdown();
-    progressSaveRevision++;setProgressSaveStatus('');
+    progressSaveRevision++;resultSaveRevision++;setProgressSaveStatus('');
     $('#privacyDialog').close();privacyTarget=null;
     const p = profiles.find((x) => x.id === id);
     if (!p) return;

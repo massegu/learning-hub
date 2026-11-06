@@ -2,7 +2,7 @@
 import importlib.util,threading,tempfile,zipfile
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import workspace, ROOT,doc_text
+from browser_support import workspace, ROOT,doc_text, area, training_areas, wait_for_area
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');preview=importlib.util.module_from_spec(spec);spec.loader.exec_module(preview)
 server=preview.ReviewServer(('127.0.0.1',0),preview.prepare());threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
@@ -10,7 +10,7 @@ try:
   browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox'])
   page=browser.new_page(viewport={'width':1280,'height':900});errors=[];external=[]
   page.on('pageerror',lambda e:errors.append(str(e)));page.on('request',lambda r:external.append(r.url) if r.url.startswith('https://') else None)
-  page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#v16ContentLocale');page.wait_for_timeout(1500)
+  page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#v16ContentLocale',state='attached');page.wait_for_timeout(1500)
   page.evaluate('''()=>{const original=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return original(it,...args)}}''');page.clock.install();answered=0;exports=0
   def current():
    page.wait_for_function('()=>window.__current&&[__current.q,__current.memoryQuestion].includes(document.querySelector("#exercisePrompt").textContent)')
@@ -18,7 +18,7 @@ try:
   def next_item():
    page.evaluate('window.__current=null');page.locator('#exerciseNext').click();return current()
   def open_area(domain,level=None):
-   page.evaluate('window.__current=null');page.locator(f'#navMenu [data-subject="{domain}"]').click();it=current()
+   page.evaluate('window.__current=null');area(page, domain).click();it=current()
    if level is not None and it['level']!=level:
     page.evaluate('window.__current=null');page.locator('#exerciseLevelSelect').select_option(str(level));it=current()
    return it
@@ -88,10 +88,10 @@ try:
    page.set_viewport_size({'width':1280,'height':900})
   for age in ['early','junior','primary','middle','teen']:
    workspace(page).locator('#profileSelect').select_option(age);workspace(page).locator('#v16ContentLocale').select_option('es_mx');page.wait_for_function('()=>LearningAPI.contentLocale==="es_mx"')
-   assert page.locator('#navMenu [data-subject="applied"]').count()==0
+   assert area(page, 'applied').count()==0
    assert page.locator('#homeworkOptions input[value="applied"]').count()==0
-   assert page.locator('#navMenu [data-subject="speedReasoning"]').inner_text().find('Velocidad de procesamiento')>=0
-   if age in ['primary','middle']:assert page.locator('#navMenu [data-subject="reading"],#navMenu [data-subject="middleReading"]').count()==0
+   assert area(page, 'speedReasoning').inner_text().find('Velocidad de procesamiento')>=0
+   if age in ['primary','middle']:assert area(page, 'reading').count()==0 and area(page, 'middleReading').count()==0
    domain='reading' if age in ['early','junior'] else 'literacy';it=open_area(domain);passages=[]
    for n in range(10):
     passages.append(it['passageKey']);answer(it)
@@ -151,7 +151,7 @@ try:
    print(f'PASS: {age}: ten sources, L1/L3 sequential/spatial/association recall, timed/invalid/untimed/wrong trials, fused executive tasks and two DOCX',flush=True)
   # Timing survives reload in progress; the old domain is never restored as a menu area.
   before=page.evaluate('()=>__profiles.find(p=>p.id==="teen").progress.history.filter(x=>x.subject==="speedReasoning").length')
-  page.reload(wait_until='networkidle');page.wait_for_selector('#profileSelect');workspace(page).locator('#profileSelect').select_option('teen')
+  page.reload(wait_until='networkidle');page.wait_for_selector('#profileSelect',state='attached');workspace(page).locator('#profileSelect').select_option('teen')
   page.wait_for_timeout(300)
   after=page.evaluate('()=>__profiles.find(p=>p.id==="teen").progress.history.filter(x=>x.subject==="speedReasoning").length');assert before==after
   assert not errors,errors;assert not external,external

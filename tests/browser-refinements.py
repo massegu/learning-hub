@@ -5,7 +5,7 @@ Ordinary consecutive selection is covered by browser-smoke.py and Node tests.
 from pathlib import Path
 import functools,http.server,json,re,tempfile,threading
 from playwright.sync_api import sync_playwright
-from browser_support import workspace, ROOT,SDK,QuietHandler,doc_text
+from browser_support import workspace, ROOT,SDK,QuietHandler,doc_text, area, training_areas, wait_for_area
 
 server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(QuietHandler,directory=str(ROOT)))
 threading.Thread(target=server.serve_forever,daemon=True).start()
@@ -24,7 +24,7 @@ try:
             elif '/jszip@3.10.1/' in url:route.fulfill(body=(ROOT/'node_modules/jszip/dist/jszip.min.js').read_bytes(),content_type='application/javascript')
             else:route.abort()
         page.route(re.compile(r'^https://'),external)
-        page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#v16ContentLocale');page.wait_for_timeout(3500)
+        page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#v16ContentLocale',state='attached');page.wait_for_timeout(3500)
         page.evaluate("""()=>{
           const adapt=EarlyContent.adaptResponse,gate=ActivityModel.forDelivery;
           EarlyContent.adaptResponse=(res,payload,profile)=>{
@@ -41,7 +41,7 @@ try:
         def render(domain,family,level):
             page.evaluate('({family,level})=>{window.__family=family;window.__fixedLevel=level;}',dict(family=f'{domain}-{family}',level=level))
             before=page.evaluate('__requests.length')
-            page.locator(f'#navMenu [data-subject="{domain}"]').click()
+            area(page, domain).click()
             page.wait_for_function('(before)=>__requests.length>before && __current?.ageProfile.family===__family && __current?.level===__fixedLevel && document.querySelector("#exercisePrompt").textContent===__current.q && document.querySelector("#exerciseVisual").children.length>0',arg=before)
             # Exercise the actual level control too: the deterministic fixture
             # must agree with the outgoing request and the visible level label.
@@ -100,7 +100,7 @@ try:
         for band in ['junior','primary','middle','teen']:
             workspace(page).locator('#profileSelect').select_option(band)
             for width in [1440,1024,390]:
-                page.set_viewport_size({'width':width,'height':900});page.locator('#navMenu [data-subject="attention"]').click()
+                page.set_viewport_size({'width':width,'height':900});area(page, 'attention').click()
                 page.wait_for_function('document.querySelector("#exercisePrompt").textContent==="¿Qué criterio ayuda más?"')
                 assert not page.locator('#exercise').evaluate('(e)=>e.classList.contains("early-primary")')
                 assert 'F15-P7' in page.locator('#exerciseVisual').inner_text();layout()

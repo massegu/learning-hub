@@ -2,7 +2,7 @@
 import importlib.util,threading,json,subprocess
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import workspace, ROOT
+from browser_support import workspace, ROOT, area, training_areas, wait_for_area
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');review=importlib.util.module_from_spec(spec);spec.loader.exec_module(review)
 server=review.ReviewServer(('127.0.0.1',0),review.prepare());threading.Thread(target=server.serve_forever,daemon=True).start()
 fixtures=json.loads(subprocess.check_output(['node','-e',"console.log(JSON.stringify(require('./js/curriculum').interactivePool('primary','executive',3).filter(x=>x.interactionTask.kind==='auditory').slice(0,2)))"],cwd=ROOT,text=True));chosen={}
@@ -22,10 +22,10 @@ try:
   page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle')
   page.evaluate('''()=>{const fn=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return fn(it,...args)}}''')
   for age in ['early','junior','primary','middle','teen']:
-   workspace(page).locator('#profileSelect').select_option(age);assert page.locator('#navMenu [data-subject=social]').is_visible();workspace(page).locator('#navMenu [data-subject=social]').click();page.wait_for_selector('#exerciseOptions .option-btn');assert page.locator('#exercisePrompt').inner_text()
-   assert not page.locator('#navMenu [data-subject=social]').evaluate('e=>e.hidden')
+   workspace(page).locator('#profileSelect').select_option(age);assert area(page, 'social').is_visible();area(page, 'social').click();page.wait_for_selector('#exerciseOptions .option-btn');assert page.locator('#exercisePrompt').inner_text()
+   assert not area(page, 'social').evaluate('e=>e.hidden')
    page.locator('#exerciseOptions [data-answer]').evaluate_all('(els,a)=>els.find(e=>e.dataset.answer===a).click()',page.evaluate('__current.a'));assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
-  workspace(page).locator('#profileSelect').select_option('primary');workspace(page).locator('#navMenu [data-subject=attention]').click()
+  workspace(page).locator('#profileSelect').select_option('primary');area(page, 'attention').click()
   assert page.locator('#interactionKindSwitch button:visible').all_text_contents()==['Retos con tarjetas']
   assert page.locator('[data-interaction-kind=symbols]').is_visible()
   page.locator('#interactionModeBtn').click();page.wait_for_selector('#roomDescription');assert page.evaluate('__current.interactionTask.kind')=='room'
@@ -33,7 +33,7 @@ try:
   assert page.locator('#interactionKindSwitch [data-interaction-kind="signals"]').is_hidden()
   workspace(page).locator('#profileSelect').select_option('primary');workspace(page).locator('#navMenu [data-section=home]').click();assert 'learning-areas-3d.png' in page.locator('[data-school-area=social] .area-illustration').evaluate('e=>getComputedStyle(e).backgroundImage');page.locator('#schoolHub').screenshot(path='/tmp/new-area-icons.png')
   page.clock.install();page.clock.pause_at(page.evaluate('Date.now()+1000'));page.add_style_tag(content='*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}')
-  workspace(page).locator('#navMenu [data-subject=executive]').click();page.locator('#interactionModeBtn').click();page.wait_for_selector('#startInteractive');page.locator('#exerciseLevelSelect').select_option('3');page.wait_for_function('()=>__current?.interactionTask?.level===3')
+  area(page, 'executive').click();page.locator('#interactionModeBtn').click();page.wait_for_selector('#startInteractive');page.locator('#exerciseLevelSelect').select_option('3');page.wait_for_function('()=>__current?.interactionTask?.level===3')
   baseline=page.evaluate('(__profiles.find(p=>p.id==="primary").progress.history||[]).length')
   assert page.locator('#interactionKindSwitch button:visible').all_text_contents()==['Retos con tarjetas','Mira y actúa','Escucha y actúa']
   page.locator('[data-interaction-kind=signals]').click();page.wait_for_selector('#signalModeSelect')
@@ -73,7 +73,7 @@ try:
   page.locator('#practiceSkipped').click()
   latest=page.evaluate('__profiles.find(p=>p.id==="primary").progress.interactiveObservations.at(-1)');assert all(r['report']=='audio_unavailable' for r in latest['report']['trials'])
   assert page.evaluate('(__profiles.find(p=>p.id==="primary").progress.history||[]).length')==baseline
-  workspace(page).locator('#profileSelect').select_option('teen');workspace(page).locator('#navMenu [data-subject=memory]').click();page.locator('#memoryAudioModeButton').click();page.wait_for_function('()=>__current?.audioMemory===true');assert page.evaluate('__requests.at(-1).memory_audio_only') is True;assert page.locator('#playMemoryAudio').is_visible()
-  workspace(page).locator('#navMenu [data-subject=speedReasoning]').click();page.locator('#speedUnpairedMode').click();page.wait_for_function('()=>__current?.mechanic==="speed_unpaired"');assert page.evaluate('__requests.at(-1).speed_mechanic')=='unpaired';assert 'una sola vez' in page.locator('#exercisePrompt').inner_text().lower()
+  workspace(page).locator('#profileSelect').select_option('teen');area(page, 'memory').click();page.locator('#memoryAudioModeButton').click();page.wait_for_function('()=>__current?.audioMemory===true');assert page.evaluate('__requests.at(-1).memory_audio_only') is True;assert page.locator('#playMemoryAudio').is_visible()
+  area(page, 'speedReasoning').click();page.locator('#speedUnpairedMode').click();page.wait_for_function('()=>__current?.mechanic==="speed_unpaired"');assert page.evaluate('__requests.at(-1).speed_mechanic')=='unpaired';assert 'una sola vez' in page.locator('#exercisePrompt').inner_text().lower()
   assert not errors,errors;browser.close();print('PASS: Social Lab delivery and scoring in 5 ages; explicit audio start, spoken/tonal cue timing, no visual answer cue, unscored observation, interruption cleanup, audio-error recovery/omission and mobile layout')
 finally:server.shutdown();server.server_close()

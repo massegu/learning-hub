@@ -1,7 +1,7 @@
 """Presentation regression: real browser, local content, synthetic progress only."""
 import importlib.util,threading,os
 from playwright.sync_api import sync_playwright
-from browser_support import workspace, ROOT
+from browser_support import workspace, ROOT, area, training_areas, wait_for_area
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');review=importlib.util.module_from_spec(spec);spec.loader.exec_module(review)
 server=review.ReviewServer(('127.0.0.1',0),review.prepare());threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
@@ -13,7 +13,7 @@ try:
   def override(route):route.fulfill(json={'status':200,'data':{'items':[fixture],'usage':{'used':1,'limit':500}}})
   page.route('**/__review/content',override)
   def show(item,domain):
-   fixture.clear();fixture.update(item);page.evaluate('window.__current=null');workspace(page).locator(f'#navMenu [data-subject={domain}]').click()
+   fixture.clear();fixture.update(item);page.evaluate('window.__current=null');area(page, domain).click()
    page.wait_for_function('()=>__current&&document.querySelector("#exercisePrompt").textContent===__current.q')
   passage=page.evaluate('Curriculum.pool("teen","literacy",1).find(x=>x.stimulus?.some(b=>b.type==="text"&&b.text.length>350))')
   for width in [1440,390]:

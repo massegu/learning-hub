@@ -2,7 +2,7 @@
 import importlib.util,threading,tempfile,json,os
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import workspace, ROOT
+from browser_support import workspace, ROOT, area, training_areas, wait_for_area
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');review=importlib.util.module_from_spec(spec);spec.loader.exec_module(review)
 class Handler(review.Handler):
  def send(self,data,kind='text/html; charset=utf-8',status=200):
@@ -16,7 +16,7 @@ try:
   page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');workspace(page).locator('#profileSelect').select_option('primary')
   page.evaluate('''()=>{window.__current=null;const original=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return original(it,...args)}}''')
   def answer_social():
-   workspace(page).locator('#navMenu [data-subject=social]').click();page.wait_for_function('()=>__current?.domain==="social"&&document.querySelectorAll("#exerciseOptions [data-answer]").length>0')
+   area(page, 'social').click();page.wait_for_function('()=>__current?.domain==="social"&&document.querySelectorAll("#exerciseOptions [data-answer]").length>0')
    page.locator('#exerciseOptions [data-answer]').evaluate_all('(els,a)=>els.find(e=>e.dataset.answer===a).click()',page.evaluate('__current.a'));assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
   answer_social();page.wait_for_function('()=>__profiles.find(p=>p.id==="primary").progress.history?.length===1')
   original=page.evaluate('JSON.stringify(__profiles.find(p=>p.id==="primary").progress)');saved=page.evaluate('__saved.length')

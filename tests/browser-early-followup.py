@@ -2,7 +2,7 @@
 import importlib.util,threading,tempfile,zipfile,re
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import workspace, ROOT,doc_text
+from browser_support import workspace, ROOT,doc_text, area, training_areas, wait_for_area
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');review=importlib.util.module_from_spec(spec);spec.loader.exec_module(review)
 server=review.ReviewServer(('127.0.0.1',0),review.prepare());threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
@@ -16,7 +16,7 @@ try:
   def current():
    page.wait_for_function('()=>window.__current&&[__current.q,__current.memoryQuestion].includes(document.querySelector("#exercisePrompt").textContent)');return page.evaluate('__current')
   def open_area(domain):
-   page.evaluate('window.__current=null');page.locator(f'#navMenu [data-subject="{domain}"]').click();return current()
+   page.evaluate('window.__current=null');area(page, domain).click();return current()
   def shot(name):
    for width in [1280,390]:
     page.set_viewport_size({'width':width,'height':900});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),name
