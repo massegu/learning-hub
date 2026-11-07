@@ -132,7 +132,7 @@ try:
    with page.expect_download() as dl:page.evaluate('(age)=>WorksheetGenerator.generate([__exportItems],__profiles.find(p=>p.id===age))',age)
    path=Path(tmp)/f'{age}-new.docx';dl.value.save_as(path);nodes=doc_text(path.read_bytes());exports+=1
    assert any('no mide el tiempo' in x for x in nodes)
-   if any(it.get('recallSequence') for it in captured):assert any('una a una' in x for x in nodes)
+   if any(it.get('recallSequence') for it in captured):assert any('uno a uno' in x or 'una a una' in x for x in nodes)
    if any(it.get('type')=='memoryReveal' and not it.get('recallSequence') for it in captured):assert any('Mira el material' in x for x in nodes)
    for item in captured:
     for block in item['stimulus']:
@@ -144,7 +144,8 @@ try:
        visible=page.evaluate("({value,item})=>item.type==='memoryReveal'&&StimulusArt.forLabel(value,item.lexicalSenses)?ActivityModel.memoryLabel(value):value",{'value':value,'item':item})
        assert visible!=value and any(visible in node for node in nodes),value
    page.locator('#navMenu [data-section="progress"]').click()
-   assert 'Mediana al acertar' in page.locator('#progressCards').inner_text()
+   page.locator('#speedProgressChart details.progress-chart-data').evaluate('(el)=>el.open=true')
+   assert 'Mediana al acertar' in page.locator('#speedProgressChart').inner_text()
    with page.expect_download() as dl:page.locator('#exportDetailCsv').click()
    csv_path=Path(tmp)/f'{age}.csv';dl.value.save_as(csv_path)
    csv_data=csv_path.read_text(encoding='utf-8-sig');assert 'tiempo_ms;tiempo_valido;tarea_velocidad' in csv_data;assert 'speedReasoning' in csv_data
