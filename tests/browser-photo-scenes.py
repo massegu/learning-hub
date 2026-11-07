@@ -2,7 +2,7 @@
 import importlib.util,threading,os,tempfile,zipfile,io
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import workspace, ROOT
+from browser_support import workspace, ROOT, area, training_areas, wait_for_area
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');review=importlib.util.module_from_spec(spec);spec.loader.exec_module(review)
 server=review.ReviewServer(('127.0.0.1',0),review.prepare());threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
@@ -10,7 +10,7 @@ try:
   browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_EXECUTABLE') or '/usr/bin/chromium',args=['--no-sandbox']);page=browser.new_page(viewport={'width':1360,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');workspace(page).locator('#profileSelect').select_option('teen')
   page.evaluate('''()=>{const old=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return old(it,...args)}}''')
-  workspace(page).locator('#navMenu [data-subject=memory]').click();page.locator('#photoModeSwitch [data-photos=true]').click();page.wait_for_selector('#showMemoryPhoto')
+  area(page, 'memory').click();page.locator('#photoModeSwitch [data-photos=true]').click();page.wait_for_selector('#showMemoryPhoto')
   assert page.evaluate('__requests.at(-1).photos_only') is True
   assert page.evaluate('__requests.at(-1).client_revision')==12
   assert 'Hoy:' in page.locator('#usageHint').inner_text()
@@ -33,7 +33,7 @@ try:
   workspace(page).locator('#navMenu [data-section=home]').click();prompt=page.locator('#exercisePrompt').inner_text();page.clock.run_for(17000)
   assert page.locator('#home').evaluate("e=>e.classList.contains('active-section')")
   assert page.locator('#exercisePrompt').inner_text()==prompt
-  workspace(page).locator('#navMenu [data-subject=attention]').click();page.locator('#attentionPhotos').click();page.wait_for_selector('.photo-comparison img')
+  area(page, 'attention').click();page.locator('#attentionPhotos').click();page.wait_for_selector('.photo-comparison img')
   page.locator('#exerciseLevelSelect').select_option('2');page.wait_for_function('()=>__current?.level===2&&__current?.photoTask?.kind==="differences"');
   difference=page.evaluate('__current');assert difference['photoTask']['kind']=='differences'
   assert page.locator('.photo-comparison img').count()==2
@@ -67,7 +67,7 @@ try:
      source=ROOT/page.evaluate('(id)=>PhotoLibrary.scenes[id].path',memory['photoTask']['sceneId']);assert source.read_bytes() in images
      pair=page.evaluate('(id)=>PhotoLibrary.pairs[id]',difference['photoTask']['pairId']);base=page.evaluate('(id)=>PhotoLibrary.scenes[id].path',pair['sceneId']);assert (ROOT/base).read_bytes() in images;assert (ROOT/pair['path']).read_bytes() in images
   page.set_viewport_size({'width':1360,'height':1000})
-  workspace(page).locator('#navMenu [data-subject=memory]').click();page.locator('#photoModeSwitch [data-photos=true]').click();page.locator('#exerciseLevelSelect').select_option('3')
+  area(page, 'memory').click();page.locator('#photoModeSwitch [data-photos=true]').click();page.locator('#exerciseLevelSelect').select_option('3')
   page.wait_for_function('()=>__current?.domain==="memory"&&__current?.level===3&&__current?.photoTask?.evidence?.length===3')
   advanced=page.evaluate('__current');page.locator('#showMemoryPhoto').click();page.wait_for_selector('.everyday-photo img')
   page.clock.run_for(advanced['revealMs']+100)
@@ -86,7 +86,7 @@ try:
   page.route('**/__review/content',override)
   new_pairs=page.evaluate('PhotoLibrary.pool("teen","attention",2).filter(x=>["street","park","factory","city","museumComparison"].includes(x.photoTask.pairId))')
   for task in new_pairs:
-   fixture.clear();fixture.update(task);workspace(page).locator('#navMenu [data-subject=attention]').click()
+   fixture.clear();fixture.update(task);area(page, 'attention').click()
    page.wait_for_function('(id)=>__current?.id===id&&document.querySelectorAll(".photo-comparison img").length===2',arg=task['id'])
    for label in task['answers']:
     page.locator('#exerciseOptions').get_by_role('button',name=label,exact=True).click()

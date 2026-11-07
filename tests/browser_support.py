@@ -79,8 +79,53 @@ def doc_text(data):
 
 
 def workspace(page):
-    """Open the real responsive workspace menu before using a sidebar control."""
+    """Open the responsive workspace and account/profile controls when needed."""
     toggle = page.locator('#workspaceMenu')
     if toggle.count() and toggle.is_visible() and toggle.get_attribute('aria-expanded') != 'true':
         toggle.click()
+    account = page.locator('.account-tools > summary')
+    if account.count() and account.is_visible() and account.evaluate('(e)=>!e.parentElement.open'):
+        account.click()
     return page
+
+
+class TrainingArea:
+    """Compatibility-free handle for an area card in the current training view."""
+    def __init__(self, page, domain):
+        self.page = page
+        self.domain = domain
+        self.locator = page.locator(f'#homeLevels [data-home-area="{domain}"]')
+
+    def count(self):
+        return self.locator.count()
+
+    def is_visible(self):
+        # The old sidebar showed every available area regardless of the active section.
+        return self.count() > 0
+
+    def click(self, **kwargs):
+        workspace(self.page).locator('#navMenu [data-section="training"]').click()
+        self.locator.click(**kwargs)
+        options = self.page.locator('#activityOptions')
+        if options.count() and options.is_visible() and not options.evaluate('(e)=>e.open'):
+            options.locator('summary').click()
+
+    def __getattr__(self, name):
+        return getattr(self.locator, name)
+
+
+def area(page, domain):
+    """Select an area through the current Entrenar navigation and its area card."""
+    return TrainingArea(page, domain)
+
+
+def wait_for_area(page, domain):
+    page.wait_for_function('(domain)=>Boolean(document.querySelector(`#homeLevels [data-home-area="${domain}"]`))', arg=domain)
+
+
+def training_areas(page):
+    """Return the available area identifiers and labels from the Entrenar screen."""
+    workspace(page).locator('#navMenu [data-section="training"]').click()
+    return page.locator('#homeLevels [data-home-area]').evaluate_all(
+        '(els)=>els.map(e=>({domain:e.dataset.homeArea,label:e.querySelector("strong")?.textContent.trim()||e.textContent.trim()}))'
+    )

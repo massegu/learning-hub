@@ -4,7 +4,7 @@ Only a local fake SDK/account/database is used; external services are blocked.
 import functools,http.server,json,re,subprocess,tempfile,threading,sys
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import workspace, ROOT,SDK,QuietHandler,doc_text
+from browser_support import workspace, ROOT,SDK,QuietHandler,doc_text, area, training_areas, wait_for_area
 
 ROUTE=sys.argv[1] if len(sys.argv)>1 else 'junior'
 assert ROUTE in ['junior','primary','middle']
@@ -90,7 +90,7 @@ try:
         for level in [1,2,3]:
             for domain in domains:
                 page.evaluate('window.__current=null')
-                page.locator(f'#navMenu [data-subject="{domain}"]').click();loaded=wait_item()
+                area(page, domain).click();loaded=wait_item()
                 if loaded['level']!=level:
                     page.evaluate('window.__current=null')
                     page.locator('#exerciseLevelSelect').select_option(str(level));wait_item()
@@ -103,7 +103,7 @@ try:
                 assert all(a!=b for a,b in zip(keys,keys[1:])),(domain,level)
                 print(f'PASS: {domain}, start L{level}: ten consecutive real-handler activities',flush=True)
         for focus in ['grammar','spelling','writing']:
-            page.locator(f'#navMenu [data-subject="{language_domain}"]').click();wait_item()
+            area(page, language_domain).click();wait_item()
             page.evaluate('window.__current=null');page.locator(f'[data-mode="{focus}"]').click()
             for n in range(10):
                 item=wait_item();assert item['languageFocus']==focus;answer(item)
@@ -113,7 +113,7 @@ try:
             workspace(page).locator('#v16ContentLocale').select_option(key)
             page.wait_for_function('(key)=>LearningAPI.contentLocale===key',arg=key)
             for domain in domains:
-                page.evaluate('window.__current=null');page.locator(f'#navMenu [data-subject="{domain}"]').click()
+                page.evaluate('window.__current=null');area(page, domain).click()
                 item=wait_item();assert item['localization']['locale']==key;answer(item)
             page.locator('#navMenu [data-section="homework"]').click()
             page.locator('#worksheetAll').click();page.locator('#worksheetQuestions').select_option('20');page.locator('#worksheetCount').select_option('1')
@@ -123,7 +123,7 @@ try:
             assert len(items)==20;assert all(it['localization']['locale']==key for it in items)
             document_integrity(page,doc_text(path.read_bytes()),items,key)
             print(f'PASS: {key}, {len(domains)} domains and real 20-question DOCX',flush=True)
-        page.locator(f'#navMenu [data-subject="{reading_domain}"]').click();wait_item()
+        area(page, reading_domain).click();wait_item()
         for width in [1280,390]:
             page.set_viewport_size({'width':width,'height':900});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
             page.locator('#exercise').screenshot(path=f'/tmp/{ROUTE}-reading-{width}.png')

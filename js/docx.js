@@ -1,4 +1,22 @@
 (function(){
+  const vendorPromises={};
+  function loadVendor(globalName,src,label){
+    if(window[globalName])return Promise.resolve(window[globalName]);
+    if(vendorPromises[globalName])return vendorPromises[globalName];
+    vendorPromises[globalName]=new Promise((resolve,reject)=>{
+      const script=document.createElement('script');script.src=src;script.async=true;
+      script.onload=()=>window[globalName]?resolve(window[globalName]):reject(new Error(`No se ha cargado ${label}.`));
+      script.onerror=()=>{delete vendorPromises[globalName];reject(new Error(`No se pudo cargar ${label}. Comprueba la conexión e inténtalo de nuevo.`));};
+      document.head.appendChild(script);
+    }).catch(error=>{delete vendorPromises[globalName];throw error;});
+    return vendorPromises[globalName];
+  }
+  function loadWorksheetLibraries(){
+    return Promise.all([
+      loadVendor('docx','https://unpkg.com/docx@8.5.0/build/index.umd.js','el generador DOCX'),
+      loadVendor('JSZip','https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js','el generador ZIP')
+    ]);
+  }
   function clean(v){return String(v??'').replace(/\s+/g,' ').trim()}
   function pad(n){return String(n).padStart(2,'0')}
   function stamp(){
@@ -237,8 +255,7 @@
     itemsByVersion=prepared.map(items=>items.map(x=>x.item));
     const models=prepared.map(items=>items.map(x=>x.projection));
     if(window.ContentPolicy.forProfile(profile)&&!window.StimulusArt)throw new Error('No se ha cargado el adaptador de ilustraciones.');
-    if(!window.docx) throw new Error('No se ha cargado el generador DOCX. Comprueba la conexión.');
-    if(!window.JSZip) throw new Error('No se ha cargado el generador ZIP. Comprueba la conexión.');
+    await loadWorksheetLibraries();
     const p=prefix(profile);
     if(itemsByVersion.length===1){
       downloadBlob(new Blob([await makeDoc(itemsByVersion[0],1,profile,models[0])],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),`${p}_ficha_01.docx`);
@@ -250,5 +267,5 @@
     }
     downloadBlob(await zip.generateAsync({type:'blob'}),`${p}_fichas.zip`);
   }
-  window.WorksheetGenerator={generate,integrityVersion:1};
+  window.WorksheetGenerator={generate,loadLibraries:loadWorksheetLibraries,integrityVersion:1};
 })();

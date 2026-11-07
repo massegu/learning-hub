@@ -67,18 +67,21 @@
       btn.dataset.v16Bound='1'; btn.textContent='Continuar entrenamiento →';
       btn.onclick=()=>{
         const wanted=localStorage.getItem(profileKey());
-        const target=wanted ? document.querySelector(`#navMenu .nav-item[data-subject="${CSS.escape(wanted)}"]`) : null;
-        if(target) target.click(); else $('#recommendedBtn')?.click();
+          const activeHub=document.querySelector('#earlyHub:not(.hidden),#schoolHub:not(.hidden)');
+          const candidates=[...(activeHub?.querySelectorAll('[data-home-area],[data-school-area],[data-early-area]')||[]),...document.querySelectorAll('#homeLevels [data-home-area]')];
+          const target=wanted?candidates.find(button=>button.dataset.homeArea===wanted||button.dataset.schoolArea===wanted||button.dataset.earlyArea===wanted):null;
+          if(target)target.click();else $('#recommendedBtn')?.click();
       };
     }
   }
 
   function rememberNavigation(){
-    const nav=$('#navMenu'); if(!nav||nav.dataset.v16Bound) return;
-    nav.dataset.v16Bound='1';
-    nav.addEventListener('click',e=>{
-      const b=e.target.closest('.nav-item[data-subject]');
-      if(b?.dataset.subject) localStorage.setItem(profileKey(),b.dataset.subject);
+    if(document.documentElement.dataset.v16RememberBound)return;
+    document.documentElement.dataset.v16RememberBound='1';
+    document.addEventListener('click',e=>{
+      const b=e.target.closest('[data-home-area],[data-school-area],[data-early-area],#recommendedBtn');
+      const area=b?.dataset.homeArea||b?.dataset.schoolArea||b?.dataset.earlyArea||b?.dataset.subject;
+      if(area)localStorage.setItem(profileKey(),area);
     },true);
   }
 
