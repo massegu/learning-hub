@@ -24,7 +24,7 @@ try:
   answer_social();assert page.evaluate('__requests.at(-1).session_only') is True;assert page.evaluate('__requests.at(-1).client_revision')==12
   assert page.evaluate('__saved.length')==saved;assert page.evaluate('JSON.stringify(__profiles.find(p=>p.id==="primary").progress)')==original
   workspace(page).locator('#independentSessionBtn').click();assert 'Seguimiento individual' in page.locator('#independentSessionStatus').inner_text();assert page.evaluate('JSON.stringify(__profiles.find(p=>p.id==="primary").progress)')==original
-  workspace(page).locator('#independentSessionBtn').click();answer_social();page.reload(wait_until='networkidle');assert 'Seguimiento individual' in page.locator('#independentSessionStatus').inner_text();assert page.evaluate('JSON.stringify(__profiles.find(p=>p.id==="primary").progress)')==original
+  workspace(page).locator('#independentSessionBtn').click();answer_social();page.reload(wait_until='networkidle');workspace(page);assert 'Seguimiento individual' in page.locator('#independentSessionStatus').inner_text();assert page.evaluate('JSON.stringify(__profiles.find(p=>p.id==="primary").progress)')==original
   workspace(page).locator('#profilePrivacyBtn').click();page.wait_for_function('()=>document.querySelector("#privacyStatus").textContent.includes("exportación")')
   page.locator('#privacyAlias').fill('P-024');page.locator('#privacyReviewDate').fill('2027-01-01');page.locator('#saveProfilePrivacy').click();page.wait_for_function('()=>document.querySelector("#privacyStatus").textContent.includes("guardados")')
   assert page.evaluate('__profiles.find(p=>p.id==="primary").name')=='P-024'

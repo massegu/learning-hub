@@ -29,7 +29,7 @@ try:
      item=page.evaluate('__current');assert item['type']=='multiSelect';assert page.locator('#multiCheck').is_disabled();assert page.locator('#multiCount').inner_text()=='0 seleccionadas'
      labels=item['answers'] if correct else [x for x in item['opts'] if x not in item['answers']][:1]
      for label in labels:
-      option=page.get_by_role('button',name=label,exact=True);option.focus();page.keyboard.press('Space');assert option.get_attribute('aria-pressed')=='true'
+      option=page.locator('#exerciseOptions').get_by_role('button',name=label,exact=True);option.focus();page.keyboard.press('Space');assert option.get_attribute('aria-pressed')=='true'
      assert '/' not in page.locator('#multiCount').inner_text()
      page.locator('#multiCheck').click();page.wait_for_selector('#exerciseNext:not(.hidden)')
      assert ('ok' if correct else 'bad') in page.locator('#exerciseFeedback').get_attribute('class')
