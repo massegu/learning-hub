@@ -2,21 +2,21 @@
 import importlib.util,threading,tempfile,zipfile,io,os,struct
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import workspace, ROOT
+from browser_support import workspace, ROOT, area, training_areas, wait_for_area
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');review=importlib.util.module_from_spec(spec);spec.loader.exec_module(review)
 server=review.ReviewServer(('127.0.0.1',0),review.prepare());threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
  with tempfile.TemporaryDirectory() as tmp,sync_playwright() as p:
   browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_EXECUTABLE') or '/usr/bin/chromium',args=['--no-sandbox'])
   page=browser.new_page(viewport={'width':1280,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
-  page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#profileSelect');page.wait_for_timeout(500)
+  page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#profileSelect',state='attached');page.wait_for_timeout(500)
   workspace(page).locator('#profileSelect').select_option('teen')
   page.evaluate('''()=>{const old=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return old(it,...args)}}''')
   fixture={}
   def override(route):route.fulfill(json={'status':200,'data':{'items':[fixture],'usage':{'used':50,'limit':500}}})
   page.route('**/__review/content',override);page.clock.install()
   def show(item,domain):
-   fixture.clear();fixture.update(item);page.evaluate('window.__current=null');workspace(page).locator(f'#navMenu [data-subject={domain}]').click()
+   fixture.clear();fixture.update(item);page.evaluate('window.__current=null');area(page, domain).click()
    page.wait_for_function('()=>__current&&document.querySelector("#exercisePrompt").textContent===__current.q')
   def good():assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
   scene=page.evaluate('(()=>{const it=Curriculum.pool("early","memory",1).find(x=>x.mechanic==="memory_scene");delete it.ageProfile;it.teenReview={version:3};return it})()');assert len(scene['memoryContent'])==2

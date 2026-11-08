@@ -3,6 +3,7 @@
   if(!window.supabase||!cfg) throw new Error('Supabase config missing');
   const client=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey);
   const API={client,session:null,user:null,contentLocale:null,localeRevision:0};
+  const progressWriteQueues=new Map();
   API.effectiveLocale=profile=>window.LocaleContent.effective(profile || {locale:API.profileLocale},API.contentLocale);
   API.setContentLocale=value=>{
     const next=value==null?null:window.LocaleContent.normalize(value);
@@ -30,8 +31,35 @@
   API.createProfile=async(name,age_band,initial_level=1,locale='es_intl')=>{const {data,error}=await client.from('learner_profiles').insert({account_id:API.user.id,name,age_band,locale,progress:{initialLevel:Number(initial_level)||1}}).select('id,name,age_band,locale,progress,created_at').single();if(error)throw error;return data};
   API.updateProfileLocale=async(id,locale)=>{const {data,error}=await client.from('learner_profiles').update({locale}).eq('id',id).select('id,name,age_band,locale,progress,created_at').single();if(error)throw error;return data};
   API.deleteProfile=async(id)=>API.privacy('delete',id);
-  API.saveProgress=async(id,progress)=>{if(API.isIndependent(id)||progress?._sessionOnly)return;const {data:row}=await client.from('learner_profiles').select('progress').eq('id',id).single();const merged=window.PrivacyControls.minimize(progress);if(row?.progress?._delivery)merged._delivery=row.progress._delivery;const {error}=await client.from('learner_profiles').update({progress:merged}).eq('id',id);if(error)throw error};
-  API.saveResult=async(profile_id,row)=>{if(API.isIndependent(profile_id)||row?.sessionOnly)return;const {error}=await client.from('exercise_results').insert({profile_id,occurred_at:row.ts,session_id:row.sessionId,session_started_at:row.sessionStartedAt,subject:row.subject,level:row.level,correct:row.correct,points:row.points,item_id:row.itemId,detail:row.detail});if(error)console.warn('Result insert failed',error)};
+  API.saveProgress=(id,progress)=>{
+    if(API.isIndependent(id)||progress?._sessionOnly)return Promise.resolve(false);
+    // Capture the exact state at invocation time; the caller may mutate it while queued.
+    const snapshot=typeof structuredClone==='function'?structuredClone(progress):JSON.parse(JSON.stringify(progress));
+    const previous=progressWriteQueues.get(id)||Promise.resolve();
+    const operation=previous.catch(()=>{}).then(async()=>{
+      const {data:row,error:readError}=await client.from('learner_profiles').select('progress').eq('id',id).single();
+      if(readError)throw readError;
+      const merged=window.PrivacyControls.minimize(snapshot);
+      if(row?.progress?._delivery)merged._delivery=row.progress._delivery;
+      const {error}=await client.from('learner_profiles').update({progress:merged}).eq('id',id);
+      if(error)throw error;
+      return true;
+    });
+    // Keep the queue moving after a failed write, while returning that failure to its caller.
+    const tail=operation.then(()=>undefined,()=>undefined);
+    progressWriteQueues.set(id,tail);
+    tail.then(()=>{if(progressWriteQueues.get(id)===tail)progressWriteQueues.delete(id);});
+    return operation;
+  };
+  API.saveResult=async(profile_id,row)=>{
+    if(API.isIndependent(profile_id)||row?.sessionOnly)return false;
+    // Repository schema/migrations do not confirm a client-supplied unique attempt
+    // key, so an ambiguous insert failure must not be retried. Safe retry needs a
+    // backend `client_attempt_id uuid UNIQUE` stored with the result and reused here.
+    const {error}=await client.from('exercise_results').insert({profile_id,occurred_at:row.ts,session_id:row.sessionId,session_started_at:row.sessionStartedAt,subject:row.subject,level:row.level,correct:row.correct,points:row.points,item_id:row.itemId,detail:row.detail});
+    if(error)throw error;
+    return true;
+  };
   API.privacy=async(action,id,settings={})=>{if(API.isIndependent(id))throw new Error('Termina la sesión independiente para gestionar el perfil.');const {data,error}=await client.rpc('manage_learner_privacy',{p_action:action,p_profile:id,p_alias:settings.alias??null,p_review_at:settings.reviewAt??null});if(error)throw new Error('No se ha podido completar la gestión de privacidad. Inténtalo de nuevo o contacta con soporte.');return data;};
   API.recordAccess=id=>typeof client.rpc==='function'?API.privacy('open',id).catch(()=>null):Promise.resolve(null);
   API.getAccount=async()=>{const {data,error}=await client.from('accounts').select('subscription_status,trial_started_at,trial_ends_at,current_period_end,content_locale').single();if(error)throw error;API.setContentLocale(data?.content_locale);return data};

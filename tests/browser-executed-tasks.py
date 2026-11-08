@@ -2,18 +2,18 @@
 import importlib.util,threading,os,tempfile,zipfile
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import workspace,ROOT
+from browser_support import workspace,ROOT, area, training_areas, wait_for_area
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');review=importlib.util.module_from_spec(spec);spec.loader.exec_module(review)
 server=review.ReviewServer(('127.0.0.1',0),review.prepare());threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
  with sync_playwright() as p,tempfile.TemporaryDirectory() as tmp:
   browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_EXECUTABLE') or '/usr/bin/chromium',args=['--no-sandbox']);page=browser.new_page(viewport={'width':1440,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
-  page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#profileSelect');page.clock.install()
+  page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#profileSelect',state='attached');page.clock.install()
   page.evaluate('''()=>{window.__completedCalls=0;const save=LearningAPI.saveResult;LearningAPI.saveResult=(id,row)=>{if(row.itemId?.startsWith('executed-v'))window.__completedCalls++;return save(id,row);};const original=LearningAPI.requestContent;LearningAPI.requestContent=async payload=>{if(payload.executed_only){window.__executionRequest=payload;return {items:[structuredClone(window.__task)],usage:{used:1,limit:500}};}return original(payload);}}''')
   for age in ['early','teen']:
    workspace(page).locator('#profileSelect').select_option(age)
    for domain,kinds in [('attention',['cancel','compare','follow']),('memory',['serial','spatial','update']),('executive',['plan','switch','inhibit'])]:
-    workspace(page).locator(f'#navMenu [data-subject={domain}]').click();page.locator('#exerciseLevelSelect').select_option('2')
+    area(page, domain).click();page.locator('#exerciseLevelSelect').select_option('2')
     for kind in kinds:
      page.evaluate('''({age,domain,kind})=>{window.__task=ExecutedTasks.pool(age,domain,2).find(x=>x.execution.kind===kind);window.__executionRequest=null;}''',{'age':age,'domain':domain,'kind':kind})
      page.locator('#executedMode').click();page.wait_for_function('()=>window.__executionRequest?.executed_only&&document.querySelector(".executed-area")');assert page.evaluate('__executionRequest.client_revision')==12
@@ -72,7 +72,7 @@ try:
      page.set_viewport_size({'width':1440,'height':1000})
   # Interrupt an unfinished timed block; no delayed response may grade the next view.
   page.evaluate("()=>window.__task=ExecutedTasks.pool('teen','memory',1).find(x=>x.execution.kind==='serial')")
-  workspace(page).locator('#navMenu [data-subject=memory]').click();page.locator('#executedMode').click();page.locator('.executed-area').get_by_role('button',name='Empezar',exact=True).click()
+  area(page, 'memory').click();page.locator('#executedMode').click();page.locator('.executed-area').get_by_role('button',name='Empezar',exact=True).click()
   completed_before=page.evaluate('__completedCalls')
   page.evaluate("()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'));}")
   assert 'interrumpido' in page.locator('.executed-status').inner_text();page.clock.fast_forward(20000);assert page.locator('#exerciseFeedback').inner_text()=='';assert page.evaluate('__completedCalls')==completed_before
@@ -84,12 +84,12 @@ try:
    assert 'Reconstruye' in z.read('word/document.xml').decode() or 'reconstruye' in z.read('word/document.xml').decode()
    expected=bytes(page.evaluate("Array.from(PhosphorArt.png(StimulusArt.forLabel(__task.execution.sequence[0])))"));assert any(z.read(name)==expected for name in z.namelist() if name.startswith('word/media/'))
   # Every activity tab shares a minimum target height; older submodes join the toolbar.
-  workspace(page).locator('#navMenu [data-subject=executive]').click();page.locator('#interactionModeBtn').click()
+  area(page, 'executive').click();page.locator('#interactionModeBtn').click()
   boxes=page.locator('.activity-toolbar button:visible').evaluate_all('(els)=>els.map(e=>({h:e.getBoundingClientRect().height,y:e.getBoundingClientRect().y}))');assert all(b['h']>=44 for b in boxes);assert page.locator('.activity-toolbar').evaluate('(e)=>e.scrollWidth<=e.clientWidth+1');assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
   page.wait_for_selector('#exerciseVisual table');page.locator('#exercise').screenshot(path='/tmp/phase2-toolbar-desktop.png')
   # Existing pictograms stay legible at mobile widths in the timed speed renderer.
   page.evaluate("()=>{const previous=LearningAPI.requestContent;LearningAPI.requestContent=async payload=>payload.domain==='speedReasoning'?{items:[Curriculum.pool('teen','speedReasoning',1).find(x=>x.speedFamily==='category'&&!x.qualityEvidence)],usage:{used:1,limit:500}}:previous(payload);}")
-  workspace(page).locator('#navMenu [data-subject=speedReasoning]').click();page.locator('#practiceSpeedTrial').click();page.set_viewport_size({'width':390,'height':844})
+  area(page, 'speedReasoning').click();page.locator('#practiceSpeedTrial').click();page.set_viewport_size({'width':390,'height':844})
   icons=page.locator('.speed-search-grid .picture-icon svg').evaluate_all('(els)=>els.map(e=>e.getBoundingClientRect().width)');assert icons and min(icons)>=55,icons
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1');page.locator('#exercise').screenshot(path='/tmp/phase2-speed-mobile.png')
   assert not errors,errors;browser.close();print('PASS: 18 completed executed tasks, hidden memory and update, factual grid actions, changing rules, inhibition, keyboard, 390px, interruption, aligned toolbar and Word source')

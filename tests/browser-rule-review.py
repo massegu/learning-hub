@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import threading
 from playwright.sync_api import sync_playwright
-from browser_support import workspace, ROOT,doc_text
+from browser_support import workspace, ROOT,doc_text, area, training_areas, wait_for_area
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py')
 preview=importlib.util.module_from_spec(spec);spec.loader.exec_module(preview)
 server=preview.ReviewServer(('127.0.0.1',0),preview.prepare())
@@ -15,7 +15,7 @@ try:
   page=browser.new_page(viewport={'width':1280,'height':900});errors=[];external=[]
   page.on('pageerror',lambda e:errors.append(str(e)))
   page.on('request',lambda r:external.append(r.url) if r.url.startswith('https://') else None)
-  page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#v16ContentLocale');page.wait_for_timeout(3000)
+  page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#v16ContentLocale',state='attached');page.wait_for_timeout(3000)
   page.evaluate('''()=>{const gate=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return gate(it,...args)}}''');page.clock.install()
   workspace(page).locator('#v16ContentLocale').select_option('es_mx');page.wait_for_function('()=>LearningAPI.contentLocale==="es_mx"')
   workspace(page).locator('#profileSelect').select_option('teen')
@@ -33,7 +33,7 @@ try:
   answered=0
   for domain in ['executive','attention','memory']:
    for level in ([1,2,3] if domain=='executive' else [1]):
-    page.evaluate('window.__current=null');page.locator(f'#navMenu [data-subject="{domain}"]').click();it=wait_item()
+    page.evaluate('window.__current=null');area(page, domain).click();it=wait_item()
     if it['level']!=level:
      page.evaluate('window.__current=null');page.locator('#exerciseLevelSelect').select_option(str(level));it=wait_item()
     found=False

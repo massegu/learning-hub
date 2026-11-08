@@ -5,7 +5,7 @@ from pathlib import Path
 import tempfile
 import threading
 from playwright.sync_api import sync_playwright
-from browser_support import workspace, ROOT, doc_text
+from browser_support import workspace, ROOT, doc_text, area, training_areas, wait_for_area
 
 spec=importlib.util.spec_from_file_location('review_preview',ROOT/'tools/review-preview.py')
 preview=importlib.util.module_from_spec(spec);spec.loader.exec_module(preview)
@@ -28,7 +28,7 @@ try:
    page.wait_for_function('()=>(document.querySelectorAll("#exerciseOptions button:not(:disabled)").length>0)||(__current?.type==="self"&&!document.querySelector("#textAnswerArea").classList.contains("hidden"))')
    return it
   def open_domain(domain,level):
-   page.evaluate('window.__current=null');page.locator(f'#navMenu [data-subject="{domain}"]').click();it=wait_item()
+   page.evaluate('window.__current=null');area(page, domain).click();it=wait_item()
    if it['level']!=level:
     page.evaluate('window.__current=null');page.locator('#exerciseLevelSelect').select_option(str(level));it=wait_item()
    return it
@@ -45,7 +45,7 @@ try:
   for band,domains in cases.items():
    workspace(page).locator('#profileSelect').select_option(band)
    if band=='primary':
-    assert page.locator('#navMenu [data-subject="reading"]').count()==0
+    assert area(page, 'reading').count()==0
     assert page.locator('[data-school-area="reading"]').count()==0
     assert page.locator('#homeworkOptions [value="reading"]').count()==0
    if band=='middle':assert page.locator('#appShell').get_attribute('data-age-theme')=='studio'

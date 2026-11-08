@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import threading
 from playwright.sync_api import sync_playwright
-from browser_support import workspace, ROOT,doc_text
+from browser_support import workspace, ROOT,doc_text, area, training_areas, wait_for_area
 
 spec=importlib.util.spec_from_file_location('review_preview',ROOT/'tools/review-preview.py')
 preview=importlib.util.module_from_spec(spec);spec.loader.exec_module(preview)
@@ -17,7 +17,7 @@ try:
   page.on('pageerror',lambda e:errors.append(str(e)))
   page.on('request',lambda r:external.append(r.url) if r.url.startswith('https://') else None)
   page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle')
-  page.wait_for_selector('#v16ContentLocale');page.wait_for_timeout(3000)
+  page.wait_for_selector('#v16ContentLocale',state='attached');page.wait_for_timeout(3000)
   page.evaluate('''()=>{window.__current=null;window.__exports=[];const gate=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return gate(it,...args)};const generate=WorksheetGenerator.generate;WorksheetGenerator.generate=async(items,profile)=>{__exports.push({items,profile});return generate(items,profile)}}''')
   page.clock.install()
   def wait_item():
@@ -32,10 +32,10 @@ try:
    page.wait_for_function('(key)=>LearningAPI.contentLocale===key&&!document.querySelector("#v16ContentLocale").disabled',arg=key)
    for band in ['early','junior','primary','middle','teen']:
     workspace(page).locator('#profileSelect').select_option(band)
-    domains=page.locator('#navMenu [data-subject]:visible').evaluate_all('(els)=>els.map(e=>e.dataset.subject)')
+    domains=[item['domain'] for item in training_areas(page)]
     plan=(domains*2)[:10]
     for domain in plan:
-     page.evaluate('window.__current=null');page.locator(f'#navMenu [data-subject="{domain}"]').click();it=wait_item()
+     page.evaluate('window.__current=null');area(page, domain).click();it=wait_item()
      level=1 if index%2==0 else 3
      if it['level']!=level:
       page.evaluate('window.__current=null');page.locator('#exerciseLevelSelect').select_option(str(level));it=wait_item()

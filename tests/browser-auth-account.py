@@ -2,7 +2,7 @@
 import importlib.util,http.server,threading,tempfile,os
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import workspace, ROOT,SDK
+from browser_support import workspace, ROOT,SDK, area, training_areas, wait_for_area
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');preview=importlib.util.module_from_spec(spec);spec.loader.exec_module(preview)
 AUTH=r'''
 window.__authEvents=[];window.__changes=[];window.__resets=[];window.__signUps=[];
@@ -34,7 +34,7 @@ try:
   page.goto(origin,wait_until='networkidle');page.wait_for_selector('#changePasswordBtn')
   assert page.locator('#profileSelect').input_value()=='early'
   assert page.evaluate("localStorage.getItem('lh_current_profile')")=='early'
-  workspace(page).locator('#navMenu [data-subject=language]').click()
+  area(page, 'language').click()
   page.wait_for_selector('#exerciseOptions .option-btn, #orderCheck')
   page.locator('#changePasswordBtn').click();assert page.locator('#passwordDialog').is_visible()
   page.locator('#newPassword').fill('ClaveNueva123!');page.locator('#repeatPassword').fill('Distinta123!');page.locator('#savePassword').click()
@@ -58,7 +58,7 @@ try:
   assert page.evaluate("localStorage.getItem('lh_current_profile')")=='another-early'
   workspace(page).locator('#profileSelect').select_option('another-teen')
   for domain in ['teenLanguage','teenMath','executive','memory']:
-   workspace(page).locator(f'#navMenu [data-subject={domain}]').click();page.wait_for_selector('#exerciseOptions .option-btn')
+   area(page, domain).click();page.wait_for_selector('#exerciseOptions .option-btn')
    assert 'Cannot read' not in page.locator('#exercisePrompt').inner_text()
    assert page.evaluate('__requests.at(-1).profile_id')=='another-teen'
   page.locator('#signOutBtn').click();page.wait_for_selector('#authForgotPassword')
@@ -74,9 +74,9 @@ try:
   page.locator('#closePassword').click();page.wait_for_selector('#appShell:not(.hidden)');assert 'recuperar=' not in page.url
   # SDK recovery events are handled without awaiting Auth inside its callback.
   page.evaluate('__authEvents.forEach(callback=>callback("PASSWORD_RECOVERY"))');page.wait_for_selector('#passwordDialog[open]')
-  areas=page.locator('#navMenu [data-subject]').count()
-  assert page.locator('#navMenu [data-subject] .nav-area-label').count()==areas
-  assert page.locator('#navMenu [data-subject] .nav-area-icon').count()==areas
+  areas=page.locator('#homeLevels [data-home-area]').count()
+  assert page.locator('#homeLevels [data-home-area] > strong').count()==areas
+  assert page.locator('#homeLevels [data-home-area] .area-illustration').count()==areas
   # Recovery can open over the workspace. Its inactive navigation must fit
   # too: icon + an anonymous flex text item used to widen both mobile columns.
   for font,family in [('', ''), ('20px', ''), ('', 'monospace')]:
@@ -100,11 +100,11 @@ try:
   page.evaluate("__profiles=[];localStorage.setItem('lh_current_profile','another-teen')")
   page.locator('#authEmail').fill('review@example.invalid');page.locator('#authPassword').fill('LocalTest123!');page.locator('#authSignIn').click()
   page.wait_for_selector('#profileGate:not(.hidden)')
-  assert page.locator('#navMenu [data-subject]').count()==0
+  assert page.locator('#profileSelect option').count()==0
   assert page.evaluate("localStorage.getItem('lh_current_profile')") is None
   page.locator('#newProfileName').fill('Nuevo perfil');page.locator('#newProfileAge').select_option('teen');page.locator('#createProfileBtn').click()
   page.wait_for_selector('#profileGate.hidden',state='hidden')
-  workspace(page).locator('#navMenu [data-subject=teenLanguage]').click();page.wait_for_selector('#exerciseOptions .option-btn')
+  area(page, 'teenLanguage').click();page.wait_for_selector('#exerciseOptions .option-btn')
   assert page.evaluate('__requests.at(-1).profile_id')=='created'
   assert not errors,errors
   print('PASS: unavailable remembered profile, account switch with four working areas, owned request IDs, password mismatch, error/retry, update, recovery and mobile; no real emails sent')

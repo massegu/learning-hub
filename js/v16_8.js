@@ -72,8 +72,7 @@
   function patchDescriptions(){
     const route=currentRoute();
     // The explicit early profile supplies its own child-facing descriptions.
-    if(route==="early") return;
-    if(route==="early" || route==="junior"){
+    if(route!=="junior") return;
       const active=$("#navMenu .nav-item.active[data-subject]")?.dataset.subject;
       const desc=$("#exerciseDescription");
       if(!desc) return;
@@ -88,7 +87,6 @@
         applied:"Situaciones cotidianas que integran varias habilidades cognitivas."
       };
       if(d[active]) desc.textContent=d[active];
-    }
   }
 
   function patchUI(){
@@ -98,8 +96,9 @@
   }
 
   function start(){
-    let n=0;
-    const timer=setInterval(()=>{patchUI(); if(++n>180) clearInterval(timer);},120);
+    patchUI();
+    const profiles=$("#profileSelect");
+    if(profiles)new MutationObserver(patchUI).observe(profiles,{childList:true});
     document.addEventListener("change",e=>{
       if(["profileSelect","newProfileAge"].includes(e.target?.id)) setTimeout(patchUI,40);
     },true);

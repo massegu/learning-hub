@@ -2,7 +2,7 @@
 import importlib.util,threading,tempfile,zipfile
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import workspace, ROOT
+from browser_support import workspace, ROOT, area, training_areas, wait_for_area
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');preview=importlib.util.module_from_spec(spec);spec.loader.exec_module(preview)
 server=preview.ReviewServer(('127.0.0.1',0),preview.prepare());threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
@@ -10,12 +10,12 @@ try:
   browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox'])
   page=browser.new_page(viewport={'width':1280,'height':900});errors=[]
   page.on('pageerror',lambda e:errors.append(str(e)))
-  page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#v16ContentLocale');page.wait_for_timeout(1000)
+  page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#v16ContentLocale',state='attached');page.wait_for_timeout(1000)
   page.evaluate('''()=>{const original=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return original(it,...args)}}''')
   def current():
    page.wait_for_function('()=>window.__current&&[__current.q,__current.memoryQuestion].includes(document.querySelector("#exercisePrompt").textContent)');return page.evaluate('__current')
   def open_area(domain):
-   page.evaluate('window.__current=null');page.locator(f'#navMenu [data-subject="{domain}"]').click();return current()
+   page.evaluate('window.__current=null');area(page, domain).click();return current()
   def next_item():
    page.evaluate('window.__current=null');page.locator('#exerciseNext').click();return current()
   def screenshot(name):
@@ -79,7 +79,7 @@ try:
   it=open_area('teenLanguage')
   page.evaluate('window.__current=null');page.locator('#languageModeSwitch [data-mode=spelling]').click();it=current()
   assert all(b.get('text')!=it['topic'] for b in it.get('stimulus',[]));assert page.locator('#exerciseVisual').inner_text().strip()!='Dos rutas y un horario'
-  page.evaluate('window.__current=null');workspace(page).locator('#navMenu [data-subject=literacy]').click();current();page.evaluate('window.__current=null');page.locator('#languageModeSwitch [data-mode=writing]').click();it=current()
+  page.evaluate('window.__current=null');area(page, 'literacy').click();current();page.evaluate('window.__current=null');page.locator('#languageModeSwitch [data-mode=writing]').click();it=current()
   assert page.locator('#writingCriteria li').count()==len(it['writingRubric'])
   assert 'Criterios de revisión' not in page.locator('#exerciseVisual').inner_text();screenshot('writing-criteria-once')
   assert not errors,errors

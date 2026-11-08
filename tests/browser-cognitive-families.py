@@ -2,22 +2,22 @@
 import importlib.util,threading,os,tempfile,zipfile
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import workspace,ROOT
+from browser_support import workspace,ROOT, area, training_areas, wait_for_area
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');review=importlib.util.module_from_spec(spec);spec.loader.exec_module(review)
 server=review.ReviewServer(('127.0.0.1',0),review.prepare());threading.Thread(target=server.serve_forever,daemon=True).start()
 proof=ROOT/'docs/review-assets/cognitive-families-20261104';proof.mkdir(parents=True,exist_ok=True)
 try:
  with sync_playwright() as p,tempfile.TemporaryDirectory() as tmp:
   browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_EXECUTABLE') or ('/usr/bin/chromium' if Path('/usr/bin/chromium').exists() else p.chromium.executable_path),args=['--no-sandbox']);page=browser.new_page(viewport={'width':1440,'height':1050});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
-  page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#profileSelect');page.clock.install()
+  page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#profileSelect',state='attached');page.clock.install()
   page.evaluate('''()=>{window.__saves=0;window.__current=null;const save=LearningAPI.saveResult;LearningAPI.saveResult=(id,row)=>{if(row.itemId?.startsWith('cognitive-v'))window.__saves++;return save(id,row);};const request=LearningAPI.requestContent;LearningAPI.requestContent=async body=>{const response=await request(body);window.__current=response.items?.[0];window.__lastPayload=body;return response;};}''')
   for age in ['early','junior','primary','middle','teen']:
-   workspace(page).locator('#profileSelect').select_option(age);reading_domain={'middle':'literacy','primary':'literacy','teen':'literacy'}.get(age,'reading');page.wait_for_selector('#navMenu [data-subject='+reading_domain+']');workspace(page).locator('#navMenu [data-subject='+reading_domain+']').click();assert not page.locator('#cognitiveMode').is_visible();workspace(page).locator('#navMenu [data-subject=executive]').click()
+   workspace(page).locator('#profileSelect').select_option(age);reading_domain={'middle':'literacy','primary':'literacy','teen':'literacy'}.get(age,'reading');wait_for_area(page, reading_domain);area(page, reading_domain).click();assert not page.locator('#cognitiveMode').is_visible();area(page, 'executive').click()
    page.locator('#cognitiveMode').click();page.wait_for_function('()=>window.__current?.type==="cognitiveTask"&&document.querySelector(".cognitive-area")')
    for level in [1,2,3]:
     for kind in ['rules','words','deduction','change','information','contradiction']:
      family_domain=({'middle':'middleLanguage','teen':'teenLanguage'}.get(age,'language') if kind=='words' else 'attention' if kind=='contradiction' else 'executive')
-     workspace(page).locator('#navMenu [data-subject='+family_domain+']').click()
+     area(page, family_domain).click()
      page.locator('#exerciseLevelSelect').select_option(str(level))
      if kind=='words':page.locator('#wordFitMode').click()
      elif kind=='contradiction':page.locator('#cognitiveMode').click()
@@ -77,7 +77,7 @@ try:
       file=Path(tmp)/(kind+'.docx');dl.value.save_as(file)
       with zipfile.ZipFile(file) as z:assert item['q'][:25] in z.read('word/document.xml').decode()
   # A hidden document interrupts rules, records nothing and has no pending late score.
-  workspace(page).locator('#navMenu [data-subject=executive]').click();page.locator('#cognitiveMode').click();page.locator('#cognitiveFamilySelect').select_option('rules');page.wait_for_function('()=>window.__current?.cognitiveTask?.kind==="rules"');page.locator('.cognitive-area').get_by_role('button',name='Empezar',exact=True).click();before=page.evaluate('__saves')
+  area(page, 'executive').click();page.locator('#cognitiveMode').click();page.locator('#cognitiveFamilySelect').select_option('rules');page.wait_for_function('()=>window.__current?.cognitiveTask?.kind==="rules"');page.locator('.cognitive-area').get_by_role('button',name='Empezar',exact=True).click();before=page.evaluate('__saves')
   page.evaluate("()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'));}")
   page.clock.fast_forward(60000);assert page.evaluate('__saves')==before;assert 'interrumpida' in page.locator('.cognitive-status').inner_text()
   page.evaluate('()=>{delete document.hidden;}');page.locator('.cognitive-area').get_by_role('button',name='Empezar',exact=True).click();page.locator('.cognitive-area').get_by_role('button',name='Reiniciar sin registrar',exact=True).click();assert page.evaluate('__saves')==before

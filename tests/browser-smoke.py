@@ -13,7 +13,7 @@ import xml.etree.ElementTree as ET
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
-from browser_support import workspace, SDK, QuietHandler, doc_text
+from browser_support import workspace, SDK, QuietHandler, doc_text, area, training_areas, wait_for_area
 
 def install_journal(page):
     page.evaluate("""() => {
@@ -93,8 +93,8 @@ try:
           return true;
         }""")
         print('PASS: HTML stimulus adapters preserve all content or reject the activity')
-        nav = page.locator('#navMenu .nav-item[data-subject]')
-        assert nav.count() == 8
+        nav = training_areas(page)
+        assert len(nav) == 8
         install_journal(page)
         observed={}
         for domain in ['reading', 'attention', 'executive', 'memory', 'speedReasoning', 'applied', 'language', 'division']:
@@ -105,7 +105,7 @@ try:
                     page.wait_for_function("document.querySelector('#profileSelect').selectedOptions[0]?.textContent.includes('6-7')")
                     install_journal(page)
                 if index in [0,5]:
-                    page.locator(f'#navMenu [data-subject="{domain}"]').click()
+                    area(page, domain).click()
                 else:
                     page.locator('#exerciseNext').click()
                 page.wait_for_function("window.__lastEarly && document.querySelector('#exercisePrompt').textContent!=='Cargando reto…' && document.querySelector('#exerciseVisual').textContent.trim().length>0")
@@ -136,7 +136,7 @@ try:
         assert page.evaluate("__saved.some(p=>p.progress.ageRoute==='early'&&p.progress.totalAttempts>0&&p.progress._delivery.keep)")
         page.evaluate('window.__deny=true')
         before = page.evaluate('__requests.length')
-        page.locator('#navMenu [data-subject="reading"]').click()
+        area(page, 'reading').click()
         page.wait_for_function("document.querySelector('#exercisePrompt').textContent.includes('límite')")
         assert page.evaluate('__requests.length') == before + 1
         assert page.locator('#exerciseOptions').inner_text() == ''
@@ -144,7 +144,7 @@ try:
         print('PASS: quota errors do not generate local content or retry the server')
         page.evaluate('window.__deny=false')
         page.evaluate('window.__bodyError=true')
-        page.locator('#navMenu [data-subject="reading"]').click()
+        area(page, 'reading').click()
         page.wait_for_function("document.querySelector('#exercisePrompt').textContent.includes('prueba ha finalizado')")
         assert page.locator('#exerciseVisual').inner_text()==''
         page.evaluate('window.__bodyError=false')
@@ -158,7 +158,7 @@ try:
             return {...res,items:[{...it,stimulus:[]}]};
           };
         }""")
-        page.locator('#navMenu [data-subject="reading"]').click()
+        area(page, 'reading').click()
         page.wait_for_function("document.querySelector('#exercisePrompt').textContent.includes('estímulo')")
         assert page.locator('#exerciseVisual').inner_text()==''
         assert page.locator('#exerciseOptions').inner_text()==''
@@ -172,7 +172,7 @@ try:
           ActivityModel.forDelivery=(...args)=>++calls===1?args[0]:gate(...args);
           EarlyContent.adaptResponse=(res,payload)=>({...res,items:[{...EarlyContent.pool(payload.domain)[0],a:'missing answer'}]});
         }""")
-        page.locator('#navMenu [data-subject="reading"]').click()
+        area(page, 'reading').click()
         page.wait_for_function("document.querySelector('#exercisePrompt').textContent.includes('respuesta no está')")
         assert page.locator('#exerciseVisual').inner_text()==''
         page.evaluate('EarlyContent.adaptResponse=window.__restoreAdapt;ActivityModel.forDelivery=window.__restoreGate')
@@ -211,7 +211,7 @@ try:
         print('PASS: third complete 20-activity DOCX with every stimulus before its question')
         for band in ['junior','primary','middle','teen']:
             workspace(page).locator('#profileSelect').select_option(band)
-            page.locator('#navMenu [data-subject="attention"]').click()
+            area(page, 'attention').click()
             page.wait_for_function("document.querySelector('#exercisePrompt').textContent==='¿Qué criterio ayuda más?'")
             assert 'F15-P7' in page.locator('#exerciseVisual').inner_text()
             page.locator('#navMenu [data-section="homework"]').click()
@@ -233,7 +233,7 @@ try:
         assert page.evaluate("__profiles.find(p=>p.id==='created').progress.ageRoute") == 'early'
         print('PASS: new 6-7 profiles retain the compatible DB age and explicit route')
         page.evaluate('window.__deny=true')
-        page.locator('#navMenu [data-subject="reading"]').click()
+        area(page, 'reading').click()
         page.wait_for_function("document.querySelector('#exercisePrompt').textContent.includes('límite')")
         for selector in ['#exerciseTopic','#exerciseExplanation','#exerciseFeedback','#modelAnswer']:
             assert page.locator(selector).inner_text()==''

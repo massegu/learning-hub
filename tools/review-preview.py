@@ -96,6 +96,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         libraries = {'/__review/docx.js':'node_modules/docx/build/index.umd.js', '/__review/jszip.js':'node_modules/jszip/dist/jszip.min.js'}
         if path in libraries:
             return self.send((ROOT/libraries[path]).read_bytes(), 'application/javascript')
+        if path == '/js/docx.js':
+            source = (ROOT/'js/docx.js').read_text(encoding='utf-8')
+            source = source.replace('https://unpkg.com/docx@8.5.0/build/index.umd.js', '/__review/docx.js')
+            source = source.replace('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js', '/__review/jszip.js')
+            return self.send(source, 'application/javascript; charset=utf-8')
         # Only static app assets. No repository metadata, credentials or test files.
         target = (ROOT/path.lstrip('/')).resolve()
         if not target.is_relative_to(ROOT) or not re.match(r'^/(?:js|css|assets|data)/', path) or not target.is_file() or target.suffix not in ['.js','.css','.png','.svg','.jpg','.webp','.woff','.woff2']:

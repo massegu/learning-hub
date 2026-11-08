@@ -4,7 +4,7 @@ Only the SDK boundary is simulated; no production Supabase access.
 from pathlib import Path
 import functools,http.server,json,re,tempfile,threading
 from playwright.sync_api import sync_playwright
-from browser_support import workspace, ROOT,SDK,QuietHandler,doc_text
+from browser_support import workspace, ROOT,SDK,QuietHandler,doc_text, area, training_areas, wait_for_area
 server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(QuietHandler,directory=str(ROOT)))
 threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
@@ -32,7 +32,7 @@ try:
    else:page.locator('#exerciseOptions').get_by_role('button',name=it['a'],exact=True).click()
    page.wait_for_function('document.querySelector("#exerciseFeedback").textContent.length>0')
    return it
-  page.locator('#navMenu [data-subject="language"]').click()
+  area(page, 'language').click()
   for width in [1280,768,390]:
    page.set_viewport_size({'width':width,'height':900})
    assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
@@ -54,12 +54,12 @@ try:
     if(window.__iconFixture==='mixed'){const it=EarlyContent.pool('reading',3).find(it=>it.ageProfile.family==='reading-4'&&it.a==='la gorra');res.items=[{...it,opts:['la gorra','el zapato','la guitarra']}];}
     else res.items=[EarlyContent.pool('reading',3).find(it=>it.ageProfile.family==='reading-2')];
    }return res;};window.__iconFixture=true;}""")
-  page.locator('#navMenu [data-subject="reading"]').click()
+  area(page, 'reading').click()
   page.wait_for_function('document.querySelectorAll("#exerciseOptions .option-btn svg").length===3')
   assert page.locator('#exerciseOptions .option-btn').count()==3
   page.locator('#exercise').screenshot(path='/tmp/early-complete-icons.png')
   page.evaluate('window.__iconFixture="mixed";window.__current=null')
-  page.locator('#navMenu [data-subject="reading"]').click()
+  area(page, 'reading').click()
   page.wait_for_function('__current?.ageProfile.family==="reading-4"&&document.querySelectorAll("#exerciseOptions .option-btn").length===3')
   assert page.locator('#exerciseOptions .option-btn svg').count()==0
   page.evaluate('window.__iconFixture=false')
@@ -86,7 +86,7 @@ try:
     assert page.locator('#schoolHub').is_hidden()
     assert page.locator('#home > .hero').is_visible()
    page.set_viewport_size({'width':1280,'height':900})
-   page.locator('#navMenu [data-subject="attention"]').click()
+   area(page, 'attention').click()
    page.wait_for_function('document.querySelector("#exercisePrompt").textContent==="¿Qué criterio ayuda más?"')
    page.locator('#exerciseLevelSelect').select_option('1')
    for i in range(2*n):
@@ -100,9 +100,9 @@ try:
     if i<2*n-1:page.locator('#exerciseNext').click()
    assert 'unverified-content-level' in page.evaluate('lastDifficultyAudit.issues')
    # Reload restores the checkpoint, not just the visible age label.
-   page.reload(wait_until='networkidle');page.wait_for_selector('#profileSelect');observe()
+   page.reload(wait_until='networkidle');page.wait_for_selector('#profileSelect',state='attached');observe()
    workspace(page).locator('#profileSelect').select_option(band)
-   page.locator('#navMenu [data-subject="attention"]').click()
+   area(page, 'attention').click()
    page.wait_for_function('document.querySelector("#exercisePrompt").textContent==="¿Qué criterio ayuda más?"')
    assert page.locator('#exerciseLevelSelect').input_value()=='3'
    print(f'PASS: {band} fresh {n}-answer windows, no adjacent promotions, requested/visible levels agree, progress restores',flush=True)

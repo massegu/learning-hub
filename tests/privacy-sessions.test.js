@@ -6,12 +6,25 @@ test('independent profile starts fresh and does not mutate the tracked learner',
  s.progress.history=[{correct:false}];assert.equal(p.progress.history[0].correct,true);
  const minimized=privacy.minimize(p.progress);assert.equal(minimized.interactiveObservations[0].description,undefined);assert.equal(p.progress.interactiveObservations[0].description,'private text');
 });
-test('API suppresses independent writes, including late responses after the mode ends',async()=>{
+test('API suppresses independent writes and propagates result insert failures without unsafe retries',async()=>{
  const writes=[],client={auth:{},from(table){const q={select(){return q},eq(){return q},single(){return Promise.resolve({data:{progress:{}}})},update(value){writes.push({table,value});return q},insert(value){writes.push({table,value});return q},then(resolve){return Promise.resolve({data:null}).then(resolve)}};return q;}};
  const ctx={structuredClone,PrivacyControls:privacy,LH_CONFIG:{},supabase:{createClient:()=>client}};ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync('js/api.js','utf8'),ctx);const api=ctx.LearningAPI;
  api.setIndependent('learner');await api.saveProgress('learner',{history:[]});await api.saveResult('learner',{correct:true});assert.equal(writes.length,0);
  api.setIndependent(null);await api.saveProgress('learner',{_sessionOnly:true,history:[]});await api.saveResult('learner',{sessionOnly:true,correct:true});assert.equal(writes.length,0);
  await api.saveProgress('learner',{interactiveObservations:[{description:'private text',report:'described'}]});assert.equal(writes.length,1);assert.equal(writes[0].value.progress.interactiveObservations[0].description,undefined);
+ let attempts=0;client.from=table=>{const q={insert(){return q},then(resolve){attempts++;return Promise.resolve({error:new Error('ambiguous network response')}).then(resolve)}};return q;};
+ await assert.rejects(api.saveResult('learner',{correct:true,ts:'2026-11-06T00:00:00Z'}),/ambiguous network response/);assert.equal(attempts,1,'the client must not blindly retry an ambiguous result insert');
+});
+test('progress snapshots are serialized per profile and preserve the fourth attempt as final state',async()=>{
+ const profiles={learner:{id:'learner',progress:{}},other:{id:'other',progress:{}}},started=[],completed=[];
+ const client={auth:{},from(table){let id,patch;const q={select(){return q},eq(k,v){if(k==='id')id=v;return q},single(){return Promise.resolve({data:profiles[id]})},update(v){patch=v;return q},then(resolve){const count=patch.progress.totalAttempts;started.push([id,count]);const delay=count===3?35:count===4?5:0;return new Promise(done=>setTimeout(()=>{profiles[id].progress=patch.progress;completed.push([id,count]);done({error:null});},delay)).then(resolve)}};return q;}};
+ const ctx={structuredClone,PrivacyControls:privacy,LH_CONFIG:{},supabase:{createClient:()=>client}};ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync('js/api.js','utf8'),ctx);const api=ctx.LearningAPI;
+ const writes=[];
+ for(let attempt=1;attempt<=4;attempt++)writes.push(api.saveProgress('learner',{totalAttempts:attempt,history:Array.from({length:attempt},(_,i)=>({attemptNumber:i+1}))}));
+ await Promise.all(writes);
+ assert.deepEqual(completed.map(x=>x[1]),[1,2,3,4]);assert.equal(profiles.learner.progress.totalAttempts,4);assert.equal(profiles.learner.progress.history.length,4);
+ const first=api.saveProgress('learner',{totalAttempts:5,history:[]}),second=api.saveProgress('other',{totalAttempts:1,history:[]});
+ await Promise.all([first,second]);assert.ok(started.some(([id])=>id==='other'));assert.equal(profiles.learner.progress.totalAttempts,5);
 });
 test('content service keeps only account usage for an independent session',async()=>{
  const {context}=require('./edge-harness')(),writes=[];

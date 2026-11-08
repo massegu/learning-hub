@@ -2,19 +2,19 @@
 import importlib.util,threading,tempfile,zipfile
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import workspace, ROOT
+from browser_support import workspace, ROOT, area, training_areas, wait_for_area
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');review=importlib.util.module_from_spec(spec);spec.loader.exec_module(review)
 server=review.ReviewServer(('127.0.0.1',0),review.prepare());threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
  with tempfile.TemporaryDirectory() as tmp,sync_playwright() as p:
   browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox']);page=browser.new_page(viewport={'width':1280,'height':900},device_scale_factor=1,accept_downloads=True);errors=[];external=[]
   page.on('pageerror',lambda e:errors.append(str(e)));page.on('request',lambda r:external.append(r.url) if r.url.startswith('https://') else None)
-  page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#v16ContentLocale');page.wait_for_timeout(1000)
+  page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#v16ContentLocale',state='attached');page.wait_for_timeout(1000)
   page.evaluate('''()=>{const old=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return old(it,...args)}}''');page.clock.install();answered=0;exports=0
   def current():
    page.wait_for_function('()=>window.__current&&[__current.q,__current.memoryQuestion].includes(document.querySelector("#exercisePrompt").textContent)');return page.evaluate('__current')
   def open_area(domain):
-   page.evaluate('window.__current=null');page.locator(f'#navMenu [data-subject="{domain}"]').click();return current()
+   page.evaluate('window.__current=null');area(page, domain).click();return current()
   def switch_mode(mode):
    page.evaluate('window.__current=null');page.locator(f'#languageModeSwitch [data-mode={mode}]').click();return current()
   def next_item():
@@ -47,7 +47,7 @@ try:
    it=open_area(lang);assert not page.locator('#languageModeSwitch [data-mode=writing]').is_visible();assert it.get('languageFocus')!='writing'
    it=switch_mode('spelling');answer(it)
    it=switch_mode('vocabulary');assert it['languageFocus']=='vocabulary';shot(age+'-vocabulary');answer(it)
-   it=open_area(read);assert 'Escritura' in page.locator(f'#navMenu [data-subject={read}]').inner_text()
+   it=open_area(read);assert 'Escritura' in area(page, read).inner_text()
    it=switch_mode('writing');assert page.evaluate('__requests.at(-1).subdomain')=='writing';assert it.get('type') in ['self','order'] or it.get('languageFocus')=='writing';shot(age+'-writing');answer(it)
    if age=='teen':
     assert it.get('writingPurpose')

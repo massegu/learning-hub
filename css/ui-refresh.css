@@ -59,6 +59,50 @@
 @media(prefers-reduced-motion:reduce){#appShell[data-design] *{scroll-behavior:auto!important;transition:none!important}}
 @media(max-width:950px){#appShell[data-design] .activity-toolbar{gap:7px;padding:8px}#appShell[data-design] .activity-toolbar button{min-height:50px!important}}
 
+/* Exercise flow: readable prompt, working material, response and result. */
+#appShell[data-design] #exercise .guided-session-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 14px;padding:14px 18px;border:1px solid color-mix(in srgb,var(--accent) 24%,var(--line));border-left:5px solid var(--accent);border-radius:14px;background:var(--accent-soft);color:var(--ink)}
+#appShell[data-design] #exercise .guided-progress-copy{display:grid;gap:3px;min-width:0}
+#appShell[data-design] #exercise .guided-progress-copy strong{font-size:.92rem}
+#appShell[data-design] #exercise #guidedSessionProgress{font-size:1rem;font-weight:800;color:var(--accent-dark)}
+#appShell[data-design] .activity-settings{margin:0 0 14px;border:1px solid var(--line);border-radius:13px;background:var(--card);box-shadow:0 5px 16px #20243a08}
+#appShell[data-design] .activity-settings>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:10px 15px;color:var(--ink);font-size:.9rem;font-weight:750;cursor:pointer;list-style:none}
+#appShell[data-design] .activity-settings>summary::-webkit-details-marker{display:none}
+#appShell[data-design] .activity-settings>summary::after{content:'+';display:grid;place-items:center;width:24px;height:24px;flex:none;border-radius:50%;background:var(--accent-soft);color:var(--accent-dark);font-size:1.15rem}
+#appShell[data-design] .activity-settings[open]>summary{border-bottom:1px solid var(--line)}
+#appShell[data-design] .activity-settings[open]>summary::after{content:'−'}
+#appShell[data-design] .activity-settings-content{display:grid;gap:10px;padding:12px}
+#appShell[data-design] .activity-settings-content>.activity-toolbar{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none}
+#appShell[data-design] .activity-settings-content .activity-toolbar>.mode-switch:not(.hidden){display:flex!important;flex-wrap:wrap;align-items:stretch;gap:5px;margin:0;padding:5px;border:1px solid var(--line);border-radius:12px;background:var(--bg);box-shadow:none}
+#appShell[data-design] .activity-settings-content .activity-toolbar>button{min-height:46px!important;padding:10px 14px}
+#appShell[data-design] .activity-settings-content .activity-toolbar>.mode-switch button{min-height:44px!important;padding:9px 13px;background:transparent;border-color:transparent;box-shadow:none}
+#appShell[data-design] .activity-settings-content .activity-toolbar>.mode-switch button[aria-pressed=true]{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important;box-shadow:0 2px 0 var(--accent-dark)!important}
+#appShell[data-design] .activity-settings-content #cognitiveFamilyControl{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--muted);font-weight:700}
+#appShell[data-design] .activity-settings-content #cognitiveFamilyControl select{min-height:44px;max-width:100%;padding:8px 34px 8px 12px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);font:inherit}
+#appShell[data-design] .activity-settings-content #documentModeHint{margin:0;padding:9px 12px;border-left:3px solid var(--accent);border-radius:0 8px 8px 0;background:var(--accent-soft);color:var(--muted);font-size:.84rem;line-height:1.5}
+#appShell[data-design] #exercise .exercise-card{display:flex;flex-direction:column;gap:12px;padding:clamp(22px,3vw,36px)}
+#appShell[data-design] #exercise .exercise-meta{align-items:center;gap:12px;margin-bottom:2px;font-size:.82rem}
+#appShell[data-design] #exercise .prompt{margin:4px 0 8px;font-size:clamp(1.2rem,1.7vw,1.48rem);line-height:1.55}
+#appShell[data-design] #exerciseVisual{min-width:0;margin:8px 0 12px;line-height:1.6}
+#appShell[data-design] #exercise .options-grid{gap:12px}
+#appShell[data-design] #exercise .option-btn{min-height:56px;padding:14px 18px;line-height:1.5}
+#appShell[data-design] #exercise #textAnswerArea{display:grid;gap:12px}
+#appShell[data-design] #exercise #textAnswerArea textarea{min-height:110px;padding:14px;border:1px solid var(--line);border-radius:11px;font:inherit;line-height:1.55}
+#appShell[data-design] #exercise #exerciseFeedback{min-height:0;margin:4px 0;padding:0;font-size:1rem;line-height:1.55}
+#appShell[data-design] #exercise #exerciseFeedback:not(:empty){padding:13px 16px;border:1px solid currentColor;border-radius:12px}
+#appShell[data-design] #exercise #exerciseFeedback.ok{color:#155b38;background:#eaf6ee;border-color:#a9d4b6}
+#appShell[data-design] #exercise #exerciseFeedback.bad{color:#852d34;background:#fff0f0;border-color:#e6b5b8}
+#appShell[data-design] #exercise #exerciseFeedback.practice{color:#5c4a13;background:#fff8df;border-color:#e7d68d}
+#appShell[data-design] #exercise .progress-save-status{margin:0;color:var(--muted);font-size:.9rem;line-height:1.5}
+#appShell[data-design] #exercise .progress-save-status.success{color:#155b38}
+#appShell[data-design] #exercise .progress-save-status.error{padding:11px 14px;border:1px solid #e6b5b8;border-radius:10px;background:#fff0f0;color:#852d34}
+#appShell[data-design] #exercise .progress-save-status.info{color:var(--muted)}
+#appShell[data-design] #exercise #retryProgressSave{align-self:flex-start;min-height:44px}
+#appShell[data-design] #exercise #exerciseExplanation{margin:0;line-height:1.6}
+#appShell[data-design] #exercise #exerciseNext{align-self:flex-start;min-width:150px;min-height:54px;margin:5px 0 0;padding:12px 22px;font-size:1rem;font-weight:800}
+#appShell[data-design] :is(button,input,select,textarea,[tabindex]):focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 72%,#fff);outline-offset:3px}
+@media(min-width:700px) and (max-width:1100px){#appShell[data-design] .main-content{padding-inline:clamp(20px,3vw,34px)}#appShell[data-design] #exercise .exercise-card{padding:clamp(24px,3.2vw,34px)}#appShell[data-design] #exercise .options-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#appShell[data-design] .activity-settings-content>.activity-toolbar{gap:7px}}
+@media(max-width:699px){#appShell[data-design] #exercise .guided-session-bar{align-items:flex-start;flex-direction:column}#appShell[data-design] .activity-settings-content>.activity-toolbar{display:grid;grid-template-columns:minmax(0,1fr)}#appShell[data-design] .activity-settings-content .activity-toolbar>.mode-switch:not(.hidden){width:100%}#appShell[data-design] #exercise .exercise-meta{align-items:flex-start;flex-direction:column}#appShell[data-design] #exercise .options-grid{grid-template-columns:minmax(0,1fr)}#appShell[data-design] #exercise #exerciseNext{align-self:stretch;width:100%}}
+
 /* Use the available desktop canvas instead of centering a narrow fixed-width app. */
 #appShell[data-design]{width:100%;min-width:0;grid-template-columns:238px minmax(0,1fr)}
 #appShell[data-design] .main-content{width:100%;max-width:none;min-width:0;margin:0;padding-inline:clamp(20px,2.4vw,48px)}
