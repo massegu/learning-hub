@@ -9,7 +9,7 @@ import re
 import tempfile
 import threading
 from playwright.sync_api import sync_playwright
-from browser_support import workspace, ROOT, SDK, QuietHandler, doc_text, area, training_areas, wait_for_area
+from browser_support import workspace, ROOT, SDK, QuietHandler, doc_text, doc_accessible_text, area, training_areas, wait_for_area, submit_declared_answer, printable_stimulus_values
 
 COUNTRIES=['es_es','es_mx','es_co','es_ar','es_cl','es_pa','es_cr']
 BANDS=['early','junior','primary','middle','teen']
@@ -51,8 +51,7 @@ def document_integrity(page,nodes,items,profile,key):
         stop=nodes.index(f'ACTIVIDAD {i+2}') if i+1<len(items) else len(nodes)
         block=nodes[start:stop]; q=block.index(model['question'])
         for stimulus in model['stimulus']:
-            values=[stimulus['text']] if stimulus['type']=='text' else stimulus['items'] if stimulus['type']=='list' else [v for row in stimulus['rows'] for v in row]
-            for value in values:assert any(s==value or re.match(r'^\d+\. ',s) and s.endswith(value) for s in block[:q]),(key,i,value)
+            for value in printable_stimulus_values(page,stimulus):assert any(s==value or re.match(r'^\d+\. ',s) and s.endswith(value) for s in block[:q]),(key,i,value)
         for value in model['options']+model['tokens']:assert any(s.endswith('. '+value) for s in block),(key,i,value)
 
 server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(QuietHandler,directory=str(ROOT)))
@@ -88,18 +87,18 @@ try:
                 for domain in schedule:
                     before=page.evaluate('__requests.length')
                     area(page, domain).click()
-                    page.wait_for_function('(n)=>__requests.length>n && document.querySelectorAll("#exerciseOptions button").length>0',arg=before,timeout=20000)
+                    page.wait_for_function('(n)=>__requests.length>n',arg=before,timeout=20000)
                     item=page.evaluate('__observed[__observed.length-1]')
                     consistent(page,item,key,band=='early')
                     assert page.evaluate('__requests[__requests.length-1].locale')==key
-                    assert page.locator('#exercisePrompt').inner_text()==(item.get('memoryQuestion') if item['type']=='memoryReveal' else item['q'])
-                    if item['type']=='order':
-                        for token in item['answer']:page.locator('#exerciseOptions').get_by_role('button',name=token,exact=True).click()
-                        page.locator('#orderCheck').click()
-                    else:page.locator('#exerciseOptions').get_by_role('button',name=item['a'],exact=True).click()
+                    expected_prompt=item.get('memoryQuestion') if item['type']=='memoryReveal' else item['q']
+                    page.wait_for_function('(expected)=>document.querySelector("#exercisePrompt").textContent===expected',arg=expected_prompt)
+                    submit_declared_answer(page,item)
                     page.wait_for_function('document.querySelector("#exerciseFeedback").textContent.length>0')
                     explanation=page.locator('#exerciseFeedback').inner_text()+' '+page.locator('#exerciseExplanation').inner_text()
-                    if item.get('why'):assert item['why'] in explanation,(key,domain,explanation)
+                    # The UI deliberately supplies modality-specific feedback
+                    # for ordered recall; its `why` field is not displayed.
+                    if item.get('why') and item.get('type')!='order' and item.get('memoryResponse')!='order':assert item['why'] in explanation,(key,domain,explanation)
                     activities.append(item)
                 page.locator('#navMenu [data-section="homework"]').click()
                 page.locator('#worksheetNone').click()
@@ -111,7 +110,7 @@ try:
                 exported=page.evaluate('__exports[__exports.length-1]')
                 assert exported['profile']['contentLocale']==key
                 assert page.evaluate('__requests[__requests.length-1].locale')==key
-                nodes=doc_text(path.read_bytes())
+                nodes=doc_accessible_text(path.read_bytes())
                 document_integrity(page,nodes,exported['items'][0],exported['profile'],key)
                 for item in exported['items'][0]:consistent(page,item,key,band=='early')
                 captures[key][band]={'domains':domains,'activities':activities,'worksheet':exported['items'][0],'wordText':nodes}

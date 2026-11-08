@@ -5,7 +5,7 @@ from pathlib import Path
 import tempfile
 import threading
 from playwright.sync_api import sync_playwright
-from browser_support import workspace, ROOT, doc_text, area, training_areas, wait_for_area
+from browser_support import workspace, ROOT, doc_accessible_text, area, training_areas, wait_for_area, printable_stimulus_values
 
 spec=importlib.util.spec_from_file_location('review_preview',ROOT/'tools/review-preview.py')
 preview=importlib.util.module_from_spec(spec);spec.loader.exec_module(preview)
@@ -59,7 +59,7 @@ try:
      if band in ['junior','primary','middle']:assert it.get('juniorProfile') or it.get('schoolProfile')
      if band=='teen':assert it.get('teenReview')
      if band=='primary' and domain=='geometry':assert it['domain']=='geometry';assert ' + ' not in it['q']
-     if band=='junior' and domain=='reading':assert len(it['stimulus'][0]['text'].split())>=40
+     if band=='junior' and domain=='reading':assert sum(len(value.split()) for stimulus in it['stimulus'] for value in printable_stimulus_values(page,stimulus))>=40
      if domain in ['language','teenLanguage'] and band!='early':assert it['languageFocus']=='spelling';assert 'inferencia' not in it['q'].lower()
      keys.append(it.get('contentKey') or it.get('semanticKey'));answer(it);count+=1
      if n<9:page.evaluate('window.__current=null');page.locator('#exerciseNext').click()
@@ -74,14 +74,14 @@ try:
    page.locator('#worksheetAll').click()
    page.locator('#worksheetQuestions').select_option('20');page.locator('#worksheetCount').select_option('1')
    with page.expect_download(timeout=30000) as download:page.locator('#generateWorksheetsBtn').click()
-   path=Path(tmp)/f'{band}.docx';download.value.save_as(path);nodes=doc_text(path.read_bytes())
+   path=Path(tmp)/f'{band}.docx';download.value.save_as(path);nodes=doc_accessible_text(path.read_bytes())
    items=page.evaluate('__exports.at(-1).items[0]');assert len(items)==20
    models=page.evaluate('items=>items.map(it=>ActivityModel.printable(it,__profiles.find(p=>p.id===it.profile_id)||__profiles.find(p=>p.id===document.querySelector("#profileSelect").value)))',items)
    for i,model in enumerate(models):
     start=nodes.index(f'ACTIVIDAD {i+1}');stop=nodes.index(f'ACTIVIDAD {i+2}') if i+1<len(items) else len(nodes)
     block=nodes[start:stop];question=block.index(model['question'])
     for stimulus in model['stimulus']:
-     values=[stimulus['text']] if stimulus['type']=='text' else stimulus['items'] if stimulus['type']=='list' else [v for row in stimulus['rows'] for v in row]
+     values=printable_stimulus_values(page,stimulus)
      for value in values:assert any(value in node for node in block[:question]),(band,i,value)
    print(f'PASS: {band}, ten consecutive activities per selected domain, responsive screenshots, complete 20-question DOCX',flush=True)
   assert not errors,errors;assert not external,external

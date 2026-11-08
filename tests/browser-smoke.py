@@ -13,7 +13,7 @@ import xml.etree.ElementTree as ET
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
-from browser_support import workspace, SDK, QuietHandler, doc_text, area, training_areas, wait_for_area
+from browser_support import workspace, SDK, QuietHandler, doc_text, area, training_areas, wait_for_area, submit_declared_answer, wait_for_activity_response
 
 def install_journal(page):
     page.evaluate("""() => {
@@ -115,17 +115,12 @@ try:
                 check_text(visual+' '+page.locator('#exercisePrompt').inner_text())
                 if domain=='memory':
                     assert page.evaluate("JSON.stringify(__lastEarly.stimulus)===JSON.stringify(ActivityModel.printable(__lastEarly,__profiles[0]).stimulus)")
-                    page.wait_for_function("document.querySelectorAll('#exerciseOptions .option-btn').length>0",timeout=12000)
+                    wait_for_activity_response(page,item)
                     assert page.locator('#exerciseVisual').inner_text()==''
                 if domain=='language':
                     assert page.locator('#languageModeSwitch').is_visible()
                     assert page.locator('#languageModeSwitch button').count()==3
-                if item['type']=='order':
-                    for token in item['answer']:
-                        page.locator('#exerciseOptions').get_by_role('button',name=token,exact=True).click()
-                    page.locator('#orderCheck').click()
-                else:
-                    page.locator('#exerciseOptions').get_by_role('button',name=item['a'],exact=True).click()
+                submit_declared_answer(page,item)
                 page.wait_for_function("document.querySelector('#exerciseFeedback').textContent.length>0")
                 samples.append(item)
             assert len({it['semanticKey'] for it in samples})==10,domain

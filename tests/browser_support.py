@@ -2,6 +2,7 @@
 from pathlib import Path
 import http.server
 import io
+import json
 import zipfile
 import xml.etree.ElementTree as ET
 
@@ -78,6 +79,37 @@ def doc_text(data):
     return [n.text or '' for n in root.iter('{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t')]
 
 
+def doc_accessible_text(data):
+    """Return Word text plus descriptive alternative text attached to drawings."""
+    with zipfile.ZipFile(io.BytesIO(data)) as z:
+        root = ET.fromstring(z.read('word/document.xml'))
+    text = []
+    for paragraph in root.iter('{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p'):
+        for node in paragraph.iter():
+            if node.tag == '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t':
+                text.append(node.text or '')
+            elif node.tag == '{http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing}docPr' and node.attrib.get('descr'):
+                text.append(node.attrib['descr'])
+    return text
+
+
+def printable_stimulus_values(page, stimulus):
+    """Extract the facts expected in a printable stimulus, including image transcripts."""
+    kind = stimulus.get('type')
+    if kind == 'text':
+        return [stimulus['text']]
+    if kind == 'list':
+        return stimulus['items']
+    if kind == 'table':
+        return [value for row in stimulus['rows'] for value in row]
+    if kind == 'document':
+        source = page.evaluate('(id)=>DocumentLibrary.get(id)', stimulus['documentId'])
+        return [block['text'] if block['type'] == 'text' else ' · '.join(value for row in block['rows'] for value in row) for block in source['transcript']]
+    if kind in ('photo', 'photoPair'):
+        return ['Escena cotidiana para observar.']
+    raise AssertionError(f"Estímulo imprimible no contemplado: {stimulus}")
+
+
 def workspace(page):
     """Open the responsive workspace and account/profile controls when needed."""
     toggle = page.locator('#workspaceMenu')
@@ -104,8 +136,18 @@ class TrainingArea:
         return self.count() > 0
 
     def click(self, **kwargs):
-        workspace(self.page).locator('#navMenu [data-section="training"]').click()
-        self.locator.click(**kwargs)
+        opened_early = False
+        if self.page.locator('#profileSelect').count() and self.page.locator('#profileSelect').input_value() == 'early':
+            early_area = self.page.locator(f'#earlyHub:not(.hidden) [data-early-area="{self.domain}"]')
+            if not early_area.count() or not early_area.is_visible():
+                self.page.locator('#navMenu [data-section="home"]').click()
+                early_area = self.page.locator(f'#earlyHub:not(.hidden) [data-early-area="{self.domain}"]')
+            if early_area.count() and early_area.is_visible():
+                early_area.click(**kwargs)
+                opened_early = True
+        if not opened_early:
+            workspace(self.page).locator('#navMenu [data-section="training"]').click()
+            self.locator.click(**kwargs)
         options = self.page.locator('#activityOptions')
         if options.count() and options.is_visible() and not options.evaluate('(e)=>e.open'):
             options.locator('summary').click()
@@ -121,6 +163,149 @@ def area(page, domain):
 
 def wait_for_area(page, domain):
     page.wait_for_function('(domain)=>Boolean(document.querySelector(`#homeLevels [data-home-area="${domain}"]`))', arg=domain)
+
+
+def trace_virtual_timers(page):
+    """Record scheduled and fired timers after Playwright's virtual clock is installed."""
+    page.evaluate('''()=>{
+      window.__qaTimerLog=[];const original=window.setTimeout;
+      window.setTimeout=(callback,delay,...args)=>{
+        const entry={scheduledAt:performance.now(),delay:Number(delay)||0,firedAt:null};
+        window.__qaTimerLog.push(entry);if(window.__qaTimerLog.length>100)window.__qaTimerLog.shift();
+        return original(()=>{entry.firedAt=performance.now();callback(...args);},delay);
+      };
+    }''')
+
+
+def _click_exact_response(page, selector, attribute, value, item):
+    value = str(value)
+    try:
+        page.wait_for_function(
+            '({selector,attribute,value})=>Array.from(document.querySelectorAll(selector)).some(el=>el.getAttribute(attribute)===value)',
+            arg={'selector': selector, 'attribute': attribute, 'value': value},
+        )
+    except Exception as error:
+        rendered = page.locator('#exerciseOptions').evaluate(
+            '(root)=>Array.from(root.querySelectorAll("button")).map(el=>({text:el.innerText,aria:el.getAttribute("aria-label"),answer:el.dataset.answer,value:el.dataset.value}))'
+        )
+        raise AssertionError(
+            f"La respuesta declarada {value!r} no está en los controles visibles para "
+            f"{item.get('contentKey') or item.get('id') or item.get('type')}; "
+            f"controles renderizados: {rendered}"
+        ) from error
+    buttons = page.locator(selector)
+    index = buttons.evaluate_all(
+        '(els,args)=>els.findIndex(el=>el.getAttribute(args.attribute)===args.value)',
+        {'attribute': attribute, 'value': value},
+    )
+    buttons.nth(index).click()
+
+
+def click_order_response(page, item):
+    """Select the declared order through each token's accessible name, not its illustration text."""
+    for token in item['answer']:
+        _click_exact_response(page, '#exerciseOptions .word-token', 'aria-label', token, item)
+    page.locator('#orderCheck').click()
+
+
+def _response_selector(item):
+    kind = item.get('type')
+    if kind == 'photoDifference':
+        return '#exerciseVisual .photo-hit'
+    if kind == 'order' or item.get('memoryResponse') == 'order':
+        return '#exerciseOptions .word-token'
+    if kind in ('multiSelect', 'documentReview', 'photoDifference', 'memoryMulti') or item.get('memoryResponse') == 'multiple':
+        return '#exerciseOptions .multi-option'
+    if kind == 'self' or item.get('responseType') == 'written':
+        return '#textAnswerArea:not(.hidden)'
+    if item.get('speedTask'):
+        return '#startSpeedTrial'
+    return '#exerciseOptions [data-answer]'
+
+
+def wait_for_activity_response(page, item, *, advance_clock=False):
+    """Wait for this item's actual response phase, including reveal-based memory tasks."""
+    selector = _response_selector(item)
+    if item.get('memoryResponse') == 'audio' and page.locator('#playMemoryAudio').is_visible():
+        page.evaluate('''()=>{
+          if(window.__qaSpeechStub)return;
+          window.__qaSpeechLog=[];
+          window.speechSynthesis.speak=utterance=>{
+            window.__qaSpeechLog.push({text:utterance.text,lang:utterance.lang});
+            setTimeout(()=>utterance.onend?.(),0);
+          };
+          window.__qaSpeechStub=true;
+        }''')
+        page.locator('#playMemoryAudio').click()
+        page.wait_for_function('()=>window.__qaSpeechLog?.length>0&&document.querySelector("#answerMemoryAudio")&&!document.querySelector("#answerMemoryAudio").disabled')
+        speech = page.evaluate('window.__qaSpeechLog.at(-1)')
+        if speech['text'] != item.get('audioScript'):
+            raise AssertionError(f"El audio reproducido no corresponde al guion declarado para {item.get('id')}: {speech}")
+        page.locator('#answerMemoryAudio').click()
+    elif item.get('photoTask', {}).get('kind') == 'recall' and page.locator('#showMemoryPhoto').is_visible():
+        page.locator('#showMemoryPhoto').click()
+        if advance_clock:
+            page.locator('#exerciseVisual img').wait_for(state='visible')
+            page.clock.run_for(item.get('revealMs', 6000) + 50)
+    elif item.get('recallSequence') and page.locator('#startMemorySequence').is_visible():
+        page.locator('#startMemorySequence').click()
+        if advance_clock:
+            duration = len(item['recallSequence']) * (item.get('sequenceStepMs', 1000) + 250) + 50
+            page.clock.run_for(duration)
+    elif item.get('type') == 'memoryReveal' and not page.locator(selector).first.is_visible():
+        if advance_clock:
+            page.clock.run_for(item.get('revealMs', 6000) + 500)
+    try:
+        page.locator(selector).first.wait_for(state='visible')
+    except Exception as error:
+        state = page.evaluate('''({selector})=>({item:window.__current,phase:{prompt:document.querySelector('#exercisePrompt')?.textContent,
+          visual:document.querySelector('#exerciseVisual')?.innerHTML,options:document.querySelector('#exerciseOptions')?.innerHTML,
+          activityOptions:document.querySelector('#activityOptions')?.outerHTML},
+          controls:[...document.querySelectorAll('#exerciseOptions button')].map(b=>({id:b.id,class:b.className,text:b.innerText,answer:b.dataset.answer,value:b.dataset.value,hidden:b.hidden,disabled:b.disabled})),
+          timers:window.__qaTimerLog||[],now:performance.now(),selector})''', {'selector': selector})
+        Path('/tmp/browser-activity-response-debug.json').write_text(json.dumps(state,ensure_ascii=False,indent=2))
+        raise AssertionError(f"La actividad {item.get('id')} ({item.get('type')}, {item.get('mechanic')}, {item.get('memoryResponse')}, {item.get('responseType')}) no alcanzó su fase de respuesta: {state}") from error
+    if selector.endswith('[data-answer]') and item.get('a') is not None and not item.get('speedTask'):
+        page.wait_for_function(
+            '(answer)=>Array.from(document.querySelectorAll("#exerciseOptions [data-answer]")).some(el=>el.dataset.answer===answer)',
+            arg=str(item['a']),
+        )
+
+
+def submit_declared_answer(page, item, *, advance_clock=False):
+    """Answer the rendered interaction according to the item's response contract.
+
+    The caller advances any timed exposure and waits for the response phase. A
+    missing declared answer is reported with the actual controls; the helper
+    never chooses a substitute.
+    """
+    kind = item.get('type')
+    wait_for_activity_response(page, item, advance_clock=advance_clock)
+    if kind == 'order' or item.get('memoryResponse') == 'order':
+        click_order_response(page, item)
+    elif kind == 'photoDifference':
+        for answer in item['answers']:
+            _click_exact_response(page, '#exerciseVisual .photo-hit', 'data-value', answer, item)
+        check = page.locator('#multiCheck')
+        if check.is_visible():
+            check.click()
+    elif kind in ('multiSelect', 'documentReview', 'memoryMulti') or item.get('memoryResponse') == 'multiple':
+        for answer in item['answers']:
+            _click_exact_response(page, '#exerciseOptions .multi-option', 'data-value', answer, item)
+        check = page.locator('#multiCheck')
+        if check.is_visible():
+            check.click()
+    elif kind == 'self' or item.get('responseType') == 'written':
+        page.locator('#textAnswerInput').fill(item['sample'])
+        page.locator('#textAnswerCheck').click()
+        page.locator('[data-self="true"]').click()
+    else:
+        if 'a' not in item:
+            raise AssertionError(f"La actividad no declara una respuesta compatible: {item}")
+        if item.get('speedTask') and page.locator('#startSpeedTrial').is_visible():
+            page.locator('#startSpeedTrial').click()
+        _click_exact_response(page, '#exerciseOptions [data-answer]', 'data-answer', item['a'], item)
+    page.wait_for_function('()=>document.querySelector("#exerciseFeedback").textContent.length>0')
 
 
 def training_areas(page):

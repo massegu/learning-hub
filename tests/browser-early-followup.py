@@ -38,7 +38,9 @@ try:
    else:page.locator('#exerciseOptions').get_by_role('button',name=it['a'],exact=True).click()
    page.wait_for_selector('#exerciseNext:not(.hidden)')
   for width in [1920,1440,1280,1024,768,390]:
-   page.set_viewport_size({'width':width,'height':900});assert page.locator('[data-early-area]').count()==7
+   page.set_viewport_size({'width':width,'height':900})
+   available=page.evaluate('ContentPolicy.early.subjects.filter(domain=>domain!=="applied"&&EarlyJourney.areas[domain]).length')
+   assert page.locator('[data-early-area]').count()==available,(page.locator('[data-early-area]').count(),available)
    assert page.locator('[data-early-mission]').count()==4;assert page.locator('.discovery-trail li').count()==3
    assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
    assert page.locator('[data-early-area]').evaluate_all('(els)=>els.every(e=>e.getBoundingClientRect().height>=44)')
@@ -46,7 +48,7 @@ try:
   page.set_viewport_size({'width':1280,'height':900})
   for domain in ['language','reading','division','attention','executive','memory','speedReasoning']:
    it=open_area(domain);shot(domain);answer(it)
-  page.locator('#earlyHomeBtn').click();assert page.locator('.discovery-trail li.discovered').count()>=1
+  workspace(page).locator('#navMenu [data-section="home"]').click();assert page.locator('.discovery-trail li.discovered').count()>=1
   page.locator('[data-early-mission=stories]').click();it=current();answer(it)
   page.locator('#cancelGuidedSession').click();assert '1 de 2' in page.locator('.mission-resume').inner_text()
   page.reload(wait_until='networkidle');page.wait_for_selector('#earlyContinue');page.clock.resume();page.wait_for_timeout(500)

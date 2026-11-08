@@ -4,8 +4,8 @@ Ordinary consecutive selection is covered by browser-smoke.py and Node tests.
 """
 from pathlib import Path
 import functools,http.server,json,re,tempfile,threading
-from playwright.sync_api import sync_playwright
-from browser_support import workspace, ROOT,SDK,QuietHandler,doc_text, area, training_areas, wait_for_area
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+from browser_support import workspace, ROOT,SDK,QuietHandler,doc_accessible_text, area, training_areas, wait_for_area, printable_stimulus_values
 
 server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(QuietHandler,directory=str(ROOT)))
 threading.Thread(target=server.serve_forever,daemon=True).start()
@@ -39,10 +39,14 @@ try:
           WorksheetGenerator.generate=async(items,profile)=>{window.__export=JSON.parse(JSON.stringify({items,profile}));return generate(items,profile);};
         }""")
         def render(domain,family,level):
-            page.evaluate('({family,level})=>{window.__family=family;window.__fixedLevel=level;}',dict(family=f'{domain}-{family}',level=level))
+            page.evaluate('({domain,family,level})=>{window.__fixedLevel=level;window.__family=`${domain}-${family}`;}',dict(domain=domain,family=family,level=level))
             before=page.evaluate('__requests.length')
             area(page, domain).click()
-            page.wait_for_function('(before)=>__requests.length>before && __current?.ageProfile.family===__family && __current?.level===__fixedLevel && document.querySelector("#exercisePrompt").textContent===__current.q && document.querySelector("#exerciseVisual").children.length>0',arg=before)
+            try:
+                page.wait_for_function('(before)=>__requests.length>before && __current?.ageProfile.family===__family && __current?.level===__fixedLevel && document.querySelector("#exercisePrompt").textContent===__current.q && document.querySelector("#exerciseVisual").children.length>0',arg=before)
+            except PlaywrightTimeoutError as error:
+                state=page.evaluate('()=>({requests:__requests.length,last:__requests.at(-1),family:__family,level:__fixedLevel,item:__current,prompt:document.querySelector("#exercisePrompt")?.textContent,visual:document.querySelector("#exerciseVisual")?.innerHTML})')
+                raise AssertionError(f'La espera de la actividad no alcanzó su estado presentado: {state}') from error
             # Exercise the actual level control too: the deterministic fixture
             # must agree with the outgoing request and the visible level label.
             if page.locator('#exerciseLevelSelect').input_value()!=str(level):
@@ -110,14 +114,14 @@ try:
         page.locator('#navMenu [data-section="homework"]').click()
         page.locator('#worksheetAll').click();page.locator('#worksheetCount').select_option('1');page.locator('#worksheetQuestions').select_option('20')
         with page.expect_download(timeout=30000) as download:page.locator('#generateWorksheetsBtn').click()
-        file=Path(tmp)/'refined.docx';download.value.save_as(file);nodes=doc_text(file.read_bytes())
+        file=Path(tmp)/'refined.docx';download.value.save_as(file);nodes=doc_accessible_text(file.read_bytes())
         exported=page.evaluate('__export.items[0]')
         for i,it in enumerate(exported):
             start=nodes.index(f'ACTIVIDAD {i+1}');stop=nodes.index(f'ACTIVIDAD {i+2}') if i+1<len(exported) else len(nodes)
             block=nodes[start:stop];q=block.index(it.get('memoryQuestion') or it['q'])
             for s in it['stimulus']:
                 if s.get('label'):assert s['label'] in block[:q]
-                values=[s['text']] if s['type']=='text' else s['items'] if s['type']=='list' else [v for row in s['rows'] for v in row]
+                values=printable_stimulus_values(page,s)
                 for value in values:assert any(x==value or re.match(r'^\d+\. ',x) and x.endswith(value) for x in block[:q]),(i,value)
             for value in it.get('opts',[])+it.get('tokens',[]):assert any(x.endswith('. '+value) for x in block)
         assert not errors,errors

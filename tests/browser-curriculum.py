@@ -1,8 +1,8 @@
 """Real app and Edge handler: fusion, new sources, recall, timing and DOCX; fake account only."""
-import importlib.util,threading,tempfile,zipfile
+import importlib.util,threading,tempfile,zipfile,json
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from browser_support import workspace, ROOT,doc_text, area, training_areas, wait_for_area
+from browser_support import workspace, ROOT,doc_text, doc_accessible_text, printable_stimulus_values, area, training_areas, wait_for_area, trace_virtual_timers
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');preview=importlib.util.module_from_spec(spec);spec.loader.exec_module(preview)
 server=preview.ReviewServer(('127.0.0.1',0),preview.prepare());threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
@@ -11,7 +11,7 @@ try:
   page=browser.new_page(viewport={'width':1280,'height':900});errors=[];external=[]
   page.on('pageerror',lambda e:errors.append(str(e)));page.on('request',lambda r:external.append(r.url) if r.url.startswith('https://') else None)
   page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#v16ContentLocale',state='attached');page.wait_for_timeout(1500)
-  page.evaluate('''()=>{const original=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return original(it,...args)}}''');page.clock.install();answered=0;exports=0
+  page.evaluate('''()=>{const original=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return original(it,...args)}}''');page.clock.install();trace_virtual_timers(page);answered=0;exports=0
   def current():
    page.wait_for_function('()=>window.__current&&[__current.q,__current.memoryQuestion].includes(document.querySelector("#exercisePrompt").textContent)')
    return page.evaluate('__current')
@@ -53,7 +53,20 @@ try:
    elif it.get('type')=='memoryReveal':
     if it.get('memoryResponse') in ['spatial','spatialPair']:
      assert page.locator('#exerciseVisual .recall-grid [role=cell]').count()==it['gridSize']**2
-    page.clock.fast_forward(it['revealMs']+50);assert page.locator('#exerciseVisual').inner_text()==''
+    if it.get('photoTask',{}).get('kind')=='recall':
+     page.locator('#showMemoryPhoto').click()
+     page.locator('#exerciseVisual img').wait_for(state='visible')
+    page.clock.run_for(it['revealMs']+500)
+    if it.get('memoryResponse')=='spatial':page.locator('#exerciseOptions .spatial-answer-grid').wait_for(state='visible')
+    elif it.get('memoryResponse')=='multiple':page.locator('#exerciseOptions .multi-option').first.wait_for(state='visible')
+    elif it.get('memoryResponse')=='order':page.locator('#exerciseOptions #orderCheck').wait_for(state='visible')
+    else:
+     try:page.locator('#exerciseOptions .option-btn').first.wait_for(state='visible')
+     except Exception as error:
+      state=page.evaluate('()=>({item:window.__current,visual:document.querySelector("#exerciseVisual")?.innerHTML,options:document.querySelector("#exerciseOptions")?.innerHTML,prompt:document.querySelector("#exercisePrompt")?.textContent,timers:window.__qaTimerLog||[],now:performance.now()})')
+      Path('/tmp/browser-curriculum-memory-debug.json').write_text(json.dumps(state,ensure_ascii=False,indent=2))
+      raise AssertionError(f"Memory response phase did not render: activity={state['item']} prompt={state['prompt']} controls={state['options']} timers={state['timers'][-12:]} now={state['now']}") from error
+    assert page.locator('#exerciseVisual').inner_text()==''
     if it.get('memoryResponse')=='spatial':
      positions=page.locator('#exerciseOptions .spatial-answer-grid button').evaluate_all('(els)=>els.map(e=>e.dataset.answer)')
      expected=[f'Fila {r+1}, columna {c+1}' for r in range(it['gridSize']) for c in range(it['gridSize'])]
@@ -130,7 +143,7 @@ try:
    # A second targeted DOCX proves the new recall and speed instructions and every coordinate survive.
    page.evaluate('(items)=>window.__exportItems=items',captured)
    with page.expect_download() as dl:page.evaluate('(age)=>WorksheetGenerator.generate([__exportItems],__profiles.find(p=>p.id===age))',age)
-   path=Path(tmp)/f'{age}-new.docx';dl.value.save_as(path);nodes=doc_text(path.read_bytes());exports+=1
+   path=Path(tmp)/f'{age}-new.docx';dl.value.save_as(path);nodes=doc_accessible_text(path.read_bytes());exports+=1
    assert any('no mide el tiempo' in x for x in nodes)
    if any(it.get('recallSequence') for it in captured):assert any('uno a uno' in x or 'una a una' in x for x in nodes)
    if any(it.get('type')=='memoryReveal' and not it.get('recallSequence') for it in captured):assert any('Mira el material' in x for x in nodes)
@@ -139,7 +152,7 @@ try:
      if block['type']=='document':
       with zipfile.ZipFile(path) as archive:assert any(n.startswith('word/media/') and n.endswith('.png') for n in archive.namelist())
       continue
-     for value in ([block['text']] if block['type']=='text' else block['items'] if block['type']=='list' else [v for row in block['rows'] for v in row]):
+     for value in printable_stimulus_values(page,block):
       if not any(value in node for node in nodes):
        visible=page.evaluate("({value,item})=>item.type==='memoryReveal'&&StimulusArt.forLabel(value,item.lexicalSenses)?ActivityModel.memoryLabel(value):value",{'value':value,'item':item})
        assert visible!=value and any(visible in node for node in nodes),value

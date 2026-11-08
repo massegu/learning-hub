@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import threading
 from playwright.sync_api import sync_playwright
-from browser_support import workspace, ROOT,doc_text, area, training_areas, wait_for_area
+from browser_support import workspace, ROOT,doc_text, area, training_areas, wait_for_area, submit_declared_answer
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py')
 preview=importlib.util.module_from_spec(spec);spec.loader.exec_module(preview)
 server=preview.ReviewServer(('127.0.0.1',0),preview.prepare())
@@ -22,7 +22,7 @@ try:
   def wait_item():
    page.wait_for_function('()=>__current&&[__current.q,__current.memoryQuestion].includes(document.querySelector("#exercisePrompt").textContent)')
    it=page.evaluate('__current')
-   if it.get('type')=='memoryReveal':page.clock.fast_forward(it['revealMs']+20)
+   if it.get('type')=='memoryReveal':page.clock.run_for(it['revealMs']+20)
    page.wait_for_function('()=>document.querySelectorAll("#exerciseOptions button:not(:disabled)").length>0')
    return it
   def capture(name):
@@ -36,9 +36,10 @@ try:
     page.evaluate('window.__current=null');area(page, domain).click();it=wait_item()
     if it['level']!=level:
      page.evaluate('window.__current=null');page.locator('#exerciseLevelSelect').select_option(str(level));it=wait_item()
-    found=False
+    found=False;mechanics=set()
     for n in range(45):
      it=wait_item()
+     mechanics.add(it.get('mechanic'))
      target=(domain=='executive' and it['mechanic']=='exec_rule_switch') or (domain=='attention' and it['mechanic']=='att_table_cross') or (domain=='memory' and 'audífonos' in it.get('opts',[]))
      if target:
       found=True
@@ -49,14 +50,11 @@ try:
       if domain=='attention':assert page.locator('#exerciseVisual th').all_text_contents()==['Línea','Parada','Hora']
       if domain=='memory':assert 'auriculares' not in page.locator('#exerciseOptions').inner_text()
       capture(f'{domain}-L{level}')
-     if it.get('type')=='order':
-      for token in it['answer']:page.locator('#exerciseOptions').get_by_role('button',name=token,exact=True).click()
-      page.locator('#orderCheck').click()
-     else:page.locator('#exerciseOptions').get_by_role('button',name=it['a'],exact=True).click()
+     submit_declared_answer(page,it,advance_clock=True)
      page.wait_for_function('()=>document.querySelector("#exerciseFeedback").classList.contains("ok")');answered+=1
      if found:break
      page.evaluate('window.__current=null');page.locator('#exerciseNext').click()
-    assert found,(domain,level)
+    assert found,(domain,level,mechanics)
     print(f'PASS: Mexico/{domain}/L{level}, target appears in real session, scored and responsive',flush=True)
   with page.expect_download() as download:page.evaluate('()=>WorksheetGenerator.generate([[__reviewExport]],__profiles.find(p=>p.id==="teen"))')
   path=Path(tmp)/'rules.docx';download.value.save_as(path);nodes=doc_text(path.read_bytes())

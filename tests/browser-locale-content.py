@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import threading
 from playwright.sync_api import sync_playwright
-from browser_support import workspace, ROOT,doc_text, area, training_areas, wait_for_area
+from browser_support import workspace, ROOT,doc_text, doc_accessible_text, printable_stimulus_values, area, training_areas, wait_for_area, submit_declared_answer
 
 spec=importlib.util.spec_from_file_location('review_preview',ROOT/'tools/review-preview.py')
 preview=importlib.util.module_from_spec(spec);spec.loader.exec_module(preview)
@@ -23,7 +23,7 @@ try:
   def wait_item():
    page.wait_for_function('()=>__current&&[__current.q,__current.memoryQuestion].includes(document.querySelector("#exercisePrompt").textContent)')
    it=page.evaluate('__current')
-   if it.get('type')=='memoryReveal':page.clock.fast_forward(it['revealMs']+50)
+   if it.get('type')=='memoryReveal':page.clock.run_for(it['revealMs']+50)
    page.wait_for_function('()=>(document.querySelectorAll("#exerciseOptions button:not(:disabled)").length>0)||(__current?.type==="self"&&!document.querySelector("#textAnswerArea").classList.contains("hidden"))')
    return it
   count=0;worksheets=0
@@ -44,23 +44,18 @@ try:
      if band!='early':assert page.evaluate('__requests.at(-1).locale')==key
      if it.get('topic') and it.get('stimulus') and len(it['stimulus'])>1 and any(b.get('text')==it.get('topic') for b in it['stimulus']):
       assert not page.locator('#exerciseVisual').get_by_text(it['topic'],exact=True).count(),(band,domain,it['topic'])
-     if it.get('type')=='order':
-      for token in it['answer']:page.locator('#exerciseOptions').get_by_role('button',name=token,exact=True).click()
-      page.locator('#orderCheck').click()
-     elif it.get('type')=='self':
-      page.locator('#textAnswerInput').fill(it['sample']);page.locator('#textAnswerCheck').click();page.locator('[data-self="true"]').click()
-     else:page.locator('#exerciseOptions').get_by_role('button',name=it['a'],exact=True).click()
+     submit_declared_answer(page,it,advance_clock=True)
      page.wait_for_function('()=>document.querySelector("#exerciseFeedback").classList.contains("ok")');count+=1
     page.locator('#navMenu [data-section="homework"]').click();page.locator('#worksheetAll').click()
     page.locator('#worksheetQuestions').select_option('20');page.locator('#worksheetCount').select_option('1')
     with page.expect_download(timeout=45000) as download:page.locator('#generateWorksheetsBtn').click()
-    path=Path(tmp)/f'{key}-{band}.docx';download.value.save_as(path);nodes=doc_text(path.read_bytes());exported=page.evaluate('__exports.at(-1)');items=exported['items'][0]
+    path=Path(tmp)/f'{key}-{band}.docx';download.value.save_as(path);nodes=doc_accessible_text(path.read_bytes());exported=page.evaluate('__exports.at(-1)');items=exported['items'][0]
     assert len(items)==20;assert all(it['localization']['locale']==key for it in items)
     models=page.evaluate('({items,profile})=>items.map(it=>ActivityModel.printable(it,profile))',dict(items=items,profile=exported['profile']))
     for i,model in enumerate(models):
      start=nodes.index(f'ACTIVIDAD {i+1}');stop=nodes.index(f'ACTIVIDAD {i+2}') if i+1<len(items) else len(nodes);block=nodes[start:stop];q=block.index(model['question'])
      for stimulus in model['stimulus']:
-      values=[stimulus['text']] if stimulus['type']=='text' else stimulus['items'] if stimulus['type']=='list' else [v for row in stimulus['rows'] for v in row]
+      values=printable_stimulus_values(page,stimulus)
       for value in values:assert any(value in node for node in block[:q]),(key,band,i,value)
      for option in model['options']+model['tokens']:assert any(node.endswith('. '+option) for node in block),(key,band,i,option)
     worksheets+=1
