@@ -26,13 +26,14 @@ try:
    assert not area(page, 'social').evaluate('e=>e.hidden')
    page.locator('#exerciseOptions [data-answer]').evaluate_all('(els,a)=>els.find(e=>e.dataset.answer===a).click()',page.evaluate('__current.a'));assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
   workspace(page).locator('#profileSelect').select_option('primary');area(page, 'attention').click()
-  assert page.locator('#interactionKindSwitch button:visible').all_text_contents()==['Mira y actúa','Escucha y actúa']
+  assert page.locator('[data-interaction-kind=movement]').is_hidden()
+  assert page.locator('[data-interaction-kind=auditory]').is_hidden()
   assert page.locator('[data-interaction-kind=symbols]').is_hidden()
+  page.locator('#interactionModeBtn').click();page.wait_for_selector('#roomDescription');assert page.evaluate('__current.interactionTask.kind')=='room'
+  area(page, 'executive').click()
+  assert page.locator('#interactionKindSwitch button:visible').all_text_contents()==['Retos con tarjetas','Mira y actúa','Escucha y actúa']
   page.locator('[data-interaction-kind=movement]').click();page.wait_for_selector('#startInteractive')
   assert page.evaluate('__current.interactionTask.kind')=='movement'
-  page.locator('#interactionModeBtn').click();page.wait_for_selector('#roomDescription');assert page.evaluate('__current.interactionTask.kind')=='room'
-  assert page.locator('#interactionKindSwitch [data-interaction-kind="auditory"]').is_visible()
-  assert page.locator('#interactionKindSwitch [data-interaction-kind="symbols"]').is_hidden()
   workspace(page).locator('#profileSelect').select_option('primary');workspace(page).locator('#navMenu [data-section=home]').click();assert 'learning-areas-3d.png' in page.locator('[data-school-area=social] .area-illustration').evaluate('e=>getComputedStyle(e).backgroundImage');page.locator('#schoolHub').screenshot(path='/tmp/new-area-icons.png')
   page.clock.install();page.clock.pause_at(page.evaluate('Date.now()+1000'));page.add_style_tag(content='*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}')
   area(page, 'executive').click();page.locator('[data-interaction-kind=symbols]').click();page.wait_for_selector('#startInteractive');page.locator('#exerciseLevelSelect').select_option('3');page.wait_for_function('()=>__current?.interactionTask?.level===3')

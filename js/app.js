@@ -1181,7 +1181,13 @@
     setupExercise();
   });
   $('#interactionModeBtn').onclick=()=>{interactionKind='room';interactionOnly=true;cognitiveOnly=false;executedOnly=false;photoOnly=false;documentOnly=false;memoryAudioOnly=false;setupExercise();};
-  $('#interactionKindSwitch').addEventListener('click',event=>{const button=event.target.closest('[data-interaction-kind]');if(!button)return;interactionKind=button.dataset.interactionKind;interactionOnly=true;cognitiveOnly=false;executedOnly=false;photoOnly=false;documentOnly=false;memoryAudioOnly=false;setupExercise();});
+  $('#interactionKindSwitch').addEventListener('click',event=>{
+    const button=event.target.closest('[data-interaction-kind]');
+    if(!button)return;
+    const supported=window.ModalityCatalog.forArea(profile,subject,state.levels[subject]||1).interactionKinds;
+    if(!supported.includes(button.dataset.interactionKind))return;
+    interactionKind=button.dataset.interactionKind;interactionOnly=true;cognitiveOnly=false;executedOnly=false;photoOnly=false;documentOnly=false;memoryAudioOnly=false;setupExercise();
+  });
   $('#photoModeSwitch').addEventListener('click',event=>{
     const button=event.target.closest('button[data-photos]');if(!button)return;
     cognitiveOnly=false;executedOnly=false;interactionOnly=false;memoryAudioOnly=false;photoOnly=button.dataset.photos==='true';documentOnly=false;setupExercise();

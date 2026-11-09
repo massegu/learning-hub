@@ -1,7 +1,9 @@
 (function(root){
   'use strict';
   const interactionAges=new Set(['junior','primary','middle','teen']);
-  const kinds={attention:['movement','auditory'],executive:['symbols','movement','auditory']};
+  // Mira/escucha y actúa son modalidades de funciones ejecutivas. Atención
+  // conserva únicamente la búsqueda de objetos del entorno (roomSearch).
+  const kinds={attention:[],executive:['symbols','movement','auditory']};
   function forArea(profile,domain,level=1){
     const age=root.AgeStages.route(profile),eligible=interactionAges.has(age);
     const cognitive= root.CognitiveFamilies?.pool(age,domain,level)||[];
