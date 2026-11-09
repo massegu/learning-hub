@@ -10,7 +10,7 @@ before(async()=>{db=new PGlite();await db.exec(`create role anon;create role aut
  create table content_seen(id uuid primary key default gen_random_uuid(),profile_id uuid,user_id uuid,item_signature text);
  insert into learner_profiles values('${P}','${A}','P-1','primary','es_es','{"interactiveObservations":[{"kind":"room","description":"private free text","report":"described"}]}'),('${Q}','${B}','P-2','teen','es_es','{}');
  grant all on private.content_delivery_log to anon,authenticated;grant select(kind) on private.content_delivery_log to anon;insert into exercise_results(profile_id,correct) values('${P}',true),('${Q}',false);insert into private.content_delivery_log(user_id,profile_id,content_id,kind) values('${A}','${P}','${P}','exercise'),('${B}','${Q}','${Q}','worksheet');
- insert into content_seen(profile_id,user_id,item_signature) values('${P}','${A}','source-a'),('${Q}','${B}','source-b');grant truncate,trigger,references on learner_profiles,exercise_results to anon,authenticated;grant update(correct) on exercise_results to authenticated;`);await db.exec(fs.readFileSync('supabase/migrations/202610230001_learner_privacy.sql','utf8'));});
+ insert into content_seen(profile_id,user_id,item_signature) values('${P}','${A}','source-a'),('${Q}','${B}','source-b');grant truncate,trigger,references on learner_profiles,exercise_results to anon,authenticated;grant update(correct) on exercise_results to authenticated;`);await db.exec(fs.readFileSync('supabase/migrations/202610230001_learner_privacy.sql','utf8'));const idempotencyMigration=fs.readFileSync('supabase/migrations/202611090001_idempotent_exercise_results.sql','utf8');await db.exec(idempotencyMigration);await db.exec(idempotencyMigration);});
 after(async()=>db.close());
 const as=async(id)=>db.exec(`reset role;select set_config('request.jwt.claim.sub','${id}',false);set role authenticated;`);
 test('migration strips legacy notes and cannot store temporary session progress',async()=>{
@@ -48,4 +48,20 @@ test('legacy truncate/trigger and explicit result-column write grants are remove
  await assert.rejects(db.query('update exercise_results set correct=true'));
  await db.exec('reset role');for(const role of ['anon','authenticated'])assert.equal((await db.query("select has_table_privilege($1,'private.content_delivery_log','SELECT') as allowed",[role])).rows[0].allowed,false);await db.query('insert into private.content_delivery_log(user_id,profile_id,content_id,kind) values($1,$2,$2,$3)',[A,Q,'exercise']);
  await as(B);await assert.rejects(db.query("select manage_learner_privacy('export',$1)",[Q]),/Inconsistent delivery ownership/);await db.exec('reset role');await db.query('delete from private.content_delivery_log where profile_id=$1 and user_id=$2',[Q,A]);await db.exec('alter table private.content_delivery_log add column notes text');await as(B);await assert.rejects(db.query("select manage_learner_privacy('export',$1)",[Q]),/Unreviewed private delivery columns/);await db.exec('reset role;alter table private.content_delivery_log drop column notes');
+});
+
+test('result attempt keys are nullable for history, unique per profile, non-overwriting and protected by existing RLS',async()=>{
+ const ATTEMPT='aaaaaaaa-1111-4111-8111-111111111111',NEW_PROFILE='cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+ await as(B);
+ assert.equal((await db.query('select count(*)::int as n from exercise_results where profile_id=$1 and client_attempt_id is null',[Q])).rows[0].n,1,'historical result remains unchanged and nullable');
+ await db.query('insert into exercise_results(profile_id,correct,client_attempt_id) values($1,true,$2) on conflict(profile_id,client_attempt_id) do nothing',[Q,ATTEMPT]);
+ await db.query('insert into exercise_results(profile_id,correct,client_attempt_id) values($1,false,$2) on conflict(profile_id,client_attempt_id) do nothing',[Q,ATTEMPT]);
+ let rows=(await db.query('select correct from exercise_results where profile_id=$1 and client_attempt_id=$2',[Q,ATTEMPT])).rows;
+ assert.deepEqual(rows,[{correct:true}],'duplicate/retry must not replace the first confirmed answer');
+ await as(A);await assert.rejects(db.query('insert into exercise_results(profile_id,correct,client_attempt_id) values($1,true,$2) on conflict(profile_id,client_attempt_id) do nothing',[Q,ATTEMPT]),'RLS must block another account even when conflict handling is enabled');
+ await db.exec('reset role');await db.exec(`insert into learner_profiles(id,account_id,name,age_band) values('${NEW_PROFILE}','${A}','P-test','primary')`);await as(A);
+ await db.query('insert into exercise_results(profile_id,correct,client_attempt_id) values($1,false,$2) on conflict(profile_id,client_attempt_id) do nothing',[NEW_PROFILE,ATTEMPT]);
+ await db.exec('reset role');
+ rows=(await db.query('select profile_id,correct from exercise_results where client_attempt_id=$1 order by profile_id',[ATTEMPT])).rows;
+ assert.deepEqual(rows,[{profile_id:Q,correct:true},{profile_id:NEW_PROFILE,correct:false}],'the same UUID may be used independently across different profiles');
 });

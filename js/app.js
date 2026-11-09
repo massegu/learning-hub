@@ -731,13 +731,72 @@
   let progressSaveRevision=0;
   let resultSaveRevision=0;
   const unconfirmedResultWrites=new Map();
+  const pendingResultRecoveries=new Map();
   let latestProgressSave=Promise.resolve(true);
-  const unconfirmedResultsFor=id=>unconfirmedResultWrites.get(id)||0;
-  function setProgressSaveStatus(message,kind='',retryable=false){
+  function pendingResultRowsFor(id){if(!unconfirmedResultWrites.has(id))unconfirmedResultWrites.set(id,new Map());return unconfirmedResultWrites.get(id);}
+  function rememberPendingResult(id,row,state='pending'){if(id&&row?.clientAttemptId)pendingResultRowsFor(id).set(row.clientAttemptId,{row,state});}
+  function forgetPendingResult(id,attemptId){const rows=unconfirmedResultWrites.get(id);rows?.delete(attemptId);if(rows&&!rows.size)unconfirmedResultWrites.delete(id);}
+  function pendingResultStateCounts(id){
+    const states=new Map();
+    try{for(const attempt of API.pendingResults?.(id)||[])states.set(attempt.client_attempt_id,attempt.state||'pending');}catch{}
+    for(const [attemptId,entry] of unconfirmedResultWrites.get(id)||[])if(!states.has(attemptId))states.set(attemptId,entry.state||'pending');
+    const values=[...states.values()];return {total:values.length,failed:values.filter(value=>value==='failed').length,uncertain:values.filter(value=>value==='uncertain').length,pending:values.filter(value=>value==='pending').length};
+  }
+  function pendingResultStateSummary(id){const states=pendingResultStateCounts(id);return [states.failed?`${states.failed} rechazado(s)`:null,states.uncertain?`${states.uncertain} con confirmación incierta`:null,states.pending?`${states.pending} sin enviar`:null].filter(Boolean).join(', ')||'pendientes';}
+  function unconfirmedResultsFor(id){
+    return pendingResultStateCounts(id).total;
+  }
+  function setProgressSaveStatus(message,kind='',retryProgress=null,retryResult=null){
     const status=$('#progressSaveStatus'),retry=$('#retryProgressSave');
     if(!status)return;
     status.textContent=message;status.className=`progress-save-status${kind?` ${kind}`:''}`;
-    if(retry)retry.classList.toggle('hidden',!retryable);
+    if(retry){if(retryProgress!==null)retry.classList.toggle('hidden',!retryProgress);else if(!message)retry.classList.add('hidden');}
+    const resultRetry=$('#retryResultSave');if(resultRetry){if(retryResult!==null)resultRetry.classList.toggle('hidden',!retryResult);else if(!message)resultRetry.classList.add('hidden');}
+  }
+  function setPendingResultHomeStatus(message='',kind='',retry=false){
+    const status=$('#pendingResultStatus'),button=$('#retryPendingResultsHome');
+    if(!status)return;
+    status.textContent=message;status.className=`pending-result-status${kind?` ${kind}`:''}`;
+    status.classList.toggle('hidden',!message);
+    button?.classList.toggle('hidden',!retry);
+  }
+  async function recoverPendingResults(profileId,{includeFailed=false,exerciseNotice=false}={}){
+    if(!profileId||profile?.id!==profileId||profile._sessionOnly||API.isIndependent?.(profileId))return null;
+    if(pendingResultRecoveries.has(profileId))return pendingResultRecoveries.get(profileId);
+    const pendingBefore=unconfirmedResultsFor(profileId);
+    if(!pendingBefore){setPendingResultHomeStatus();return {attempted:0,confirmed:0,failed:0,uncertain:0,remaining:0};}
+    const userId=API.user?.id;
+    setPendingResultHomeStatus(`Hay ${pendingBefore} resultado(s) pendientes (${pendingResultStateSummary(profileId)}). Se está comprobando el guardado.`,'pending');
+    if(exerciseNotice)setProgressSaveStatus(`Reintentando de forma segura ${pendingBefore} resultado(s) pendiente(s)…`,'pending');
+    const operation=(async()=>{
+      let transientConfirmed=0,transientFailed=0;
+      const persistedIds=new Set((API.pendingResults?.(profileId)||[]).map(attempt=>attempt.client_attempt_id));
+      for(const [attemptId,entry] of [...(unconfirmedResultWrites.get(profileId)||new Map())]){
+        if(persistedIds.has(attemptId))continue;
+        try{const saved=await API.saveResult(profileId,entry.row);if(saved){forgetPendingResult(profileId,attemptId);transientConfirmed++;}}
+        catch(error){rememberPendingResult(profileId,entry.row,error.state||'uncertain');transientFailed++;}
+      }
+      const outcome=await API.retryPendingResults(profileId,{includeFailed});
+      const stillPersistedIds=new Set((API.pendingResults?.(profileId)||[]).map(attempt=>attempt.client_attempt_id));
+      for(const attemptId of persistedIds)if(!stillPersistedIds.has(attemptId))forgetPendingResult(profileId,attemptId);
+      if(profile?.id!==profileId||API.user?.id!==userId||profile._sessionOnly)return outcome;
+      const remaining=unconfirmedResultsFor(profileId);
+      if(!remaining){
+        const recovered=outcome.confirmed+transientConfirmed;
+        setPendingResultHomeStatus(recovered?`Se recuperaron ${recovered} resultado(s) pendientes.`:'','success');
+        if(exerciseNotice){
+          const progressPending=!$('#retryProgressSave').classList.contains('hidden');
+          setProgressSaveStatus(progressPending?'Los resultados están confirmados; el progreso sigue pendiente y puedes reintentarlo.':recovered?`Se recuperaron ${recovered} resultado(s) pendientes sin duplicarlos.`:'No quedan resultados pendientes.',progressPending?'error':'success',progressPending,false);
+        }
+      }else{
+        const reason=pendingResultStateSummary(profileId);
+        setPendingResultHomeStatus(`Quedan ${remaining} resultado(s) sin confirmar (${reason}). El reintento conserva su identificador y no crea duplicados.`,'error',true);
+        if(exerciseNotice){const progressPending=!$('#retryProgressSave').classList.contains('hidden');setProgressSaveStatus(`Quedan ${remaining} resultado(s) sin confirmar (${reason}). Puedes reintentarlos de forma segura.`, 'error',progressPending,true);}
+      }
+      return {...outcome,transientConfirmed,transientFailed,remaining};
+    })();
+    pendingResultRecoveries.set(profileId,operation);
+    try{return await operation;}finally{if(pendingResultRecoveries.get(profileId)===operation)pendingResultRecoveries.delete(profileId);}
   }
   function persist(announce=false) {
     if(!profile||!state)return Promise.resolve(false);
@@ -756,16 +815,16 @@
       if(announce)setProgressSaveStatus('Esta sesión independiente no se guarda en el perfil.','info');
       return Promise.resolve(false);
     }
-    if(announce)setProgressSaveStatus('Guardando progreso…','pending');
+    if(announce)setProgressSaveStatus('Guardando progreso…','pending',false,Boolean(unconfirmedResultsFor(profile.id)));
     const save=(async()=>{
       try{
         await API.saveProgress(profile.id,profile.progress);
         const unconfirmed=unconfirmedResultsFor(profile.id);
-        if(announce&&revision===progressSaveRevision)setProgressSaveStatus(unconfirmed?`Progreso guardado. ${unconfirmed} resultado(s) anterior(es) siguen sin confirmar y no se reintentaron.`:'Progreso guardado en este perfil.','success');
+        if(announce&&revision===progressSaveRevision)setProgressSaveStatus(unconfirmed?`Progreso guardado; quedan ${unconfirmed} resultado(s) sin confirmar.`:'Progreso guardado en este perfil.',unconfirmed?'error':'success',false,Boolean(unconfirmed));
         return true;
       }catch(e){
         console.warn(e);
-        if(announce&&revision===progressSaveRevision)setProgressSaveStatus('No se pudo guardar el progreso. Puedes reintentar este guardado.','error',true);
+        if(announce&&revision===progressSaveRevision)setProgressSaveStatus('No se pudo guardar el progreso. Puedes reintentar este guardado.','error',true,Boolean(unconfirmedResultsFor(profile.id)));
         return false;
       }
     })();
@@ -796,6 +855,7 @@
     state.scores[s] = (state.scores[s] || 0) + pts;
     const row = {
       attemptNumber:state.totalAttempts,
+      clientAttemptId:API.createAttemptId(),
       ts: new Date().toISOString(),
       sessionId: state.session.id,
       sessionStartedAt: state.session.startedAt,
@@ -814,21 +874,24 @@
     recalcLevel(s);
     const resultProfileId=profile.id;
     const tracked=profile._sessionOnly!==true&&!API.isIndependent?.(resultProfileId);
+    // Record the attempt in the durable outbox before starting the progress
+    // request so a reload during either network operation can recover it.
+    const resultSave=API.saveResult(resultProfileId,row).then(result=>{if(!result)return false;forgetPendingResult(resultProfileId,row.clientAttemptId);return true;},error=>{console.warn('Result insert failed',error);rememberPendingResult(resultProfileId,row,error.state||'uncertain');return false;});
     persist(false);
-    const resultSave=Promise.resolve().then(()=>API.saveResult(resultProfileId,row)).then(result=>Boolean(result),error=>{console.warn('Result insert failed',error);unconfirmedResultWrites.set(resultProfileId,unconfirmedResultsFor(resultProfileId)+1);return false;});
     const saveRevision=++resultSaveRevision;
     if(tracked){
-      setProgressSaveStatus('Guardando progreso y resultado…','pending');
+      setProgressSaveStatus('Guardando progreso y resultado…','pending',false,false);
       const waitForLatestProgress=async()=>{
         while(true){const revision=progressSaveRevision,latest=latestProgressSave,ok=await latest;if(revision===progressSaveRevision)return ok;}
       };
       Promise.all([waitForLatestProgress(),resultSave]).then(([progressOk,resultOk])=>{
-        if(saveRevision!==resultSaveRevision)return;
+        if(saveRevision!==resultSaveRevision||profile?.id!==resultProfileId)return;
         const unconfirmed=unconfirmedResultsFor(resultProfileId);
-        if(progressOk&&resultOk)setProgressSaveStatus(unconfirmed?`Progreso y resultado guardados. ${unconfirmed} resultado(s) anterior(es) siguen sin confirmar y no se reintentaron.`:'Progreso y resultado guardados en este perfil.','success');
+        if(progressOk&&resultOk)setProgressSaveStatus(unconfirmed?`Este intento se confirmó; quedan ${unconfirmed} resultado(s) pendiente(s).`:'Progreso y resultado guardados en este perfil.',unconfirmed?'error':'success',false,Boolean(unconfirmed));
         else if(!progressOk&&resultOk)setProgressSaveStatus('El resultado se guardó, pero el progreso no. Puedes reintentar solo el progreso.','error',true);
-        else if(progressOk&&!resultOk)setProgressSaveStatus('El progreso se guardó, pero no se pudo confirmar el resultado. Puede haberse guardado; no lo reintentes.','error');
-        else setProgressSaveStatus('No se pudo confirmar el progreso. El resultado puede haberse guardado; solo es seguro reintentar el progreso.','error',true);
+        else if(progressOk&&!resultOk)setProgressSaveStatus('El progreso se guardó; el resultado está pendiente o su confirmación se interrumpió. Puedes reintentarlo sin duplicarlo.','error',false,true);
+        else setProgressSaveStatus('El progreso y el resultado siguen sin confirmarse. Puedes reintentar cada operación de forma segura.','error',true,true);
+        if(!resultOk)setPendingResultHomeStatus(`No se confirmó el resultado (${pendingResultStateSummary(resultProfileId)}). Su identificador se conserva para reintentar sin duplicados.`,'error',true);
       });
     }
     updateGlobalUI();
@@ -990,6 +1053,7 @@
     buildSessionBuilder();
     switchSection("home");
     updateGlobalUI();
+    if(!independent)recoverPendingResults(id);
   }
   $('#workspaceMenu').onclick=()=>{const open=$('#appShell').classList.toggle('mobile-nav-open');$('#workspaceMenu').setAttribute('aria-expanded',String(open));};
   $('#prepareSessionBtn').onclick=()=>switchSection('sessionBuilder');
@@ -1272,6 +1336,7 @@
     $('#progressSaveStatus').textContent='';
     $('#progressSaveStatus').className='progress-save-status';
     $('#retryProgressSave').classList.add('hidden');
+    $('#retryResultSave').classList.add('hidden');
     $('#retryContentLoad').classList.add('hidden');
     $("#exerciseOptions").innerHTML = "";
     $("#exerciseOptions").classList.remove('structured-options');
@@ -1604,6 +1669,8 @@
     } else newExercise();
   };
   $("#retryProgressSave").onclick=()=>{persist(true);};
+  $('#retryResultSave').onclick=()=>{if(profile&&!profile._sessionOnly)recoverPendingResults(profile.id,{includeFailed:true,exerciseNotice:true});};
+  $('#retryPendingResultsHome').onclick=()=>{if(profile&&!profile._sessionOnly)recoverPendingResults(profile.id,{includeFailed:true});};
   $("#retryContentLoad").onclick=()=>newExercise();
   $$(".language-mode-btn[data-mode]").forEach(
     (b) =>
