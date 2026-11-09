@@ -1,5 +1,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),{execFileSync}=require('node:child_process');
 const curriculum=require('../js/curriculum'),model=require('../js/activity-model'),locale=require('../js/locale-content');
+globalThis.AgeStages=require('../js/age-stages');
+const modalityCatalog=require('../js/modality-catalog');
 test('interactive cards have graded, printable rules and explicit observation contracts in all locales',()=>{
  for(const age of ['junior','primary','middle','teen'])for(const level of [1,2,3])for(const domain of ['attention','executive']){
   const bank=curriculum.interactivePool(age,domain,level);assert.equal(bank.length,domain==='attention'?8:24);
@@ -39,11 +41,23 @@ test('natural copulas, nonhuman subjects and elementary vocabulary are distinct 
   for(const level of [1,2,3])for(const it of curriculum.vocabulary(age,'language',level))assert.ok(!it.opts.some(x=>['Tiene el mismo significado','No se puede saber'].includes(x)));
  }
 });
-test('attention exposes distinct object search and visual or auditory listen-and-act variants',()=>{
+test('frontend modality policy reserves listen-and-act and symbol cards for executive functions',()=>{
  for(const age of ['junior','primary','middle','teen'])for(const level of [1,2,3]){
   assert.equal(curriculum.interactivePool(age,'attention',level).every(x=>x.interactionTask.kind==='room'),true);
-  assert.equal(curriculum.generateInteractive(age,'attention',level,'symbols'),null);
-  for(const kind of ['movement','auditory']){const item=curriculum.generateInteractive(age,'attention',level,kind);assert.equal(item.interactionTask.kind,kind);assert.ok(item.interactionTask.rules.every(rule=>rule.target>=0));assert.equal(curriculum.validateInteraction(item),true);}
+  const profile={age_band:age};
+  assert.deepEqual(modalityCatalog.forArea(profile,'attention',level).interactionKinds,[]);
+  assert.equal(modalityCatalog.forArea(profile,'attention',level).roomSearch,true);
+  assert.deepEqual(modalityCatalog.forArea(profile,'executive',level).interactionKinds,['symbols','movement','auditory']);
+  for(const kind of ['symbols','movement','auditory']){
+   const item=curriculum.generateInteractive(age,'executive',level,kind);
+   assert.equal(item.interactionTask.kind,kind);
+   assert.equal(item.interactionTask.rules.filter(rule=>rule.target===-1).length,1);
+   assert.equal(curriculum.validateInteraction(item),true);
+  }
+ }
+ for(const age of ['early']){
+  assert.deepEqual(modalityCatalog.forArea({age_band:age},'attention',1).interactionKinds,[]);
+  assert.deepEqual(modalityCatalog.forArea({age_band:age},'executive',1).interactionKinds,[]);
  }
 });
 test('real endpoint gates interactive mode by client, domain, age and incompatible modes',()=>{

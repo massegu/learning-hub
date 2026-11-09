@@ -29,6 +29,8 @@ try:
     assert page.locator('#documentModeSwitch [data-documents="true"]').is_visible()==(domain in ['attention','executive'] and capability['documents']),(age,domain)
     if domain=='attention':
      assert page.locator('[data-interaction-kind=symbols]').is_hidden(),(age,'symbols must remain exclusive to executive')
+     for kind in ['movement','auditory']:
+      assert page.locator(f'[data-interaction-kind={kind}]').is_hidden(),(age,f'{kind} belongs only to executive')
      assert page.locator('#attentionPhotos').is_visible()==capability['photos'],(age,domain,'photos')
     if domain=='memory':
      assert page.locator('#memoryAudioModeButton').is_visible()==capability['memoryAudio'],(age,domain,'audio')
@@ -91,7 +93,6 @@ try:
    add(age,'speedReasoning','#speedUnpairedMode',{'speed_mechanic':'unpaired'})
    if age!='early':
     add(age,'attention','#interactionModeBtn',{'interaction_only':True,'interaction_kind':'room'})
-    for kind in ['movement','auditory']:add(age,'attention',f'[data-interaction-kind={kind}]',{'interaction_only':True,'interaction_kind':kind})
     for kind in ['symbols','movement','auditory']:add(age,'executive',f'[data-interaction-kind={kind}]',{'interaction_only':True,'interaction_kind':kind})
     add(age,'speedReasoning','[data-speed-mode=room]',{'room_speed_only':True})
     add(age,'attention','#documentModeSwitch [data-documents=true]',{'documents_only':True})
@@ -107,6 +108,28 @@ try:
    for key,value in expected.items():assert request.get(key)==value,(age,domain,selector,key,value,request)
    if domain=='attention':assert request.get('interaction_kind')!='symbols',request
    assert button.get_attribute('aria-pressed')=='true',(age,domain,selector)
+  # Even a stale/programmatic activation of a hidden attention control cannot
+  # issue a movement, auditory, or symbols request.
+  for age in ['early','junior','primary','middle','teen']:
+   workspace(page).locator('#profileSelect').select_option(age);area(page,'executive').click()
+   for kind in ['movement','auditory']:
+    button=page.locator(f'[data-interaction-kind={kind}]');available=age!='early'
+    assert button.is_visible()==available,(age,'executive interaction availability',kind)
+    if available:
+     page.evaluate('window.__current=null');button.click();page.wait_for_function('(kind)=>__current?.interactionTask?.kind===kind',arg=kind)
+     assert page.evaluate('__requests.at(-1).domain')=='executive',(age,kind,'must remain in executive')
+   area(page,'attention').click();page.wait_for_function('()=>window.__current?.domain==="attention"')
+   before=page.evaluate('__requests.length')
+   for kind in ['symbols','movement','auditory']:
+    button=page.locator(f'[data-interaction-kind={kind}]');assert button.is_hidden(),(age,'attention',kind)
+    button.evaluate('(e)=>e.click()')
+   assert page.evaluate('__requests.length')==before,(age,'hidden attention controls issued a request',page.evaluate('__requests.slice(-3)'))
+   room=page.locator('#interactionModeBtn')
+   room_available=page.evaluate('(age)=>ModalityCatalog.forArea(__profiles.find(p=>p.id===age),"attention",1).roomSearch',age)
+   assert room.is_visible()==room_available,(age,'room search availability must follow the age catalog')
+   if room_available:
+    page.evaluate('window.__current=null');room.click();page.wait_for_function('()=>__requests.at(-1)?.interaction_kind==="room"')
+    assert page.evaluate('__requests.at(-1).domain')=='attention',(age,'room search must remain in attention')
   # A previous success must disappear during a failed content request; retry only reloads content.
   page.clock.install();workspace(page).locator('#profileSelect').select_option('primary');page.evaluate('window.__current=null');area(page,'attention').click()
   page.wait_for_function('()=>window.__current?.domain==="attention"')
