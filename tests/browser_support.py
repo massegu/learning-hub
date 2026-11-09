@@ -106,9 +106,6 @@ class TrainingArea:
     def click(self, **kwargs):
         workspace(self.page).locator('#navMenu [data-section="training"]').click()
         self.locator.click(**kwargs)
-        options = self.page.locator('#activityOptions')
-        if options.count() and options.is_visible() and not options.evaluate('(e)=>e.open'):
-            options.locator('summary').click()
 
     def __getattr__(self, name):
         return getattr(self.locator, name)

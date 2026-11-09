@@ -360,7 +360,7 @@
   window.addEventListener('blur',()=>{if(currentItem?._roomTiming)currentItem._roomTiming.valid=false;});
   $('#speedModeSwitch').onclick=event=>{const button=event.target.closest('[data-speed-mode]');if(!button)return;roomSpeedOnly=button.dataset.speedMode==='room';speedUnpairedOnly=false;counter=0;setupExercise();};
   $('#speedUnpairedMode').onclick=()=>{speedUnpairedOnly=!speedUnpairedOnly;roomSpeedOnly=false;counter=0;setupExercise();};
-  $('#memoryAudioModeButton').onclick=()=>{memoryAudioOnly=!memoryAudioOnly;photoOnly=false;counter=0;setupExercise();};
+  $('#memoryAudioModeButton').onclick=()=>{memoryAudioOnly=!memoryAudioOnly;photoOnly=false;executedOnly=false;cognitiveOnly=false;interactionOnly=false;documentOnly=false;counter=0;setupExercise();};
   function renderSpeedExercise(it){
     $('#exerciseVisual').innerHTML=window.ContentPolicy.forProfile(profile)?'<p>Mira y responde. El reloj empieza al mostrar las figuras. También puedes practicar sin medir.</p>':'<p>Responde con precisión y agilidad. El tiempo empieza al mostrar el estímulo. Puedes usar los botones o las teclas numéricas.</p>';
     $('#exerciseOptions').innerHTML='<button id="startSpeedTrial" class="primary-btn">Mostrar y medir</button><button id="practiceSpeedTrial" class="secondary-btn">Practicar sin medir</button>';
@@ -1049,18 +1049,10 @@
   function syncActivitySettings() {
     const settings = $('#activityOptions');
     if (!settings) return;
-    const available = [...settings.querySelectorAll('.activity-toolbar > button, .activity-toolbar > .mode-switch, #cognitiveFamilyControl, #documentModeHint, #languageModeSwitch')]
-      .some(control => !control.classList.contains('hidden'));
+    const buttons=[...settings.querySelectorAll('.activity-toolbar button')];
+    const available=buttons.some(button=>!button.classList.contains('hidden')&&!button.closest('.hidden:not(#activityOptions)'));
     settings.classList.toggle('hidden', !available);
-    if (!available) {
-      settings.open = false;
-      return;
-    }
-    const selected = [...settings.querySelectorAll('button[aria-pressed="true"], .language-mode-btn.active')]
-      .find(button => !button.classList.contains('hidden') && !button.closest('.mode-switch.hidden'));
-    $('#activityOptionsSummary').textContent = selected
-      ? `Opciones · ${selected.textContent.trim()}`
-      : 'Opciones de actividad';
+    $('#activityOptionsSummary').textContent=available?'Elige una modalidad':'Modalidades no disponibles';
   }
   function setupExercise() {
     if(configuredSubject!==null&&configuredSubject!==subject){documentOnly=false;photoOnly=false;memoryAudioOnly=false;interactionOnly=false;interactionKind=subject==='attention'?'room':'symbols';roomSpeedOnly=false;speedUnpairedOnly=false;cognitiveOnly=false;cognitiveFamily='';executedOnly=false;}
@@ -1099,65 +1091,82 @@
       b.classList.toggle('active',!cognitiveOnly&&b.dataset.mode===mode);
     });
     $("#languageModeSwitch").classList.toggle("hidden", !isLang&&!isReading);
+    const route=window.AgeStages.route(profile);
+    const capability=window.ModalityCatalog.forArea(profile,subject,state.levels[subject]||1);
     if(subject!=='speedReasoning'){roomSpeedOnly=false;speedUnpairedOnly=false;}
-    const roomSpeedSupport=subject==='speedReasoning'&&['junior','primary','middle','teen'].includes(window.AgeStages.route(profile));
+    const roomSpeedSupport=capability.speed.room;
     if(!roomSpeedSupport)roomSpeedOnly=false;
-    $('#speedModeSwitch').classList.toggle('hidden',!roomSpeedSupport);
-    $$('#speedModeSwitch [data-speed-mode]').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.speedMode==='room')===roomSpeedOnly&&!speedUnpairedOnly)));
+    $('#speedModeSwitch').classList.toggle('hidden',subject!=='speedReasoning'||!capability.speed.screen&&!capability.speed.unpaired&&!capability.speed.room);
+    $('#speedModeSwitch [data-speed-mode="screen"]').classList.toggle('hidden',!capability.speed.screen);
+    $('#speedModeSwitch [data-speed-mode="room"]').classList.toggle('hidden',!roomSpeedSupport);
+    $('#speedUnpairedMode').classList.toggle('hidden',!capability.speed.unpaired);
+    $$('#speedModeSwitch [data-speed-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.speedMode==='room'?roomSpeedOnly:!roomSpeedOnly&&!speedUnpairedOnly)));
     $('#speedUnpairedMode').setAttribute('aria-pressed',String(speedUnpairedOnly));
-    const documentSupport=window.DocumentLibrary?.supports(window.AgeStages.route(profile),subject);
+    const documentSupport=capability.documents;
     if(!documentSupport||isReading)documentOnly=false;
-    const photoSupport=window.PhotoLibrary.supports(window.AgeStages.route(profile),subject);
+    const photoSupport=capability.photos;
     if(!photoSupport)photoOnly=false;
     if(subject!=='memory')memoryAudioOnly=false;
-    const interactionSupport=['junior','primary','middle','teen'].includes(window.AgeStages.route(profile))&&['attention','executive'].includes(subject);
+    const interactionSupport=capability.interactionKinds.length>0||capability.roomSearch;
     if(!interactionSupport)interactionOnly=false;
-    $('#interactionModeBtn').classList.toggle('hidden',!interactionSupport);
-    $('#interactionModeBtn').textContent=subject==='executive'?'Actúa con reglas':'Busca a tu alrededor';
-    $('#interactionModeBtn').setAttribute('aria-pressed',String(interactionOnly&&(subject==='attention'?interactionKind==='room':interactionKind==='symbols')));
-    $('#interactionKindSwitch').classList.toggle('hidden',!interactionSupport||executedOnly);
-    $('#interactionKindSwitch [data-interaction-kind="symbols"]').classList.remove('hidden');
-    $$('#interactionKindSwitch [data-interaction-kind="signals"],#interactionKindSwitch [data-interaction-kind="auditory"]').forEach(b=>b.classList.toggle('hidden',subject==='attention'));
-    $$('#interactionKindSwitch button').forEach(b=>b.setAttribute('aria-pressed',String(interactionOnly&&(b.dataset.interactionKind==='signals'?interactionKind==='movement':b.dataset.interactionKind===interactionKind))));
-    $('#photoModeSwitch').classList.toggle('hidden',!photoSupport||subject!=='memory');
-    $('#memoryAudioMode').classList.toggle('hidden',subject!=='memory');
+    const supportedInteractionKinds=capability.interactionKinds;
+    if(interactionOnly&&!['room',...supportedInteractionKinds].includes(interactionKind))interactionKind=subject==='attention'?'room':'symbols';
+    $('#interactionModeBtn').classList.toggle('hidden',!capability.roomSearch);
+    $('#interactionModeBtn').textContent='Busca a tu alrededor';
+    $('#interactionModeBtn').setAttribute('aria-pressed',String(interactionOnly&&interactionKind==='room'));
+    $('#interactionKindSwitch').classList.toggle('hidden',!interactionSupport);
+    $$('#interactionKindSwitch [data-interaction-kind]').forEach(b=>{
+      b.classList.toggle('hidden',!supportedInteractionKinds.includes(b.dataset.interactionKind));
+      b.setAttribute('aria-pressed',String(interactionOnly&&b.dataset.interactionKind===interactionKind));
+    });
+    $('#photoModeSwitch').classList.toggle('hidden',subject!=='memory');
+    $('#photoModeSwitch [data-photos="true"]').classList.toggle('hidden',!photoSupport||subject!=='memory');
+    const audioMemoryAvailable=capability.memoryAudio;
+    $('#memoryAudioModeButton').classList.toggle('hidden',!audioMemoryAvailable);
+    if(!audioMemoryAvailable)memoryAudioOnly=false;
     $('#memoryAudioModeButton').setAttribute('aria-pressed',String(memoryAudioOnly));
     $('#attentionPhotos').classList.toggle('hidden',!photoSupport||subject!=='attention');
     $('#attentionPhotos').setAttribute('aria-pressed',String(photoOnly));
     $('#photoModeSwitch [data-photos=true]').textContent=subject==='attention'?'Encuentra las diferencias':'Escenas cotidianas';
     $$('#photoModeSwitch button').forEach(b=>b.setAttribute('aria-pressed',String(!memoryAudioOnly&&!cognitiveOnly&&!executedOnly&&(b.dataset.photos==='true')===photoOnly)));
 
-    const availableCognitiveBank=window.CognitiveFamilies.pool(window.AgeStages.route(profile),subject,state.levels[subject]||1);
+    const availableCognitiveBank=window.CognitiveFamilies.pool(route,subject,state.levels[subject]||1);
     // Attention now has one clear task family: compare sources and find contradictions.
-    const cognitiveBank=subject==='attention'?availableCognitiveBank.filter(it=>it.cognitiveTask.kind==='contradiction'):subject==='executive'?availableCognitiveBank.filter(it=>it.cognitiveTask.kind!=='contradiction'):availableCognitiveBank;
-    const wordFitAvailable=isLang&&cognitiveBank.some(it=>it.cognitiveTask.kind==='words');
+    const cognitiveBank=availableCognitiveBank.filter(it=>capability.cognitiveKinds.includes(it.cognitiveTask.kind));
+    const wordFitAvailable=capability.wordFit;
     $('#wordFitMode').classList.toggle('hidden',!wordFitAvailable);
     $('#wordFitMode').classList.toggle('active',cognitiveOnly&&cognitiveFamily==='words');
     $('#wordFitMode').setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily==='words'));
     if(!cognitiveBank.length)cognitiveOnly=false;
-    $('#cognitiveMode').classList.toggle('hidden',!cognitiveBank.length||isLang||isReading);
-    $('#cognitiveMode').textContent=subject==='attention'?'Encuentra la contradicción':'Situaciones y decisiones';
-    $('#cognitiveMode').setAttribute('aria-pressed',String(cognitiveOnly));
-    $('#cognitiveFamilyControl').classList.toggle('hidden',!cognitiveOnly);
+    $('#cognitiveMode').classList.add('hidden');
     const families=[...new Set(cognitiveBank.map(it=>it.cognitiveTask.kind))];
-    $('#cognitiveFamilyControl').classList.toggle('hidden',!cognitiveOnly||families.length<=1);
     if(subject==='attention'&&families.includes('contradiction'))cognitiveFamily='contradiction';
     else if(!families.includes(cognitiveFamily))cognitiveFamily='';
-    $('#cognitiveFamilySelect').replaceChildren(new Option('Mezclar familias',''),...families.map(key=>new Option(window.CognitiveFamilies.definitions[key].title,key)));
-    $('#cognitiveFamilySelect').value=cognitiveFamily;
+    const familyModes=$('#cognitiveFamilyModes');
+    familyModes.replaceChildren();
+    if(cognitiveBank.length&&!isLang&&!isReading){
+      const choices=subject==='attention'?families.map(key=>({key,label:window.CognitiveFamilies.definitions[key].title})):[{key:'',label:'Situaciones variadas'},...families.map(key=>({key,label:window.CognitiveFamilies.definitions[key].title}))];
+      for(const choice of choices){
+        const button=document.createElement('button');button.type='button';button.className='modality-button';button.dataset.cognitiveFamily=choice.key;button.textContent=choice.label;
+        button.setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily===choice.key));familyModes.append(button);
+      }
+    }
+    familyModes.classList.toggle('hidden',!familyModes.children.length);
     if(!['attention','memory','executive'].includes(subject))executedOnly=false;
-    $('#executedMode').classList.toggle('hidden',!['attention','memory','executive'].includes(subject));
+    $('#executedMode').classList.toggle('hidden',!capability.executed);
+    $('#executedMode').textContent=subject==='attention'?'Búsqueda y secuencias':subject==='memory'?'Recuerdo activo':'Reglas y planificación';
     $('#executedMode').setAttribute('aria-pressed',String(executedOnly));
-    $('#interactionKindSwitch').classList.toggle('hidden',!interactionSupport||executedOnly);
-    $('#interactionKindSwitch [data-interaction-kind="symbols"]').classList.remove('hidden');
-    $$('#interactionKindSwitch [data-interaction-kind="signals"],#interactionKindSwitch [data-interaction-kind="auditory"]').forEach(b=>b.classList.toggle('hidden',subject==='attention'));
-    $('#documentModeSwitch').classList.toggle('hidden',!documentSupport||isReading);
+    $('#documentModeSwitch').classList.toggle('hidden',!['attention','executive'].includes(subject)||isReading);
+    $('#documentModeSwitch [data-documents="true"]').classList.toggle('hidden',!documentSupport||isReading);
+    $('#documentModeSwitch [data-documents="false"]').classList.toggle('hidden',!['attention','executive'].includes(subject)||isReading);
     $('#documentModeSwitch [data-documents=false]').textContent=subject==='executive'?'Planifica y decide':'Busca y compara';
     $('#documentModeSwitch [data-documents=true]').textContent=subject==='executive'?'Resuelve con documentos':'Explora documentos';
     $('#photoModeSwitch [data-photos=false]').textContent='Recuerda imágenes y secuencias';
-    $('#documentModeHint').classList.toggle('hidden',!documentSupport||isReading);
-    $('#documentModeHint').textContent=cognitiveOnly?'Elige una familia o alterna entre situaciones. Lee la consigna antes de empezar.':executedOnly?'Marca, reconstruye o actúa directamente sobre los estímulos.':interactionOnly?(subject==='executive'?'Pulsa el botón que indica cada tarjeta; en la otra modalidad, mira o escucha una señal y haz el gesto indicado. Los gestos no se miden automáticamente.':interactionKind==='room'?'Busca objetos de la sala y explica qué características cumplen.':'Responde a las tarjetas o sigue las señales con un gesto.') :photoOnly?'Compara las escenas y pulsa en la imagen los elementos que han cambiado.':subject==='executive'?(documentOnly?'Usa el documento para organizar acciones y corregir un plan.':'Ordena acciones, aplica reglas y revisa decisiones.'):(documentOnly?'Localiza y contrasta los datos del documento.':'Compara figuras, códigos y listas.');
+    $('#documentModeHint').classList.add('hidden');
     $$('#documentModeSwitch [data-documents]').forEach(b=>b.setAttribute('aria-pressed',String(!cognitiveOnly&&!executedOnly&&!interactionOnly&&!photoOnly&&(b.dataset.documents==='true')===documentOnly)));
+    $('#attentionPhotos').setAttribute('aria-pressed',String(photoOnly&&subject==='attention'));
+    $$('#languageModeSwitch [data-mode]').forEach(button=>button.setAttribute('aria-pressed',String(!cognitiveOnly&&button.dataset.mode===mode)));
+    $('#wordFitMode').setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily==='words'));
     syncActivitySettings();
     counter = 0;
     renderEarlyTaskGuide();
@@ -1165,23 +1174,22 @@
     newExercise();
   }
   $('#documentModeSwitch').addEventListener('click',event=>{
-    const button=event.target.closest('button[data-documents],#attentionPhotos,#interactionModeBtn');
+    const button=event.target.closest('button[data-documents],#attentionPhotos');
     if(!button)return;
     cognitiveOnly=false;executedOnly=false;memoryAudioOnly=false;photoOnly=button.id==='attentionPhotos';
-    interactionOnly=button.id==='interactionModeBtn';
-    if(interactionOnly)interactionKind=subject==='attention'?'room':'symbols';
-    documentOnly=!interactionOnly&&!photoOnly&&button.dataset.documents==='true';
+    interactionOnly=false;documentOnly=!photoOnly&&button.dataset.documents==='true';
     setupExercise();
   });
-  $('#interactionKindSwitch').addEventListener('click',event=>{const button=event.target.closest('[data-interaction-kind]');if(!button)return;interactionKind=button.dataset.interactionKind==='signals'?'movement':button.dataset.interactionKind;interactionOnly=true;cognitiveOnly=false;executedOnly=false;photoOnly=false;documentOnly=false;setupExercise();});
+  $('#interactionModeBtn').onclick=()=>{interactionKind='room';interactionOnly=true;cognitiveOnly=false;executedOnly=false;photoOnly=false;documentOnly=false;memoryAudioOnly=false;setupExercise();};
+  $('#interactionKindSwitch').addEventListener('click',event=>{const button=event.target.closest('[data-interaction-kind]');if(!button)return;interactionKind=button.dataset.interactionKind;interactionOnly=true;cognitiveOnly=false;executedOnly=false;photoOnly=false;documentOnly=false;memoryAudioOnly=false;setupExercise();});
   $('#photoModeSwitch').addEventListener('click',event=>{
     const button=event.target.closest('button[data-photos]');if(!button)return;
-    cognitiveOnly=false;executedOnly=false;memoryAudioOnly=false;photoOnly=button.dataset.photos==='true';documentOnly=false;setupExercise();
+    cognitiveOnly=false;executedOnly=false;interactionOnly=false;memoryAudioOnly=false;photoOnly=button.dataset.photos==='true';documentOnly=false;setupExercise();
   });
-  $('#cognitiveMode').onclick=()=>{cognitiveOnly=true;executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;setupExercise();};
-  $('#wordFitMode').onclick=()=>{mode='vocabulary';cognitiveOnly=true;cognitiveFamily='words';executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;setupExercise();};
-  $('#cognitiveFamilySelect').onchange=e=>{cognitiveFamily=e.target.value;setupExercise();};
-  $('#executedMode').onclick=()=>{cognitiveOnly=false;executedOnly=true;photoOnly=false;documentOnly=false;interactionOnly=false;setupExercise();};
+  $('#cognitiveMode').onclick=()=>{cognitiveOnly=true;cognitiveFamily='';executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;setupExercise();};
+  $('#wordFitMode').onclick=()=>{mode='vocabulary';cognitiveOnly=true;cognitiveFamily='words';executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;setupExercise();};
+  $('#cognitiveFamilyModes').addEventListener('click',event=>{const button=event.target.closest('[data-cognitive-family]');if(!button)return;cognitiveFamily=button.dataset.cognitiveFamily;cognitiveOnly=true;executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;setupExercise();});
+  $('#executedMode').onclick=()=>{cognitiveOnly=false;executedOnly=true;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;setupExercise();};
   async function requestForProfile(payload, targetProfile = profile) {
     if (!targetProfile?.id) throw new Error('Selecciona o crea un perfil para empezar.');
     const locale = API.effectiveLocale(targetProfile);
@@ -1242,6 +1250,9 @@
     return res?.items?.[0] || null;
   }
   async function newExercise() {
+    // A save from the previous card may still be resolving. Invalidate its UI
+    // callback so it cannot display a stale success over a failed new load.
+    progressSaveRevision++;resultSaveRevision++;
     $('#exercise').classList.remove('visual-only-differences');
     stopMemoryCountdown();
     $('#printCognitive')?.remove();
@@ -1252,6 +1263,10 @@
     const requestedSubject = subject;
     const generation = ++requestGeneration;
     currentItem = null;
+    $('#progressSaveStatus').textContent='';
+    $('#progressSaveStatus').className='progress-save-status';
+    $('#retryProgressSave').classList.add('hidden');
+    $('#retryContentLoad').classList.add('hidden');
     $("#exerciseOptions").innerHTML = "";
     $("#exerciseOptions").classList.remove('structured-options');
     $("#exerciseVisual").innerHTML = "";
@@ -1302,6 +1317,7 @@
     $("#exerciseOptions").classList.remove('structured-options');
     $("#exerciseVisual").innerHTML = "";
     $("#exerciseNext").classList.add("hidden");
+    $('#retryContentLoad').classList.remove('hidden');
   }
   function renderExercise(it) {
     if (!it) {
@@ -1381,11 +1397,7 @@
         `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus,{heading:it.topic||it.theme,rubric:it.writingRubric,illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:!window.ContentPolicy.forProfile(profile),senses:it.lexicalSenses})}</div>`;
     $("#exercisePrompt").textContent = it.q || "Actividad";
     if(it.roomSpeedTask){renderRoomSpeed(it);return;}
-    if(it.interactionTask){renderInteractiveExercise(it);
-      if(['movement','auditory'].includes(it.interactionTask.kind)){
-        const controls=document.createElement('label');controls.className='signal-mode-control';controls.innerHTML='Mira/escucha y actúa · Tipo de señal <select id="signalModeSelect"><option value="movement">En pantalla</option><option value="auditory">Palabra o sonido</option></select>';
-        $('#exerciseVisual').prepend(controls);$('#signalModeSelect').value=it.interactionTask.kind;$('#signalModeSelect').onchange=e=>{interactionKind=e.target.value;setupExercise();};
-      }return;}
+    if(it.interactionTask){renderInteractiveExercise(it);return;}
     if(it.speedTask){renderSpeedExercise(it);return;}
     if(['multiSelect','documentReview','photoDifference'].includes(it.type)){renderMultiSelect(it);return;}
     if (it.type === "memoryReveal" || it.type === "memoryMulti") {
@@ -1586,11 +1598,12 @@
     } else newExercise();
   };
   $("#retryProgressSave").onclick=()=>{persist(true);};
+  $("#retryContentLoad").onclick=()=>newExercise();
   $$(".language-mode-btn[data-mode]").forEach(
     (b) =>
       (b.onclick = () => {
-        mode = b.dataset.mode;cognitiveOnly=false;
-        $('#cognitiveFamilyControl').classList.add('hidden');$('#cognitiveMode').setAttribute('aria-pressed','false');
+        mode = b.dataset.mode;cognitiveOnly=false;executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;
+        $('#cognitiveFamilyModes').classList.add('hidden');$('#cognitiveMode').setAttribute('aria-pressed','false');
         $$(".language-mode-btn").forEach((x) =>
           x.classList.toggle("active", x === b),
         );
