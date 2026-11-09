@@ -10,7 +10,7 @@ try:
   browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);page=browser.new_page(viewport={'width':1440,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');workspace(page).locator('#profileSelect').select_option('primary')
   page.evaluate('''()=>{const original=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return original(it,...args)}}''')
-  area(page, 'executive').click();page.locator('#interactionModeBtn').click();page.wait_for_selector('#startInteractive')
+  area(page, 'executive').click();page.locator('[data-interaction-kind=symbols]').click();page.wait_for_selector('#startInteractive')
   assert page.evaluate('__requests.at(-1).interaction_only') is True
   assert page.evaluate('__requests.at(-1).interaction_kind')=='symbols'
   assert page.locator('[data-support-link]:visible').inner_text().endswith('learninghub2026@proton.me')
@@ -32,7 +32,7 @@ try:
   symbol=play_symbols();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class');assert history()[-1]['interactionSummary']['correctTrials']==len(symbol['interactionTask']['trials'])
   page.locator('#exerciseLevelSelect').select_option('3');page.wait_for_function('()=>__current?.interactionTask?.level===3');advanced=play_symbols(True)
   assert history()[-1]['correct'] is False;assert history()[-1]['interactionSummary']['noGoErrors']==1
-  old_attempts=len(history());page.locator('[data-interaction-kind=signals]').click();page.wait_for_selector('#startInteractive');movement=page.evaluate('__current');assert movement['interactionTask']['kind']=='movement'
+  old_attempts=len(history());page.locator('[data-interaction-kind=movement]').click();page.wait_for_selector('#startInteractive');movement=page.evaluate('__current');assert movement['interactionTask']['kind']=='movement'
   page.locator('#startInteractive').click()
   early_marked=False
   for n,rule in enumerate(movement['interactionTask']['rules'][i] for i in movement['interactionTask']['trials']):
@@ -72,7 +72,7 @@ try:
    assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class');assert page.locator('#exerciseNext').is_visible();assert len(history())==old_attempts+index+1
   page.evaluate('__restorePhotoRequest()');photo_attempts=len(history())
   # A restarted/inactive activity must never produce an automatic success.
-  area(page, 'executive').click();page.locator('#interactionModeBtn').click();page.locator('[data-interaction-kind=symbols]').click();page.wait_for_selector('#startInteractive');page.locator('#startInteractive').click()
+  area(page, 'executive').click();page.locator('[data-interaction-kind=symbols]').click();page.wait_for_selector('#startInteractive');page.locator('#startInteractive').click()
   page.evaluate('''()=>{Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'));Object.defineProperty(document,'hidden',{configurable:true,value:false});}''')
   page.clock.run_for(10000);assert page.locator('#restartInteraction').is_visible();assert len(history())==photo_attempts
   page.locator('#restartInteraction').click();assert page.locator('#startInteractive').is_visible()

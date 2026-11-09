@@ -13,15 +13,14 @@ try:
   page.evaluate('''()=>{window.__saves=0;window.__current=null;const save=LearningAPI.saveResult;LearningAPI.saveResult=(id,row)=>{if(row.itemId?.startsWith('cognitive-v'))window.__saves++;return save(id,row);};const request=LearningAPI.requestContent;LearningAPI.requestContent=async body=>{const response=await request(body);window.__current=response.items?.[0];window.__lastPayload=body;return response;};}''')
   for age in ['early','junior','primary','middle','teen']:
    workspace(page).locator('#profileSelect').select_option(age);reading_domain={'middle':'literacy','primary':'literacy','teen':'literacy'}.get(age,'reading');wait_for_area(page, reading_domain);area(page, reading_domain).click();assert not page.locator('#cognitiveMode').is_visible();area(page, 'executive').click()
-   page.locator('#cognitiveMode').click();page.wait_for_function('()=>window.__current?.type==="cognitiveTask"&&document.querySelector(".cognitive-area")')
+   page.locator('#cognitiveFamilyModes [data-cognitive-family=""]').click();page.wait_for_function('()=>window.__current?.type==="cognitiveTask"&&document.querySelector(".cognitive-area")')
    for level in [1,2,3]:
     for kind in ['rules','words','deduction','change','information','contradiction']:
      family_domain=({'middle':'middleLanguage','teen':'teenLanguage'}.get(age,'language') if kind=='words' else 'attention' if kind=='contradiction' else 'executive')
      area(page, family_domain).click()
      page.locator('#exerciseLevelSelect').select_option(str(level))
      if kind=='words':page.locator('#wordFitMode').click()
-     elif kind=='contradiction':page.locator('#cognitiveMode').click()
-     else:page.locator('#cognitiveMode').click();page.locator('#cognitiveFamilySelect').select_option(kind)
+     else:page.locator(f'#cognitiveFamilyModes [data-cognitive-family="{kind}"]').click()
      page.wait_for_function('({kind,level})=>window.__current?.type==="cognitiveTask"&&__current.cognitiveTask.kind===kind&&__current.level===level&&document.querySelector(".cognitive-area")',arg={'kind':kind,'level':level})
      item=page.evaluate('__current');task=item['cognitiveTask'];before=page.evaluate('__saves')
      if kind=='rules' and level==1 and age!='early':assert 'Adivina la regla' in page.locator('#exercisePrompt').inner_text()
@@ -77,7 +76,7 @@ try:
       file=Path(tmp)/(kind+'.docx');dl.value.save_as(file)
       with zipfile.ZipFile(file) as z:assert item['q'][:25] in z.read('word/document.xml').decode()
   # A hidden document interrupts rules, records nothing and has no pending late score.
-  area(page, 'executive').click();page.locator('#cognitiveMode').click();page.locator('#cognitiveFamilySelect').select_option('rules');page.wait_for_function('()=>window.__current?.cognitiveTask?.kind==="rules"');page.locator('.cognitive-area').get_by_role('button',name='Empezar',exact=True).click();before=page.evaluate('__saves')
+  area(page, 'executive').click();page.locator('#cognitiveFamilyModes [data-cognitive-family="rules"]').click();page.wait_for_function('()=>window.__current?.cognitiveTask?.kind==="rules"');page.locator('.cognitive-area').get_by_role('button',name='Empezar',exact=True).click();before=page.evaluate('__saves')
   page.evaluate("()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'));}")
   page.clock.fast_forward(60000);assert page.evaluate('__saves')==before;assert 'interrumpida' in page.locator('.cognitive-status').inner_text()
   page.evaluate('()=>{delete document.hidden;}');page.locator('.cognitive-area').get_by_role('button',name='Empezar',exact=True).click();page.locator('.cognitive-area').get_by_role('button',name='Reiniciar sin registrar',exact=True).click();assert page.evaluate('__saves')==before
