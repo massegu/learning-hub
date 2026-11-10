@@ -6,6 +6,10 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 // Checkout/portal ALWAYS verify the user token explicitly below.
 const API_VERSION = '2026-08-26.dahlia';
 const EVENTS = new Set(['checkout.session.completed','customer.subscription.updated','customer.subscription.deleted','invoice.payment_failed','invoice.payment_succeeded']);
+// Existing, already-linked sandbox subscriptions keep their contracted price.
+// This allowlist is only used for the exact subscription already bound to an account;
+// new subscriptions still require a server-created attempt for STRIPE_PRICE_ID.
+const LEGACY_MONTHLY_EUR_AMOUNTS = new Set([1999,2500]);
 class BillingError extends Error { status: number; constructor(status: number, message: string) { super(message); this.status=status; } }
 const fail = (status: number, message: string): never => { throw new BillingError(status,message); };
 const ref = (value: any): string | null => typeof value==='string'?value:(value?.id||null);
@@ -59,8 +63,14 @@ function sameMode(object: any,cfg: ReturnType<typeof config>) {
 function priceAllowed(sub: any,price: string) {
   return sub.items?.has_more===false&&sub.items?.data?.length===1&&ref(sub.items.data[0].price)===price&&sub.items.data[0].quantity===1;
 }
-function periodEnd(sub: any,price: string) {
-  const seconds=sub.items?.data?.find((it: any)=>ref(it.price)===price)?.current_period_end??sub.current_period_end;
+function legacyPriceAllowed(sub: any) {
+  const item=sub.items?.data?.[0],price=item?.price;
+  return sub.items?.has_more===false&&sub.items?.data?.length===1&&item.quantity===1&&price&&
+    price.currency==='eur'&&LEGACY_MONTHLY_EUR_AMOUNTS.has(price.unit_amount)&&
+    price.recurring?.interval==='month'&&price.recurring?.interval_count===1;
+}
+function periodEnd(sub: any) {
+  const seconds=sub.items?.data?.[0]?.current_period_end??sub.current_period_end;
   if(!Number.isFinite(seconds)||seconds<=0||seconds>8640000000000)return null;
   return new Date(seconds*1000).toISOString();
 }
@@ -144,10 +154,12 @@ async function webhook(admin: any,cfg: ReturnType<typeof config>,event: any) {
       // Canceled Stripe subscriptions are terminal. An older subscription can never replace a newer one.
       trusted=['canceled','incomplete_expired'].includes(previous.status)&&sub.created>previous.created;
     }
-    const allowed=priceAllowed(sub,cfg.price);
+    // Grandfather only the two confirmed old test tariffs for a subscription already
+    // bound to this account. This never authorizes an old price for a new checkout.
+    const allowed=priceAllowed(sub,cfg.price)||(known&&legacyPriceAllowed(sub));
     let status: string | null=null,end: string | null=null;
     if(trusted){
-      end=periodEnd(sub,cfg.price);
+      end=periodEnd(sub);
       let invoice=sub.latest_invoice;
       if(allowed&&sub.status==='active'&&typeof invoice==='string')invoice=await stripe(cfg,'invoices/'+encodeURIComponent(invoice));
       if(invoice&&typeof invoice==='object')sameMode(invoice,cfg);
