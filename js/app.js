@@ -1021,6 +1021,7 @@
   function activateProfile(id,independent=false) {
     stopMemoryCountdown();
     progressSaveRevision++;resultSaveRevision++;setProgressSaveStatus('');
+    if(independent)setPendingResultHomeStatus();
     $('#privacyDialog').close();privacyTarget=null;
     const p = profiles.find((x) => x.id === id);
     if (!p) return;
@@ -1118,6 +1119,13 @@
     settings.classList.toggle('hidden', !available);
     $('#activityOptionsSummary').textContent=available?'Elige una modalidad':'Modalidades no disponibles';
   }
+  function syncLanguageModeButtons() {
+    $$('#languageModeSwitch .language-mode-btn[data-mode]').forEach(button=>{
+      const selected=!cognitiveOnly&&button.dataset.mode===mode;
+      button.classList.toggle('active',selected);
+      button.setAttribute('aria-pressed',String(selected));
+    });
+  }
   function setupExercise() {
     if(configuredSubject!==null&&configuredSubject!==subject){documentOnly=false;photoOnly=false;memoryAudioOnly=false;interactionOnly=false;interactionKind=subject==='attention'?'room':'symbols';roomSpeedOnly=false;speedUnpairedOnly=false;cognitiveOnly=false;cognitiveFamily='';executedOnly=false;}
     configuredSubject=subject;
@@ -1152,7 +1160,6 @@
       b.classList.toggle('hidden',isLang&&b.dataset.mode==='writing'||isReading&&['spelling','vocabulary'].includes(b.dataset.mode));
       b.textContent=window.ContentPolicy.forProfile(profile)?({grammar:'Palabras y gramática',spelling:'Ortografía',writing:'Formar frases',vocabulary:'Vocabulario'})[b.dataset.mode]:({grammar:'Gramática',spelling:'Ortografía',writing:'Escritura',vocabulary:'Vocabulario'})[b.dataset.mode];
       if(isReading)b.textContent=({grammar:'Lectura',writing:window.ContentPolicy.forProfile(profile)?'Formar frases':'Escritura'})[b.dataset.mode]||'';
-      b.classList.toggle('active',!cognitiveOnly&&b.dataset.mode===mode);
     });
     $("#languageModeSwitch").classList.toggle("hidden", !isLang&&!isReading);
     const route=window.AgeStages.route(profile);
@@ -1229,7 +1236,7 @@
     $('#documentModeHint').classList.add('hidden');
     $$('#documentModeSwitch [data-documents]').forEach(b=>b.setAttribute('aria-pressed',String(!cognitiveOnly&&!executedOnly&&!interactionOnly&&!photoOnly&&(b.dataset.documents==='true')===documentOnly)));
     $('#attentionPhotos').setAttribute('aria-pressed',String(photoOnly&&subject==='attention'));
-    $$('#languageModeSwitch [data-mode]').forEach(button=>button.setAttribute('aria-pressed',String(!cognitiveOnly&&button.dataset.mode===mode)));
+    syncLanguageModeButtons();
     $('#wordFitMode').setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily==='words'));
     syncActivitySettings();
     counter = 0;
@@ -1676,10 +1683,8 @@
     (b) =>
       (b.onclick = () => {
         mode = b.dataset.mode;cognitiveOnly=false;executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;
+        syncLanguageModeButtons();
         $('#cognitiveFamilyModes').classList.add('hidden');$('#cognitiveMode').setAttribute('aria-pressed','false');
-        $$(".language-mode-btn").forEach((x) =>
-          x.classList.toggle("active", x === b),
-        );
         syncActivitySettings();
         newExercise();
       }),
