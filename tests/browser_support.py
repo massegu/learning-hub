@@ -45,8 +45,8 @@ window.supabase={createClient(){
    if(args.p_action==='delete'){__profiles=__profiles.filter(p=>p.id!==profile.id);localStorage.setItem('__mock_profiles',JSON.stringify(__profiles));return {data:{deleted:true}}};
    return {error:{message:'Unknown privacy action'}};
  },from(table){
-   let filter,operation,values;
-   const q={select(){return q},order(){return q},eq(k,v){filter=v;return q},insert(v){operation='insert';values=v;return q},update(v){operation='update';values=v;return q},delete(){return q},single(){return Promise.resolve(result(true))},then(a,b){return Promise.resolve(result(false)).then(a,b)}};
+   let filter,operation,values,upsertOptions;
+   const q={select(){return q},order(){return q},eq(k,v){filter=v;return q},insert(v){operation='insert';values=v;return q},upsert(v,options){operation='upsert';values=v;upsertOptions=options;return q},update(v){operation='update';values=v;return q},delete(){return q},single(){return Promise.resolve(result(true))},then(a,b){return Promise.resolve(result(false)).then(a,b)}};
    function result(single){
      if(table==='accounts'){
        if(operation==='update'){if(window.__saveLocaleFail)return {error:{message:'Mock save rejected'}};localStorage.setItem('__mock_account_locale',values.content_locale);operation=null;}
@@ -59,6 +59,17 @@ window.supabase={createClient(){
        const p=__profiles.find(p=>p.id===filter);
        if(operation==='update'&&p){Object.assign(p,values);__saved.push(JSON.parse(JSON.stringify(p)));localStorage.setItem('__mock_profiles',JSON.stringify(__profiles));operation=null;}
        return {data:single?p:__profiles,error:null};
+     }
+     if(table==='exercise_results'&&operation==='upsert'){
+       const rows=JSON.parse(localStorage.getItem('__mock_exercise_results')||'{}');
+       const key=values.profile_id+':'+values.client_attempt_id;
+       if(!rows[key])rows[key]=values;
+       localStorage.setItem('__mock_exercise_results',JSON.stringify(rows));
+       const calls=Number(localStorage.getItem('__mock_exercise_result_calls')||0)+1;
+       localStorage.setItem('__mock_exercise_result_calls',String(calls));
+       operation=null;
+       if(window.__dropNextResultResponse){window.__dropNextResultResponse=false;return {data:null,error:{status:500,message:'simulated response lost after commit'}};}
+       return {data:null,error:null};
      }
      return {data:[],error:null};
    }

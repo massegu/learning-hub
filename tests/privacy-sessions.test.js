@@ -6,14 +6,15 @@ test('independent profile starts fresh and does not mutate the tracked learner',
  s.progress.history=[{correct:false}];assert.equal(p.progress.history[0].correct,true);
  const minimized=privacy.minimize(p.progress);assert.equal(minimized.interactiveObservations[0].description,undefined);assert.equal(p.progress.interactiveObservations[0].description,'private text');
 });
-test('API suppresses independent writes and propagates result insert failures without unsafe retries',async()=>{
- const writes=[],client={auth:{},from(table){const q={select(){return q},eq(){return q},single(){return Promise.resolve({data:{progress:{}}})},update(value){writes.push({table,value});return q},insert(value){writes.push({table,value});return q},then(resolve){return Promise.resolve({data:null}).then(resolve)}};return q;}};
- const ctx={structuredClone,PrivacyControls:privacy,LH_CONFIG:{},supabase:{createClient:()=>client}};ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync('js/api.js','utf8'),ctx);const api=ctx.LearningAPI;
+test('API suppresses independent writes and retains ambiguous result attempts for safe retries',async()=>{
+ const writes=[],values=new Map(),localStorage={get length(){return values.size},key:i=>[...values.keys()][i]??null,getItem:k=>values.get(k)||null,setItem:(k,v)=>values.set(k,String(v)),removeItem:k=>values.delete(k)},client={auth:{},from(table){const q={select(){return q},eq(){return q},single(){return Promise.resolve({data:{progress:{}}})},update(value){writes.push({table,value});return q},upsert(value){writes.push({table,value});return q},then(resolve){return Promise.resolve({data:null}).then(resolve)}};return q;}};
+ const ctx={structuredClone,PrivacyControls:privacy,LH_CONFIG:{},localStorage,crypto:{randomUUID:()=> 'aaaaaaaa-1111-4111-8111-111111111111'},supabase:{createClient:()=>client}};ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync('js/api.js','utf8'),ctx);const api=ctx.LearningAPI;api.user={id:'owner'};
  api.setIndependent('learner');await api.saveProgress('learner',{history:[]});await api.saveResult('learner',{correct:true});assert.equal(writes.length,0);
  api.setIndependent(null);await api.saveProgress('learner',{_sessionOnly:true,history:[]});await api.saveResult('learner',{sessionOnly:true,correct:true});assert.equal(writes.length,0);
  await api.saveProgress('learner',{interactiveObservations:[{description:'private text',report:'described'}]});assert.equal(writes.length,1);assert.equal(writes[0].value.progress.interactiveObservations[0].description,undefined);
- let attempts=0;client.from=table=>{const q={insert(){return q},then(resolve){attempts++;return Promise.resolve({error:new Error('ambiguous network response')}).then(resolve)}};return q;};
- await assert.rejects(api.saveResult('learner',{correct:true,ts:'2026-11-06T00:00:00Z'}),/ambiguous network response/);assert.equal(attempts,1,'the client must not blindly retry an ambiguous result insert');
+ let attempts=0;client.from=table=>{const q={upsert(){return q},then(resolve){attempts++;return Promise.resolve(attempts===1?{error:new Error('ambiguous network response')}:{data:null,error:null}).then(resolve)}};return q;};
+ await assert.rejects(api.saveResult('learner',{correct:true,ts:'2026-11-06T00:00:00Z'}),/ambiguous network response/);assert.equal(attempts,1,'the client performs one initial attempt and keeps its ID for a safe retry');
+ assert.equal(api.pendingResults('learner').length,1);assert.equal((await api.retryPendingResults('learner')).confirmed,1);assert.equal(attempts,2);
 });
 test('progress snapshots are serialized per profile and preserve the fourth attempt as final state',async()=>{
  const profiles={learner:{id:'learner',progress:{}},other:{id:'other',progress:{}}},started=[],completed=[];

@@ -1,4 +1,4 @@
-"""Partial save failures are communicated accurately and only progress is retried."""
+"""Progress and idempotent result retries preserve the same client attempt."""
 import importlib.util,threading,os
 from pathlib import Path
 from playwright.sync_api import sync_playwright
@@ -13,15 +13,17 @@ try:
   page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#profileSelect',state='attached');workspace(page).locator('#profileSelect').select_option('primary')
   page.evaluate('''()=>{window.__current=null;const original=ActivityModel.forDelivery;ActivityModel.forDelivery=(item,...args)=>{window.__current=item;return original(item,...args)}}''')
   area(page,'attention').click();page.wait_for_function('()=>window.__current&&document.querySelectorAll("#exerciseOptions .option-btn").length')
-  page.evaluate('''()=>{window.__resultWrites=0;const save=LearningAPI.saveResult;LearningAPI.saveResult=async(...args)=>{window.__resultWrites++;throw new Error('ambiguous insert failure')};window.__saveProgress=LearningAPI.saveProgress;LearningAPI.saveProgress=async(...args)=>window.__saveProgress(...args)}''')
-  page.locator('#exerciseOptions .option-btn').first.click();page.wait_for_function('()=>document.querySelector("#progressSaveStatus").textContent.includes("no se pudo confirmar el resultado")')
-  assert page.locator('#retryProgressSave').is_hidden();assert page.evaluate('__resultWrites')==1
+  page.evaluate('''()=>{window.__resultWrites=0;window.__attemptIds=[];LearningAPI.saveResult=async(_profile,row)=>{window.__resultWrites++;window.__attemptIds.push(row.clientAttemptId);if(window.__resultWrites===1){const error=new Error('ambiguous insert failure');error.state='uncertain';throw error;}return {state:'confirmed',clientAttemptId:row.clientAttemptId};};window.__saveProgress=LearningAPI.saveProgress;LearningAPI.saveProgress=async(...args)=>window.__saveProgress(...args)}''')
+  page.locator('#exerciseOptions .option-btn').first.click();page.wait_for_function('()=>document.querySelector("#progressSaveStatus").textContent.includes("confirmación se interrumpió")')
+  assert page.locator('#retryProgressSave').is_hidden();assert page.locator('#retryResultSave').is_visible();assert page.evaluate('__resultWrites')==1
+  page.locator('#retryResultSave').click();page.wait_for_function('()=>window.__resultWrites===2');assert 'recuperaron 1 resultado' in page.locator('#progressSaveStatus').inner_text().lower(),page.locator('#progressSaveStatus').inner_text()
+  assert page.evaluate('__resultWrites')==2;assert page.evaluate('__attemptIds[0]===__attemptIds[1]');assert page.locator('#retryResultSave').is_hidden()
   page.locator('#exerciseNext').click();page.wait_for_function('()=>window.__current&&document.querySelectorAll("#exerciseOptions .option-btn").length')
-  page.evaluate('''()=>{window.__resultWrites=0;window.__progressWrites=0;LearningAPI.saveResult=async()=>{window.__resultWrites++;return true};LearningAPI.saveProgress=async(...args)=>{window.__progressWrites++;if(window.__progressWrites===1)throw new Error('temporary progress failure');return window.__saveProgress(...args)}}''')
+  page.evaluate('''()=>{window.__resultWrites=0;window.__progressWrites=0;LearningAPI.saveResult=async(_profile,row)=>{window.__resultWrites++;window.__lastAttemptId=row.clientAttemptId;return {state:'confirmed',clientAttemptId:row.clientAttemptId}};LearningAPI.saveProgress=async(...args)=>{window.__progressWrites++;if(window.__progressWrites===1)throw new Error('temporary progress failure');return window.__saveProgress(...args)}}''')
   page.locator('#exerciseOptions .option-btn').first.click();page.wait_for_function('()=>document.querySelector("#progressSaveStatus").textContent.includes("El resultado se guardó")')
   assert page.locator('#retryProgressSave').is_visible();assert page.evaluate('__resultWrites')==1
   page.locator('#retryProgressSave').click();page.wait_for_function('()=>document.querySelector("#progressSaveStatus").textContent.includes("Progreso guardado")')
   assert page.evaluate('__resultWrites')==1;assert page.evaluate('__progressWrites')==2;assert page.locator('#retryProgressSave').is_hidden()
   assert page.evaluate('(()=>{const p=__profiles.find(x=>x.id==="primary").progress;return p.totalAttempts===2&&p.history.length===2})()')
-  assert not errors,errors;browser.close();print('PASS: ambiguous result errors are not retried; partial progress failure exposes progress-only recovery; completed result is not duplicated')
+  assert not errors,errors;browser.close();print('PASS: uncertain result retries with same client attempt ID; partial progress failure exposes progress-only recovery; completed result is not duplicated')
 finally:server.shutdown();server.server_close()

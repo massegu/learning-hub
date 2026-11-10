@@ -96,6 +96,10 @@
 #appShell[data-design] #exercise .progress-save-status.success{color:#155b38}
 #appShell[data-design] #exercise .progress-save-status.error{padding:11px 14px;border:1px solid #e6b5b8;border-radius:10px;background:#fff0f0;color:#852d34}
 #appShell[data-design] #exercise .progress-save-status.info{color:var(--muted)}
+#appShell[data-design] #exercise #retryResultSave,#appShell[data-design] #home #retryPendingResultsHome{min-height:44px;align-self:flex-start}
+#appShell[data-design] #home .pending-result-status{margin:0 0 10px;padding:10px 13px;border-radius:10px;color:var(--muted);font-size:.9rem;line-height:1.45}
+#appShell[data-design] #home .pending-result-status.error{border:1px solid #e6b5b8;background:#fff0f0;color:#852d34}
+#appShell[data-design] #home .pending-result-status.success{color:#155b38}
 #appShell[data-design] #exercise #retryProgressSave{align-self:flex-start;min-height:44px}
 #appShell[data-design] #exercise #exerciseExplanation{margin:0;line-height:1.6}
 #appShell[data-design] #exercise #exerciseNext{align-self:flex-start;min-width:150px;min-height:54px;margin:5px 0 0;padding:12px 22px;font-size:1rem;font-weight:800}
