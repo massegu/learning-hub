@@ -1,6 +1,6 @@
 const {test,before,after}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),{stripTypeScriptTypes}=require('node:module'),{PGlite}=require('@electric-sql/pglite');
 const USER='11111111-1111-4111-8111-111111111111',OTHER='22222222-2222-4222-8222-222222222222';
-const price='price_approved',secret='whsec_offline_fixture',app='https://learning.invalid/';
+const price='price_1UYQXGPtYdHU5MK2o23mThdS',secret='whsec_offline_fixture',app='https://learning.invalid/';
 let db;
 before(async()=>{
  db=new PGlite();
@@ -21,7 +21,7 @@ before(async()=>{
 });
 after(async()=>{await db.close()});
 const future=()=>Math.floor(Date.now()/1000)+86400;
-function sub(id='sub_A',extra={}){return {id,object:'subscription',customer:'cus_A',livemode:false,created:100,status:'active',metadata:{},items:{has_more:false,data:[{price:{id:price},quantity:1,current_period_end:future()}]},latest_invoice:{id:'in_A',livemode:false,customer:'cus_A',status:'paid',parent:{type:'subscription_details',subscription_details:{subscription:id}}},...extra}}
+function sub(id='sub_A',extra={}){return {id,object:'subscription',customer:'cus_A',livemode:false,created:100,status:'active',metadata:{},items:{has_more:false,data:[{price:{id:price,currency:'eur',unit_amount:3000,tax_behavior:'inclusive',recurring:{interval:'month',interval_count:1}},quantity:1,current_period_end:future()}]},latest_invoice:{id:'in_A',livemode:false,customer:'cus_A',status:'paid',parent:{type:'subscription_details',subscription_details:{subscription:id}}},...extra}}
 async function fixture({bound=true,status='active',customer='cus_A',env={}}={}){
  await db.exec('truncate auth.users cascade');
  await db.query('insert into auth.users(id) values($1),($2)',[USER,OTHER]);
@@ -91,10 +91,14 @@ test('authenticated checkout fixes identity, price, quantity and return URL on t
  assert.equal(call.headers['Idempotency-Key'],'lh:checkout:v2:'+attempts[0].id);
  assert.deepEqual(await f.action('checkout'),first);assert.equal(f.requests.filter(r=>r.path==='checkout/sessions'&&r.body).length,1);
 });
-test('existing subscriptions use the customer-bound portal, never an email or browser-supplied customer',async()=>{
+test('existing subscriptions use the customer-bound portal and retain their contracted price',async()=>{
  const f=await fixture();assert.equal((await f.action('checkout')).status,409);
+ const contracted=f.objects.get('subscriptions/sub_A').items.data[0].price;
+ Object.assign(contracted,{id:'price_legacy_1999',unit_amount:1999});
  assert.equal((await f.action('portal','userB',{customer:'cus_A'})).status,200);
  const call=f.requests.find(r=>r.path==='billing_portal/sessions');assert.equal(call.body.customer,'cus_B');assert.equal(call.body.return_url,app);
+ assert.deepEqual(f.objects.get('subscriptions/sub_A').items.data[0].price,contracted);
+ assert.equal(f.requests.some(r=>r.path.startsWith('subscriptions/')),false);
 });
 test('automatic tax is opt-in, collects billing address and keeps the inclusive 30 EUR total',async()=>{
  const f=await fixture({bound:false,status:'trial',customer:null,env:{STRIPE_AUTOMATIC_TAX:'enabled'}});
@@ -147,6 +151,39 @@ test('unsupported prices, trials, wrong quantity, unpaid invoices and missing va
  for(const mutate of [s=>s.items.data[0].price.id='price_other',s=>s.status='trialing',s=>s.items.data[0].quantity=2,s=>s.items.has_more=true,s=>s.latest_invoice.status='open',s=>s.latest_invoice.customer='cus_B',s=>s.items.data[0].current_period_end=1]){
   const f=await fixture();mutate(f.objects.get('subscriptions/sub_A'));assert.equal((await f.event()).status,200);assert.equal((await f.account()).subscription_status,'past_due');
  }
+});
+test('already-linked paid subscriptions keep their contracted 19.99 or 25 EUR monthly price without changing it',async()=>{
+ for(const amount of [1999,2500]){
+  const f=await fixture();const current=f.objects.get('subscriptions/sub_A');
+  Object.assign(current.items.data[0].price,{id:'price_legacy_'+amount,unit_amount:amount});
+  assert.equal((await f.event()).status,200);
+  assert.equal((await f.account()).subscription_status,'active');
+  assert.equal((await f.account()).stripe_subscription_id,'sub_A');
+  assert.equal(current.items.data[0].price.unit_amount,amount);
+  current.status='past_due';current.latest_invoice.status='open';
+  assert.equal((await f.event('invoice.payment_failed',undefined,{id:'evt_legacy_failed_'+amount})).status,200);
+  assert.equal((await f.account()).subscription_status,'past_due');
+  current.status='active';current.latest_invoice.status='paid';
+  assert.equal((await f.event('customer.subscription.updated',current,{id:'evt_legacy_recovered_'+amount})).status,200);
+  assert.equal((await f.account()).subscription_status,'active');
+ }
+});
+test('legacy prices cannot be used for a new checkout and the configured launch price is the exact 30 EUR inclusive price',async()=>{
+ const f=await fixture({bound:false,status:'trial'});
+ const result=await f.action('checkout');assert.equal(result.status,200);
+ const call=f.requests.find(r=>r.path==='checkout/sessions'&&r.body);
+ assert.equal(call.body['line_items[0][price]'],'price_1UYQXGPtYdHU5MK2o23mThdS');
+ assert.equal(f.objects.get('prices/'+price).unit_amount,3000);
+ assert.equal(f.objects.get('prices/'+price).tax_behavior,'inclusive');
+ const old=await fixture({bound:false,status:'trial',env:{STRIPE_PRICE_ID:'price_old1999'}});
+ old.objects.set('prices/price_old1999',{id:'price_old1999',livemode:false,active:true,type:'recurring',currency:'eur',unit_amount:1999,tax_behavior:'inclusive',recurring:{interval:'month',interval_count:1}});
+ assert.equal((await old.action('checkout')).status,409);
+ assert.equal(old.requests.some(r=>r.path==='checkout/sessions'&&r.body),false);
+});
+test('the initial subscribe button advertises the 30 EUR launch price',()=>{
+ const html=fs.readFileSync('index.html','utf8');
+ assert.ok(html.includes('id="subscribeBtn" class="mini-btn billing-btn hidden">Suscribirme · 30,00 €/mes'));
+ assert.doesNotMatch(html,/id="subscribeBtn"[^>]*>[^<]*19,99/);
 });
 test('database failure returns retryable status; account update and event receipt roll back together',async()=>{
  const f=await fixture({status:'past_due'});

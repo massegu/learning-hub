@@ -75,4 +75,4 @@ desde España, trabaja por cuenta ajena y aún no ha confirmado altas/tratamient
 con asesoría. La compatibilidad de empleo y actividad propia no implica una
 exención automática por ingresos. Revisar la situación concreta antes de cobrar.
 Seguir [el procedimiento fiscal de prueba](stripe-tax-spain.md) después de esa
-confirmación; el total anunciado sigue siendo 19,99 EUR con impuestos incluidos.
+confirmación; el precio de lanzamiento anunciado es 30,00 EUR al mes, con impuestos incluidos.
