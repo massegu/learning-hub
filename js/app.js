@@ -1059,6 +1059,32 @@
   }
   $('#workspaceMenu').onclick=()=>{const open=$('#appShell').classList.toggle('mobile-nav-open');$('#workspaceMenu').setAttribute('aria-expanded',String(open));};
   $('#prepareSessionBtn').onclick=()=>switchSection('sessionBuilder');
+  function areaIcon(domain,route){
+    const key=/Language|language|literacy|reading/i.test(domain)?'language':
+      /Math|division|geometry/i.test(domain)?'math':
+      domain==='attention'?'attention':domain==='memory'?'memory':
+      domain==='executive'?'executive':domain==='speedReasoning'?'speed':
+      domain==='social'?'social':domain==='english'?'english':'applied';
+    const paths={
+      language:'<path d="M5 5h6a3 3 0 0 1 3 3v12a3 3 0 0 0-3-3H5z"/><path d="M19 5h-2a3 3 0 0 0-3 3v12a3 3 0 0 1 3-3h2z"/>',
+      math:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h4m-2-2v4m5-2h3m-10 7h4m3-2 3 4m0-4-3 4"/>',
+      attention:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v3m0 16v3M1 12h3m16 0h3"/>',
+      memory:'<path d="M9 5a4 4 0 0 0-6 4v2a4 4 0 0 0 2 6 4 4 0 0 0 4 3c2 0 3-1 3-3V7a3 3 0 0 0-3-2Zm6 0a4 4 0 0 1 6 4v2a4 4 0 0 1-2 6 4 4 0 0 1-4 3c-2 0-3-1-3-3V7a3 3 0 0 1 3-2Z"/><path d="M6 10h3m6 0h3M7 15h2m6 0h2"/>',
+      executive:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="m15 18 2 2 4-5"/>',
+      speed:'<path d="m13 2-9 12h7l-1 8 10-13h-7z"/>',
+      social:'<path d="M20 11a6 6 0 0 1-6 6H8l-4 4v-6a6 6 0 0 1 0-9 6 6 0 0 1 10 5"/><path d="M14 5h6a3 3 0 0 1 1 5l-2 2"/>',
+      english:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-4 4-4 14 0 18m0-18c4 4 4 14 0 18"/>',
+      applied:'<path d="M6 3h12v18H6z"/><path d="m9 9 2 2 4-4M9 16h6"/>'
+    };
+    return '<svg class="redesign-line-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+paths[key]+'</svg>';
+  }
+  function navSymbol(id){
+    const p={home:'<path d="m3 11 9-8 9 8v10h-7v-6h-4v6H3z"/>',
+      training:'<path d="M4 5h16M4 12h16M4 19h16"/><circle cx="7" cy="5" r="1" fill="currentColor"/><circle cx="7" cy="12" r="1" fill="currentColor"/><circle cx="7" cy="19" r="1" fill="currentColor"/>',
+      homework:'<path d="M5 3h11l3 3v15H5z"/><path d="M15 3v4h4M9 12h6m-6 4h6"/>',
+      progress:'<path d="M3 20V4m0 16h18M7 16l4-5 3 2 5-7"/>'};
+    return '<svg class="redesign-nav-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">'+p[id]+'</svg>';
+  }
   function buildNavigation() {
     const nav = $("#navMenu");
     const items = [
@@ -1070,7 +1096,7 @@
     nav.innerHTML = items
       .map(
         (x, i) =>
-          `<button class="nav-item ${i === 0 ? "active" : ""}" data-section="${x[0]}"><span aria-hidden="true">${x[1]}</span> ${x[2]}</button>`,
+          `<button class="nav-item ${i === 0 ? "active" : ""}" data-section="${x[0]}">${navSymbol(x[0])}<span>${x[2]}</span></button>`,
       )
       .join("");
     $$(".nav-item").forEach(
@@ -1133,6 +1159,8 @@
     $("#exercise").dataset.subject=subject;
     $('#appShell').dataset.subject=subject;
     const m = SUBJECT_META[subject];
+    const everydayPreview=$("#everydayLanguagePreview");
+    if(everydayPreview)everydayPreview.classList.toggle("hidden",!["language","middleLanguage","teenLanguage","literacy"].includes(subject));
     $("#exercisePill").textContent = m.name.toUpperCase();
     $("#exerciseHeading").textContent = m.name;
     $("#exerciseDescription").textContent = m.desc;
@@ -1775,7 +1803,7 @@
     const next=active?journey.definition(active.id,profile).plan[active.index]:domains.includes(suggested)?suggested:domains[0];
     hub.innerHTML=`<div class="school-hero card"><div><p class="eyebrow">LEARNING LAB · ${stage.label}</p><h3>${stage.title}</h3><p>${stage.description}</p><button id="schoolContinue" class="primary-btn">${active?'Continuar misión':'Explorar '+journey.all[next].title} →</button></div></div><div class="hub-heading"><h3>Áreas de entrenamiento</h3><span>Acceso directo o misiones de 3 a 5 actividades</span></div><div class="school-area-grid">${domains.map(domain=>{
       const area=journey.all[domain],results=state.history.filter(x=>x.subject===domain);
-      return `<button class="school-area-card card" data-school-area="${domain}" data-area="${domain}"><span class="school-icon area-illustration" aria-hidden="true">${window.StimulusArt.svg(area.icon)}</span><span><strong>${area.title}</strong><small>${results.length} actividades · nivel ${state.levels[domain]||1}</small></span><span aria-hidden="true">→</span></button>`;
+      return `<button class="school-area-card card" data-school-area="${domain}" data-area="${domain}"><span class="school-icon area-illustration" aria-hidden="true">${window.AgeStages.route(profile)==="junior"?window.StimulusArt.svg(area.icon):areaIcon(domain,window.AgeStages.route(profile))}</span><span><strong>${area.title}</strong><small>${results.length} actividades · nivel ${state.levels[domain]||1}</small>${domain==="language"?'<small class="communication-coming">Comunicación cotidiana · próximamente</small>':""}</span><span aria-hidden="true">→</span></button>`;
     }).join('')}</div><div class="hub-heading"><h3>Misiones opcionales</h3><span>${saved.completed.length} completadas</span></div>${active?`<p class="mission-resume">${journey.definition(active.id).title}: ${active.index} actividades realizadas.</p>`:''}<div class="school-mission-grid">${journey.forMissions(profile).map(m=>`<div class="school-mission-card card"><h4>${m.title}</h4><p>${m.plan.length} actividades · ${[...new Set(m.plan)].map(d=>journey.all[d].title).join(', ')}</p><button class="secondary-btn" data-school-mission="${m.id}" ${active&&active.id!==m.id?'disabled':''}>${active?.id===m.id?'Continuar':'Empezar'} →</button></div>`).join('')}</div><div class="school-summary" aria-label="Resumen de progreso"><strong>${state.totalAttempts}</strong><span>actividades realizadas</span><small>${saved.completed.length} misiones completadas</small></div>`;
     function open(domain){guidedSession=null;hideGuidedBar();subject=domain;switchSection('exercise');setupExercise();}
     $('#schoolContinue').onclick=()=>active?startSchoolMission(active.id):open(next);
@@ -1811,7 +1839,7 @@
     const explored=ageData().subjects.filter(d=>stats[d]?.attempts>=3).length;
     hub.innerHTML=`<div class="explore-welcome card"><div><p class="eyebrow">LEARNING LAB · MIS DESCUBRIMIENTOS</p><h3>Un lugar para explorar</h3><p>Elige un área o prueba una misión corta. Vamos paso a paso.</p><button id="earlyContinue" class="primary-btn">${active?'Continuar misión':'Explorar '+journey.areas[next].title} →</button></div></div>
       <div class="hub-heading"><div><p class="eyebrow">ELIGE TU CAMINO</p><h3>Mis áreas</h3></div><span>También puedes verlas en Entrenar.</span></div>
-      <div class="early-area-grid">${Object.entries(journey.areas).filter(([d])=>ageData().subjects.includes(d)).map(([domain,area])=>`<button class="early-area-card card" data-early-area="${domain}" data-area="${domain}"><span class="area-illustration" aria-hidden="true">${window.StimulusArt.svg(area.icon)}</span><span class="area-copy"><small>${area.theme}</small><strong>${area.title}</strong><span>${area.description}</span><span class="area-progress" aria-label="Primera exploración: ${stats[domain].firstExploration} de 3 actividades">${[1,2,3].map(i=>`<i class="${stats[domain].firstExploration>=i?'done':''}" aria-hidden="true"></i>`).join('')}<small>${stats[domain].attempts} actividades · nivel ${state.levels[domain]||1}</small></span></span><span aria-hidden="true">→</span></button>`).join('')}</div>
+      <div class="early-area-grid">${Object.entries(journey.areas).filter(([d])=>ageData().subjects.includes(d)).map(([domain,area])=>`<button class="early-area-card card" data-early-area="${domain}" data-area="${domain}"><span class="area-illustration" aria-hidden="true">${window.StimulusArt.svg(area.icon)}</span><span class="area-copy"><small>${area.theme}</small><strong>${area.title}</strong><span>${area.description}</span>${domain==="language"?'<small class="communication-coming">Comunicación cotidiana · próximamente</small>':""}<span class="area-progress" aria-label="Primera exploración: ${stats[domain].firstExploration} de 3 actividades">${[1,2,3].map(i=>`<i class="${stats[domain].firstExploration>=i?'done':''}" aria-hidden="true"></i>`).join('')}<small>${stats[domain].attempts} actividades · nivel ${state.levels[domain]||1}</small></span></span><span aria-hidden="true">→</span></button>`).join('')}</div>
       <div class="hub-heading"><div><p class="eyebrow">PASO A PASO</p><h3>Misiones cortas</h3></div><span>${saved.completed.length} misiones terminadas</span></div>
       ${active?`<p class="mission-resume" role="status">${journey.definition(active.id).title}: ${active.index} de ${journey.definition(active.id).plan.length} actividades realizadas. Puedes continuar cuando quieras.</p>`:''}
       <div class="early-mission-grid">${journey.missions.map(m=>`<div class="mission-card card"><span aria-hidden="true">${window.StimulusArt.svg(m.icon)}</span><div><h4>${m.title}</h4><p>${m.description}</p><button class="secondary-btn" data-early-mission="${m.id}" ${active&&active.id!==m.id?'disabled':''}>${active?.id===m.id?'Continuar':'Empezar'} →</button></div></div>`).join('')}</div>
@@ -1842,7 +1870,7 @@
     const descriptions={attention:'Concentración y selección',memory:'Recuerdo y aprendizaje',executive:'Planificación y organización',social:'Perspectivas y convivencia',speedReasoning:'Velocidad y razonamiento',applied:'Situaciones cotidianas',english:'Comunicación en inglés'};
     const cards=sorted.map(domain=>{
       const meta=SUBJECT_META[domain],name=subjectLabel(domain),short=descriptions[domain]||meta.desc;
-      return `<button class="redesign-area-card" type="button" data-redesign-area="${escapeHtml(domain)}"><span class="redesign-area-icon" aria-hidden="true">${escapeHtml(meta.icon)}</span><strong>${escapeHtml(name)}</strong><span class="redesign-area-desc">${escapeHtml(short)}</span><small>Nivel ${state.levels[domain]||1} <span aria-hidden="true">→</span></small></button>`;
+      return `<button class="redesign-area-card" type="button" data-redesign-area="${escapeHtml(domain)}"><span class="redesign-area-icon" aria-hidden="true">${areaIcon(domain,route)}</span><strong>${escapeHtml(name)}</strong><span class="redesign-area-desc">${escapeHtml(short)}</span>${/Language|language|literacy/.test(domain)?'<span class="communication-coming">Comunicación cotidiana · próximamente</span>':""}<small>Nivel ${state.levels[domain]||1} <span aria-hidden="true">→</span></small></button>`;
     }).join('');
     landing.innerHTML=`<div class="redesign-continue"><div><span class="redesign-kicker">CONTINUAR PRACTICANDO</span><strong>${escapeHtml(subjectLabel(suggested))}</strong><span>${escapeHtml(state.totalAttempts?'Retoma el entrenamiento desde tu perfil.':'Empieza por un área y descubre sus actividades.')}</span></div><button type="button" class="primary-btn" data-redesign-area="${escapeHtml(suggested)}">Empezar →</button></div><div class="redesign-heading"><h3>Áreas de entrenamiento</h3><span>${sorted.length} áreas disponibles</span></div><div class="redesign-area-grid">${cards}</div>`;
     landing.querySelectorAll('[data-redesign-area]').forEach(button=>button.addEventListener('click',()=>{
