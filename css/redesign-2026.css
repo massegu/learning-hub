@@ -58,3 +58,51 @@
 @media(max-width:1150px){#appShell[data-design] .redesign-area-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){#appShell[data-design] .redesign-continue{padding:18px;flex-direction:column;align-items:stretch}#appShell[data-design] .redesign-area-grid{grid-template-columns:1fr}#appShell[data-design] .redesign-area-card{min-height:140px}#appShell[data-design] .redesign-heading{align-items:flex-start;flex-direction:column;gap:4px}#appShell[data-design] .topbar-actions{justify-content:flex-start}}
 @media(prefers-reduced-motion:reduce){#appShell[data-design] .redesign-area-card{transition:none}}
+
+/* Second-round visual refinement: a calm indigo/teal identity with age-aware iconography. */
+#appShell[data-design]{
+ --bg:#F7F8FA;--card:#FFFFFF;--ink:#20334B;--muted:#5D7184;
+ --line:#DCE5E9;--nav:#203C4F;--accent:#555DB0;--accent-dark:#40498E;
+ --accent-soft:#EEF0FA;--green:#368A83;
+}
+#appShell[data-design="calma"]{--accent:#387D78;--accent-dark:#296965;--accent-soft:#E9F5F2}
+#appShell[data-design] .sidebar{background:#203C4F!important;border-right:1px solid #31556A!important;gap:15px}
+#appShell[data-design] .brand-badge{background:#C6E6DC!important;color:#24453F!important;border-radius:13px}
+#appShell[data-design] .sidebar-profile{padding:13px 12px;border:1px solid #FFFFFF26;border-radius:14px;background:#FFFFFF0A;display:flex;flex-direction:column;gap:7px}
+#appShell[data-design] .sidebar-profile label{color:#DCE9EE;font-size:.73rem;letter-spacing:.065em;font-weight:750}
+#appShell[data-design] .sidebar-profile select{width:100%;min-width:0;max-width:100%;min-height:43px;border-radius:9px}
+#appShell[data-design] .account-tools{margin-top:7px;border:1px solid #FFFFFF30;background:#FFFFFF08;padding:10px 12px}
+#appShell[data-design] .account-tools>summary{font-size:.88rem;padding:7px 4px}
+#appShell[data-design] .account-tools .profile-actions{display:flex;flex-wrap:wrap;gap:7px;padding:10px 0}
+#appShell[data-design] .account-tools .profile-actions button{flex:1;min-height:40px;font-size:.78rem}
+#appShell[data-design] .account-tools .privacy-panel p{font-size:.76rem;line-height:1.45;color:#D4E2E9}
+#appShell[data-design] .account-tools .privacy-panel button,
+#appShell[data-design] .account-tools .sidebar-footer button{width:100%;font-size:.83rem;min-height:43px;margin:5px 0}
+#appShell[data-design] .account-tools .sidebar-footer .score-chip{background:#FFFFFF12;border:1px solid #FFFFFF18}
+#appShell[data-design] .nav-menu{display:grid;gap:4px;margin-top:5px}
+#appShell[data-design] .nav-item{display:flex;align-items:center;gap:12px;min-height:47px;font-weight:650;padding:10px 12px}
+#appShell[data-design] .nav-item.active{background:#FFFFFF20!important;border-left:3px solid #95D5C9!important;box-shadow:none!important}
+#appShell[data-design] .redesign-nav-icon{height:20px;width:20px;flex:0 0 20px;stroke:currentColor}
+#appShell[data-design] .support-contact{margin-top:auto;overflow-wrap:anywhere;font-size:.78rem;line-height:1.5}
+#appShell[data-design] .support-contact a{overflow-wrap:anywhere;word-break:break-word}
+#appShell[data-design] .redesign-line-icon{width:25px;height:25px;stroke:currentColor}
+#appShell[data-design] .redesign-area-icon{width:45px;height:45px;border-radius:13px;background:#EFF1FA;color:#525DB0}
+#appShell[data-design] .redesign-area-card:nth-child(4n+2) .redesign-area-icon{background:#E6F4F1;color:#2C7771}
+#appShell[data-design] .redesign-area-card:nth-child(4n+3) .redesign-area-icon{background:#F3EDF8;color:#795B95}
+#appShell[data-design] .redesign-area-card:nth-child(4n+4) .redesign-area-icon{background:#F8F1E5;color:#926E3C}
+#appShell[data-design] :is(.school-area-card,.early-area-card) .redesign-line-icon{height:32px;width:32px}
+#appShell[data-design] .redesign-continue{background:#EFF0F9;border-color:#DDE0EE}
+#appShell[data-design="calma"] .redesign-continue{background:#EAF3F0;border-color:#D3E6DE}
+#appShell[data-design] .communication-coming{display:block;margin-top:7px;color:#68758C!important;font-size:.72rem;font-weight:650;line-height:1.35}
+#appShell[data-design] .everyday-language-preview.hidden{display:none!important}
+#appShell[data-design] .everyday-language-preview{padding:17px 19px;border:1px dashed #ABB9D0;border-radius:15px;background:#F5F7FC;margin:0 0 18px}
+#appShell[data-design] .everyday-preview-heading{display:flex;align-items:flex-start;gap:12px}
+#appShell[data-design] .everyday-preview-icon{display:grid;place-items:center;flex:0 0 39px;height:39px;border-radius:12px;background:#E3EBF5;color:#3D648D;font-size:1.5rem}
+#appShell[data-design] .everyday-preview-heading>div{flex:1}
+#appShell[data-design] .everyday-preview-heading h4{font-size:1.08rem;color:#253D55;margin:0 0 5px}
+#appShell[data-design] .everyday-preview-heading p{margin:0;color:#52687B;line-height:1.45;font-size:.9rem}
+#appShell[data-design] .everyday-preview-status{flex:0 0 auto;background:#E7ECEF;color:#4B6170;border-radius:999px;padding:6px 10px;font-size:.76rem;font-weight:750}
+#appShell[data-design] .everyday-preview-note{margin:11px 0 0;color:#67788A;font-size:.83rem;line-height:1.5}
+@media(min-width:951px){#appShell[data-design]{grid-template-columns:218px minmax(0,1fr)}#appShell[data-design] .sidebar{width:auto;grid-column:1;padding:22px 13px;overflow:auto}}
+@media(max-width:950px){#appShell[data-design] .sidebar-profile{max-width:260px}#appShell[data-design]:not(.mobile-nav-open) .sidebar-profile{display:none!important}#appShell[data-design].mobile-nav-open .sidebar-profile{display:flex!important}#appShell[data-design].mobile-nav-open .account-tools{display:block!important}}
+@media(max-width:650px){#appShell[data-design] .everyday-preview-heading{flex-wrap:wrap}#appShell[data-design] .everyday-preview-status{margin-left:50px}#appShell[data-design] .redesign-area-icon{width:40px;height:40px}}
