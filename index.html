@@ -52,20 +52,18 @@
     <aside class="sidebar">
       <button id="workspaceMenu" class="workspace-menu" aria-expanded="false" aria-controls="navMenu">Menú</button>
       <div class="brand"><div class="brand-badge"><span>LU</span></div><div><h1>LEVEL UP</h1><p>Learning Lab</p></div></div>
-      <details class="account-tools">
-        <summary>Cuenta y perfiles</summary>
-        <div class="profile-panel">
-          <small>PERFIL ACTIVO</small>
-          <select id="profileSelect"></select>
-          <div class="profile-actions"><button id="newProfileBtn" class="mini-btn">+ Nuevo</button><button id="deleteProfileBtn" class="mini-btn danger">Eliminar</button></div>
-        </div>
-        <div class="privacy-panel"><button id="independentSessionBtn" class="ghost-btn">Empezar sesión independiente</button><p id="independentSessionStatus" role="status">Seguimiento individual: los resultados se guardan en este perfil.</p><button id="profilePrivacyBtn" class="ghost-btn">Privacidad de este perfil</button></div>
-        <div class="sidebar-footer">
-          <div class="score-chip"><span>TOTAL</span><strong id="globalScore">0</strong><small>PTS</small></div>
-          <button id="resetProgressBtn" class="ghost-btn">Reiniciar este perfil</button>
-        </div>
-      </details>
+      <div class="profile-panel sidebar-profile">
+        <label for="profileSelect">PERFIL ACTIVO</label>
+        <select id="profileSelect" aria-label="Perfil activo"></select>
+      </div>
       <nav id="navMenu" class="nav-menu"></nav>
+      <details class="account-tools">
+        <summary>Cuenta y ajustes</summary>
+        <div class="profile-actions"><button id="newProfileBtn" class="mini-btn">+ Nuevo perfil</button><button id="deleteProfileBtn" class="mini-btn danger">Eliminar perfil</button></div>
+        <div class="locale-panel" id="sidebarLocalePlaceholder"></div>
+        <div class="privacy-panel"><button id="independentSessionBtn" class="ghost-btn">Empezar sesión independiente</button><p id="independentSessionStatus" role="status">Seguimiento individual: los resultados se guardan en este perfil.</p><button id="profilePrivacyBtn" class="ghost-btn">Privacidad de este perfil</button></div>
+        <div class="sidebar-footer"><div class="score-chip"><span>TOTAL</span><strong id="globalScore">0</strong><small>PTS</small></div><button id="resetProgressBtn" class="ghost-btn">Reiniciar este perfil</button></div>
+      </details>
       <p class="support-contact hidden"><a data-support-link>Ayuda y contacto</a></p>
     </aside>
 
@@ -96,6 +94,10 @@
 
       <section id="exercise" class="section">
         <div class="section-intro card block-banner"><div><span class="pill" id="exercisePill">ÁREA</span><h3 id="exerciseHeading">Entrenamiento</h3><p id="exerciseDescription">Retos adaptativos.</p></div><label class="level-control">Nivel<select id="exerciseLevelSelect"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label></div>
+        <div id="everydayLanguagePreview" class="everyday-language-preview hidden" aria-label="Comunicación y vida cotidiana">
+          <div class="everyday-preview-heading"><span class="everyday-preview-icon" aria-hidden="true">◎</span><div><h4>Comunicación y vida cotidiana</h4><p>Escuchar y comprender · Comunicar y resolver · Interpretar situaciones · Organizar y actuar</p></div><span class="everyday-preview-status">En preparación</span></div>
+          <p class="everyday-preview-note">Incorporaremos aquí actividades adaptadas de «En Frecuencia» y «Entre Líneas FC». Las modalidades disponibles siguen funcionando con normalidad.</p>
+        </div>
         <div id="guidedSessionBar" class="guided-session-bar card hidden"><div class="guided-progress-copy"><strong id="guidedSessionTitle">Sesión guiada</strong><span id="guidedSessionProgress" role="status" aria-live="polite"></span></div><button id="cancelGuidedSession" class="mini-btn">Salir de la sesión</button></div>
         <section id="activityOptions" class="activity-settings hidden" aria-labelledby="activityOptionsSummary">
           <h4 id="activityOptionsSummary">Modalidades disponibles</h4>
