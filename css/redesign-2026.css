@@ -1,0 +1,60 @@
+/* Learning Hub redesign preview. Existing auth, billing, scoring and exercises remain unchanged. */
+#appShell[data-design]{
+  --bg:#F6F7F9;--card:#FFFFFF;--ink:#253149;--muted:#647188;
+  --line:#E1E6ED;--nav:#223451;--accent:#655FC3;--accent-dark:#4C479E;
+  --accent-soft:#F0EFFA;--green:#398A76;
+  --design-hero:#F1F3FB;--design-hero-ink:#253149;
+  background:var(--bg);color:var(--ink);
+}
+#appShell[data-design="calma"]{
+  --accent:#398A76;--accent-dark:#286B5C;--accent-soft:#E8F4EF;
+}
+#appShell[data-design] .sidebar{background:#223451!important;border-right:1px solid #344763}
+#appShell[data-design] .brand-badge{background:#8DC8B7;color:#183B35}
+#appShell[data-design] .nav-item{font-size:.96rem}
+#appShell[data-design] .nav-item.active{background:#FFFFFF20;border-left:3px solid #A6DBCE}
+#appShell[data-design] .topbar{margin-bottom:20px;border-bottom:1px solid var(--line);padding-bottom:18px}
+#appShell[data-design] .topbar-actions{align-items:center;gap:7px}
+#appShell[data-design] .topbar-actions .streak-card,
+#appShell[data-design] .topbar-actions>.session-chip:has(#sessionAttempts){display:none}
+#appShell[data-design] .topbar-actions #activeProfileLabel{font-weight:750}
+#appShell[data-design] .main-content{background:#F6F7F9!important}
+#appShell[data-design] .home-welcome{margin:6px 0 17px}
+#appShell[data-design] .home-welcome h3{font-size:clamp(1.65rem,2.5vw,2.45rem);line-height:1.2;letter-spacing:-.035em}
+#appShell[data-design] .home-welcome .eyebrow{color:var(--accent);letter-spacing:.09em}
+#appShell[data-design] #home>.hero{display:none!important}
+#appShell[data-design] #home>.home-session-notice{margin:0 0 18px;border-left:0;border:1px solid var(--line);background:#FFFFFF;color:#55657B;font-size:.84rem}
+#appShell[data-design] #home>.home-progress{margin-top:22px;background:#FFFFFF;padding:16px 20px;border-color:var(--line)}
+#appShell[data-design] #home>.home-progress>summary{font-size:.98rem;font-weight:800;color:var(--ink);min-height:24px;cursor:pointer}
+#appShell[data-design] #home>.home-progress>summary:focus-visible{outline:3px solid var(--accent);outline-offset:4px}
+#appShell[data-design] #home>.home-progress[open]>.dashboard-grid{margin-top:16px}
+#appShell[data-design] :is(.school-hero,.early-hero,.explore-welcome){background:linear-gradient(112deg,#EDF1FB,#E7F4ED)!important;color:var(--ink)!important;border:1px solid var(--line)!important;border-radius:20px;box-shadow:none}
+#appShell[data-design] :is(.school-hero,.early-hero,.explore-welcome) :is(h3,p){color:var(--ink)!important}
+#appShell[data-design] :is(.school-area-grid,.early-area-grid){gap:13px}
+#appShell[data-design] :is(.school-area-card,.early-area-card){border-radius:16px;padding:17px;background:#fff;border:1px solid var(--line);box-shadow:none;min-height:112px}
+#appShell[data-design] :is(.school-area-card,.early-area-card):hover{border-color:var(--accent)}
+#appShell[data-design] .school-summary{background:#fff}
+#appShell[data-design] .home-area-landing.hidden{display:none!important}
+#appShell[data-design] .redesign-continue{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:23px 25px;background:#EDEFFA;border:1px solid #DCE0F2;border-radius:19px;margin-bottom:28px}
+#appShell[data-design="calma"] .redesign-continue{background:#E7F3ED;border-color:#D2E5D9}
+#appShell[data-design] .redesign-continue>div{display:flex;flex-direction:column;gap:5px}
+#appShell[data-design] .redesign-continue strong{font-size:1.35rem;color:var(--ink)}
+#appShell[data-design] .redesign-continue span:not(.redesign-kicker){color:var(--muted);font-size:.92rem}
+#appShell[data-design] .redesign-kicker{color:var(--accent-dark);font-size:.72rem;font-weight:900;letter-spacing:.11em}
+#appShell[data-design] .redesign-continue .primary-btn{min-width:125px;min-height:46px}
+#appShell[data-design] .redesign-heading{display:flex;align-items:baseline;justify-content:space-between;gap:15px;margin-bottom:15px}
+#appShell[data-design] .redesign-heading h3{margin:0;font-size:1.35rem}
+#appShell[data-design] .redesign-heading span{color:var(--muted);font-size:.88rem}
+#appShell[data-design] .redesign-area-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+#appShell[data-design] .redesign-area-card{display:flex;flex-direction:column;align-items:flex-start;text-align:left;min-width:0;min-height:185px;gap:9px;padding:18px 19px;border:1px solid var(--line);border-radius:18px;background:#fff;color:var(--ink);font:inherit;cursor:pointer;transition:border-color .16s,box-shadow .16s}
+#appShell[data-design] .redesign-area-card:hover{border-color:var(--accent);box-shadow:0 6px 22px #2736560b}
+#appShell[data-design] .redesign-area-card:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+#appShell[data-design] .redesign-area-icon{display:grid;place-items:center;width:43px;height:43px;border-radius:13px;background:var(--accent-soft);color:var(--accent-dark);font-size:1.3rem;font-weight:850}
+#appShell[data-design] .redesign-area-card strong{font-size:1.03rem;line-height:1.35}
+#appShell[data-design] .redesign-area-desc{color:var(--muted);font-size:.84rem;line-height:1.45;max-width:30ch;flex:1}
+#appShell[data-design] .redesign-area-card small{display:flex;justify-content:space-between;width:100%;color:var(--accent-dark);font-size:.78rem;font-weight:800}
+#appShell[data-design] #training .section-intro{border-top:1px solid var(--line);border-radius:18px}
+#appShell[data-design] .training-area-list{grid-template-columns:repeat(auto-fit,minmax(min(100%,235px),1fr))}
+@media(max-width:1150px){#appShell[data-design] .redesign-area-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){#appShell[data-design] .redesign-continue{padding:18px;flex-direction:column;align-items:stretch}#appShell[data-design] .redesign-area-grid{grid-template-columns:1fr}#appShell[data-design] .redesign-area-card{min-height:140px}#appShell[data-design] .redesign-heading{align-items:flex-start;flex-direction:column;gap:4px}#appShell[data-design] .topbar-actions{justify-content:flex-start}}
+@media(prefers-reduced-motion:reduce){#appShell[data-design] .redesign-area-card{transition:none}}
