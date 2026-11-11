@@ -32,3 +32,23 @@ test('redesign is present without replacing critical account UI',()=>{
  assert.match(app,/const hasDedicatedJourney=\['early','junior','primary'\]/);
  assert.match(css,/redesign-area-grid/);
 });
+
+test('refined sidebar keeps profile selector and account actions accessible',()=>{
+ assert.match(html,/class="profile-panel sidebar-profile"/);
+ assert.match(html,/id="profileSelect"/);
+ assert.ok(html.indexOf('id="profileSelect"')<html.indexOf('id="navMenu"'));
+ for(const id of ['newProfileBtn','deleteProfileBtn','independentSessionBtn','profilePrivacyBtn','resetProgressBtn']) assert.match(html,new RegExp('id="'+id+'"'));
+ assert.match(html,/<summary>Cuenta y ajustes<\/summary>/);
+});
+test('functional communication preview is appropriately scoped',()=>{
+ assert.match(html,/id="everydayLanguagePreview"/);
+ assert.match(html,/En preparación/);
+ assert.match(app,/everydayPreview\.classList\.toggle/);
+ assert.match(app,/Comunicación cotidiana · próximamente/);
+});
+test('age-aware symbols use coherent icons without shipping a new library',()=>{
+ assert.match(app,/function areaIcon\(domain,route\)/);
+ assert.match(app,/function navSymbol\(id\)/);
+ assert.match(app,/window\.AgeStages\.route\(profile\)==="junior"\?window\.StimulusArt\.svg/);
+ assert.match(css,/redesign-line-icon/);
+});
