@@ -698,6 +698,7 @@
     const schoolName={language:'Lenguaje',division:'Matemáticas',reading:'Lectura + Escritura'}[domain];
     return schoolName?`${schoolName} ${ageData().label.replace(' años','')}`:SUBJECT_META[domain].name;
   }
+  function ageLabel(p){const route=window.AgeStages.route(p);return route==='early'?'6–7 años':route==='junior'?'8–10 años':AGE[route]?.label||AGE[p.age_band]?.label||'Grupo de edad';}
   function ageData() {
     const route=window.AgeStages.route(profile);
     const data=route==='junior'?{...AGE.primary,label:'8-10 años',subjects:window.ContentPolicy.early.subjects}:window.ContentPolicy.forProfile(profile)||AGE[profile.age_band];
@@ -987,7 +988,7 @@
     sel.innerHTML = profiles
       .map(
         (p) =>
-          `<option value="${p.id}">${escapeHtml(p.name)} · ${AGE[p.age_band].label}</option>`,
+          `<option value="${p.id}">${escapeHtml(p.name)} · ${ageLabel(p)}</option>`,
       )
       .join("");
     if (profile) sel.value = profile.id;
@@ -1746,11 +1747,12 @@
     $("#sessionAttempts").textContent = state.session.attempts;
     $("#activeProfileLabel").textContent = profile.name;
     $("#ageEyebrow").textContent =
-      `${AGE[profile.age_band].label} · ${window.LocaleContent.labels[API.effectiveLocale(profile)]}`;
-    $('#welcomeTitle').textContent=$('#appShell').dataset.design==='impulso'?'Un nuevo reto, a tu ritmo':'Tu espacio para avanzar';
+      `${ageLabel(profile)} · ${window.LocaleContent.labels[API.effectiveLocale(profile)]}`;
+    $('#welcomeTitle').textContent='¿Qué quieres practicar hoy?';
     $('#homeSessionNotice').textContent=profile._sessionOnly?'Sesión independiente: esta práctica no se añade al historial.':'Con seguimiento: los resultados se guardan en este perfil.';
     $('#homeSessionNotice').classList.toggle('independent',Boolean(profile._sessionOnly));
     renderHomeLevels();
+    renderHomeAreaLanding();
     renderEarlyHub();
     renderEarlyTaskGuide();
     renderSchoolHub();
@@ -1825,6 +1827,27 @@
     const attempts=window.EarlyJourney.stats(state.history)[subject]?.attempts||0;
     guide.innerHTML=`<button class="mini-btn" id="earlyHomeBtn">← Mis áreas</button><span class="task-steps" aria-label="Mira, responde y sigue"><span class="${answered?'':'current'}" ${answered?'':'aria-current="step"'}>1 · Mira</span><span>2 · Responde</span><span class="${answered?'ready':''}">3 · Sigue</span></span><small>${attempts} actividades en esta área</small>`;
     $('#earlyHomeBtn').onclick=()=>{guidedSession=null;hideGuidedBar();switchSection('home');};
+  }
+  function renderHomeAreaLanding(){
+    const landing=$('#homeAreaLanding');
+    const route=window.AgeStages.route(profile);
+    const hasDedicatedJourney=['early','junior','primary'].includes(route);
+    landing.classList.toggle('hidden',hasDedicatedJourney);
+    if(hasDedicatedJourney)return;
+    const subjects=ageData().subjects;
+    const priority=['attention','memory','executive','middleLanguage','teenLanguage','language','literacy','middleReading','reading','speedReasoning','middleMath','teenMath','division','social','applied','english','geometry'];
+    const order=domain=>{const n=priority.indexOf(domain);return n<0?99:n;};
+    const sorted=[...subjects].sort((a,b)=>order(a)-order(b));
+    const suggested=subjects.includes($('#recommendedBtn').dataset.subject)?$('#recommendedBtn').dataset.subject:sorted[0];
+    const descriptions={attention:'Concentración y selección',memory:'Recuerdo y aprendizaje',executive:'Planificación y organización',social:'Perspectivas y convivencia',speedReasoning:'Velocidad y razonamiento',applied:'Situaciones cotidianas',english:'Comunicación en inglés'};
+    const cards=sorted.map(domain=>{
+      const meta=SUBJECT_META[domain],name=subjectLabel(domain),short=descriptions[domain]||meta.desc;
+      return `<button class="redesign-area-card" type="button" data-redesign-area="${escapeHtml(domain)}"><span class="redesign-area-icon" aria-hidden="true">${escapeHtml(meta.icon)}</span><strong>${escapeHtml(name)}</strong><span class="redesign-area-desc">${escapeHtml(short)}</span><small>Nivel ${state.levels[domain]||1} <span aria-hidden="true">→</span></small></button>`;
+    }).join('');
+    landing.innerHTML=`<div class="redesign-continue"><div><span class="redesign-kicker">CONTINUAR PRACTICANDO</span><strong>${escapeHtml(subjectLabel(suggested))}</strong><span>${escapeHtml(state.totalAttempts?'Retoma el entrenamiento desde tu perfil.':'Empieza por un área y descubre sus actividades.')}</span></div><button type="button" class="primary-btn" data-redesign-area="${escapeHtml(suggested)}">Empezar →</button></div><div class="redesign-heading"><h3>Áreas de entrenamiento</h3><span>${sorted.length} áreas disponibles</span></div><div class="redesign-area-grid">${cards}</div>`;
+    landing.querySelectorAll('[data-redesign-area]').forEach(button=>button.addEventListener('click',()=>{
+      guidedSession=null;hideGuidedBar();subject=button.dataset.redesignArea;switchSection('exercise');setupExercise();
+    }));
   }
   function renderHomeLevels() {
     $("#homeLevels").innerHTML = ageData()
