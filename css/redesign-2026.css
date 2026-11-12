@@ -1,0 +1,225 @@
+/* Learning Hub redesign preview. Existing auth, billing, scoring and exercises remain unchanged. */
+#appShell[data-design]{background:var(--bg);color:var(--ink)}
+#appShell[data-design] .sidebar{background:#223451!important;border-right:1px solid #344763}
+#appShell[data-design] .brand-badge{background:#8DC8B7;color:#183B35}
+#appShell[data-design] .nav-item{font-size:.96rem}
+#appShell[data-design] .nav-item.active{background:#FFFFFF20;border-left:3px solid #A6DBCE}
+#appShell[data-design] .topbar{margin-bottom:20px;border-bottom:1px solid var(--line);padding-bottom:18px}
+#appShell[data-design] .topbar-actions{align-items:center;gap:7px}
+#appShell[data-design] .topbar-actions .streak-card,
+#appShell[data-design] .topbar-actions>.session-chip:has(#sessionAttempts){display:none}
+#appShell[data-design] .topbar-actions #activeProfileLabel{font-weight:750}
+#appShell[data-design] .main-content{background:#F6F7F9!important}
+#appShell[data-design] .home-welcome{margin:6px 0 17px}
+#appShell[data-design] .home-welcome h3{font-size:clamp(1.65rem,2.5vw,2.45rem);line-height:1.2;letter-spacing:-.035em}
+#appShell[data-design] .home-welcome .eyebrow{color:var(--accent);letter-spacing:.09em}
+#appShell[data-design] #home>.hero{display:none!important}
+#appShell[data-design] #home>.home-session-notice{margin:0 0 18px;border-left:0;border:1px solid var(--line);background:#FFFFFF;color:#55657B;font-size:.84rem}
+#appShell[data-design] #home>.home-progress{margin-top:22px;background:#FFFFFF;padding:16px 20px;border-color:var(--line)}
+#appShell[data-design] #home>.home-progress>summary{font-size:.98rem;font-weight:800;color:var(--ink);min-height:24px;cursor:pointer}
+#appShell[data-design] #home>.home-progress>summary:focus-visible{outline:3px solid var(--accent);outline-offset:4px}
+#appShell[data-design] #home>.home-progress[open]>.dashboard-grid{margin-top:16px}
+#appShell[data-design] :is(.school-hero,.early-hero,.explore-welcome){background:linear-gradient(112deg,#EDF1FB,#E7F4ED)!important;color:var(--ink)!important;border:1px solid var(--line)!important;border-radius:20px;box-shadow:none}
+#appShell[data-design] :is(.school-hero,.early-hero,.explore-welcome) :is(h3,p){color:var(--ink)!important}
+#appShell[data-design] :is(.school-area-grid,.early-area-grid){gap:13px}
+#appShell[data-design] :is(.school-area-card,.early-area-card){border-radius:16px;padding:17px;background:#fff;border:1px solid var(--line);box-shadow:none;min-height:112px}
+#appShell[data-design] :is(.school-area-card,.early-area-card):hover{border-color:var(--accent)}
+#appShell[data-design] .school-summary{background:#fff}
+#appShell[data-design] .home-area-landing.hidden{display:none!important}
+#appShell[data-design] .redesign-continue{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:23px 25px;background:#EDEFFA;border:1px solid #DCE0F2;border-radius:19px;margin-bottom:28px}
+#appShell[data-design="calma"] .redesign-continue{background:#E7F3ED;border-color:#D2E5D9}
+#appShell[data-design] .redesign-continue>div{display:flex;flex-direction:column;gap:5px}
+#appShell[data-design] .redesign-continue strong{font-size:1.35rem;color:var(--ink)}
+#appShell[data-design] .redesign-continue span:not(.redesign-kicker){color:var(--muted);font-size:.92rem}
+#appShell[data-design] .redesign-kicker{color:var(--accent-dark);font-size:.72rem;font-weight:900;letter-spacing:.11em}
+#appShell[data-design] .redesign-continue .primary-btn{min-width:125px;min-height:46px}
+#appShell[data-design] .redesign-heading{display:flex;align-items:baseline;justify-content:space-between;gap:15px;margin-bottom:15px}
+#appShell[data-design] .redesign-heading h3{margin:0;font-size:1.35rem}
+#appShell[data-design] .redesign-heading span{color:var(--muted);font-size:.88rem}
+#appShell[data-design] .redesign-area-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+#appShell[data-design] .redesign-area-card{display:flex;flex-direction:column;align-items:flex-start;text-align:left;min-width:0;min-height:185px;gap:9px;padding:18px 19px;border:1px solid var(--line);border-radius:18px;background:#fff;color:var(--ink);font:inherit;cursor:pointer;transition:border-color .16s,box-shadow .16s}
+#appShell[data-design] .redesign-area-card:hover{border-color:var(--accent);box-shadow:0 6px 22px #2736560b}
+#appShell[data-design] .redesign-area-card:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+#appShell[data-design] .redesign-area-icon{display:grid;place-items:center;width:43px;height:43px;border-radius:13px;background:var(--accent-soft);color:var(--accent-dark);font-size:1.3rem;font-weight:850}
+#appShell[data-design] .redesign-area-card strong{font-size:1.03rem;line-height:1.35}
+#appShell[data-design] .redesign-area-desc{color:var(--muted);font-size:.84rem;line-height:1.45;max-width:30ch;flex:1}
+#appShell[data-design] .redesign-area-card small{display:flex;justify-content:space-between;width:100%;color:var(--accent-dark);font-size:.78rem;font-weight:800}
+#appShell[data-design] #training .section-intro{border-top:1px solid var(--line);border-radius:18px}
+#appShell[data-design] .training-area-list{grid-template-columns:repeat(auto-fit,minmax(min(100%,235px),1fr))}
+@media(max-width:1150px){#appShell[data-design] .redesign-area-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){#appShell[data-design] .redesign-continue{padding:18px;flex-direction:column;align-items:stretch}#appShell[data-design] .redesign-area-grid{grid-template-columns:1fr}#appShell[data-design] .redesign-area-card{min-height:140px}#appShell[data-design] .redesign-heading{align-items:flex-start;flex-direction:column;gap:4px}#appShell[data-design] .topbar-actions{justify-content:flex-start}}
+@media(prefers-reduced-motion:reduce){#appShell[data-design] .redesign-area-card{transition:none}}
+
+/* Second-round visual refinement: a calm indigo/teal identity with age-aware iconography. */
+#appShell[data-design] .sidebar{background:#203C4F!important;border-right:1px solid #31556A!important;gap:15px}
+#appShell[data-design] .brand-badge{background:#C6E6DC!important;color:#24453F!important;border-radius:13px}
+#appShell[data-design] .sidebar-profile{padding:13px 12px;border:1px solid #FFFFFF26;border-radius:14px;background:#FFFFFF0A;display:flex;flex-direction:column;gap:7px}
+#appShell[data-design] .sidebar-profile label{color:#DCE9EE;font-size:.73rem;letter-spacing:.065em;font-weight:750}
+#appShell[data-design] .sidebar-profile select{width:100%;min-width:0;max-width:100%;min-height:43px;border-radius:9px}
+#appShell[data-design] .account-tools{margin-top:7px;border:1px solid #FFFFFF30;background:#FFFFFF08;padding:10px 12px}
+#appShell[data-design] .account-tools>summary{font-size:.88rem;padding:7px 4px}
+#appShell[data-design] .account-tools .profile-actions{display:flex;flex-wrap:wrap;gap:7px;padding:10px 0}
+#appShell[data-design] .account-tools .profile-actions button{flex:1;min-height:40px;font-size:.78rem}
+#appShell[data-design] .account-tools .privacy-panel p{font-size:.76rem;line-height:1.45;color:#D4E2E9}
+#appShell[data-design] .account-tools .privacy-panel button,
+#appShell[data-design] .account-tools .sidebar-footer button{width:100%;font-size:.83rem;min-height:43px;margin:5px 0}
+#appShell[data-design] .account-tools .sidebar-footer .score-chip{background:#FFFFFF12;border:1px solid #FFFFFF18}
+#appShell[data-design] .nav-menu{display:grid;gap:4px;margin-top:5px}
+#appShell[data-design] .nav-item{display:flex;align-items:center;gap:12px;min-height:47px;font-weight:650;padding:10px 12px}
+#appShell[data-design] .nav-item.active{background:#FFFFFF20!important;border-left:3px solid #95D5C9!important;box-shadow:none!important}
+#appShell[data-design] .redesign-nav-icon{height:20px;width:20px;flex:0 0 20px;stroke:currentColor}
+#appShell[data-design] .support-contact{margin-top:auto;overflow-wrap:anywhere;font-size:.78rem;line-height:1.5}
+#appShell[data-design] .support-contact a{overflow-wrap:anywhere;word-break:break-word}
+#appShell[data-design] .redesign-line-icon{width:25px;height:25px;stroke:currentColor}
+#appShell[data-design] .redesign-area-icon{width:45px;height:45px;border-radius:13px;background:#EFF1FA;color:#525DB0}
+#appShell[data-design] .redesign-area-card:nth-child(4n+2) .redesign-area-icon{background:#E6F4F1;color:#2C7771}
+#appShell[data-design] .redesign-area-card:nth-child(4n+3) .redesign-area-icon{background:#F3EDF8;color:#795B95}
+#appShell[data-design] .redesign-area-card:nth-child(4n+4) .redesign-area-icon{background:#F8F1E5;color:#926E3C}
+#appShell[data-design] :is(.school-area-card,.early-area-card) .redesign-line-icon{height:32px;width:32px}
+#appShell[data-design] .redesign-continue{background:#EFF0F9;border-color:#DDE0EE}
+#appShell[data-design="calma"] .redesign-continue{background:#EAF3F0;border-color:#D3E6DE}
+#appShell[data-design] .communication-coming{display:block;margin-top:7px;color:#68758C!important;font-size:.72rem;font-weight:650;line-height:1.35}
+#appShell[data-design] .everyday-language-preview.hidden{display:none!important}
+#appShell[data-design] .everyday-language-preview{padding:17px 19px;border:1px dashed #ABB9D0;border-radius:15px;background:#F5F7FC;margin:0 0 18px}
+#appShell[data-design] .everyday-preview-heading{display:flex;align-items:flex-start;gap:12px}
+#appShell[data-design] .everyday-preview-icon{display:grid;place-items:center;flex:0 0 39px;height:39px;border-radius:12px;background:#E3EBF5;color:#3D648D;font-size:1.5rem}
+#appShell[data-design] .everyday-preview-heading>div{flex:1}
+#appShell[data-design] .everyday-preview-heading h4{font-size:1.08rem;color:#253D55;margin:0 0 5px}
+#appShell[data-design] .everyday-preview-heading p{margin:0;color:#52687B;line-height:1.45;font-size:.9rem}
+#appShell[data-design] .everyday-preview-status{flex:0 0 auto;background:#E7ECEF;color:#4B6170;border-radius:999px;padding:6px 10px;font-size:.76rem;font-weight:750}
+#appShell[data-design] .everyday-preview-note{margin:11px 0 0;color:#67788A;font-size:.83rem;line-height:1.5}
+@media(min-width:951px){#appShell[data-design]{grid-template-columns:218px minmax(0,1fr)}#appShell[data-design] .sidebar{width:auto;grid-column:1;padding:22px 13px;overflow:auto}}
+@media(max-width:950px){#appShell[data-design] .sidebar-profile{max-width:260px}#appShell[data-design]:not(.mobile-nav-open) .sidebar-profile{display:none!important}#appShell[data-design].mobile-nav-open .sidebar-profile{display:flex!important}#appShell[data-design].mobile-nav-open .account-tools{display:block!important}}
+@media(max-width:650px){#appShell[data-design] .everyday-preview-heading{flex-wrap:wrap}#appShell[data-design] .everyday-preview-status{margin-left:50px}#appShell[data-design] .redesign-area-icon{width:40px;height:40px}}
+
+/* Professional workspace: stable across age profiles, warm and restrained. */
+#appShell[data-design]{
+ --bg:#FBF9F7;--card:#FFFFFF;--ink:#254556;--muted:#536D79;
+ --line:#DCE4E8;--nav:#254556;--accent:#4C5BDD;--accent-dark:#3645B9;
+ --accent-soft:#EEE9FA;--green:#087D71;--turquoise:#10BFAE;--coral:#FF7468;--pink:#F8E8EC;
+ --design-hero:#EEE9FA;--design-hero-ink:#254556;
+ background:var(--bg);color:var(--ink)
+}
+#appShell[data-design] .main-content{background:var(--bg)!important}
+#appShell[data-design] .sidebar{background:#254556!important;border-right:1px solid #355F70!important}
+#appShell[data-design] .brand-badge{background:#10BFAE!important;color:#173C46!important}
+#appShell[data-design] .nav-item.active{border-left-color:#10BFAE!important;background:#FFFFFF18!important}
+#appShell[data-design] .home-welcome{display:flex;justify-content:space-between;align-items:center;gap:18px}
+#appShell[data-design].early-experience #home>.home-welcome,#appShell[data-design].school-experience #home>.home-welcome{display:flex!important}
+#appShell[data-design].early-experience #home>.home-session-notice,#appShell[data-design].school-experience #home>.home-session-notice{display:block!important}
+#appShell[data-design] .home-welcome p:last-child{color:var(--muted)}
+#appShell[data-design] .home-progress-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:center;margin:18px 0;padding:15px 18px;border:1px solid var(--line);border-radius:15px;background:#fff}
+#appShell[data-design] .home-progress-summary>div{display:flex;flex-direction:column;gap:4px;min-width:0}
+#appShell[data-design] .home-progress-summary>div span{color:var(--muted);font-size:.78rem}
+#appShell[data-design] .home-progress-summary>div strong{color:var(--ink);font-size:1rem;overflow-wrap:anywhere}
+#appShell[data-design] .text-action{border:0;background:transparent;color:var(--accent-dark);text-decoration:underline;text-underline-offset:3px;font:inherit;font-weight:750;cursor:pointer;min-height:44px;padding:8px 10px}
+#appShell[data-design] #home>.home-progress{margin-top:8px;background:#fff}
+#appShell[data-design] #home>.home-progress>summary{color:var(--ink)}
+#appShell[data-design] .redesign-continue{background:#EEE9FA;border-color:#DCD5F0}
+#appShell[data-design] .redesign-kicker{color:var(--accent-dark)}
+#appShell[data-design] .redesign-area-icon{background:#EEE9FA;color:#4C5BDD}
+#appShell[data-design] .redesign-area-card:nth-child(4n+2) .redesign-area-icon{background:#E1F8F4;color:#087D71}
+#appShell[data-design] .redesign-area-card:nth-child(4n+3) .redesign-area-icon{background:#F8E8EC;color:#9B3E37}
+#appShell[data-design] .redesign-area-card:nth-child(4n+4) .redesign-area-icon{background:#EAF0FF;color:#3645B9}
+#appShell[data-design] .professional-area-group{margin:24px 0 0}
+#appShell[data-design] .professional-area-group>h3{font-size:1.05rem;color:#254556;margin:0 0 10px;padding-left:2px}
+#appShell[data-design] .professional-area-group .redesign-area-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+#appShell[data-design] .training-area-list{display:block;margin-top:18px}
+#appShell[data-design] .training-area-group{margin:20px 0 28px}
+#appShell[data-design] .training-area-group>h3{margin:0 0 10px;color:#254556;font-size:1.02rem}
+#appShell[data-design] .training-group-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,235px),1fr));gap:12px}
+#appShell[data-design] .training-group-grid .level-row{min-height:100px}
+#appShell[data-design] .training-group-grid .area-illustration{display:grid;place-items:center;background:#EEE9FA;border-radius:12px;color:#4C5BDD}
+#appShell[data-design] .training-group-grid .area-illustration .redesign-line-icon{width:27px;height:27px}
+#appShell[data-design] #homeLevels [data-area] .area-illustration{background-image:none!important}
+#appShell[data-design] #homeLevels [data-area] .area-illustration svg{display:block!important;visibility:visible!important;opacity:1!important;width:27px;height:27px}
+#appShell[data-design] #homeLevels [data-area="attention"] .area-illustration{background:#EEE9FA;color:#4C5BDD}
+#appShell[data-design] #homeLevels [data-area="memory"] .area-illustration{background:#FFF0EE;color:#A7463D}
+#appShell[data-design] #homeLevels [data-area="executive"] .area-illustration{background:#FFF0EE;color:#A7463D}
+#appShell[data-design] #homeLevels [data-area="language"] .area-illustration{background:#EAF0FF;color:#3645B9}
+#appShell[data-design] #homeLevels [data-area="social"] .area-illustration{background:#FFF0EE;color:#A7463D}
+#appShell[data-design] .training-group-grid .level-track{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;height:8px;overflow:visible;background:transparent}
+#appShell[data-design] .training-group-grid .level-track span{display:block;width:auto;height:8px;border-radius:999px;background:#EEE9FA}
+#appShell[data-design] .training-group-grid .level-track span.is-active{background:#4C5BDD}
+#appShell[data-design] #homeLevels .level-track span{background:#EEE9FA!important}
+#appShell[data-design] #homeLevels .level-track span.is-active{background:#4C5BDD!important}
+#appShell[data-design] .session-domain b{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:#EEE9FA;color:#4C5BDD}
+#appShell[data-design] .session-domain b .redesign-line-icon{width:23px;height:23px}
+#appShell[data-design] .redesign-area-card{min-height:170px;border-radius:15px;box-shadow:0 2px 8px #25455608}
+#appShell[data-design] .redesign-area-card.geometry-subarea{border-left:4px solid #7EA99B;background:#FFFEFC}
+#appShell[data-design] .communication-coming{margin-top:3px;padding:3px 7px;border-radius:6px;background:#FBF9F7;color:#536D79!important;font-size:.72rem}
+#appShell[data-design] .professional-missions{margin:24px 0 10px;padding:14px 17px;border:1px solid var(--line);border-radius:14px;background:#fff}
+#appShell[data-design] .professional-missions>summary{min-height:44px;display:flex;align-items:center;cursor:pointer;color:var(--ink);font-weight:800}
+#appShell[data-design] .professional-missions>summary:focus-visible,#appShell[data-design] .home-progress>summary:focus-visible{outline:3px solid #756BA7;outline-offset:3px;border-radius:5px}
+#appShell[data-design] .professional-mission-list{display:grid;gap:8px;margin-top:10px}
+#appShell[data-design] .professional-mission{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 14px;border-radius:10px;background:#FBF9F7}
+#appShell[data-design] .professional-mission p{margin:4px 0 0;color:var(--muted);font-size:.86rem}
+#appShell[data-design] .professional-mission .secondary-btn{min-width:110px;min-height:44px}
+#appShell[data-design] .account-tools .profile-actions button,#appShell[data-design] .account-tools .privacy-panel button,#appShell[data-design] .account-session-actions button,#appShell[data-design] .destructive-account-tools button{min-height:44px}
+#appShell[data-design] .sidebar-profile select{min-height:44px}
+#appShell[data-design] .home-welcome .secondary-btn{min-height:44px}
+#appShell[data-design] :is(button,a,select,summary,input,textarea):focus-visible{outline:3px solid #756BA7;outline-offset:3px}
+#appShell[data-design] .account-session-actions{display:grid;gap:5px;margin:10px 0}
+#appShell[data-design] .account-billing{display:grid;gap:7px;margin:10px 0;padding:10px;border-radius:10px;background:#FFFFFF10}
+#appShell[data-design] .account-billing .billing-btn{width:100%;min-height:44px}
+#appShell[data-design] .account-billing .session-chip{justify-content:center}
+#appShell[data-design] .destructive-account-tools{margin:10px 0;padding:9px;border:1px solid #FF746866;border-radius:9px;background:#FF746812}
+#appShell[data-design] .destructive-account-tools>summary{min-height:44px;display:flex;align-items:center;cursor:pointer;color:#8F3932;font-weight:750}
+#appShell[data-design] .account-tools .locale-panel{margin:8px 0}
+#appShell[data-design] .v16-locale-panel{margin:0;padding:12px;background:#FFFFFF12;border:1px solid #FFFFFF25;border-radius:9px}
+#appShell[data-design] .v16-locale-panel label{color:#10BFAE}
+#appShell[data-design] .v16-locale-note{color:#E5EDF0}
+#appShell[data-design] .exercise-navigation{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 auto 14px;max-width:1440px}
+#appShell[data-design] .exercise-navigation>span{color:var(--muted);font-size:.85rem}
+#appShell[data-design] .exercise-navigation button{min-height:44px}
+#appShell[data-design] .language-topic{background:#FFF0EE!important;color:#8F3932!important;border-left:4px solid #FF7468!important;border-radius:8px}
+#appShell[data-design] #exerciseVisual .reading-passage:not(:has(.practice-document)){background:#FBF9F7!important;border:1px solid #E6DCD5;border-left:4px solid #FF7468!important;border-radius:13px;color:var(--ink)}
+#appShell[data-design] #exerciseVisual .reading-passage:not(:has(.practice-document))>.stimulus-caption{color:#8F3932}
+#appShell[data-design] .memory-recall-context{margin:18px 0;padding:16px 20px;border:1px solid #F2D8D4;border-left:4px solid #FF7468;border-radius:12px;background:#FFF7F5;color:var(--ink)}
+#appShell[data-design] .memory-recall-context strong{display:block;margin-bottom:5px;color:#8F3932;font-size:.8rem;letter-spacing:.04em;text-transform:uppercase}
+#appShell[data-design] .memory-recall-context p{margin:0;line-height:1.6}
+#appShell[data-design] .destructive-account-tools>p{margin:4px 2px 10px;color:#E5EDF0;font-size:.78rem;line-height:1.45}
+#appShell[data-design] .primary-btn{background:#4C5BDD!important;border-color:#4C5BDD!important;color:#fff!important;box-shadow:0 3px 0 #3645B9,0 8px 18px #4C5BDD24!important}
+#appShell[data-design] .primary-btn:hover{background:#3645B9!important;border-color:#3645B9!important;box-shadow:0 3px 0 #29369C,0 9px 20px #4C5BDD30!important}
+#appShell[data-design] #activityOptions .activity-toolbar button[aria-pressed="true"],#appShell[data-design] #languageModeSwitch .language-mode-btn.active{background:#4C5BDD!important;border-color:#4C5BDD!important;color:#fff!important;box-shadow:0 2px 0 #3645B9!important}
+#appShell[data-design] #activityOptions .level-control{display:flex;align-items:center;gap:12px;margin-bottom:12px;color:var(--muted);font-weight:700}
+#appShell[data-design] #activityOptions .level-control::before{content:none;margin:0}
+#appShell[data-design] #activityOptions .level-control select{min-height:44px;padding:8px 32px 8px 12px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);font:inherit}
+#appShell[data-design].exercise-focus{grid-template-columns:minmax(0,1fr);min-height:100vh;background:var(--bg)}
+#appShell[data-design].exercise-focus .sidebar,#appShell[data-design].exercise-focus .topbar{display:none!important}
+#appShell[data-design].exercise-focus .main-content{grid-column:1;width:100%!important;max-width:none!important;margin:0!important;box-sizing:border-box;padding:clamp(16px,3vw,40px) clamp(16px,4vw,56px) 36px;background:var(--bg)!important}
+#appShell[data-design].exercise-focus #exercise{width:100%;max-width:1680px;margin:0 auto}
+#appShell[data-design].exercise-focus #exercise .section-intro{margin-bottom:14px}
+#appShell[data-design].exercise-focus #exercise .exercise-card{padding:clamp(20px,3vw,40px);border-radius:20px;box-shadow:0 4px 22px #2545560d}
+#appShell[data-design].exercise-focus #exercise .prompt{font-size:clamp(1.25rem,2.2vw,1.8rem);line-height:1.5}
+#appShell[data-design].exercise-focus #exerciseNext{min-height:52px}
+#appShell[data-design].exercise-focus #exercise :is(button,input,textarea,select):focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+@media(max-width:700px){
+ #appShell[data-design] .home-progress-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #appShell[data-design] .home-welcome{align-items:stretch}
+ #appShell[data-design] .professional-mission{align-items:flex-start;flex-direction:column}
+ #appShell[data-design] .professional-mission .secondary-btn{width:100%}
+ #appShell[data-design] .exercise-navigation{align-items:flex-start;flex-direction:column}
+}
+
+#appShell[data-design] .evolution-chart{display:block;width:100%;height:auto;min-height:190px;margin:8px 0 2px;overflow:visible;background:#fff;border:1px solid var(--line);border-radius:16px}
+#appShell[data-design] .evolution-chart .chart-grid{stroke:#DCE4E8;stroke-dasharray:4 6}
+#appShell[data-design] .evolution-chart .chart-axis-label{fill:#536D79;font-size:13px}
+#appShell[data-design] .evolution-chart .chart-session-label{fill:#254556;font-size:13px;font-weight:750}
+#appShell[data-design] .evolution-chart .chart-line{fill:none;stroke:#4C5BDD;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+#appShell[data-design] .evolution-chart .chart-point{fill:#fff;stroke:#4C5BDD;stroke-width:3}
+#appShell[data-design] .evolution-chart .chart-point-core{fill:#FF7468}
+#appShell[data-design] .eyebrow{color:var(--accent-dark)!important}
+#appShell[data-design] .progress-chart-summary{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;color:var(--ink)}
+#appShell[data-design] .progress-chart-summary strong{font-size:1.15rem}
+#appShell[data-design] .progress-chart-summary span{color:var(--muted)}
+#appShell[data-design] .session-evolution-note{margin:8px 0 0;color:var(--muted);font-size:.84rem;line-height:1.5}
+#appShell[data-design] .progress-chart-data{margin-top:12px;border:1px solid var(--line);border-radius:12px;background:#fff}
+#appShell[data-design] .progress-chart-data>summary{min-height:44px;padding:11px 14px;cursor:pointer;color:var(--ink);font-weight:750}
+#appShell[data-design] .progress-chart-data table{width:100%;border-collapse:collapse}
+#appShell[data-design] .progress-chart-data th,#appShell[data-design] .progress-chart-data td{padding:10px 12px;border-top:1px solid var(--line);text-align:left;color:var(--ink)}
+#appShell[data-design] .progress-chart-data th{font-size:.84rem;color:var(--muted)}
+#appShell[data-design] #progressCards .accuracy-ring span{font-size:.68rem;line-height:1.15;white-space:normal;text-align:center;max-width:100%;overflow-wrap:anywhere}
+#appShell[data-design] #progressCards .progress-subject{border-top-color:var(--progress-color)!important}
+#appShell[data-design] #progressCards .ring-track{stroke:#E3E0EC}
+@media(max-width:560px){#appShell[data-design] .evolution-chart{min-height:150px}#appShell[data-design] .progress-chart-data{overflow-x:auto}#appShell[data-design] .progress-chart-data table{min-width:470px}}

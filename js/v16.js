@@ -68,8 +68,8 @@
       btn.onclick=()=>{
         const wanted=localStorage.getItem(profileKey());
           const activeHub=document.querySelector('#earlyHub:not(.hidden),#schoolHub:not(.hidden)');
-          const candidates=[...(activeHub?.querySelectorAll('[data-home-area],[data-school-area],[data-early-area]')||[]),...document.querySelectorAll('#homeLevels [data-home-area]')];
-          const target=wanted?candidates.find(button=>button.dataset.homeArea===wanted||button.dataset.schoolArea===wanted||button.dataset.earlyArea===wanted):null;
+          const candidates=[...(activeHub?.querySelectorAll('[data-home-area],[data-school-area],[data-early-area]')||[]),...document.querySelectorAll('#homeAreaLanding [data-redesign-area],#homeLevels [data-home-area]')];
+          const target=wanted?candidates.find(button=>button.dataset.homeArea===wanted||button.dataset.schoolArea===wanted||button.dataset.earlyArea===wanted||button.dataset.redesignArea===wanted):null;
           if(target)target.click();else $('#recommendedBtn')?.click();
       };
     }
@@ -79,9 +79,9 @@
     if(document.documentElement.dataset.v16RememberBound)return;
     document.documentElement.dataset.v16RememberBound='1';
     document.addEventListener('click',e=>{
-      const b=e.target.closest('[data-home-area],[data-school-area],[data-early-area],#recommendedBtn');
-      const area=b?.dataset.homeArea||b?.dataset.schoolArea||b?.dataset.earlyArea||b?.dataset.subject;
-      if(area)localStorage.setItem(profileKey(),area);
+      const b=e.target.closest('[data-home-area],[data-school-area],[data-early-area],[data-redesign-area],#recommendedBtn');
+      const area=b?.dataset.homeArea||b?.dataset.schoolArea||b?.dataset.earlyArea||b?.dataset.redesignArea||b?.dataset.subject;
+      if(area){try{localStorage.setItem(profileKey(),area);}catch{}}
     },true);
   }
 
@@ -113,10 +113,10 @@
   }
 
   function addLocaleControl(){
-    const panel=$('.profile-panel'); if(!panel||$('#v16LocalePanel')) return;
+    const panel=$('#sidebarLocalePlaceholder'); if(!panel||$('#v16LocalePanel')) return;
     const wrap=document.createElement('div'); wrap.id='v16LocalePanel'; wrap.className='v16-locale-panel';
     wrap.innerHTML=`<label for="v16ContentLocale">VARIANTE DE ESPAÑOL</label><select id="v16ContentLocale">${Object.entries(LOCALES).map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select><span class="v16-locale-note">Se aplica a los ejemplos y al vocabulario de todos los perfiles de esta cuenta.</span>`;
-    panel.insertAdjacentElement('afterend',wrap);
+    panel.appendChild(wrap);
     $('#v16ContentLocale').addEventListener('change',e=>saveLocale(e.target.value)); loadLocale();
   }
 

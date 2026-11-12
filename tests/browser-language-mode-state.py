@@ -45,14 +45,14 @@ try:
     localStorage.setItem('lh:result-outbox:v1:account:primary:'+id,JSON.stringify({profile_id:'primary',client_attempt_id:id,occurred_at:'2026-11-10T00:00:00.000Z',session_id:'test-session-2',session_started_at:'2026-11-10T00:00:00.000Z',subject:'language',level:1,correct:false,points:0,item_id:'pending-item',detail:'choice',state:'uncertain',created_at:'2026-11-10T00:01:00.000Z',updated_at:'2026-11-10T00:01:00.000Z'}));
   }''',pending_id)
   assert page.locator('#pendingResultStatus').inner_text().startswith('Se recuperaron')
-  page.locator('#independentSessionBtn').click()
+  workspace(page).locator('#independentSessionBtn').click()
   assert page.locator('#independentSessionStatus').inner_text().startswith('Los resultados de esta sesión no se guardan')
   assert page.locator('#pendingResultStatus').is_hidden()
   assert page.locator('#pendingResultStatus').inner_text()==''
   assert page.evaluate('(key)=>localStorage.getItem(key)!==null',pending_key),'switching to independent mode must not delete a real pending outbox record'
   check_modes()
   page.once('dialog',lambda dialog:dialog.accept())
-  page.locator('#independentSessionBtn').click()
+  workspace(page).locator('#independentSessionBtn').click()
   page.wait_for_function("()=>document.querySelector('#pendingResultStatus').textContent.includes('Se recuperaron 1 resultado')")
   assert page.evaluate('(key)=>localStorage.getItem(key)===null',pending_key),'the tracked profile must still recover its pending result after independent mode ends'
   assert len(page.evaluate("Object.keys(JSON.parse(localStorage.getItem('__mock_exercise_results')||'{}'))"))==2

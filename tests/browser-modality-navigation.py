@@ -10,8 +10,9 @@ try:
   browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);page=browser.new_page(viewport={'width':1440,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');workspace(page).locator('#profileSelect').select_option('early')
   page.evaluate('''()=>{window.__current=null;const deliver=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return deliver(it,...args)}}''')
-  assert page.locator('.home-progress').get_attribute('open') is not None
-  assert page.locator('.home-progress .dashboard-grid').is_visible()
+  assert page.locator('#homeProgressSummary>div').count()==3
+  assert page.locator('.home-progress').get_attribute('open') is None
+  assert page.locator('.home-progress .dashboard-grid').count()==0
   # Check the true per-age capability inventory against what the frontend offers.
   for age in ['early','junior','primary','middle','teen']:
    workspace(page).locator('#profileSelect').select_option(age)
@@ -155,5 +156,5 @@ try:
   page.locator('#retryContentLoad').click();page.wait_for_function('()=>window.__current&&document.querySelector("#retryContentLoad").classList.contains("hidden")')
   assert 'guardados' not in page.locator('#progressSaveStatus').inner_text()
   assert not errors,errors
-  browser.close();print('PASS: five-age modality inventory, all direct contract kinds, no symbols in attention, supported documents/photos/audio/speed, home progress expanded, retry clears stale save success, desktop and mobile screenshots')
+  browser.close();print('PASS: five-age modality inventory, all direct contract kinds, no symbols in attention, supported documents/photos/audio/speed, compact progress summary, retry clears stale save success, desktop and mobile screenshots')
 finally:server.shutdown();server.server_close()

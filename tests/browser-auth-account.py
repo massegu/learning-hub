@@ -31,7 +31,7 @@ try:
   origin=f'http://127.0.0.1:{server.server_port}'
   # A remembered profile can be deleted, or belong to a previous account.
   page.add_init_script("localStorage.setItem('lh_current_profile','unavailable-profile')")
-  page.goto(origin,wait_until='networkidle');page.wait_for_selector('#changePasswordBtn')
+  page.goto(origin,wait_until='networkidle');page.wait_for_selector('#changePasswordBtn',state='attached')
   assert page.locator('#profileSelect').input_value()=='early'
   assert page.evaluate("localStorage.getItem('lh_current_profile')")=='early'
   area(page, 'language').click()

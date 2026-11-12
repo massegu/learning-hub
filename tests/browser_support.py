@@ -91,6 +91,9 @@ def doc_text(data):
 
 def workspace(page):
     """Open the responsive workspace and account/profile controls when needed."""
+    return_home = page.locator('#exerciseReturnHome')
+    if return_home.count() and return_home.is_visible():
+        return_home.click()
     toggle = page.locator('#workspaceMenu')
     if toggle.count() and toggle.is_visible() and toggle.get_attribute('aria-expanded') != 'true':
         toggle.click()
@@ -117,6 +120,9 @@ class TrainingArea:
     def click(self, **kwargs):
         workspace(self.page).locator('#navMenu [data-section="training"]').click()
         self.locator.click(**kwargs)
+        options = self.page.locator('#activityOptions')
+        if options.count() and options.is_visible() and options.evaluate('(e)=>!e.open'):
+            options.locator(':scope > summary').click()
 
     def __getattr__(self, name):
         return getattr(self.locator, name)

@@ -5,7 +5,7 @@ from playwright.sync_api import sync_playwright
 from browser_support import ROOT, area, training_areas, wait_for_area, workspace
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');review=importlib.util.module_from_spec(spec);spec.loader.exec_module(review)
 server=review.ReviewServer(('127.0.0.1',0),review.prepare());threading.Thread(target=server.serve_forever,daemon=True).start()
-shots=ROOT/'docs/review-assets/calma-impulso';shots.mkdir(parents=True,exist_ok=True)
+shots=Path('/tmp/lh-pr45-age-designs');shots.mkdir(parents=True,exist_ok=True)
 try:
  with tempfile.TemporaryDirectory() as tmp,sync_playwright() as p:
   browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_EXECUTABLE','/usr/bin/chromium'),args=['--no-sandbox']);page=browser.new_page(viewport={'width':1440,'height':1050});errors=[];page.on('pageerror',lambda e:errors.append(str(e)));page.on('dialog',lambda d:d.accept())
@@ -14,7 +14,7 @@ try:
    workspace(page)
   for age in ['early','junior','primary','middle','teen']:
    page.set_viewport_size({'width':1440,'height':1050});workspace(page).locator('#profileSelect').select_option(age)
-   expected='impulso' if age in ['middle','teen'] else 'calma';assert page.locator('#appShell').get_attribute('data-design')==expected
+   assert page.locator('#appShell').get_attribute('data-design')=='calma'
    boxes=page.evaluate('()=>({main:document.querySelector(".main-content").getBoundingClientRect().left,side:document.querySelector(".sidebar").getBoundingClientRect().right})');assert boxes['main']>=boxes['side']-1,boxes
    page.screenshot(path=str(shots/f'{age}-desktop.png'))
    page.set_viewport_size({'width':390,'height':844});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),age
@@ -30,7 +30,7 @@ try:
   workspace(page).locator('#profileSelect').select_option('teen')
   page.evaluate('''()=>{window.__fixture=PhotoLibrary.pool('teen','memory',1).find(it=>it.photoTask.sceneId==='library2026');LearningAPI.requestContent=async()=>({items:[structuredClone(__fixture)],usage:{used:2,limit:500}})}''')
   area(page, 'memory').click();page.wait_for_selector('#showMemoryPhoto');page.locator('#showMemoryPhoto').click();page.wait_for_selector('#exerciseVisual img');assert page.locator('#exerciseVisual img').evaluate('e=>e.naturalWidth')==1536
-  page.locator('#exercise').screenshot(path=str(shots/'impulso-scene-desktop.png'))
+  page.locator('#exercise').screenshot(path=str(shots/'professional-scene-desktop.png'))
   # Real DOCX export embeds exactly the new original document PNG.
   with page.expect_download() as dl:
    page.evaluate('()=>WorksheetGenerator.generate([DocumentLibrary.pool("primary","attention",1).filter(it=>it.stimulus.some(b=>b.documentId==="everyday-museum-brochure"))],__profiles.find(p=>p.id==="primary"))')

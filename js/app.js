@@ -237,6 +237,11 @@
     visual.innerHTML = targetPair + cards;
   }
   function displayMemoryQuestion(it){return it.photoTask?.kind==='recall'?String(it.memoryQuestion||'¿Qué recuerdas?').replace(/\s(?=\d+\))/g,'\n'):it.memoryQuestion||'¿Qué recuerdas?';}
+  function memoryRecallContext(it){
+    if(it.mechanic!=='memory_plan_recall')return '';
+    const context=it.stimulus?.find(block=>block.type==='text'&&block.text)?.text;
+    return context?`<aside class="memory-recall-context"><strong>Contexto del plan</strong><p>${escapeHtml(context)}</p></aside>`:'';
+  }
   function renderMemoryExercise(it) {
     if(it.audioMemory){
       const visual=$('#exerciseVisual'),area=$('#exerciseOptions');let heard=false;
@@ -315,7 +320,7 @@
     setTimeout(
       () => {
         if (currentItem !== it) return;
-        visual.innerHTML = "";
+        visual.innerHTML = memoryRecallContext(it);
         $("#exercisePrompt").textContent =
           it.memoryQuestion || "¿Qué recuerdas?";
         if(it.memoryResponse==='order')renderOrderExercise(it);
@@ -698,6 +703,7 @@
     const schoolName={language:'Lenguaje',division:'Matemáticas',reading:'Lectura + Escritura'}[domain];
     return schoolName?`${schoolName} ${ageData().label.replace(' años','')}`:SUBJECT_META[domain].name;
   }
+  function ageLabel(p){const route=window.AgeStages.route(p);return route==='early'?'6–7 años':route==='junior'?'8–10 años':AGE[route]?.label||AGE[p.age_band]?.label||'Grupo de edad';}
   function ageData() {
     const route=window.AgeStages.route(profile);
     const data=route==='junior'?{...AGE.primary,label:'8-10 años',subjects:window.ContentPolicy.early.subjects}:window.ContentPolicy.forProfile(profile)||AGE[profile.age_band];
@@ -987,7 +993,7 @@
     sel.innerHTML = profiles
       .map(
         (p) =>
-          `<option value="${p.id}">${escapeHtml(p.name)} · ${AGE[p.age_band].label}</option>`,
+          `<option value="${p.id}">${escapeHtml(p.name)} · ${ageLabel(p)}</option>`,
       )
       .join("");
     if (profile) sel.value = profile.id;
@@ -1037,7 +1043,8 @@
     $('#appShell').classList.toggle('early-experience',Boolean(window.ContentPolicy.forProfile(p)));
     $('#appShell').classList.toggle('school-experience',Boolean(window.SchoolJourney.forProfile(p)));
     $('#appShell').dataset.ageTheme=window.AgeStages.forProfile(p)?.theme || '';
-    $('#appShell').dataset.design=['middle','teen'].includes(p.progress?.ageRoute||p.age_band)?'impulso':'calma';
+    // Keep the professional workspace visually consistent; age adaptation lives in the activity content.
+    $('#appShell').dataset.design='calma';
     $('#appShell').classList.remove('mobile-nav-open');$('#workspaceMenu').setAttribute('aria-expanded','false');
     $('#exercise').classList.toggle('early-primary',Boolean(window.ContentPolicy.forProfile(p)));
     API.profileLocale = p.locale;
@@ -1058,6 +1065,34 @@
   }
   $('#workspaceMenu').onclick=()=>{const open=$('#appShell').classList.toggle('mobile-nav-open');$('#workspaceMenu').setAttribute('aria-expanded',String(open));};
   $('#prepareSessionBtn').onclick=()=>switchSection('sessionBuilder');
+  $('#prepareSessionHomeBtn').onclick=()=>switchSection('sessionBuilder');
+  $('#exerciseReturnHome').addEventListener('click',()=>switchSection('home'));
+  function areaIcon(domain,route){
+    const key=/Language|language|literacy|reading/i.test(domain)?'language':
+      /Math|division|geometry/i.test(domain)?'math':
+      domain==='attention'?'attention':domain==='memory'?'memory':
+      domain==='executive'?'executive':domain==='speedReasoning'?'speed':
+      domain==='social'?'social':domain==='english'?'english':'applied';
+    const paths={
+      language:'<path d="M5 5h6a3 3 0 0 1 3 3v12a3 3 0 0 0-3-3H5z"/><path d="M19 5h-2a3 3 0 0 0-3 3v12a3 3 0 0 1 3-3h2z"/>',
+      math:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h4m-2-2v4m5-2h3m-10 7h4m3-2 3 4m0-4-3 4"/>',
+      attention:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v3m0 16v3M1 12h3m16 0h3"/>',
+      memory:'<path d="M9 5a4 4 0 0 0-6 4v2a4 4 0 0 0 2 6 4 4 0 0 0 4 3c2 0 3-1 3-3V7a3 3 0 0 0-3-2Zm6 0a4 4 0 0 1 6 4v2a4 4 0 0 1-2 6 4 4 0 0 1-4 3c-2 0-3-1-3-3V7a3 3 0 0 1 3-2Z"/><path d="M6 10h3m6 0h3M7 15h2m6 0h2"/>',
+      executive:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="m15 18 2 2 4-5"/>',
+      speed:'<path d="m13 2-9 12h7l-1 8 10-13h-7z"/>',
+      social:'<path d="M20 11a6 6 0 0 1-6 6H8l-4 4v-6a6 6 0 0 1 0-9 6 6 0 0 1 10 5"/><path d="M14 5h6a3 3 0 0 1 1 5l-2 2"/>',
+      english:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-4 4-4 14 0 18m0-18c4 4 4 14 0 18"/>',
+      applied:'<path d="M6 3h12v18H6z"/><path d="m9 9 2 2 4-4M9 16h6"/>'
+    };
+    return '<svg class="redesign-line-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+paths[key]+'</svg>';
+  }
+  function navSymbol(id){
+    const p={home:'<path d="m3 11 9-8 9 8v10h-7v-6h-4v6H3z"/>',
+      training:'<path d="M4 5h16M4 12h16M4 19h16"/><circle cx="7" cy="5" r="1" fill="currentColor"/><circle cx="7" cy="12" r="1" fill="currentColor"/><circle cx="7" cy="19" r="1" fill="currentColor"/>',
+      homework:'<path d="M5 3h11l3 3v15H5z"/><path d="M15 3v4h4M9 12h6m-6 4h6"/>',
+      progress:'<path d="M3 20V4m0 16h18M7 16l4-5 3 2 5-7"/>'};
+    return '<svg class="redesign-nav-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">'+p[id]+'</svg>';
+  }
   function buildNavigation() {
     const nav = $("#navMenu");
     const items = [
@@ -1069,7 +1104,7 @@
     nav.innerHTML = items
       .map(
         (x, i) =>
-          `<button class="nav-item ${i === 0 ? "active" : ""}" data-section="${x[0]}"><span aria-hidden="true">${x[1]}</span> ${x[2]}</button>`,
+          `<button class="nav-item ${i === 0 ? "active" : ""}" data-section="${x[0]}">${navSymbol(x[0])}<span>${x[2]}</span></button>`,
       )
       .join("");
     $$(".nav-item").forEach(
@@ -1098,6 +1133,7 @@
     if(id!=='exercise'){stopMemoryCountdown();interactionOnly=false;}
     $$(".section").forEach((s) => s.classList.remove("active-section"));
     $("#" + id).classList.add("active-section");
+    $('#appShell').classList.toggle('exercise-focus',id==='exercise');
     $$(".nav-item").forEach((b) =>
       b.classList.toggle(
         "active",
@@ -1108,16 +1144,13 @@
     $("#sectionTitle").textContent =
       id === "exercise" ? SUBJECT_META[subject].name : titles[id];
     if (id === "progress") renderProgress();
-    if(id==='home')renderEarlyHub();
-    if(id==='home')renderSchoolHub();
+    if(id==='home')renderHomeAreaLanding();
+    if(id==='exercise'){window.scrollTo(0,0);$('#exerciseHeading').focus({preventScroll:true});}
   }
   function syncActivitySettings() {
     const settings = $('#activityOptions');
     if (!settings) return;
-    const buttons=[...settings.querySelectorAll('.activity-toolbar button')];
-    const available=buttons.some(button=>!button.classList.contains('hidden')&&!button.closest('.hidden:not(#activityOptions)'));
-    settings.classList.toggle('hidden', !available);
-    $('#activityOptionsSummary').textContent=available?'Elige una modalidad':'Modalidades no disponibles';
+    settings.classList.remove('hidden');
   }
   function syncLanguageModeButtons() {
     $$('#languageModeSwitch .language-mode-btn[data-mode]').forEach(button=>{
@@ -1127,11 +1160,14 @@
     });
   }
   function setupExercise() {
+    if(profile?.id&&!profile._sessionOnly){try{localStorage.setItem(`lh_v16_last_subject_${profile.id}`,subject);}catch{}}
     if(configuredSubject!==null&&configuredSubject!==subject){documentOnly=false;photoOnly=false;memoryAudioOnly=false;interactionOnly=false;interactionKind=subject==='attention'?'room':'symbols';roomSpeedOnly=false;speedUnpairedOnly=false;cognitiveOnly=false;cognitiveFamily='';executedOnly=false;}
     configuredSubject=subject;
     $("#exercise").dataset.subject=subject;
     $('#appShell').dataset.subject=subject;
     const m = SUBJECT_META[subject];
+    const everydayPreview=$("#everydayLanguagePreview");
+    if(everydayPreview)everydayPreview.classList.toggle("hidden",!["language","middleLanguage","teenLanguage"].includes(subject));
     $("#exercisePill").textContent = m.name.toUpperCase();
     $("#exerciseHeading").textContent = m.name;
     $("#exerciseDescription").textContent = m.desc;
@@ -1735,10 +1771,10 @@
     if ($("#subjectScore") && subject)
       $("#subjectScore").textContent = state.scores[subject] || 0;
     $("#globalScore").textContent = total;
-    $("#homePoints").textContent = total;
-    $("#homeCorrect").textContent = state.totalCorrect;
-    $("#homeAttempts").textContent = state.totalAttempts;
-    $("#homeAccuracy").textContent =
+    if($("#homePoints"))$("#homePoints").textContent = total;
+    if($("#homeCorrect"))$("#homeCorrect").textContent = state.totalCorrect;
+    if($("#homeAttempts"))$("#homeAttempts").textContent = state.totalAttempts;
+    if($("#homeAccuracy"))$("#homeAccuracy").textContent =
       (state.totalAttempts
         ? Math.round((state.totalCorrect / state.totalAttempts) * 100)
         : 0) + "%";
@@ -1746,11 +1782,21 @@
     $("#sessionAttempts").textContent = state.session.attempts;
     $("#activeProfileLabel").textContent = profile.name;
     $("#ageEyebrow").textContent =
-      `${AGE[profile.age_band].label} · ${window.LocaleContent.labels[API.effectiveLocale(profile)]}`;
-    $('#welcomeTitle').textContent=$('#appShell').dataset.design==='impulso'?'Un nuevo reto, a tu ritmo':'Tu espacio para avanzar';
+      `${ageLabel(profile)} · ${window.LocaleContent.labels[API.effectiveLocale(profile)]}`;
+    $('#welcomeTitle').textContent='¿Qué quieres preparar hoy?';
+    const summary=$('#homeProgressSummary');
+    const lastOpened=(()=>{try{const last=localStorage.getItem(`lh_v16_last_subject_${profile.id}`);return ageData().subjects.includes(last)?last:null;}catch{return null;}})();
+    const lastAnswered=[...state.history].reverse().find(row=>ageData().subjects.includes(row.subject))?.subject||null;
+    const lastArea=lastOpened||lastAnswered;
+    if(summary){
+      const accuracy=state.totalAttempts?Math.round(state.totalCorrect/state.totalAttempts*100):0;
+      const areaLabel=lastOpened?'Última área abierta':lastAnswered?'Última área respondida':'Última área';
+      summary.innerHTML=`<div><span>Actividades</span><strong>${state.totalAttempts}</strong></div><div><span>Precisión</span><strong>${accuracy}%</strong></div><div><span>${areaLabel}</span><strong>${escapeHtml(lastArea?subjectLabel(lastArea):'Sin actividad reciente')}</strong></div>`;
+    }
     $('#homeSessionNotice').textContent=profile._sessionOnly?'Sesión independiente: esta práctica no se añade al historial.':'Con seguimiento: los resultados se guardan en este perfil.';
     $('#homeSessionNotice').classList.toggle('independent',Boolean(profile._sessionOnly));
     renderHomeLevels();
+    renderHomeAreaLanding();
     renderEarlyHub();
     renderEarlyTaskGuide();
     renderSchoolHub();
@@ -1766,19 +1812,7 @@
     subject=mission.plan[saved.active.index];persist();switchSection('exercise');updateGuidedBar();setupExercise();
   }
   function renderSchoolHub(){
-    const hub=$('#schoolHub'),stage=window.SchoolJourney.forProfile(profile);
-    hub.classList.toggle('hidden',!stage);if(!stage||!state)return;
-    const journey=window.SchoolJourney,saved=journey.normalize(profile.progress?._schoolJourney),active=saved.active;
-    const domains=ageData().subjects,suggested=$('#recommendedBtn').dataset.subject;
-    const next=active?journey.definition(active.id,profile).plan[active.index]:domains.includes(suggested)?suggested:domains[0];
-    hub.innerHTML=`<div class="school-hero card"><div><p class="eyebrow">LEARNING LAB · ${stage.label}</p><h3>${stage.title}</h3><p>${stage.description}</p><button id="schoolContinue" class="primary-btn">${active?'Continuar misión':'Explorar '+journey.all[next].title} →</button></div></div><div class="hub-heading"><h3>Áreas de entrenamiento</h3><span>Acceso directo o misiones de 3 a 5 actividades</span></div><div class="school-area-grid">${domains.map(domain=>{
-      const area=journey.all[domain],results=state.history.filter(x=>x.subject===domain);
-      return `<button class="school-area-card card" data-school-area="${domain}" data-area="${domain}"><span class="school-icon area-illustration" aria-hidden="true">${window.StimulusArt.svg(area.icon)}</span><span><strong>${area.title}</strong><small>${results.length} actividades · nivel ${state.levels[domain]||1}</small></span><span aria-hidden="true">→</span></button>`;
-    }).join('')}</div><div class="hub-heading"><h3>Misiones opcionales</h3><span>${saved.completed.length} completadas</span></div>${active?`<p class="mission-resume">${journey.definition(active.id).title}: ${active.index} actividades realizadas.</p>`:''}<div class="school-mission-grid">${journey.forMissions(profile).map(m=>`<div class="school-mission-card card"><h4>${m.title}</h4><p>${m.plan.length} actividades · ${[...new Set(m.plan)].map(d=>journey.all[d].title).join(', ')}</p><button class="secondary-btn" data-school-mission="${m.id}" ${active&&active.id!==m.id?'disabled':''}>${active?.id===m.id?'Continuar':'Empezar'} →</button></div>`).join('')}</div><div class="school-summary" aria-label="Resumen de progreso"><strong>${state.totalAttempts}</strong><span>actividades realizadas</span><small>${saved.completed.length} misiones completadas</small></div>`;
-    function open(domain){guidedSession=null;hideGuidedBar();subject=domain;switchSection('exercise');setupExercise();}
-    $('#schoolContinue').onclick=()=>active?startSchoolMission(active.id):open(next);
-    $$('[data-school-area]').forEach(b=>b.onclick=()=>open(b.dataset.schoolArea));
-    $$('[data-school-mission]').forEach(b=>b.onclick=()=>startSchoolMission(b.dataset.schoolMission));
+    const hub=$('#schoolHub');hub.classList.add('hidden');hub.replaceChildren();
   }
   function renderSchoolTaskGuide(){
     let guide=$('#schoolTaskGuide');
@@ -1800,23 +1834,7 @@
     subject=mission.plan[active.index];persist();switchSection('exercise');updateGuidedBar();setupExercise();
   }
   function renderEarlyHub(){
-    const hub=$('#earlyHub'),early=Boolean(window.ContentPolicy.forProfile(profile));
-    hub.classList.toggle('hidden',!early);if(!early||!state)return;
-    const journey=window.EarlyJourney,stats=journey.stats(state.history),saved=journeyState(),active=saved.active;
-    const suggested=$('#recommendedBtn').dataset.subject;
-    const next=active?journey.definition(active.id).plan[active.index]:journey.suggest(state.history,ageData().subjects,suggested);
-    const discovery=journey.overview(state.history,ageData().subjects,saved.completed);
-    const explored=ageData().subjects.filter(d=>stats[d]?.attempts>=3).length;
-    hub.innerHTML=`<div class="explore-welcome card"><div><p class="eyebrow">LEARNING LAB · MIS DESCUBRIMIENTOS</p><h3>Un lugar para explorar</h3><p>Elige un área o prueba una misión corta. Vamos paso a paso.</p><button id="earlyContinue" class="primary-btn">${active?'Continuar misión':'Explorar '+journey.areas[next].title} →</button></div></div>
-      <div class="hub-heading"><div><p class="eyebrow">ELIGE TU CAMINO</p><h3>Mis áreas</h3></div><span>También puedes verlas en Entrenar.</span></div>
-      <div class="early-area-grid">${Object.entries(journey.areas).filter(([d])=>ageData().subjects.includes(d)).map(([domain,area])=>`<button class="early-area-card card" data-early-area="${domain}" data-area="${domain}"><span class="area-illustration" aria-hidden="true">${window.StimulusArt.svg(area.icon)}</span><span class="area-copy"><small>${area.theme}</small><strong>${area.title}</strong><span>${area.description}</span><span class="area-progress" aria-label="Primera exploración: ${stats[domain].firstExploration} de 3 actividades">${[1,2,3].map(i=>`<i class="${stats[domain].firstExploration>=i?'done':''}" aria-hidden="true"></i>`).join('')}<small>${stats[domain].attempts} actividades · nivel ${state.levels[domain]||1}</small></span></span><span aria-hidden="true">→</span></button>`).join('')}</div>
-      <div class="hub-heading"><div><p class="eyebrow">PASO A PASO</p><h3>Misiones cortas</h3></div><span>${saved.completed.length} misiones terminadas</span></div>
-      ${active?`<p class="mission-resume" role="status">${journey.definition(active.id).title}: ${active.index} de ${journey.definition(active.id).plan.length} actividades realizadas. Puedes continuar cuando quieras.</p>`:''}
-      <div class="early-mission-grid">${journey.missions.map(m=>`<div class="mission-card card"><span aria-hidden="true">${window.StimulusArt.svg(m.icon)}</span><div><h4>${m.title}</h4><p>${m.description}</p><button class="secondary-btn" data-early-mission="${m.id}" ${active&&active.id!==m.id?'disabled':''}>${active?.id===m.id?'Continuar':'Empezar'} →</button></div></div>`).join('')}</div>
-      <section class="discovery-trail" aria-label="Tu progreso en descubrimientos"><div><strong>Tu camino de descubrimientos</strong><span>${discovery.discoveries} de ${discovery.goal} pasos explorados · ${explored} de ${ageData().subjects.length} áreas iniciadas · ${state.totalAttempts} actividades</span><progress value="${discovery.discoveries}" max="${discovery.goal}" aria-label="Actividades para explorar todas las áreas"></progress></div><ol>${discovery.milestones.map(m=>`<li class="${m.done?'discovered':''}"><span aria-hidden="true">${m.done?'✓':'○'}</span><span>${m.title}<small>${m.done?'Conseguido':'Por descubrir'}</small></span></li>`).join('')}</ol></section>`;
-    $('#earlyContinue').onclick=()=>active?startEarlyMission(active.id):openEarlyArea(next);
-    $$('[data-early-area]').forEach(b=>b.onclick=()=>openEarlyArea(b.dataset.earlyArea));
-    $$('[data-early-mission]').forEach(b=>b.onclick=()=>startEarlyMission(b.dataset.earlyMission));
+    const hub=$('#earlyHub');hub.classList.add('hidden');hub.replaceChildren();
   }
   function renderEarlyTaskGuide(answered=false){
     let guide=$('#earlyTaskGuide');
@@ -1826,13 +1844,58 @@
     guide.innerHTML=`<button class="mini-btn" id="earlyHomeBtn">← Mis áreas</button><span class="task-steps" aria-label="Mira, responde y sigue"><span class="${answered?'':'current'}" ${answered?'':'aria-current="step"'}>1 · Mira</span><span>2 · Responde</span><span class="${answered?'ready':''}">3 · Sigue</span></span><small>${attempts} actividades en esta área</small>`;
     $('#earlyHomeBtn').onclick=()=>{guidedSession=null;hideGuidedBar();switchSection('home');};
   }
+  function renderHomeAreaLanding(){
+    const landing=$('#homeAreaLanding');
+    const route=window.AgeStages.route(profile);
+    landing.classList.remove('hidden');
+    const subjects=ageData().subjects;
+    const priority=['attention','memory','executive','speedReasoning','applied','social','language','middleLanguage','teenLanguage','reading','middleReading','literacy','english','geometry','division','middleMath','teenMath'];
+    const order=domain=>{const n=priority.indexOf(domain);return n<0?99:n;};
+    const sorted=[...subjects].sort((a,b)=>order(a)-order(b));
+    let remembered=null;
+    try{const saved=localStorage.getItem(`lh_v16_last_subject_${profile.id}`);if(subjects.includes(saved))remembered=saved;}catch{}
+    const lastAnswered=[...state.history].reverse().find(row=>subjects.includes(row.subject))?.subject||null;
+    const recommended=subjects.includes($('#recommendedBtn').dataset.subject)?$('#recommendedBtn').dataset.subject:sorted[0];
+    const suggested=remembered||lastAnswered||recommended;
+    const suggestionKind=remembered?'open':lastAnswered?'answered':'new';
+    const descriptions={attention:'Concentración y selección',memory:'Recuerdo y aprendizaje',executive:'Planificación y organización',social:'Perspectivas y convivencia',speedReasoning:'Velocidad y razonamiento',applied:'Situaciones cotidianas',english:'Comunicación en inglés'};
+    const groupFor=areaGroupFor;
+    const groupLabels={cognitive:'Áreas cognitivas',language:'Lenguaje y comunicación',math:'Matemáticas'};
+    const cardsFor=domains=>domains.map(domain=>{
+      const meta=SUBJECT_META[domain],name=subjectLabel(domain),short=descriptions[domain]||meta.desc;
+      const languageArea=['language','middleLanguage','teenLanguage'].includes(domain);
+      const journeyAttribute=window.ContentPolicy.forProfile(profile)?`data-early-area="${escapeHtml(domain)}"`:window.SchoolJourney.forProfile(profile)?`data-school-area="${escapeHtml(domain)}"`:'';
+      return `<button class="redesign-area-card${domain==='geometry'?' geometry-subarea':''}" type="button" data-area="${escapeHtml(domain)}" data-redesign-area="${escapeHtml(domain)}" ${journeyAttribute}><span class="redesign-area-icon" aria-hidden="true">${areaIcon(domain,'professional')}</span><strong>${escapeHtml(name)}</strong><span class="redesign-area-desc">${escapeHtml(short)}</span>${languageArea?'<span class="communication-coming">Comunicación y vida cotidiana · en preparación</span>':''}<small>Nivel ${state.levels[domain]||1} <span aria-hidden="true">→</span></small></button>`;
+    }).join('');
+    const groups=['cognitive','language','math'].filter(group=>sorted.some(domain=>groupFor(domain)===group));
+    const areaSections=groups.map(group=>`<section class="professional-area-group ${group==='math'?'mathematics-area-group':''}" aria-labelledby="areaGroup-${group}"><h3 id="areaGroup-${group}">${groupLabels[group]}</h3><div class="redesign-area-grid">${cardsFor(sorted.filter(domain=>groupFor(domain)===group))}</div></section>`).join('');
+    const journeyMarkup=renderOptionalMissions(route);
+    const suggestionCopy={open:['ÚLTIMA ÁREA ABIERTA','Abre el área de nuevo; el ejercicio comienza desde el inicio.','Volver a '],answered:['ÚLTIMA ÁREA RESPONDIDA','Continúa en el área de tu respuesta más reciente.','Continuar en '],new:['ENTRENAMIENTO','Empieza por un área o prepara una sesión supervisada.','Empezar por ']}[suggestionKind];
+    landing.innerHTML=`<div class="redesign-continue"><div><span class="redesign-kicker">${suggestionCopy[0]}</span><strong>${escapeHtml(subjectLabel(suggested))}</strong><span>${suggestionCopy[1]}</span></div><button type="button" class="primary-btn" data-redesign-area="${escapeHtml(suggested)}">${suggestionCopy[2]}${escapeHtml(subjectLabel(suggested))} →</button></div><div class="redesign-heading"><h3>Áreas disponibles</h3><span>${sorted.length} áreas para este perfil</span></div>${areaSections}${journeyMarkup}`;
+    landing.querySelectorAll('[data-redesign-area]').forEach(button=>button.addEventListener('click',()=>{
+      guidedSession=null;hideGuidedBar();subject=button.dataset.redesignArea;switchSection('exercise');setupExercise();
+    }));
+    landing.querySelectorAll('[data-unified-mission]').forEach(button=>button.addEventListener('click',()=>{
+      const {kind,id}=button.dataset.unifiedMission==='early'?{kind:'early',id:button.dataset.missionId}:{kind:'school',id:button.dataset.missionId};
+      if(kind==='early')startEarlyMission(id);else startSchoolMission(id);
+    }));
+  }
+  function renderOptionalMissions(route){
+    if(window.ContentPolicy.forProfile(profile)){
+      const saved=journeyState(),active=saved.active,journey=window.EarlyJourney;
+      const stats=journey.stats(state.history),discovery=journey.overview(state.history,ageData().subjects,saved.completed),explored=ageData().subjects.filter(d=>stats[d]?.attempts>=3).length;
+      return `<details class="professional-missions"><summary>Misiones opcionales · ${journey.missions.length}</summary>${active?`<p role="status">${journey.definition(active.id).title}: ${active.index} de ${journey.definition(active.id).plan.length} actividades realizadas.</p>`:''}<section class="professional-discovery" aria-label="Progreso de descubrimientos"><strong>Recorrido de descubrimientos</strong><p>${discovery.discoveries} de ${discovery.goal} pasos · ${explored} de ${ageData().subjects.length} áreas iniciadas</p><progress value="${discovery.discoveries}" max="${discovery.goal}" aria-label="Actividades para explorar todas las áreas"></progress><ol>${discovery.milestones.map(m=>`<li>${m.done?'✓':'○'} ${escapeHtml(m.title)}</li>`).join('')}</ol></section><div class="professional-mission-list">${journey.missions.map(m=>`<article class="professional-mission"><div><strong>${escapeHtml(m.title)}</strong><p>${escapeHtml(m.description)}</p></div><button type="button" class="secondary-btn" data-unified-mission="early" data-mission-id="${escapeHtml(m.id)}" ${active&&active.id!==m.id?'disabled':''}>${active?.id===m.id?'Continuar':'Empezar'}</button></article>`).join('')}</div></details>`;
+    }
+    const stage=window.SchoolJourney.forProfile(profile);if(!stage)return '';
+    const journey=window.SchoolJourney,saved=journey.normalize(profile.progress?._schoolJourney),active=saved.active,missions=journey.forMissions(profile);
+    return `<details class="professional-missions"><summary>Misiones opcionales · ${missions.length} · ${saved.completed.length} completadas</summary>${active?`<p role="status">${escapeHtml(journey.definition(active.id,profile).title)}: ${active.index} actividades realizadas.</p>`:''}<div class="professional-mission-list">${missions.map(m=>`<article class="professional-mission"><div><strong>${escapeHtml(m.title)}</strong><p>${m.plan.length} actividades · ${escapeHtml([...new Set(m.plan)].map(d=>journey.all[d]?.title||SUBJECT_META[d]?.name||d).join(', '))}</p></div><button type="button" class="secondary-btn" data-unified-mission="school" data-mission-id="${escapeHtml(m.id)}" ${active&&active.id!==m.id?'disabled':''}>${active?.id===m.id?'Continuar':'Empezar'}</button></article>`).join('')}</div></details>`;
+  }
+  function areaGroupFor(domain){return ['geometry','division','middleMath','teenMath'].includes(domain)?'math':
+    ['language','middleLanguage','teenLanguage','reading','middleReading','literacy','english'].includes(domain)?'language':'cognitive';}
   function renderHomeLevels() {
-    $("#homeLevels").innerHTML = ageData()
-      .subjects.map(
-        (s) =>
-          `<button type="button" class="level-row" data-home-area="${s}" data-area="${s}"><span class="area-illustration" aria-hidden="true"></span><strong>${SUBJECT_META[s].name}</strong><div class="level-track"><span style="width:${((state.levels[s] || 1) / 3) * 100}%"></span></div><span class="level-tag">NIVEL ${state.levels[s] || 1}</span></button>`,
-      )
-      .join("");
+    const subjects=ageData().subjects,labels={cognitive:'Áreas cognitivas',language:'Lenguaje y comunicación',math:'Matemáticas'};
+    const groups=['cognitive','language','math'].filter(group=>subjects.some(s=>areaGroupFor(s)===group));
+    $("#homeLevels").innerHTML=groups.map(group=>`<section class="training-area-group"><h3>${labels[group]}</h3><div class="training-group-grid">${subjects.filter(s=>areaGroupFor(s)===group).map(s=>{const level=state.levels[s]||1;return `<button type="button" class="level-row" data-home-area="${s}" data-area="${s}"><span class="area-illustration" aria-hidden="true">${areaIcon(s,'professional')}</span><strong>${SUBJECT_META[s].name}</strong><div class="level-track" role="meter" aria-label="Nivel actual" aria-valuemin="1" aria-valuemax="3" aria-valuenow="${level}">${[1,2,3].map(n=>`<span class="${n<=level?'is-active':''}" aria-hidden="true"></span>`).join('')}</div><span class="level-tag">NIVEL ${level}</span></button>`;}).join('')}</div></section>`).join('');
     $$('[data-home-area]').forEach(button=>button.onclick=()=>{guidedSession=null;hideGuidedBar();subject=button.dataset.homeArea;switchSection('exercise');setupExercise();});
     const stats = ageData()
       .subjects.map((s) => {
@@ -1919,9 +1982,9 @@
         const r = state.history.filter((x) => x.subject === s),
           c = r.filter((x) => x.correct).length,
           acc = r.length ? Math.round((c / r.length) * 100) : 0;
-        const palette={language:['#437b68','#f0f7f1'],middleLanguage:['#437b68','#f0f7f1'],teenLanguage:['#437b68','#f0f7f1'],division:['#426fa0','#f0f5fb'],geometry:['#486b92','#f0f5fb'],middleMath:['#426fa0','#f0f5fb'],teenMath:['#426fa0','#f0f5fb'],literacy:['#977044','#fbf6eb'],reading:['#977044','#fbf6eb'],english:['#397d91','#edf7f9'],social:['#997140','#fbf4eb'],attention:['#b08035','#fff8e9'],applied:['#997140','#fbf4eb'],executive:['#8a619b','#f7f1fa'],memory:['#b36b64','#fcf2ef'],speedReasoning:['#477f9b','#edf6fb']};
-        const [color,tint]=palette[s]||['#548c76','#f2f7f1'];
-        return `<div class="progress-subject card" style="--progress-color:${color};--progress-tint:${tint}"><small>${SUBJECT_META[s].name}</small><div class="accuracy-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="ring-track" cx="60" cy="60" r="49"/><circle class="ring-value" cx="60" cy="60" r="49" pathLength="100" stroke-opacity="${acc?1:0}" stroke-dasharray="${acc} 100"/></svg><div><strong>${r.length?acc+'%':'—'}</strong><span>${r.length?'de aciertos':'sin práctica'}</span></div></div><small>${r.length} ${r.length===1?'ejercicio':'ejercicios'} · nivel ${state.levels[s] || 1}</small></div>`;
+        const palette={language:['#4C5BDD','#EAF0FF'],middleLanguage:['#4C5BDD','#EAF0FF'],teenLanguage:['#4C5BDD','#EAF0FF'],division:['#A7463D','#FFF0EE'],geometry:['#3645B9','#EAF0FF'],middleMath:['#A7463D','#FFF0EE'],teenMath:['#A7463D','#FFF0EE'],literacy:['#3645B9','#EEE9FA'],reading:['#3645B9','#EEE9FA'],english:['#4C5BDD','#EAF0FF'],social:['#A7463D','#FFF0EE'],attention:['#4C5BDD','#EEE9FA'],applied:['#A7463D','#FFF0EE'],executive:['#A7463D','#FFF0EE'],memory:['#A7463D','#F8E8EC'],speedReasoning:['#4C5BDD','#EAF0FF']};
+        const [color,tint]=palette[s]||['#087D71','#E1F8F4'];
+        return `<div class="progress-subject card" style="--progress-color:${color};--progress-tint:${tint}"><small>${SUBJECT_META[s].name}</small><div class="accuracy-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="ring-track" cx="60" cy="60" r="49"/><circle class="ring-value" cx="60" cy="60" r="49" pathLength="100" stroke-opacity="${acc?1:0}" stroke-dasharray="${acc} 100"/></svg><div><strong>${r.length?acc+'%':'—'}</strong><span>${r.length?'aciertos':'sin práctica'}</span></div></div><small>${r.length} ${r.length===1?'ejercicio':'ejercicios'} · nivel ${state.levels[s] || 1}</small></div>`;
       })
       .join("");
     renderSpeedProgress();
@@ -1935,7 +1998,7 @@
     if(!recent.length){$('#sessionEvolution').innerHTML='<p class="muted">Completa algunos ejercicios para ver aquí tu evolución.</p>';return;}
     const points=recent.map((row,i)=>({x:recent.length===1?350:60+i*580/(recent.length-1),y:200-160*row.correct/row.attempts,accuracy:Math.round(100*row.correct/row.attempts),...row}));
     const path=points.map((p,i)=>`${i?'L':'M'}${p.x},${p.y}`).join(' ');
-    $('#sessionEvolution').innerHTML=`<div class="progress-chart-summary"><strong>${recent.reduce((n,r)=>n+r.attempts,0)} ejercicios</strong><span>en ${recent.length} ${recent.length===1?'sesión reciente':'sesiones recientes'}</span></div><svg class="evolution-chart" viewBox="0 0 700 250" role="img" aria-label="Porcentaje de aciertos por sesión. Los datos completos aparecen debajo."><defs><linearGradient id="progressFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#669c88" stop-opacity=".26"/><stop offset="100%" stop-color="#669c88" stop-opacity=".02"/></linearGradient></defs>${[0,50,100].map(n=>`<g><path d="M60 ${200-n*1.6}H650" stroke="#dce5dc" stroke-dasharray="4 6"/><text x="46" y="${205-n*1.6}" text-anchor="end" fill="#61776a" font-size="13">${n}%</text></g>`).join('')}<path d="${path}L${points.at(-1).x},200L${points[0].x},200Z" fill="url(#progressFill)"/><path d="${path}" fill="none" stroke="#397b67" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${points.map((p,i)=>`<g><circle cx="${p.x}" cy="${p.y}" r="6" fill="#fffdf7" stroke="#397b67" stroke-width="3"><title>Sesión ${i+1} · ${escapeHtml(sessionDateLabel(p.date))}: ${p.accuracy}% de aciertos, ${p.attempts} ejercicios</title></circle><text x="${p.x}" y="230" text-anchor="middle" fill="#61776a" font-size="13">${i+1}</text></g>`).join('')}</svg><details class="progress-chart-data"><summary>Ver los datos por sesión</summary><table><thead><tr><th>Sesión</th><th>Fecha y hora</th><th>Ejercicios</th><th>Aciertos</th></tr></thead><tbody>${points.map((p,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(sessionDateLabel(p.date))}</td><td>${p.attempts}</td><td>${p.accuracy}%</td></tr>`).join('')}</tbody></table></details>`;
+    $('#sessionEvolution').innerHTML=`<div class="progress-chart-summary"><strong>${recent.reduce((n,r)=>n+r.attempts,0)} ejercicios</strong><span>en ${recent.length} ${recent.length===1?'sesión reciente':'sesiones recientes'}</span></div><svg class="evolution-chart" viewBox="0 0 700 250" role="img" aria-label="Porcentaje de aciertos por sesión; cada punto representa una sesión. La tabla accesible conserva las fechas, el número de respuestas, los aciertos y la precisión."><defs><linearGradient id="progressFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4C5BDD" stop-opacity=".18"/><stop offset="100%" stop-color="#4C5BDD" stop-opacity=".015"/></linearGradient></defs>${[0,50,100].map(n=>`<g><path class="chart-grid" d="M60 ${200-n*1.6}H650"/><text class="chart-axis-label" x="46" y="${205-n*1.6}" text-anchor="end">${n}%</text></g>`).join('')}<path d="${path}L${points.at(-1).x},200L${points[0].x},200Z" fill="url(#progressFill)"/><path class="chart-line" d="${path}"/>${points.map((p,i)=>`<g><circle class="chart-point" cx="${p.x}" cy="${p.y}" r="7"><title>Sesión ${i+1} · ${escapeHtml(sessionDateLabel(p.date))}: ${p.accuracy}% de aciertos, ${p.correct} de ${p.attempts} ejercicios</title></circle><circle class="chart-point-core" cx="${p.x}" cy="${p.y}" r="2.5"/><text class="chart-session-label" x="${p.x}" y="230" text-anchor="middle">${i+1}</text></g>`).join('')}</svg><p class="session-evolution-note">La precisión puede variar entre sesiones según la dificultad y las actividades realizadas.</p><details class="progress-chart-data"><summary>Ver los datos exactos por sesión</summary><table><thead><tr><th scope="col">Sesión</th><th scope="col">Fecha y hora</th><th scope="col">Ejercicios</th><th scope="col">Aciertos</th><th scope="col">Precisión</th></tr></thead><tbody>${points.map((p,i)=>`<tr><th scope="row">${i+1}</th><td>${escapeHtml(sessionDateLabel(p.date))}</td><td>${p.attempts}</td><td>${p.correct}</td><td>${p.accuracy}%</td></tr>`).join('')}</tbody></table></details>`;
   }
   function csvEscape(v) {
     const s = String(v ?? "");
@@ -2080,7 +2143,7 @@
     holder.innerHTML = domains
       .map(
         (s) =>
-          `<label class="session-domain"><input type="checkbox" value="${s}" ${["attention", "memory", "executive"].includes(s) ? "checked" : ""}><span><b>${SUBJECT_META[s].icon}</b><strong>${subjectLabel(s)}</strong><small>${SUBJECT_META[s].desc}</small></span></label>`,
+          `<label class="session-domain"><input type="checkbox" value="${s}" ${["attention", "memory", "executive"].includes(s) ? "checked" : ""}><span><b aria-hidden="true">${areaIcon(s,'professional')}</b><strong>${subjectLabel(s)}</strong><small>${SUBJECT_META[s].desc}</small></span></label>`,
       )
       .join("");
     const update = () => {

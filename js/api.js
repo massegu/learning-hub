@@ -113,7 +113,7 @@
   API.isIndependent=id=>API.independentProfile===id;
   API.signOut=async()=>{API.setIndependent(null);await client.auth.signOut();API.session=null;API.user=null;API.profileLocale=null;API.setContentLocale(null)};
   API.listProfiles=async()=>{const {data,error}=await client.from('learner_profiles').select('id,name,age_band,locale,progress,created_at').order('created_at');if(error)throw error;return (data||[]).map(p=>{p.progress=window.PrivacyControls.minimize(p.progress);return p;})};
-  API.createProfile=async(name,age_band,initial_level=1,locale='es_intl')=>{const {data,error}=await client.from('learner_profiles').insert({account_id:API.user.id,name,age_band,locale,progress:{initialLevel:Number(initial_level)||1}}).select('id,name,age_band,locale,progress,created_at').single();if(error)throw error;return data};
+  API.createProfile=async(name,age_band,initial_level=1,locale='es_intl')=>{const younger=['early','junior'].includes(age_band);const storedBand=younger?'primary':age_band;const progress={initialLevel:Number(initial_level)||1,...(younger?{ageRoute:age_band}:{})};const {data,error}=await client.from('learner_profiles').insert({account_id:API.user.id,name,age_band:storedBand,locale,progress}).select('id,name,age_band,locale,progress,created_at').single();if(error)throw error;return data};
   API.updateProfileLocale=async(id,locale)=>{const {data,error}=await client.from('learner_profiles').update({locale}).eq('id',id).select('id,name,age_band,locale,progress,created_at').single();if(error)throw error;return data};
   API.deleteProfile=async(id)=>{const result=await API.privacy('delete',id);API.clearPendingResults(id);return result;};
   API.saveProgress=(id,progress)=>{
