@@ -85,8 +85,7 @@
         <div class="hero card"><div class="hero-copy"><span class="pill">LEARNING LAB</span><h3>Entrena habilidades. Sube de nivel.</h3><p id="heroText">Elige un área y completa retos adaptados a tu nivel.</p><button class="primary-btn jump-btn" id="heroStartBtn">Empezar →</button></div><div class="hero-visual" aria-hidden="true"><div class="pixel-world"><span class="pixel-block grass b1"></span><span class="pixel-block grass b2"></span><span class="pixel-block dirt b3"></span><span class="pixel-block stone b4"></span><span class="pixel-block grass b5"></span><span class="pixel-block dirt b6"></span></div><div class="hero-level">UP</div><span>TRAIN</span><span>LEVEL UP</span></div></div>
         <div id="homeProgressSummary" class="home-progress-summary" aria-label="Resumen de progreso"></div>
         <details class="home-progress">
-          <summary>Mi progreso</summary>
-          <div class="dashboard-grid"><div class="stat card"><span>PTS</span><div><small>Puntos</small><strong id="homePoints">0</strong></div></div><div class="stat card"><span>✓</span><div><small>Aciertos</small><strong id="homeCorrect">0</strong></div></div><div class="stat card"><span>%</span><div><small>Precisión</small><strong id="homeAccuracy">0%</strong></div></div><div class="stat card"><span>#</span><div><small>Ejercicios</small><strong id="homeAttempts">0</strong></div></div></div>
+          <summary>Entrenamiento recomendado</summary>
           <div class="card panel-card focus-card"><p class="eyebrow">OBJETIVO</p><h3 id="recommendedTitle">Entrenamiento recomendado</h3><p id="recommendedText">Completa algunos ejercicios para recibir una recomendación.</p><button id="recommendedBtn" class="secondary-btn">Ir al área →</button></div>
         </details>
       </section>
@@ -97,16 +96,17 @@
       </section>
 
       <section id="exercise" class="section">
-        <div class="section-intro card block-banner"><div><span class="pill" id="exercisePill">ÁREA</span><h3 id="exerciseHeading">Entrenamiento</h3><p id="exerciseDescription">Retos adaptativos.</p></div><div class="exercise-professional-controls"><label class="level-control">Nivel<select id="exerciseLevelSelect"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label><button id="sharedActivityToggle" type="button" class="secondary-btn" aria-pressed="false" aria-controls="exercisePrompt exerciseVisual exerciseOptions exerciseFeedback exerciseNext">Vista de actividad</button></div></div>
-        <div id="sharedActivityBar" class="shared-activity-bar hidden"><span role="status">Vista de actividad. El seguimiento del perfil no cambia.</span><button id="sharedActivityExit" type="button" class="primary-btn">Volver al panel profesional</button></div>
+        <div class="exercise-navigation"><button id="exerciseReturnHome" type="button" class="secondary-btn">← Volver al panel</button><span>Actividad supervisada</span></div>
+        <div class="section-intro card block-banner"><div><span class="pill" id="exercisePill">ÁREA</span><h3 id="exerciseHeading" tabindex="-1">Entrenamiento</h3><p id="exerciseDescription">Retos adaptativos.</p></div></div>
         <div id="everydayLanguagePreview" class="everyday-language-preview hidden" aria-label="Comunicación y vida cotidiana">
           <div class="everyday-preview-heading"><span class="everyday-preview-icon" aria-hidden="true">◎</span><div><h4>Comunicación y vida cotidiana</h4><p>Escuchar y comprender · Comunicar y resolver · Interpretar situaciones · Organizar y actuar</p></div><span class="everyday-preview-status">En preparación</span></div>
           <p class="everyday-preview-note">Incorporaremos aquí actividades adaptadas de «En Frecuencia» y «Entre Líneas FC». Las modalidades disponibles siguen funcionando con normalidad.</p>
         </div>
         <div id="guidedSessionBar" class="guided-session-bar card hidden"><div class="guided-progress-copy"><strong id="guidedSessionTitle">Sesión guiada</strong><span id="guidedSessionProgress" role="status" aria-live="polite"></span></div><button id="cancelGuidedSession" class="mini-btn">Salir de la sesión</button></div>
-        <section id="activityOptions" class="activity-settings hidden" aria-labelledby="activityOptionsSummary">
-          <h4 id="activityOptionsSummary">Modalidades disponibles</h4>
+        <details id="activityOptions" class="activity-settings" aria-labelledby="activityOptionsSummary">
+          <summary id="activityOptionsSummary">Opciones del profesional</summary>
           <div class="activity-settings-content">
+            <label class="level-control">Dificultad<select id="exerciseLevelSelect"><option value="1">Nivel 1</option><option value="2">Nivel 2</option><option value="3">Nivel 3</option></select></label>
             <div class="activity-toolbar" role="group" aria-label="Modalidades de ejercicio">
               <button id="cognitiveMode" class="secondary-btn hidden" aria-pressed="false">Situaciones y decisiones</button><button id="executedMode" class="secondary-btn hidden" aria-pressed="false">Retos interactivos</button>
               <div id="speedModeSwitch" class="mode-switch hidden"><button data-speed-mode="screen" aria-pressed="true">Retos en pantalla</button><button data-speed-mode="room" aria-pressed="false">Busca a tu alrededor</button><button id="speedUnpairedMode" aria-pressed="false">Busca el símbolo sin pareja</button></div>
@@ -120,7 +120,7 @@
             </div>
             <p id="documentModeHint" class="muted document-mode-hint hidden"></p>
           </div>
-        </section>
+        </details>
         <div class="exercise-layout single"><div class="exercise-card card"><div class="exercise-meta"><span id="exerciseCounter">Ejercicio 1</span><div class="exercise-account-usage"><details class="daily-usage"><summary id="usageHint" class="muted">Uso de hoy</summary><p id="dailyUsageExplanation"></p></details><span class="bank-size-hint">Banco: más de 800 actividades por edad</span> · <span class="mini-score"><b id="subjectScore">0</b> pts</span></div></div><div id="exerciseTopic" class="language-topic hidden"></div><div id="exercisePrompt" class="prompt"></div><div id="exerciseVisual"></div><div id="exerciseOptions" class="options-grid"></div><div id="textAnswerArea" class="text-answer-area hidden"><textarea id="textAnswerInput" rows="2" maxlength="500" placeholder="Escribe aquí tu respuesta..."></textarea><button id="textAnswerCheck" class="primary-btn">Ver una respuesta modelo</button></div><div id="selfAssessment" class="self-assessment hidden"><p>Compara tu respuesta con el modelo:</p><div id="modelAnswer" class="explanation"></div><div class="self-buttons"><button data-self="true" class="secondary-btn">Lo he conseguido</button><button data-self="false" class="ghost-light-btn">Necesito practicar</button></div></div><button id="reviseWritingAnswer" class="secondary-btn hidden" type="button">Revisar mi texto</button><div id="exerciseFeedback" class="feedback"></div><div id="exerciseExplanation" class="explanation hidden"></div><div id="progressSaveStatus" class="progress-save-status" role="status" aria-live="polite"></div><button id="retryProgressSave" class="secondary-btn hidden" type="button">Reintentar guardado</button><button id="retryResultSave" class="secondary-btn hidden" type="button">Reintentar resultados de forma segura</button><button id="retryContentLoad" class="secondary-btn hidden" type="button">Reintentar carga del ejercicio</button><button id="exerciseNext" class="primary-btn hidden">Siguiente →</button></div></div>
       </section>
 

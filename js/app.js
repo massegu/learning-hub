@@ -1020,7 +1020,6 @@
     }
   }
   function activateProfile(id,independent=false) {
-    setSharedActivityView(false);
     stopMemoryCountdown();
     progressSaveRevision++;resultSaveRevision++;setProgressSaveStatus('');
     if(independent)setPendingResultHomeStatus();
@@ -1062,19 +1061,7 @@
   $('#workspaceMenu').onclick=()=>{const open=$('#appShell').classList.toggle('mobile-nav-open');$('#workspaceMenu').setAttribute('aria-expanded',String(open));};
   $('#prepareSessionBtn').onclick=()=>switchSection('sessionBuilder');
   $('#prepareSessionHomeBtn').onclick=()=>switchSection('sessionBuilder');
-  const sharedActivityToggle=$('#sharedActivityToggle'),sharedActivityBar=$('#sharedActivityBar');
-  function setSharedActivityView(enabled,restoreFocus=true){
-    const on=Boolean(enabled&&$('#exercise').classList.contains('active-section'));
-    $('#appShell').classList.toggle('shared-activity',on);
-    sharedActivityToggle.setAttribute('aria-pressed',String(on));
-    sharedActivityToggle.textContent=on?'Vista de actividad activa':'Vista de actividad';
-    sharedActivityBar.classList.toggle('hidden',!on);
-    if(on){$('#sharedActivityExit').focus();}
-    else if(restoreFocus&&document.activeElement===$('#sharedActivityExit'))sharedActivityToggle.focus();
-  }
-  sharedActivityToggle.addEventListener('click',()=>setSharedActivityView(sharedActivityToggle.getAttribute('aria-pressed')!=='true'));
-  $('#sharedActivityExit').addEventListener('click',()=>setSharedActivityView(false));
-  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&$('#appShell').classList.contains('shared-activity'))setSharedActivityView(false);});
+  $('#exerciseReturnHome').addEventListener('click',()=>switchSection('home'));
   function areaIcon(domain,route){
     const key=/Language|language|literacy|reading/i.test(domain)?'language':
       /Math|division|geometry/i.test(domain)?'math':
@@ -1138,11 +1125,10 @@
     homework: "Fichas para casa",
   };
   function switchSection(id) {
-    const wasShared=id!=='exercise'&&$('#appShell').classList.contains('shared-activity');
-    if(wasShared)setSharedActivityView(false,false);
     if(id!=='exercise'){stopMemoryCountdown();interactionOnly=false;}
     $$(".section").forEach((s) => s.classList.remove("active-section"));
     $("#" + id).classList.add("active-section");
+    $('#appShell').classList.toggle('exercise-focus',id==='exercise');
     $$(".nav-item").forEach((b) =>
       b.classList.toggle(
         "active",
@@ -1154,15 +1140,12 @@
       id === "exercise" ? SUBJECT_META[subject].name : titles[id];
     if (id === "progress") renderProgress();
     if(id==='home')renderHomeAreaLanding();
-    if(wasShared){$('#sectionTitle').setAttribute('tabindex','-1');$('#sectionTitle').focus();}
+    if(id==='exercise'){window.scrollTo(0,0);$('#exerciseHeading').focus({preventScroll:true});}
   }
   function syncActivitySettings() {
     const settings = $('#activityOptions');
     if (!settings) return;
-    const buttons=[...settings.querySelectorAll('.activity-toolbar button')];
-    const available=buttons.some(button=>!button.classList.contains('hidden')&&!button.closest('.hidden:not(#activityOptions)'));
-    settings.classList.toggle('hidden', !available);
-    $('#activityOptionsSummary').textContent=available?'Elige una modalidad':'Modalidades no disponibles';
+    settings.classList.remove('hidden');
   }
   function syncLanguageModeButtons() {
     $$('#languageModeSwitch .language-mode-btn[data-mode]').forEach(button=>{
@@ -1783,10 +1766,10 @@
     if ($("#subjectScore") && subject)
       $("#subjectScore").textContent = state.scores[subject] || 0;
     $("#globalScore").textContent = total;
-    $("#homePoints").textContent = total;
-    $("#homeCorrect").textContent = state.totalCorrect;
-    $("#homeAttempts").textContent = state.totalAttempts;
-    $("#homeAccuracy").textContent =
+    if($("#homePoints"))$("#homePoints").textContent = total;
+    if($("#homeCorrect"))$("#homeCorrect").textContent = state.totalCorrect;
+    if($("#homeAttempts"))$("#homeAttempts").textContent = state.totalAttempts;
+    if($("#homeAccuracy"))$("#homeAccuracy").textContent =
       (state.totalAttempts
         ? Math.round((state.totalCorrect / state.totalAttempts) * 100)
         : 0) + "%";
@@ -1797,11 +1780,13 @@
       `${ageLabel(profile)} · ${window.LocaleContent.labels[API.effectiveLocale(profile)]}`;
     $('#welcomeTitle').textContent='¿Qué quieres preparar hoy?';
     const summary=$('#homeProgressSummary');
-    const lastArea=(()=>{try{const last=localStorage.getItem(`lh_v16_last_subject_${profile.id}`);return ageData().subjects.includes(last)?last:null;}catch{return null;}})();
+    const lastOpened=(()=>{try{const last=localStorage.getItem(`lh_v16_last_subject_${profile.id}`);return ageData().subjects.includes(last)?last:null;}catch{return null;}})();
+    const lastAnswered=[...state.history].reverse().find(row=>ageData().subjects.includes(row.subject))?.subject||null;
+    const lastArea=lastOpened||lastAnswered;
     if(summary){
       const accuracy=state.totalAttempts?Math.round(state.totalCorrect/state.totalAttempts*100):0;
-      summary.innerHTML=`<div><span>Actividades</span><strong>${state.totalAttempts}</strong></div><div><span>Precisión</span><strong>${accuracy}%</strong></div><div><span>Última área</span><strong>${escapeHtml(lastArea?subjectLabel(lastArea):'Sin actividad reciente')}</strong></div><button type="button" class="text-action" data-progress-link>Ver progreso →</button>`;
-      summary.querySelector('[data-progress-link]').onclick=()=>switchSection('progress');
+      const areaLabel=lastOpened?'Última área abierta':lastAnswered?'Última área respondida':'Última área';
+      summary.innerHTML=`<div><span>Actividades</span><strong>${state.totalAttempts}</strong></div><div><span>Precisión</span><strong>${accuracy}%</strong></div><div><span>${areaLabel}</span><strong>${escapeHtml(lastArea?subjectLabel(lastArea):'Sin actividad reciente')}</strong></div>`;
     }
     $('#homeSessionNotice').textContent=profile._sessionOnly?'Sesión independiente: esta práctica no se añade al historial.':'Con seguimiento: los resultados se guardan en este perfil.';
     $('#homeSessionNotice').classList.toggle('independent',Boolean(profile._sessionOnly));
@@ -1864,8 +1849,10 @@
     const sorted=[...subjects].sort((a,b)=>order(a)-order(b));
     let remembered=null;
     try{const saved=localStorage.getItem(`lh_v16_last_subject_${profile.id}`);if(subjects.includes(saved))remembered=saved;}catch{}
+    const lastAnswered=[...state.history].reverse().find(row=>subjects.includes(row.subject))?.subject||null;
     const recommended=subjects.includes($('#recommendedBtn').dataset.subject)?$('#recommendedBtn').dataset.subject:sorted[0];
-    const suggested=remembered||recommended;
+    const suggested=remembered||lastAnswered||recommended;
+    const suggestionKind=remembered?'open':lastAnswered?'answered':'new';
     const descriptions={attention:'Concentración y selección',memory:'Recuerdo y aprendizaje',executive:'Planificación y organización',social:'Perspectivas y convivencia',speedReasoning:'Velocidad y razonamiento',applied:'Situaciones cotidianas',english:'Comunicación en inglés'};
     const groupFor=areaGroupFor;
     const groupLabels={cognitive:'Áreas cognitivas',language:'Lenguaje y comunicación',math:'Matemáticas'};
@@ -1878,7 +1865,8 @@
     const groups=['cognitive','language','math'].filter(group=>sorted.some(domain=>groupFor(domain)===group));
     const areaSections=groups.map(group=>`<section class="professional-area-group ${group==='math'?'mathematics-area-group':''}" aria-labelledby="areaGroup-${group}"><h3 id="areaGroup-${group}">${groupLabels[group]}</h3><div class="redesign-area-grid">${cardsFor(sorted.filter(domain=>groupFor(domain)===group))}</div></section>`).join('');
     const journeyMarkup=renderOptionalMissions(route);
-    landing.innerHTML=`<div class="redesign-continue"><div><span class="redesign-kicker">${remembered?'ÚLTIMA ÁREA UTILIZADA':'ENTRENAMIENTO'}</span><strong>${escapeHtml(subjectLabel(suggested))}</strong><span>${remembered?'Abre el área de nuevo; el ejercicio comienza desde el inicio.':'Empieza por un área o prepara una sesión supervisada.'}</span></div><button type="button" class="primary-btn" data-redesign-area="${escapeHtml(suggested)}">${remembered?'Volver a '+escapeHtml(subjectLabel(suggested)):'Empezar por '+escapeHtml(subjectLabel(suggested))} →</button></div><div class="redesign-heading"><h3>Áreas disponibles</h3><span>${sorted.length} áreas para este perfil</span></div>${areaSections}${journeyMarkup}<button type="button" id="viewDetailedProgress" class="text-action">Ver progreso detallado →</button>`;
+    const suggestionCopy={open:['ÚLTIMA ÁREA ABIERTA','Abre el área de nuevo; el ejercicio comienza desde el inicio.','Volver a '],answered:['ÚLTIMA ÁREA RESPONDIDA','Continúa en el área de tu respuesta más reciente.','Continuar en '],new:['ENTRENAMIENTO','Empieza por un área o prepara una sesión supervisada.','Empezar por ']}[suggestionKind];
+    landing.innerHTML=`<div class="redesign-continue"><div><span class="redesign-kicker">${suggestionCopy[0]}</span><strong>${escapeHtml(subjectLabel(suggested))}</strong><span>${suggestionCopy[1]}</span></div><button type="button" class="primary-btn" data-redesign-area="${escapeHtml(suggested)}">${suggestionCopy[2]}${escapeHtml(subjectLabel(suggested))} →</button></div><div class="redesign-heading"><h3>Áreas disponibles</h3><span>${sorted.length} áreas para este perfil</span></div>${areaSections}${journeyMarkup}`;
     landing.querySelectorAll('[data-redesign-area]').forEach(button=>button.addEventListener('click',()=>{
       guidedSession=null;hideGuidedBar();subject=button.dataset.redesignArea;switchSection('exercise');setupExercise();
     }));
@@ -1886,7 +1874,6 @@
       const {kind,id}=button.dataset.unifiedMission==='early'?{kind:'early',id:button.dataset.missionId}:{kind:'school',id:button.dataset.missionId};
       if(kind==='early')startEarlyMission(id);else startSchoolMission(id);
     }));
-    $('#viewDetailedProgress')?.addEventListener('click',()=>switchSection('progress'));
   }
   function renderOptionalMissions(route){
     if(window.ContentPolicy.forProfile(profile)){
@@ -1903,7 +1890,7 @@
   function renderHomeLevels() {
     const subjects=ageData().subjects,labels={cognitive:'Áreas cognitivas',language:'Lenguaje y comunicación',math:'Matemáticas'};
     const groups=['cognitive','language','math'].filter(group=>subjects.some(s=>areaGroupFor(s)===group));
-    $("#homeLevels").innerHTML=groups.map(group=>`<section class="training-area-group"><h3>${labels[group]}</h3><div class="training-group-grid">${subjects.filter(s=>areaGroupFor(s)===group).map(s=>`<button type="button" class="level-row" data-home-area="${s}" data-area="${s}"><span class="area-illustration" aria-hidden="true">${areaIcon(s,'professional')}</span><strong>${SUBJECT_META[s].name}</strong><div class="level-track"><span style="width:${((state.levels[s] || 1) / 3) * 100}%"></span></div><span class="level-tag">NIVEL ${state.levels[s] || 1}</span></button>`).join('')}</div></section>`).join('');
+    $("#homeLevels").innerHTML=groups.map(group=>`<section class="training-area-group"><h3>${labels[group]}</h3><div class="training-group-grid">${subjects.filter(s=>areaGroupFor(s)===group).map(s=>{const level=state.levels[s]||1;return `<button type="button" class="level-row" data-home-area="${s}" data-area="${s}"><span class="area-illustration" aria-hidden="true">${areaIcon(s,'professional')}</span><strong>${SUBJECT_META[s].name}</strong><div class="level-track" role="meter" aria-label="Nivel actual" aria-valuemin="1" aria-valuemax="3" aria-valuenow="${level}">${[1,2,3].map(n=>`<span class="${n<=level?'is-active':''}" aria-hidden="true"></span>`).join('')}</div><span class="level-tag">NIVEL ${level}</span></button>`;}).join('')}</div></section>`).join('');
     $$('[data-home-area]').forEach(button=>button.onclick=()=>{guidedSession=null;hideGuidedBar();subject=button.dataset.homeArea;switchSection('exercise');setupExercise();});
     const stats = ageData()
       .subjects.map((s) => {
@@ -1990,8 +1977,8 @@
         const r = state.history.filter((x) => x.subject === s),
           c = r.filter((x) => x.correct).length,
           acc = r.length ? Math.round((c / r.length) * 100) : 0;
-        const palette={language:['#437b68','#f0f7f1'],middleLanguage:['#437b68','#f0f7f1'],teenLanguage:['#437b68','#f0f7f1'],division:['#426fa0','#f0f5fb'],geometry:['#486b92','#f0f5fb'],middleMath:['#426fa0','#f0f5fb'],teenMath:['#426fa0','#f0f5fb'],literacy:['#977044','#fbf6eb'],reading:['#977044','#fbf6eb'],english:['#397d91','#edf7f9'],social:['#997140','#fbf4eb'],attention:['#b08035','#fff8e9'],applied:['#997140','#fbf4eb'],executive:['#8a619b','#f7f1fa'],memory:['#b36b64','#fcf2ef'],speedReasoning:['#477f9b','#edf6fb']};
-        const [color,tint]=palette[s]||['#548c76','#f2f7f1'];
+        const palette={language:['#4C5BDD','#EAF0FF'],middleLanguage:['#4C5BDD','#EAF0FF'],teenLanguage:['#4C5BDD','#EAF0FF'],division:['#087D71','#E1F8F4'],geometry:['#3645B9','#EAF0FF'],middleMath:['#087D71','#E1F8F4'],teenMath:['#087D71','#E1F8F4'],literacy:['#3645B9','#EEE9FA'],reading:['#3645B9','#EEE9FA'],english:['#087D71','#E1F8F4'],social:['#A7463D','#FFF0EE'],attention:['#4C5BDD','#EEE9FA'],applied:['#A7463D','#FFF0EE'],executive:['#087D71','#E1F8F4'],memory:['#A7463D','#F8E8EC'],speedReasoning:['#087D71','#E1F8F4']};
+        const [color,tint]=palette[s]||['#087D71','#E1F8F4'];
         return `<div class="progress-subject card" style="--progress-color:${color};--progress-tint:${tint}"><small>${SUBJECT_META[s].name}</small><div class="accuracy-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="ring-track" cx="60" cy="60" r="49"/><circle class="ring-value" cx="60" cy="60" r="49" pathLength="100" stroke-opacity="${acc?1:0}" stroke-dasharray="${acc} 100"/></svg><div><strong>${r.length?acc+'%':'—'}</strong><span>${r.length?'de aciertos':'sin práctica'}</span></div></div><small>${r.length} ${r.length===1?'ejercicio':'ejercicios'} · nivel ${state.levels[s] || 1}</small></div>`;
       })
       .join("");
@@ -2006,7 +1993,7 @@
     if(!recent.length){$('#sessionEvolution').innerHTML='<p class="muted">Completa algunos ejercicios para ver aquí tu evolución.</p>';return;}
     const points=recent.map((row,i)=>({x:recent.length===1?350:60+i*580/(recent.length-1),y:200-160*row.correct/row.attempts,accuracy:Math.round(100*row.correct/row.attempts),...row}));
     const path=points.map((p,i)=>`${i?'L':'M'}${p.x},${p.y}`).join(' ');
-    $('#sessionEvolution').innerHTML=`<div class="progress-chart-summary"><strong>${recent.reduce((n,r)=>n+r.attempts,0)} ejercicios</strong><span>en ${recent.length} ${recent.length===1?'sesión reciente':'sesiones recientes'}</span></div><svg class="evolution-chart" viewBox="0 0 700 250" role="img" aria-label="Porcentaje de aciertos por sesión. Los datos completos aparecen debajo."><defs><linearGradient id="progressFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#669c88" stop-opacity=".26"/><stop offset="100%" stop-color="#669c88" stop-opacity=".02"/></linearGradient></defs>${[0,50,100].map(n=>`<g><path d="M60 ${200-n*1.6}H650" stroke="#dce5dc" stroke-dasharray="4 6"/><text x="46" y="${205-n*1.6}" text-anchor="end" fill="#61776a" font-size="13">${n}%</text></g>`).join('')}<path d="${path}L${points.at(-1).x},200L${points[0].x},200Z" fill="url(#progressFill)"/><path d="${path}" fill="none" stroke="#397b67" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${points.map((p,i)=>`<g><circle cx="${p.x}" cy="${p.y}" r="6" fill="#fffdf7" stroke="#397b67" stroke-width="3"><title>Sesión ${i+1} · ${escapeHtml(sessionDateLabel(p.date))}: ${p.accuracy}% de aciertos, ${p.attempts} ejercicios</title></circle><text x="${p.x}" y="230" text-anchor="middle" fill="#61776a" font-size="13">${i+1}</text></g>`).join('')}</svg><details class="progress-chart-data"><summary>Ver los datos por sesión</summary><table><thead><tr><th>Sesión</th><th>Fecha y hora</th><th>Ejercicios</th><th>Aciertos</th></tr></thead><tbody>${points.map((p,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(sessionDateLabel(p.date))}</td><td>${p.attempts}</td><td>${p.accuracy}%</td></tr>`).join('')}</tbody></table></details>`;
+    $('#sessionEvolution').innerHTML=`<div class="progress-chart-summary"><strong>${recent.reduce((n,r)=>n+r.attempts,0)} ejercicios</strong><span>en ${recent.length} ${recent.length===1?'sesión reciente':'sesiones recientes'}</span></div><svg class="evolution-chart" viewBox="0 0 700 250" role="img" aria-label="Porcentaje de aciertos por sesión; cada punto representa una sesión. La tabla accesible conserva las fechas, el número de respuestas, los aciertos y la precisión."><defs><linearGradient id="progressFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10BFAE" stop-opacity=".22"/><stop offset="100%" stop-color="#10BFAE" stop-opacity=".015"/></linearGradient></defs>${[0,50,100].map(n=>`<g><path class="chart-grid" d="M60 ${200-n*1.6}H650"/><text class="chart-axis-label" x="46" y="${205-n*1.6}" text-anchor="end">${n}%</text></g>`).join('')}<path d="${path}L${points.at(-1).x},200L${points[0].x},200Z" fill="url(#progressFill)"/><path class="chart-line" d="${path}"/>${points.map((p,i)=>`<g><circle class="chart-point" cx="${p.x}" cy="${p.y}" r="7"><title>Sesión ${i+1} · ${escapeHtml(sessionDateLabel(p.date))}: ${p.accuracy}% de aciertos, ${p.correct} de ${p.attempts} ejercicios</title></circle><circle class="chart-point-core" cx="${p.x}" cy="${p.y}" r="2.5"/><text class="chart-session-label" x="${p.x}" y="230" text-anchor="middle">${i+1}</text></g>`).join('')}</svg><p class="session-evolution-note">La precisión puede variar entre sesiones según la dificultad y las actividades realizadas.</p><details class="progress-chart-data"><summary>Ver los datos exactos por sesión</summary><table><thead><tr><th scope="col">Sesión</th><th scope="col">Fecha y hora</th><th scope="col">Ejercicios</th><th scope="col">Aciertos</th><th scope="col">Precisión</th></tr></thead><tbody>${points.map((p,i)=>`<tr><th scope="row">${i+1}</th><td>${escapeHtml(sessionDateLabel(p.date))}</td><td>${p.attempts}</td><td>${p.correct}</td><td>${p.accuracy}%</td></tr>`).join('')}</tbody></table></details>`;
   }
   function csvEscape(v) {
     const s = String(v ?? "");

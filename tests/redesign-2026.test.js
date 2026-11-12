@@ -43,14 +43,18 @@ test('continue action remembers a validated last area separately for each profil
  assert.ok(v16.includes('button.dataset.redesignArea'));
 });
 
-test('progress summary is compact while detailed metrics remain available',()=>{
+test('home summary is compact, has no duplicate progress route, and recommendation stays separate',()=>{
  assert.ok(html.includes('<details class="home-progress">'));
- assert.ok(html.includes('id="homePoints"'));
- assert.ok(html.includes('id="homeCorrect"'));
- assert.ok(html.includes('id="homeAccuracy"'));
- assert.ok(html.includes('id="homeAttempts"'));
+ assert.ok(html.includes('<summary>Entrenamiento recomendado</summary>'));
+ assert.ok(!html.includes('id="homePoints"'));
+ assert.ok(!html.includes('id="homeCorrect"'));
+ assert.ok(!html.includes('id="homeAccuracy"'));
+ assert.ok(!html.includes('id="homeAttempts"'));
  assert.ok(app.includes('homeProgressSummary'));
- assert.ok(app.includes('data-progress-link'));
+ assert.ok(app.includes('lastOpened||lastAnswered'));
+ assert.ok(app.includes('Última área respondida'));
+ assert.ok(!app.includes('data-progress-link'));
+ assert.ok(!app.includes('viewDetailedProgress'));
 });
 
 test('account preferences are grouped and destructive actions remain distinct',()=>{
@@ -61,18 +65,20 @@ test('account preferences are grouped and destructive actions remain distinct',(
  for(const id of ['newProfileBtn','deleteProfileBtn','independentSessionBtn','profilePrivacyBtn','resetProgressBtn','changePasswordBtn','signOutBtn'])assert.ok(html.includes(`id="${id}"`),`${id} remains available`);
 });
 
-test('shared activity mode is presentation-only, keyboard escapable, and leaves save code untouched',()=>{
- assert.ok(html.includes('id="sharedActivityToggle"'));
- assert.ok(html.includes('id="sharedActivityExit"'));
- assert.ok(app.includes("classList.toggle('shared-activity',on)"));
- assert.ok(app.includes("event.key==='Escape'"));
- assert.ok(app.includes("const wasShared=id!=='exercise'&&$('#appShell').classList.contains('shared-activity')"));
- assert.ok(css.includes('#appShell.shared-activity .sidebar'));
- assert.ok(css.includes('#appShell.shared-activity #activityOptions'));
- assert.ok(css.includes('#appShell.shared-activity #exerciseNext'));
- const presentation=app.match(/function setSharedActivityView\(enabled,restoreFocus=true\)\{([\s\S]*?)\n  \}/)?.[1]||'';
- assert.ok(presentation,'Presentation toggle has a focused implementation');
- assert.ok(!/setIndependent|saveResult|persist\(/.test(presentation),'Presentation toggle does not alter tracking or persistence');
+test('exercise has one focused presentation with in-flow return and expandable professional options',()=>{
+ assert.ok(html.includes('id="exerciseReturnHome"'));
+ assert.ok(!html.includes('id="sharedActivityToggle"'));
+ assert.ok(!html.includes('id="sharedActivityExit"'));
+ assert.ok(!html.includes('id="sharedActivityBar"'));
+ assert.ok(app.includes("classList.toggle('exercise-focus',id==='exercise')"));
+ assert.ok(app.includes("if(id==='exercise'){window.scrollTo(0,0);$('#exerciseHeading').focus({preventScroll:true});}"));
+ assert.ok(app.includes("$('#exerciseReturnHome').addEventListener('click',()=>switchSection('home'))"));
+ assert.ok(html.includes('<details id="activityOptions" class="activity-settings"'));
+ assert.ok(html.includes('<summary id="activityOptionsSummary">Opciones del profesional</summary>'));
+ assert.ok(css.includes('#appShell[data-design].exercise-focus .sidebar'));
+ assert.ok(css.includes('.exercise-navigation'));
+ assert.ok(css.includes('#activityOptions .level-control::before{content:none'));
+ assert.ok(!css.includes('.shared-activity-bar'));
 });
 
 test('communication preview appears only in language and is clearly marked as preparation',()=>{
@@ -84,8 +90,10 @@ test('communication preview appears only in language and is clearly marked as pr
 });
 
 test('professional palette is consistent across age themes and uses coherent line icons',()=>{
- for(const token of ['#254556','#F8E8EC','#F3C5A0','#7EA99B','#D98573','#FAF7F2','#756BA7'])assert.ok(css.includes(token),`palette includes ${token}`);
+ for(const token of ['#254556','#4C5BDD','#10BFAE','#FF7468','#F8E8EC','#EEE9FA','#FBF9F7','#FFFFFF'])assert.ok(css.includes(token),`palette includes ${token}`);
+ for(const old of ['#A25447','#753C33','#F3C5A0','#D98573'])assert.ok(!css.includes(old),`legacy dominant token ${old} is removed`);
  assert.ok(app.includes("$('#appShell').dataset.design='calma'"));
  assert.ok(app.includes('areaIcon(domain,\'professional\')'));
  assert.ok(app.includes('areaIcon(s,\'professional\')'));
+ assert.ok(css.includes('#homeLevels [data-area] .area-illustration svg{display:block!important;visibility:visible!important'));
 });
