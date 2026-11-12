@@ -27,48 +27,67 @@ try:
     const generate=WorksheetGenerator.generate;
     WorksheetGenerator.generate=async(items,profile)=>{window.__export={items,profile};return generate(items,profile);};
    }""")
-  page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#earlyContinue');observe()
+  page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#homeAreaLanding:not(.hidden)');observe()
+  expected_areas=['attention','executive','language','reading','division','memory','speedReasoning','social']
+  actual_areas=page.locator('#homeAreaLanding .redesign-area-card[data-redesign-area]').evaluate_all('(els)=>els.map(e=>e.dataset.redesignArea).sort()')
+  assert actual_areas==sorted(expected_areas),(actual_areas,sorted(expected_areas))
   for width in [1920,1440,1280,1024,768,390]:
    page.set_viewport_size({'width':width,'height':900})
-   assert page.locator('[data-early-area]').count()==8
-   assert page.locator('[data-early-mission]').count()==4
+   assert page.locator('#homeAreaLanding .redesign-area-card[data-redesign-area]').count()==8
+   assert page.locator('.professional-missions [data-unified-mission="early"]').count()==4
    assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
-   assert page.locator('#earlyHub button').evaluate_all('(els)=>els.every(e=>e.getBoundingClientRect().height>=44)')
-   assert page.locator('#earlyHub svg').evaluate_all('(els)=>els.filter(e=>e.getBoundingClientRect().width).every(e=>{let r=e.getBoundingClientRect();return Math.abs(r.width-r.height)<1&&r.width>=40})')
-   if width in [1280,390]:page.locator('#earlyHub').screenshot(path=f'/tmp/early-hub-{width}.png')
-  print('PASS: eight-area hub and four short missions at six desktop/mobile widths, normal zoom',flush=True)
+   assert page.locator('#homeAreaLanding button').evaluate_all('(els)=>els.filter(e=>e.getClientRects().length).every(e=>e.getBoundingClientRect().height>=44)')
+   assert page.locator('#homeAreaLanding .redesign-area-icon').evaluate_all('(els)=>els.every(e=>{let r=e.getBoundingClientRect();return Math.abs(r.width-r.height)<1&&r.width>=40})')
+   if width in [1280,390]:page.locator('#homeAreaLanding').screenshot(path=f'/tmp/early-hub-{width}.png')
+  print('PASS: unified eight-area dashboard and four optional missions at six desktop/mobile widths, normal zoom',flush=True)
   page.set_viewport_size({'width':1280,'height':900})
   def answer():
    page.wait_for_function('document.querySelectorAll("#exerciseOptions button").length>0',timeout=15000)
    it=page.evaluate('__current')
-   if it['type']=='order':
-    for token in it['answer']:page.locator('#exerciseOptions').get_by_role('button',name=token,exact=True).click()
+   if it.get('recallSequence'):
+    page.locator('#startMemorySequence').click()
+    page.wait_for_function('document.querySelector("#exerciseOptions .sequence-workspace")!==null')
+   if it['type']=='order' or it.get('memoryResponse')=='order':
+    page.wait_for_function('document.querySelector("#exerciseOptions .sequence-workspace")!==null')
+    for token in it.get('answer',[]):page.locator('#exerciseOptions').get_by_role('button',name=token,exact=True).click()
     page.locator('#orderCheck').click()
+   elif it['type']=='memoryMulti' or it.get('memoryResponse')=='multiple':
+    page.wait_for_function('document.querySelector("#exerciseOptions #multiCheck")!==null')
+    for value in it.get('answers',[]):page.locator('#exerciseOptions').get_by_role('button',name=value,exact=True).click()
+    page.locator('#multiCheck').click()
+   elif it.get('speedTask'):
+    page.locator('#practiceSpeedTrial').click()
+    page.wait_for_function('document.querySelector("#exerciseOptions .speed-choice")!==null')
+    page.locator('#exerciseOptions').get_by_role('button',name=it['a'],exact=True).click()
+   elif it['type']=='self' or (not it.get('opts') and it.get('sample')):
+    page.locator('#textAnswerInput').fill('Una respuesta completa para la tarea.')
+    page.locator('#textAnswerCheck').click()
+    page.locator('.self-buttons [data-self="true"]').click()
    else:page.locator('#exerciseOptions').get_by_role('button',name=it['a'],exact=True).click()
    page.wait_for_function('document.querySelector("#exerciseFeedback").textContent.length>0')
   # Direct access remains available; representative screen from every domain.
-  for domain in ['language','reading','division','attention','executive','memory','speedReasoning','applied']:
+  for domain in expected_areas:
    page.locator('#navMenu [data-section="home"]').click()
    page.evaluate('window.__current=null')
-   page.locator(f'[data-early-area="{domain}"]').click()
+   page.locator(f'#homeAreaLanding .redesign-area-card[data-redesign-area="{domain}"]').click()
    page.wait_for_function('(domain)=>__current?.domain===domain&&document.querySelector("#exercisePrompt").textContent===__current.q',arg=domain)
    assert page.locator('#earlyTaskGuide').is_visible()
    page.locator('#exercise').screenshot(path=f'/tmp/early-journey-{domain}.png')
    answer()
   page.locator('#earlyHomeBtn').click()
-  page.locator('[data-early-mission="stories"]').click();answer()
+  page.locator('.professional-missions > summary').click();page.locator('[data-unified-mission="early"][data-mission-id="stories"]').click();answer()
   page.locator('#exercise').screenshot(path='/tmp/early-journey-mission.png')
   assert page.evaluate('__profiles[0].progress._earlyJourney.active.index')==1
   page.locator('#cancelGuidedSession').click()
-  assert '1 de 2' in page.locator('.mission-resume').inner_text()
-  page.reload(wait_until='networkidle');page.wait_for_selector('#earlyContinue');observe()
-  page.locator('#earlyContinue').click()
+  page.wait_for_function('document.querySelector(".professional-missions [role=status]")?.textContent.includes("1 de 2")')
+  page.reload(wait_until='networkidle');page.wait_for_selector('#homeAreaLanding:not(.hidden)');observe()
+  page.locator('.professional-missions > summary').click();page.locator('[data-unified-mission="early"][data-mission-id="stories"]').click()
   assert 'Actividad 2 de 2' in page.locator('#guidedSessionProgress').inner_text()
   answer();page.locator('#exerciseNext').click()
-  assert page.locator('#earlyHub').is_visible()
+  assert page.locator('#homeAreaLanding').is_visible()
   assert page.evaluate('__profiles[0].progress._earlyJourney.completed.length')==1
   assert page.evaluate('__profiles[0].progress._earlyJourney.active===null')
-  page.locator('[data-early-mission="explore"]').click();answer();page.locator('#exerciseNext').click()
+  page.locator('.professional-missions > summary').click();page.locator('[data-unified-mission="early"][data-mission-id="explore"]').click();answer();page.locator('#exerciseNext').click()
   page.wait_for_function('__current?.domain==="division"')
   assert 'Actividad 2 de 5' in page.locator('#guidedSessionProgress').inner_text()
   page.locator('#cancelGuidedSession').click()
@@ -76,7 +95,8 @@ try:
   # Older profiles keep their ordinary dashboard and no playful exercise layer.
   workspace(page).locator('#profileSelect').select_option('middle')
   assert page.locator('#earlyHub').is_hidden()
-  assert page.locator('#home > .hero').is_visible()
+  assert page.locator('#homeAreaLanding').is_visible()
+  assert page.locator('#home > .hero').is_hidden()
   assert not page.locator('#appShell').evaluate('(e)=>e.classList.contains("early-experience")')
   assert page.locator('#schoolHub').is_hidden()
   workspace(page).locator('#profileSelect').select_option('junior')

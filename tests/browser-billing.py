@@ -38,7 +38,7 @@ try:
   page.route('https://checkout.stripe.com/**',lambda route:route.fulfill(body='<p>Checkout simulado</p>',content_type='text/html'))
   page.route('https://billing.stripe.com/**',lambda route:route.fulfill(body='<p>Portal simulado</p>',content_type='text/html'))
   origin=f'http://127.0.0.1:{server.server_port}'
-  page.goto(origin,wait_until='networkidle');page.locator('#subscribeBtn').wait_for(state='visible');assert page.locator('#subscribeBtn').inner_text()=='Probar pago · 30,00 €/mes'
+  page.goto(origin,wait_until='networkidle');page.locator('.account-tools > summary').click();page.locator('#subscribeBtn').wait_for(state='visible');assert page.locator('#subscribeBtn').inner_text()=='Probar pago · 30,00 €/mes'
   page.evaluate('__billingFail=true');page.locator('#subscribeBtn').click()
   page.wait_for_function('()=>document.querySelector("#billingMessage").textContent.includes("recuperable")')
   assert page.locator('#subscribeBtn').is_enabled();assert page.evaluate('__billing[0]')=={'action':'checkout','mode':'test'}
@@ -52,7 +52,7 @@ try:
   page.evaluate("localStorage.setItem('__accountState','active')");page.clock.run_for(5100)
   page.wait_for_function('()=>document.querySelector("#accountStatus").textContent==="Suscripción activa"')
   assert 'Suscripción activa' in page.locator('#billingMessage').inner_text();assert 'pago=' not in page.url
-  page.locator('#billingPortalBtn').click();page.wait_for_url('https://billing.stripe.com/**')
+  page.locator('.account-tools > summary').click();page.locator('#billingPortalBtn').click();page.wait_for_url('https://billing.stripe.com/**')
   page.goto(origin+'/?pago=cancelado',wait_until='networkidle');assert 'sin completar' in page.locator('#billingMessage').inner_text()
   page.set_viewport_size({'width':390,'height':844});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
   page.locator('.main-content').screenshot(path='/tmp/billing-return-mobile.png')

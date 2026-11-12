@@ -9,7 +9,7 @@ try:
  with tempfile.TemporaryDirectory() as tmp,sync_playwright() as p:
   browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox']);page=browser.new_page(viewport={'width':1280,'height':900},device_scale_factor=1);errors=[];external=[]
   page.on('pageerror',lambda e:errors.append(str(e)));page.on('request',lambda r:external.append(r.url) if r.url.startswith('https://') else None)
-  page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#earlyContinue');page.wait_for_timeout(1500)
+  page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#homeAreaLanding:not(.hidden)');page.wait_for_timeout(1500)
   page.evaluate('''()=>{const gate=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{const result=gate(it,...args);window.__current=it;return result;};
     const adapt=EarlyContent.adaptResponse;EarlyContent.adaptResponse=(...args)=>{const r=adapt(...args);if(window.__forceAttention&&args[1].domain==='attention'){r.items[0]=EarlyContent.pool('attention',1).find(x=>x.stimulus.some(b=>b.presentation==='model')&&x.stimulus.some(b=>b.type==='table'));window.__forceAttention=false;}return r;};
   }''');page.clock.install()
@@ -38,21 +38,21 @@ try:
    else:page.locator('#exerciseOptions').get_by_role('button',name=it['a'],exact=True).click()
    page.wait_for_selector('#exerciseNext:not(.hidden)')
   for width in [1920,1440,1280,1024,768,390]:
-   page.set_viewport_size({'width':width,'height':900});assert page.locator('[data-early-area]').count()==7
-   assert page.locator('[data-early-mission]').count()==4;assert page.locator('.discovery-trail li').count()==3
+   page.set_viewport_size({'width':width,'height':900});assert page.locator('#homeAreaLanding [data-early-area]').count()==page.locator('#homeLevels [data-home-area]').count()
+   assert page.locator('.professional-missions [data-unified-mission="early"]').count()==4;assert page.locator('.professional-discovery li').count()==3
    assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
-   assert page.locator('[data-early-area]').evaluate_all('(els)=>els.every(e=>e.getBoundingClientRect().height>=44)')
-   if width in [1280,390]:page.locator('#earlyHub').screenshot(path=f'/tmp/followup-hub-{width}.png')
+   assert page.locator('#homeAreaLanding [data-early-area]').evaluate_all('(els)=>els.every(e=>e.getBoundingClientRect().height>=44)')
+   if width in [1280,390]:page.locator('#homeAreaLanding').screenshot(path=f'/tmp/followup-hub-{width}.png')
   page.set_viewport_size({'width':1280,'height':900})
   for domain in ['language','reading','division','attention','executive','memory','speedReasoning']:
    it=open_area(domain);shot(domain);answer(it)
-  page.locator('#earlyHomeBtn').click();assert page.locator('.discovery-trail li.discovered').count()>=1
-  page.locator('[data-early-mission=stories]').click();it=current();answer(it)
-  page.locator('#cancelGuidedSession').click();assert '1 de 2' in page.locator('.mission-resume').inner_text()
-  page.reload(wait_until='networkidle');page.wait_for_selector('#earlyContinue');page.clock.resume();page.wait_for_timeout(500)
+  page.locator('#navMenu [data-section="home"]').click();page.locator('.professional-missions > summary').click();assert page.locator('.professional-discovery li').count()==3
+  page.locator('[data-unified-mission=early][data-mission-id=stories]').click();it=current();answer(it)
+  page.locator('#cancelGuidedSession').click();page.locator('.professional-missions > summary').click();assert '1 de 2' in page.locator('.professional-missions [role=status]').inner_text()
+  page.reload(wait_until='networkidle');page.wait_for_selector('#homeAreaLanding:not(.hidden)');page.clock.resume();page.wait_for_timeout(500)
   page.evaluate('''()=>{const gate=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return gate(it,...args)}}''')
-  page.locator('#earlyContinue').click();it=current();assert 'Actividad 2 de 2' in page.locator('#guidedSessionProgress').inner_text();answer(it);page.locator('#exerciseNext').click()
-  assert page.locator('.discovery-trail li.discovered').count()>=2
+  page.locator('.professional-missions > summary').click();page.locator('[data-unified-mission=early][data-mission-id=stories]').click();it=current();assert 'Actividad 2 de 2' in page.locator('#guidedSessionProgress').inner_text();answer(it);page.locator('#exerciseNext').click()
+  page.locator('.professional-missions > summary').click();assert page.locator('.professional-discovery li').count()==3
   # Force a native simple perceptual comparison only after a real authorized reply.
   page.evaluate('''()=>{const adapt=EarlyContent.adaptResponse;EarlyContent.adaptResponse=(...args)=>{const r=adapt(...args);if(args[1].domain==='attention'&&ContentPolicy.forProfile(args[2]))r.items[0]=EarlyContent.pool('attention',1).find(x=>x.stimulus.some(b=>b.presentation==='model')&&x.stimulus.some(b=>b.type==='table'));return r;}}''')
   it=open_area('attention');assert page.locator('.early-model').count()==1;assert page.locator('.early-comparison tr').count()>=2;shot('attention-model')

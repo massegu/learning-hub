@@ -18,7 +18,7 @@ try:
   page.on('pageerror',lambda e:errors.append(str(e)))
   page.on('request',lambda req:external.append(req.url) if req.url.startswith('https://') else None)
   page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle')
-  page.wait_for_selector('#earlyContinue');page.wait_for_timeout(1000)
+  page.wait_for_selector('#homeAreaLanding:not(.hidden)');page.wait_for_timeout(1000)
   page.evaluate('''()=>{window.__delivered=[];const gate=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;__delivered.push(it);return gate(it,...args)};window.__exports=[];const generate=WorksheetGenerator.generate;WorksheetGenerator.generate=async(items,profile)=>{__exports.push({items,profile});return generate(items,profile)}}''')
   page.clock.install()
   def wait_item():
