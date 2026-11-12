@@ -62,6 +62,8 @@ test('account preferences are grouped and destructive actions remain distinct',(
  assert.ok(html.includes('id="sidebarLocalePlaceholder"'));
  assert.ok(v16.includes("const panel=$('#sidebarLocalePlaceholder')"));
  assert.ok(html.includes('<details class="destructive-account-tools">'));
+ assert.ok(html.includes('<summary>Eliminar perfil o reiniciar progreso</summary>'));
+ assert.ok(html.includes('afectan al perfil activo y pueden borrar sus datos guardados'));
  for(const id of ['newProfileBtn','deleteProfileBtn','independentSessionBtn','profilePrivacyBtn','resetProgressBtn','changePasswordBtn','signOutBtn'])assert.ok(html.includes(`id="${id}"`),`${id} remains available`);
 });
 
@@ -76,9 +78,19 @@ test('exercise has one focused presentation with in-flow return and expandable p
  assert.ok(html.includes('<details id="activityOptions" class="activity-settings"'));
  assert.ok(html.includes('<summary id="activityOptionsSummary">Opciones del profesional</summary>'));
  assert.ok(css.includes('#appShell[data-design].exercise-focus .sidebar'));
+ assert.ok(css.includes('#appShell[data-design].exercise-focus{grid-template-columns:minmax(0,1fr)'));
  assert.ok(css.includes('.exercise-navigation'));
  assert.ok(css.includes('#activityOptions .level-control::before{content:none'));
+ assert.ok(css.includes('#appShell[data-design].exercise-focus #exercise{width:100%;max-width:1680px'));
  assert.ok(!css.includes('.shared-activity-bar'));
+});
+
+test('memory plan recall keeps its identifying context after hiding the plan steps',()=>{
+ assert.ok(app.includes("if(it.mechanic!=='memory_plan_recall')return ''"));
+ assert.ok(app.includes("it.stimulus?.find(block=>block.type==='text'&&block.text)?.text"));
+ assert.ok(app.includes('visual.innerHTML = memoryRecallContext(it)'));
+ assert.ok(css.includes('.memory-recall-context'));
+ assert.ok(css.includes('#exerciseVisual .reading-passage:not(:has(.practice-document)){background:#FBF9F7!important'));
 });
 
 test('communication preview appears only in language and is clearly marked as preparation',()=>{
@@ -96,4 +108,8 @@ test('professional palette is consistent across age themes and uses coherent lin
  assert.ok(app.includes('areaIcon(domain,\'professional\')'));
  assert.ok(app.includes('areaIcon(s,\'professional\')'));
  assert.ok(css.includes('#homeLevels [data-area] .area-illustration svg{display:block!important;visibility:visible!important'));
+ assert.ok(css.includes('.training-group-grid .level-track span.is-active{background:#4C5BDD}'));
+ assert.ok(css.includes('.evolution-chart .chart-point-core{fill:#FF7468}'));
+ assert.ok(css.includes('#progressCards .accuracy-ring span{font-size:.68rem'));
+ assert.ok(app.includes("r.length?'aciertos':'sin práctica'"));
 });

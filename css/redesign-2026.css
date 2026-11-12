@@ -134,13 +134,15 @@
 #appShell[data-design] #homeLevels [data-area] .area-illustration{background-image:none!important}
 #appShell[data-design] #homeLevels [data-area] .area-illustration svg{display:block!important;visibility:visible!important;opacity:1!important;width:27px;height:27px}
 #appShell[data-design] #homeLevels [data-area="attention"] .area-illustration{background:#EEE9FA;color:#4C5BDD}
-#appShell[data-design] #homeLevels [data-area="memory"] .area-illustration{background:#DDF8F3;color:#087D71}
+#appShell[data-design] #homeLevels [data-area="memory"] .area-illustration{background:#FFF0EE;color:#A7463D}
 #appShell[data-design] #homeLevels [data-area="executive"] .area-illustration{background:#FFF0EE;color:#A7463D}
 #appShell[data-design] #homeLevels [data-area="language"] .area-illustration{background:#EAF0FF;color:#3645B9}
 #appShell[data-design] #homeLevels [data-area="social"] .area-illustration{background:#FFF0EE;color:#A7463D}
 #appShell[data-design] .training-group-grid .level-track{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;height:8px;overflow:visible;background:transparent}
 #appShell[data-design] .training-group-grid .level-track span{display:block;width:auto;height:8px;border-radius:999px;background:#EEE9FA}
-#appShell[data-design] .training-group-grid .level-track span.is-active{background:#10BFAE}
+#appShell[data-design] .training-group-grid .level-track span.is-active{background:#4C5BDD}
+#appShell[data-design] #homeLevels .level-track span{background:#EEE9FA!important}
+#appShell[data-design] #homeLevels .level-track span.is-active{background:#4C5BDD!important}
 #appShell[data-design] .session-domain b{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:#EEE9FA;color:#4C5BDD}
 #appShell[data-design] .session-domain b .redesign-line-icon{width:23px;height:23px}
 #appShell[data-design] .redesign-area-card{min-height:170px;border-radius:15px;box-shadow:0 2px 8px #25455608}
@@ -170,16 +172,23 @@
 #appShell[data-design] .exercise-navigation{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 auto 14px;max-width:1440px}
 #appShell[data-design] .exercise-navigation>span{color:var(--muted);font-size:.85rem}
 #appShell[data-design] .exercise-navigation button{min-height:44px}
+#appShell[data-design] .language-topic{background:#FFF0EE!important;color:#8F3932!important;border-left:4px solid #FF7468!important;border-radius:8px}
+#appShell[data-design] #exerciseVisual .reading-passage:not(:has(.practice-document)){background:#FBF9F7!important;border:1px solid #E6DCD5;border-left:4px solid #FF7468!important;border-radius:13px;color:var(--ink)}
+#appShell[data-design] #exerciseVisual .reading-passage:not(:has(.practice-document))>.stimulus-caption{color:#8F3932}
+#appShell[data-design] .memory-recall-context{margin:18px 0;padding:16px 20px;border:1px solid #F2D8D4;border-left:4px solid #FF7468;border-radius:12px;background:#FFF7F5;color:var(--ink)}
+#appShell[data-design] .memory-recall-context strong{display:block;margin-bottom:5px;color:#8F3932;font-size:.8rem;letter-spacing:.04em;text-transform:uppercase}
+#appShell[data-design] .memory-recall-context p{margin:0;line-height:1.6}
+#appShell[data-design] .destructive-account-tools>p{margin:4px 2px 10px;color:#E5EDF0;font-size:.78rem;line-height:1.45}
 #appShell[data-design] .primary-btn{background:#4C5BDD!important;border-color:#4C5BDD!important;color:#fff!important;box-shadow:0 3px 0 #3645B9,0 8px 18px #4C5BDD24!important}
 #appShell[data-design] .primary-btn:hover{background:#3645B9!important;border-color:#3645B9!important;box-shadow:0 3px 0 #29369C,0 9px 20px #4C5BDD30!important}
 #appShell[data-design] #activityOptions .activity-toolbar button[aria-pressed="true"],#appShell[data-design] #languageModeSwitch .language-mode-btn.active{background:#4C5BDD!important;border-color:#4C5BDD!important;color:#fff!important;box-shadow:0 2px 0 #3645B9!important}
 #appShell[data-design] #activityOptions .level-control{display:flex;align-items:center;gap:12px;margin-bottom:12px;color:var(--muted);font-weight:700}
 #appShell[data-design] #activityOptions .level-control::before{content:none;margin:0}
 #appShell[data-design] #activityOptions .level-control select{min-height:44px;padding:8px 32px 8px 12px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);font:inherit}
-#appShell[data-design] .exercise-focus{display:block;min-height:100vh;background:var(--bg)}
+#appShell[data-design].exercise-focus{grid-template-columns:minmax(0,1fr);min-height:100vh;background:var(--bg)}
 #appShell[data-design].exercise-focus .sidebar,#appShell[data-design].exercise-focus .topbar{display:none!important}
-#appShell[data-design].exercise-focus .main-content{width:100%;max-width:none;margin:0;padding:clamp(16px,3vw,40px) clamp(16px,4vw,56px) 36px;background:var(--bg)!important}
-#appShell[data-design].exercise-focus #exercise{max-width:1440px;margin:0 auto}
+#appShell[data-design].exercise-focus .main-content{grid-column:1;width:100%!important;max-width:none!important;margin:0!important;box-sizing:border-box;padding:clamp(16px,3vw,40px) clamp(16px,4vw,56px) 36px;background:var(--bg)!important}
+#appShell[data-design].exercise-focus #exercise{width:100%;max-width:1680px;margin:0 auto}
 #appShell[data-design].exercise-focus #exercise .section-intro{margin-bottom:14px}
 #appShell[data-design].exercise-focus #exercise .exercise-card{padding:clamp(20px,3vw,40px);border-radius:20px;box-shadow:0 4px 22px #2545560d}
 #appShell[data-design].exercise-focus #exercise .prompt{font-size:clamp(1.25rem,2.2vw,1.8rem);line-height:1.5}
@@ -199,7 +208,8 @@
 #appShell[data-design] .evolution-chart .chart-session-label{fill:#254556;font-size:13px;font-weight:750}
 #appShell[data-design] .evolution-chart .chart-line{fill:none;stroke:#4C5BDD;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
 #appShell[data-design] .evolution-chart .chart-point{fill:#fff;stroke:#4C5BDD;stroke-width:3}
-#appShell[data-design] .evolution-chart .chart-point-core{fill:#10BFAE}
+#appShell[data-design] .evolution-chart .chart-point-core{fill:#FF7468}
+#appShell[data-design] .eyebrow{color:var(--accent-dark)!important}
 #appShell[data-design] .progress-chart-summary{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;color:var(--ink)}
 #appShell[data-design] .progress-chart-summary strong{font-size:1.15rem}
 #appShell[data-design] .progress-chart-summary span{color:var(--muted)}
@@ -209,4 +219,7 @@
 #appShell[data-design] .progress-chart-data table{width:100%;border-collapse:collapse}
 #appShell[data-design] .progress-chart-data th,#appShell[data-design] .progress-chart-data td{padding:10px 12px;border-top:1px solid var(--line);text-align:left;color:var(--ink)}
 #appShell[data-design] .progress-chart-data th{font-size:.84rem;color:var(--muted)}
+#appShell[data-design] #progressCards .accuracy-ring span{font-size:.68rem;line-height:1.15;white-space:normal;text-align:center;max-width:100%;overflow-wrap:anywhere}
+#appShell[data-design] #progressCards .progress-subject{border-top-color:var(--progress-color)!important}
+#appShell[data-design] #progressCards .ring-track{stroke:#E3E0EC}
 @media(max-width:560px){#appShell[data-design] .evolution-chart{min-height:150px}#appShell[data-design] .progress-chart-data{overflow-x:auto}#appShell[data-design] .progress-chart-data table{min-width:470px}}

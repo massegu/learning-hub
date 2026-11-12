@@ -237,6 +237,11 @@
     visual.innerHTML = targetPair + cards;
   }
   function displayMemoryQuestion(it){return it.photoTask?.kind==='recall'?String(it.memoryQuestion||'¿Qué recuerdas?').replace(/\s(?=\d+\))/g,'\n'):it.memoryQuestion||'¿Qué recuerdas?';}
+  function memoryRecallContext(it){
+    if(it.mechanic!=='memory_plan_recall')return '';
+    const context=it.stimulus?.find(block=>block.type==='text'&&block.text)?.text;
+    return context?`<aside class="memory-recall-context"><strong>Contexto del plan</strong><p>${escapeHtml(context)}</p></aside>`:'';
+  }
   function renderMemoryExercise(it) {
     if(it.audioMemory){
       const visual=$('#exerciseVisual'),area=$('#exerciseOptions');let heard=false;
@@ -315,7 +320,7 @@
     setTimeout(
       () => {
         if (currentItem !== it) return;
-        visual.innerHTML = "";
+        visual.innerHTML = memoryRecallContext(it);
         $("#exercisePrompt").textContent =
           it.memoryQuestion || "¿Qué recuerdas?";
         if(it.memoryResponse==='order')renderOrderExercise(it);
@@ -1977,9 +1982,9 @@
         const r = state.history.filter((x) => x.subject === s),
           c = r.filter((x) => x.correct).length,
           acc = r.length ? Math.round((c / r.length) * 100) : 0;
-        const palette={language:['#4C5BDD','#EAF0FF'],middleLanguage:['#4C5BDD','#EAF0FF'],teenLanguage:['#4C5BDD','#EAF0FF'],division:['#087D71','#E1F8F4'],geometry:['#3645B9','#EAF0FF'],middleMath:['#087D71','#E1F8F4'],teenMath:['#087D71','#E1F8F4'],literacy:['#3645B9','#EEE9FA'],reading:['#3645B9','#EEE9FA'],english:['#087D71','#E1F8F4'],social:['#A7463D','#FFF0EE'],attention:['#4C5BDD','#EEE9FA'],applied:['#A7463D','#FFF0EE'],executive:['#087D71','#E1F8F4'],memory:['#A7463D','#F8E8EC'],speedReasoning:['#087D71','#E1F8F4']};
+        const palette={language:['#4C5BDD','#EAF0FF'],middleLanguage:['#4C5BDD','#EAF0FF'],teenLanguage:['#4C5BDD','#EAF0FF'],division:['#A7463D','#FFF0EE'],geometry:['#3645B9','#EAF0FF'],middleMath:['#A7463D','#FFF0EE'],teenMath:['#A7463D','#FFF0EE'],literacy:['#3645B9','#EEE9FA'],reading:['#3645B9','#EEE9FA'],english:['#4C5BDD','#EAF0FF'],social:['#A7463D','#FFF0EE'],attention:['#4C5BDD','#EEE9FA'],applied:['#A7463D','#FFF0EE'],executive:['#A7463D','#FFF0EE'],memory:['#A7463D','#F8E8EC'],speedReasoning:['#4C5BDD','#EAF0FF']};
         const [color,tint]=palette[s]||['#087D71','#E1F8F4'];
-        return `<div class="progress-subject card" style="--progress-color:${color};--progress-tint:${tint}"><small>${SUBJECT_META[s].name}</small><div class="accuracy-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="ring-track" cx="60" cy="60" r="49"/><circle class="ring-value" cx="60" cy="60" r="49" pathLength="100" stroke-opacity="${acc?1:0}" stroke-dasharray="${acc} 100"/></svg><div><strong>${r.length?acc+'%':'—'}</strong><span>${r.length?'de aciertos':'sin práctica'}</span></div></div><small>${r.length} ${r.length===1?'ejercicio':'ejercicios'} · nivel ${state.levels[s] || 1}</small></div>`;
+        return `<div class="progress-subject card" style="--progress-color:${color};--progress-tint:${tint}"><small>${SUBJECT_META[s].name}</small><div class="accuracy-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="ring-track" cx="60" cy="60" r="49"/><circle class="ring-value" cx="60" cy="60" r="49" pathLength="100" stroke-opacity="${acc?1:0}" stroke-dasharray="${acc} 100"/></svg><div><strong>${r.length?acc+'%':'—'}</strong><span>${r.length?'aciertos':'sin práctica'}</span></div></div><small>${r.length} ${r.length===1?'ejercicio':'ejercicios'} · nivel ${state.levels[s] || 1}</small></div>`;
       })
       .join("");
     renderSpeedProgress();
@@ -1993,7 +1998,7 @@
     if(!recent.length){$('#sessionEvolution').innerHTML='<p class="muted">Completa algunos ejercicios para ver aquí tu evolución.</p>';return;}
     const points=recent.map((row,i)=>({x:recent.length===1?350:60+i*580/(recent.length-1),y:200-160*row.correct/row.attempts,accuracy:Math.round(100*row.correct/row.attempts),...row}));
     const path=points.map((p,i)=>`${i?'L':'M'}${p.x},${p.y}`).join(' ');
-    $('#sessionEvolution').innerHTML=`<div class="progress-chart-summary"><strong>${recent.reduce((n,r)=>n+r.attempts,0)} ejercicios</strong><span>en ${recent.length} ${recent.length===1?'sesión reciente':'sesiones recientes'}</span></div><svg class="evolution-chart" viewBox="0 0 700 250" role="img" aria-label="Porcentaje de aciertos por sesión; cada punto representa una sesión. La tabla accesible conserva las fechas, el número de respuestas, los aciertos y la precisión."><defs><linearGradient id="progressFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10BFAE" stop-opacity=".22"/><stop offset="100%" stop-color="#10BFAE" stop-opacity=".015"/></linearGradient></defs>${[0,50,100].map(n=>`<g><path class="chart-grid" d="M60 ${200-n*1.6}H650"/><text class="chart-axis-label" x="46" y="${205-n*1.6}" text-anchor="end">${n}%</text></g>`).join('')}<path d="${path}L${points.at(-1).x},200L${points[0].x},200Z" fill="url(#progressFill)"/><path class="chart-line" d="${path}"/>${points.map((p,i)=>`<g><circle class="chart-point" cx="${p.x}" cy="${p.y}" r="7"><title>Sesión ${i+1} · ${escapeHtml(sessionDateLabel(p.date))}: ${p.accuracy}% de aciertos, ${p.correct} de ${p.attempts} ejercicios</title></circle><circle class="chart-point-core" cx="${p.x}" cy="${p.y}" r="2.5"/><text class="chart-session-label" x="${p.x}" y="230" text-anchor="middle">${i+1}</text></g>`).join('')}</svg><p class="session-evolution-note">La precisión puede variar entre sesiones según la dificultad y las actividades realizadas.</p><details class="progress-chart-data"><summary>Ver los datos exactos por sesión</summary><table><thead><tr><th scope="col">Sesión</th><th scope="col">Fecha y hora</th><th scope="col">Ejercicios</th><th scope="col">Aciertos</th><th scope="col">Precisión</th></tr></thead><tbody>${points.map((p,i)=>`<tr><th scope="row">${i+1}</th><td>${escapeHtml(sessionDateLabel(p.date))}</td><td>${p.attempts}</td><td>${p.correct}</td><td>${p.accuracy}%</td></tr>`).join('')}</tbody></table></details>`;
+    $('#sessionEvolution').innerHTML=`<div class="progress-chart-summary"><strong>${recent.reduce((n,r)=>n+r.attempts,0)} ejercicios</strong><span>en ${recent.length} ${recent.length===1?'sesión reciente':'sesiones recientes'}</span></div><svg class="evolution-chart" viewBox="0 0 700 250" role="img" aria-label="Porcentaje de aciertos por sesión; cada punto representa una sesión. La tabla accesible conserva las fechas, el número de respuestas, los aciertos y la precisión."><defs><linearGradient id="progressFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4C5BDD" stop-opacity=".18"/><stop offset="100%" stop-color="#4C5BDD" stop-opacity=".015"/></linearGradient></defs>${[0,50,100].map(n=>`<g><path class="chart-grid" d="M60 ${200-n*1.6}H650"/><text class="chart-axis-label" x="46" y="${205-n*1.6}" text-anchor="end">${n}%</text></g>`).join('')}<path d="${path}L${points.at(-1).x},200L${points[0].x},200Z" fill="url(#progressFill)"/><path class="chart-line" d="${path}"/>${points.map((p,i)=>`<g><circle class="chart-point" cx="${p.x}" cy="${p.y}" r="7"><title>Sesión ${i+1} · ${escapeHtml(sessionDateLabel(p.date))}: ${p.accuracy}% de aciertos, ${p.correct} de ${p.attempts} ejercicios</title></circle><circle class="chart-point-core" cx="${p.x}" cy="${p.y}" r="2.5"/><text class="chart-session-label" x="${p.x}" y="230" text-anchor="middle">${i+1}</text></g>`).join('')}</svg><p class="session-evolution-note">La precisión puede variar entre sesiones según la dificultad y las actividades realizadas.</p><details class="progress-chart-data"><summary>Ver los datos exactos por sesión</summary><table><thead><tr><th scope="col">Sesión</th><th scope="col">Fecha y hora</th><th scope="col">Ejercicios</th><th scope="col">Aciertos</th><th scope="col">Precisión</th></tr></thead><tbody>${points.map((p,i)=>`<tr><th scope="row">${i+1}</th><td>${escapeHtml(sessionDateLabel(p.date))}</td><td>${p.attempts}</td><td>${p.correct}</td><td>${p.accuracy}%</td></tr>`).join('')}</tbody></table></details>`;
   }
   function csvEscape(v) {
     const s = String(v ?? "");

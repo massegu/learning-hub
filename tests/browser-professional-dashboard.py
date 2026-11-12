@@ -43,6 +43,7 @@ try:
    icons=page.locator('#homeLevels .level-row .area-illustration svg')
    assert icons.count()>0,age
    assert icons.evaluate_all('(els)=>els.every(e=>{const r=e.getBoundingClientRect(),s=getComputedStyle(e);return r.width>=20&&r.height>=20&&s.visibility==="visible"&&s.display!=="none"})'),age
+   assert page.locator('#homeLevels .level-track').evaluate_all('''els=>els.every(track=>{const level=Number(track.getAttribute('aria-valuenow')),active=[...track.children].filter(x=>x.classList.contains('is-active'));return active.length===level&&active.every(x=>getComputedStyle(x).backgroundColor==='rgb(76, 91, 221)')})'''),age
    for width,name in [(1440,'desktop'),(768,'tablet'),(390,'mobile')]:
     page.set_viewport_size({'width':width,'height':900})
     assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),(age,width,'training')
@@ -80,6 +81,10 @@ try:
     page.locator('#sessionEvolution .progress-chart-data > summary').click()
     row=page.locator('#sessionEvolution .progress-chart-data table tbody tr').first.inner_text()
     assert '1' in row and '100%' in row,row
+    attention=page.locator('#progressCards .progress-subject').filter(has_text='Atención')
+    accuracy_label=attention.locator('.accuracy-ring span')
+    assert accuracy_label.inner_text()=='aciertos'
+    assert accuracy_label.evaluate('(e)=>e.scrollWidth<=e.clientWidth+1&&e.scrollHeight<=e.clientHeight+1'),accuracy_label.evaluate('(e)=>({w:e.scrollWidth,cw:e.clientWidth,h:e.scrollHeight,ch:e.clientHeight})')
     page.screenshot(path=str(shots/'progress-evolution-teen.png'),full_page=True)
     page.locator('#navMenu [data-section="home"]').click()
    if page.locator('#exerciseReturnHome').is_visible():page.locator('#exerciseReturnHome').click()
@@ -111,6 +116,21 @@ try:
   page.wait_for_function('()=>getComputedStyle(document.querySelector("#languageModeSwitch [data-mode=grammar]")).backgroundColor==="rgb(76, 91, 221)"')
   assert selected.evaluate('(e)=>getComputedStyle(e).backgroundColor')=='rgb(76, 91, 221)'
   page.screenshot(path=str(shots/'language-teen.png'),full_page=True)
+  page.clock.install();page.evaluate('''()=>{const item=Curriculum.pool('teen','memory',3).find(x=>x.mechanic==='memory_plan_recall');if(!item)throw new Error('No existe el reto de recordar un plan');window.__memoryContextFixture=structuredClone(item);LearningAPI.requestContent=async()=>({items:[structuredClone(window.__memoryContextFixture)]});window.__current=null}''')
+  area(page,'memory').click();page.wait_for_function("()=>window.__current?.mechanic==='memory_plan_recall'")
+  memory_item=page.evaluate('__current');context=memory_item['stimulus'][0]['text']
+  assert context in page.locator('#exerciseVisual').inner_text(),context
+  page.clock.fast_forward(memory_item['revealMs']+50)
+  page.wait_for_function("()=>document.querySelector('.memory-recall-context')&&document.querySelector('#exercisePrompt').textContent.includes('cerraba el plan')")
+  context_rendered=' '.join(page.locator('.memory-recall-context').inner_text().split())
+  assert context_rendered==f'CONTEXTO DEL PLAN {context}',(context_rendered,context)
+  assert page.locator('.memory-reveal').count()==0
+  assert page.locator('#exerciseOptions [data-answer]').count()==len(memory_item['opts'])
+  page.screenshot(path=str(shots/'memory-plan-context-teen.png'),full_page=True)
+  page.set_viewport_size({'width':1920,'height':1000});canvas=page.evaluate('''()=>({viewport:innerWidth,shell:document.querySelector('#appShell').getBoundingClientRect().width,main:document.querySelector('.main-content').getBoundingClientRect().width,margin:getComputedStyle(document.querySelector('.main-content')).marginLeft,grid:getComputedStyle(document.querySelector('#appShell')).display,exercise:document.querySelector('#exercise').getBoundingClientRect().width})''');assert canvas['exercise']>=canvas['viewport']*.84,canvas
+  page.screenshot(path=str(shots/'exercise-wide-canvas.png'),full_page=True)
+  page.set_viewport_size({'width':390,'height':844});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
+  page.screenshot(path=str(shots/'memory-plan-context-teen-mobile.png'),full_page=True)
   assert not errors,errors
   browser.close();print('PASS: five-age dashboard and training icons, compact non-duplicated summary, focused exercise flow with in-flow return and professional options, progress chart, profile-isolated continuation, and responsive widths')
 finally:
