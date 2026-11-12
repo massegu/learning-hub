@@ -32,7 +32,10 @@ def document_integrity(page,nodes,items,key,docx_bytes):
     if visual_count:assert media_count>=visual_count,(key,visual_count,media_count)
     for i,model in enumerate(models):
         start=nodes.index(f'ACTIVIDAD {i+1}');stop=nodes.index(f'ACTIVIDAD {i+2}') if i+1<len(items) else len(nodes)
-        block=nodes[start:stop];q=block.index(model['question'])
+        block=nodes[start:stop]
+        paper_item=items[i]
+        paper_question=paper_item['paperQuestion'] if paper_item.get('speedEvidence',{}).get('kind')=='category' and paper_item.get('speedEvidence',{}).get('category')=='animals' else model['question']
+        q=block.index(paper_question)
         for stimulus in model['stimulus']:
             if stimulus['type']=='text':values=[stimulus['text']]
             elif stimulus['type']=='list':values=stimulus['items']
