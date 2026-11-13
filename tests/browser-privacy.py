@@ -21,7 +21,7 @@ try:
   answer_social();page.wait_for_function('()=>__profiles.find(p=>p.id==="primary").progress.history?.length===1')
   original=page.evaluate('JSON.stringify(__profiles.find(p=>p.id==="primary").progress)');saved=page.evaluate('__saved.length')
   workspace(page).locator('#independentSessionBtn').click();assert 'no se guardan' in page.locator('#independentSessionStatus').inner_text();assert page.locator('#profilePrivacyBtn').is_disabled()
-  answer_social();assert page.evaluate('__requests.at(-1).session_only') is True;assert page.evaluate('__requests.at(-1).client_revision')==12
+  answer_social();assert page.evaluate('__requests.at(-1).session_only') is True;assert page.evaluate('__requests.at(-1).client_revision')==13
   assert page.evaluate('__saved.length')==saved;assert page.evaluate('JSON.stringify(__profiles.find(p=>p.id==="primary").progress)')==original
   workspace(page).locator('#independentSessionBtn').click();assert 'Seguimiento individual' in page.locator('#independentSessionStatus').inner_text();assert page.evaluate('JSON.stringify(__profiles.find(p=>p.id==="primary").progress)')==original
   workspace(page).locator('#independentSessionBtn').click();answer_social();page.reload(wait_until='networkidle');workspace(page);assert 'Seguimiento individual' in page.locator('#independentSessionStatus').inner_text();assert page.evaluate('JSON.stringify(__profiles.find(p=>p.id==="primary").progress)')==original
@@ -36,6 +36,8 @@ try:
   assert page.locator('#profileSelect option[value=primary]').count()==0
   # A slow deletion must not remove the profile selected while it is pending.
   workspace(page).locator('#profileSelect').select_option('junior');page.evaluate('''()=>{const remove=LearningAPI.deleteProfile;LearningAPI.deleteProfile=id=>new Promise(resolve=>window.__releaseDelete=()=>resolve(remove(id)))}''')
+  account=page.locator('.account-tools');account.evaluate('(element)=>element.open=true')
+  page.locator('.destructive-account-tools').evaluate('(element)=>element.open=true')
   workspace(page).locator('#deleteProfileBtn').click();workspace(page).locator('#profileSelect').select_option('teen');page.evaluate('()=>__releaseDelete()');page.wait_for_function('()=>!__profiles.some(p=>p.id==="junior")')
   assert page.locator('#profileSelect').input_value()=='teen';assert page.locator('#profileSelect option[value=teen]').count()==1
   assert not errors,errors;browser.close();print('PASS: tracked/independent separation, no independent client writes, fresh adaptation, JSON export, profile review/rename/deletion, recoverable RPC failure and mobile dialog')
