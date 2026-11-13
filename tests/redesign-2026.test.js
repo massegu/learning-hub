@@ -99,12 +99,11 @@ test('memory plan recall keeps its identifying context after hiding the plan ste
  assert.ok(css.includes('#exerciseVisual .reading-passage:not(:has(.practice-document)){background:#FBF9F7!important'));
 });
 
-test('communication preview appears only in language and is clearly marked as preparation',()=>{
- assert.ok(html.includes('id="everydayLanguagePreview"'));
- assert.ok(html.includes('En preparación'));
- assert.ok(app.includes('!(["language","middleLanguage","teenLanguage"].includes(subject))')===false);
- assert.ok(app.includes('!["language","middleLanguage","teenLanguage"].includes(subject)'));
- assert.ok(app.includes('Comunicación y vida cotidiana · en preparación'));
+test('functional communication is a real exercise area rather than a preparation preview',()=>{
+ assert.ok(app.includes('communication: {'));
+ assert.ok(app.includes('"communication"'));
+ assert.ok(!html.includes('everydayLanguagePreview'));
+ assert.ok(!app.includes('Comunicación y vida cotidiana · en preparación'));
 });
 
 test('professional palette is consistent across age themes and uses coherent line icons',()=>{

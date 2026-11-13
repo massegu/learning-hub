@@ -10,6 +10,7 @@
     executive:{title:'Funciones ejecutivas',theme:'Pasos y planes',icon:'backpack',description:'Piensa y ordena los pasos.'},
     speedReasoning:{title:'Velocidad de procesamiento',theme:'Pistas',icon:'triangle',description:'Compara figuras y responde.'},
     applied:{title:'Cognición aplicada',theme:'Cada día',icon:'bottle',description:'Resuelve pequeñas situaciones.'},
+    communication:{title:'Comunicación funcional',theme:'Pedir y aclarar',icon:'speech',description:'Practica cómo pedir ayuda y aclarar una indicación.'},
   };
   const missions=[
     {id:'words',title:'Explora las palabras',description:'Tres actividades de Lenguaje.',plan:['language','language','language'],icon:'pencil'},

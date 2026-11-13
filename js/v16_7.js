@@ -20,6 +20,10 @@
     sel.innerHTML=[['early','6-7 años'],['junior','8-10 años'],['primary','10-12 años'],['middle','13-15 años'],['teen','16-18 años']]
       .map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
     sel.value=AGE_ROUTES[current]?current:'junior';
+    const exact=$('#newProfileExactAge'),field=$('#exactAgeField');
+    const refreshExact=()=>{if(!exact)return;const route=sel.value,range=route==='early'?[6,7]:route==='junior'?[8,9,10]:[];field?.classList.toggle('hidden',!range.length);exact.innerHTML='<option value="">Selecciona la edad</option>'+range.map(age=>`<option value="${age}">${age} años</option>`).join('');if(range.length)exact.value=String(range[0]);};
+    sel.addEventListener('change',refreshExact);refreshExact();
+    const privacyAge=$('#privacyExactAge');if(privacyAge)privacyAge.innerHTML='<option value="">Sin indicar</option>'+Array.from({length:13},(_,i)=>6+i).map(age=>`<option value="${age}">${age} años</option>`).join('');
   }
 
   async function captureProfiles(){
@@ -40,15 +44,15 @@
       (rows||[]).forEach(p=>routeMap.set(String(p.id),p?.progress?.ageRoute||p.age_band));
       return rows;
     };
-    API.createProfile=async(name,age_band,initial_level=1,locale='es_intl')=>{
+    API.createProfile=async(name,age_band,initial_level=1,locale='es_intl',ageYears=null)=>{
       const requested=AGE_ROUTES[age_band]?age_band:'junior';
       const dbAge=AGE_ROUTES[requested].dbAge||requested;
       const p=await origCreate(name,dbAge,initial_level,locale);
       routeMap.set(String(p.id),requested);
       if(requested==='early'||requested==='junior'){
-        p.progress={...(p.progress||{}),ageRoute:requested};
+        p.progress={...(p.progress||{}),ageRoute:requested,...(ageYears!==null&&ageYears!==''&&Number.isInteger(Number(ageYears))?{ageYears:Number(ageYears)}:{})};
         await origSave(p.id,p.progress);
-      }
+      }else if(ageYears!==null&&ageYears!==''&&Number.isInteger(Number(ageYears))){p.progress={...(p.progress||{}),ageYears:Number(ageYears)};await origSave(p.id,p.progress);}
       setTimeout(patchUI,80); return p;
     };
     API.saveProgress=async(id,progress)=>{

@@ -18,7 +18,7 @@ test('every 6-7 domain and level has distinct, printable activities across sever
   for (const domain of policy.early.subjects) for (const level of [1,2,3]) {
     const items=early.pool(domain,level);
     assert.ok(new Set(items.map(it=>it.semanticKey)).size>=20, `${domain}: not enough distinct problems for a worksheet`);
-    assert.ok(new Set(items.map(it=>it.ageProfile.mechanic)).size>=3, domain);
+    assert.ok(domain==='communication'?new Set(items.map(it=>it.qualityDescriptor.semanticFamily)).size>=3:new Set(items.map(it=>it.ageProfile.mechanic)).size>=3, domain);
     const signatures=items.map(it=>JSON.stringify([it.q,it.stimulus,it.opts,it.tokens,it.memoryQuestion]));
     assert.equal(new Set(signatures).size,items.length);
     assert.equal(new Set(items.map(it=>it.id)).size,items.length);

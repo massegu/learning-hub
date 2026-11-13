@@ -185,6 +185,7 @@
   function pool(domain, level = 1, subdomain = null) {
     const bandLevel = Math.max(1, Math.min(3, Number(level) || 1));
     if(domain==='social')return (root.Curriculum||(typeof require==='function'&&require('./curriculum.js'))).pool('early','social',bandLevel);
+    if(domain==='communication')return (root.Curriculum||(typeof require==='function'&&require('./curriculum.js'))).pool('early','communication',bandLevel);
     if(curriculum?.supports('early',domain)){
       let items=curriculum.pool('early',domain,bandLevel);
       if(domain==='reading'){

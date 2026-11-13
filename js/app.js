@@ -53,6 +53,11 @@
       icon: "◎",
       desc: "Comprende situaciones, escucha otros puntos de vista y practica cómo convivir.",
     },
+    communication: {
+      name: "Comunicación funcional",
+      icon: "◉",
+      desc: "Practica pedir ayuda, aclarar indicaciones y expresar necesidades en situaciones cotidianas.",
+    },
     english: {
       name: "English Lab",
       icon: "EN",
@@ -100,6 +105,7 @@
         "reading",
         "english",
         "literacy",
+        "communication",
         "attention",
         "executive",
         "memory",
@@ -116,6 +122,7 @@
         "middleReading",
         "english",
         "literacy",
+        "communication",
         "attention",
         "executive",
         "memory",
@@ -131,6 +138,7 @@
         "social",
         "english",
         "literacy",
+        "communication",
         "attention",
         "executive",
         "memory",
@@ -149,7 +157,7 @@
     photoOnly = false,
     memoryAudioOnly = false,
     interactionOnly = false,
-    roomSpeedOnly = false, speedUnpairedOnly=false, cognitiveOnly=false, cognitiveFamily="", executedOnly=false, stopExecuted=null,
+    roomSpeedOnly = false, speedUnpairedOnly=false, cognitiveOnly=false, cognitiveFamily="", executedOnly=false, stopExecuted=null,stopReaderAssist=null,
     interactionKind = 'symbols',
     configuredSubject = null,
     currentItem = null,
@@ -164,6 +172,7 @@
   let memoryCountdown = null, memoryExposureVersion = 0;
   function stopMemoryCountdown() {
     stopInteraction();
+    if(stopReaderAssist){stopReaderAssist();stopReaderAssist=null;}
     if(stopExecuted){stopExecuted();stopExecuted=null;}
     clearTimeout(memoryCountdown);memoryCountdown=null;memoryExposureVersion++;
   }
@@ -1010,12 +1019,15 @@
   async function createProfile() {
     const name = $("#newProfileName").value.trim();
     if (!name) return;
+    const exactAge=$("#newProfileExactAge").value,route=$("#newProfileAge").value;
+    if(['early','junior'].includes(route)&&!exactAge){$('#exactAgeField').classList.add('invalid');$('#newProfileExactAge').focus();return;}
     try {
       const p = await API.createProfile(
         name,
         $("#newProfileAge").value,
         $("#newProfileLevel").value,
         "es_intl",
+        exactAge?Number(exactAge):null,
       );
       profiles.push(p);
       $("#newProfileName").value = "";
@@ -1168,8 +1180,6 @@
     $("#exercise").dataset.subject=subject;
     $('#appShell').dataset.subject=subject;
     const m = SUBJECT_META[subject];
-    const everydayPreview=$("#everydayLanguagePreview");
-    if(everydayPreview)everydayPreview.classList.toggle("hidden",!["language","middleLanguage","teenLanguage"].includes(subject));
     $("#exercisePill").textContent = m.name.toUpperCase();
     $("#exerciseHeading").textContent = m.name;
     $("#exerciseDescription").textContent = m.desc;
@@ -1313,7 +1323,7 @@
     const localeRevision = API.localeRevision;
     const res = await API.requestContent({
       ...payload,
-      client_revision:12,
+      client_revision:13,
       ...(targetProfile._sessionOnly?{session_only:true}:{}),
       profile_id: targetProfile.id,
       locale,
@@ -1442,6 +1452,7 @@
     $('#retryContentLoad').classList.remove('hidden');
   }
   function renderExercise(it) {
+    if(stopReaderAssist){stopReaderAssist();stopReaderAssist=null;}
     if (!it) {
       $("#exercisePrompt").textContent = "No hay contenido disponible.";
       return;
@@ -1517,6 +1528,7 @@
     if (it.stimulus?.length)
       $("#exerciseVisual").innerHTML =
         `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus,{heading:it.topic||it.theme,rubric:it.writingRubric,illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:!window.ContentPolicy.forProfile(profile),senses:it.lexicalSenses})}</div>`;
+    if(['reading','middleReading','literacy'].includes(subject)&&window.ReaderAssist)stopReaderAssist=window.ReaderAssist.mount($('#exerciseVisual'));
     $("#exercisePrompt").textContent = it.q || "Actividad";
     if(it.roomSpeedTask){renderRoomSpeed(it);return;}
     if(it.interactionTask){renderInteractiveExercise(it);return;}
@@ -1873,7 +1885,7 @@
       const meta=SUBJECT_META[domain],name=subjectLabel(domain),short=descriptions[domain]||meta.desc;
       const languageArea=['language','middleLanguage','teenLanguage'].includes(domain);
       const journeyAttribute=window.ContentPolicy.forProfile(profile)?`data-early-area="${escapeHtml(domain)}"`:window.SchoolJourney.forProfile(profile)?`data-school-area="${escapeHtml(domain)}"`:'';
-      return `<button class="redesign-area-card${domain==='geometry'?' geometry-subarea':''}" type="button" data-area="${escapeHtml(domain)}" data-redesign-area="${escapeHtml(domain)}" ${journeyAttribute}><span class="redesign-area-icon" aria-hidden="true">${areaIcon(domain,'professional')}</span><strong>${escapeHtml(name)}</strong><span class="redesign-area-desc">${escapeHtml(short)}</span>${languageArea?'<span class="communication-coming">Comunicación y vida cotidiana · en preparación</span>':''}<small>Nivel ${state.levels[domain]||1} <span aria-hidden="true">→</span></small></button>`;
+      return `<button class="redesign-area-card${domain==='geometry'?' geometry-subarea':''}" type="button" data-area="${escapeHtml(domain)}" data-redesign-area="${escapeHtml(domain)}" ${journeyAttribute}><span class="redesign-area-icon" aria-hidden="true">${areaIcon(domain,'professional')}</span><strong>${escapeHtml(name)}</strong><span class="redesign-area-desc">${escapeHtml(short)}</span><small>Nivel ${state.levels[domain]||1} <span aria-hidden="true">→</span></small></button>`;
     }).join('');
     const groups=['cognitive','language','math'].filter(group=>sorted.some(domain=>groupFor(domain)===group));
     const areaSections=groups.map(group=>`<section class="professional-area-group ${group==='math'?'mathematics-area-group':''}" aria-labelledby="areaGroup-${group}"><h3 id="areaGroup-${group}">${groupLabels[group]}</h3><div class="redesign-area-grid">${cardsFor(sorted.filter(domain=>groupFor(domain)===group))}</div></section>`).join('');
@@ -1899,7 +1911,7 @@
     return `<details class="professional-missions"><summary>Misiones opcionales · ${missions.length} · ${saved.completed.length} completadas</summary>${active?`<p role="status">${escapeHtml(journey.definition(active.id,profile).title)}: ${active.index} actividades realizadas.</p>`:''}<div class="professional-mission-list">${missions.map(m=>`<article class="professional-mission"><div><strong>${escapeHtml(m.title)}</strong><p>${m.plan.length} actividades · ${escapeHtml([...new Set(m.plan)].map(d=>journey.all[d]?.title||SUBJECT_META[d]?.name||d).join(', '))}</p></div><button type="button" class="secondary-btn" data-unified-mission="school" data-mission-id="${escapeHtml(m.id)}" ${active&&active.id!==m.id?'disabled':''}>${active?.id===m.id?'Continuar':'Empezar'}</button></article>`).join('')}</div></details>`;
   }
   function areaGroupFor(domain){return ['geometry','division','middleMath','teenMath'].includes(domain)?'math':
-    ['language','middleLanguage','teenLanguage','reading','middleReading','literacy','english'].includes(domain)?'language':'cognitive';}
+    ['language','middleLanguage','teenLanguage','reading','middleReading','literacy','english','communication'].includes(domain)?'language':'cognitive';}
   function renderHomeLevels() {
     const subjects=ageData().subjects,labels={cognitive:'Áreas cognitivas',language:'Lenguaje y comunicación',math:'Matemáticas'};
     const groups=['cognitive','language','math'].filter(group=>subjects.some(s=>areaGroupFor(s)===group));
@@ -2066,7 +2078,7 @@
       `LearningLab_${profile.name}_resumen.csv`,
     );
   function buildHomework() {
-    const options = ageData().subjects;
+    const options = ageData().subjects.filter(domain=>domain!=='communication');
     $("#homeworkOptions").innerHTML = options
       .map(
         (s, i) =>
@@ -2232,7 +2244,7 @@
   };
   $('#profilePrivacyBtn').onclick=async()=>{
     if(!profile||profile._sessionOnly)return;
-    privacyTarget=profile.id;$('#privacyAlias').value=profile.name;$('#privacyReviewDate').value='';
+    privacyTarget=profile.id;$('#privacyAlias').value=profile.name;$('#privacyReviewDate').value='';$('#privacyExactAge').value=profile.progress?.ageYears?String(profile.progress.ageYears):'';
     $('#privacyDialog').showModal();privacyMessage('Cargando los ajustes del perfil…');
     try{const status=await privacyAction('open');$('#privacyReviewDate').value=status.review_at||'';privacyMessage(status.review_at&&status.review_at<=new Date().toISOString().slice(0,10)?'Ha llegado la fecha de revisar la conservación de este perfil.':'La exportación y el borrado incluyen los resultados asociados al perfil.');}catch(_){}
   };
@@ -2240,7 +2252,7 @@
   $('#privacyDialog').addEventListener('cancel',e=>{if(privacyBusy)e.preventDefault();});
   $('#saveProfilePrivacy').onclick=async()=>{
     try{const updated=await privacyAction('settings',{alias:$('#privacyAlias').value.trim(),reviewAt:$('#privacyReviewDate').value||null});
-      const found=profiles.find(p=>p.id===privacyTarget);if(found)Object.assign(found,updated);if(profile?.id===privacyTarget){profile.name=updated.name;renderProfiles();updateGlobalUI();}privacyMessage('Código y fecha de revisión guardados.');
+      const exactAge=$('#privacyExactAge').value;const found=profiles.find(p=>p.id===privacyTarget);if(found){Object.assign(found,updated);found.progress={...(found.progress||{}),...(exactAge?{ageYears:Number(exactAge)}:{ageYears:undefined})};if(!exactAge)delete found.progress.ageYears;}if(profile?.id===privacyTarget){profile.name=updated.name;profile.progress={...(profile.progress||{}),...(exactAge?{ageYears:Number(exactAge)}:{})};if(!exactAge)delete profile.progress.ageYears;persist();renderProfiles();updateGlobalUI();}privacyMessage('Código, edad y fecha de revisión guardados.');
     }catch(_){}
   };
   $('#exportProfilePrivacy').onclick=async()=>{
