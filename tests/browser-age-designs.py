@@ -19,14 +19,14 @@ try:
    page.screenshot(path=str(shots/f'{age}-desktop.png'))
    page.set_viewport_size({'width':390,'height':844});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),age
    assert page.locator('#workspaceMenu').is_visible();menu();assert page.locator('#profileSelect').is_visible();page.locator('#workspaceMenu').click();assert not page.locator('#navMenu').is_visible()
-   page.screenshot(path=str(shots/f'{age}-mobile.png'),full_page=True)
+   page.screenshot(path=str(shots/f'{age}-mobile.png'),full_page=True);page.locator('#workspaceMenu').click()
   page.set_viewport_size({'width':1440,'height':1050});workspace(page).locator('#profileSelect').select_option('primary')
   page.evaluate('''()=>{window.__fixture=DocumentLibrary.pool('primary','attention',1).find(it=>it.stimulus.some(b=>b.documentId==='everyday-museum-brochure'));LearningAPI.requestContent=async()=>({items:[structuredClone(__fixture)],usage:{used:1,limit:500}})}''')
   area(page, 'attention').click();page.wait_for_selector('.practice-document img');page.wait_for_function('()=>document.querySelector(".practice-document img").naturalWidth===1600');assert 'museo' in page.locator('#exercisePrompt').inner_text()
   page.locator('#exercise').screenshot(path=str(shots/'calma-document-desktop.png'))
   page.locator('#exerciseOptions [data-answer]').evaluate_all('(els,a)=>els.find(e=>e.dataset.answer===a).click()',page.evaluate('__fixture.a'))
   assert page.locator('.option-btn.correct').evaluate('e=>getComputedStyle(e).borderTopWidth')=='2px'
-  page.locator('#navMenu [data-section=progress]').click();page.locator('.progress-chart-data summary').click();assert 'Fecha y hora' in page.locator('.progress-chart-data').inner_text();assert '2026' in page.locator('.progress-chart-data tbody').inner_text();page.locator('#sessionEvolution').screenshot(path=str(shots/'dated-sessions.png'))
+  workspace(page).locator('#navMenu [data-section=progress]').click();page.locator('.progress-chart-data summary').click();assert 'Fecha y hora' in page.locator('.progress-chart-data').inner_text();assert '2026' in page.locator('.progress-chart-data tbody').inner_text();page.locator('#sessionEvolution').screenshot(path=str(shots/'dated-sessions.png'))
   workspace(page).locator('#profileSelect').select_option('teen')
   page.evaluate('''()=>{window.__fixture=PhotoLibrary.pool('teen','memory',1).find(it=>it.photoTask.sceneId==='library2026');LearningAPI.requestContent=async()=>({items:[structuredClone(__fixture)],usage:{used:2,limit:500}})}''')
   area(page, 'memory').click();page.wait_for_selector('#showMemoryPhoto');page.locator('#showMemoryPhoto').click();page.wait_for_selector('#exerciseVisual img');assert page.locator('#exerciseVisual img').evaluate('e=>e.naturalWidth')==1536
