@@ -54,7 +54,7 @@ try:
   page.evaluate("""()=>{const teen=__profiles.find(x=>x.id==='teen');teen.progress.history=[['a',true],['a',false],['b',true],['b',true],['c',false],['c',false]].map(([sessionId,correct],i)=>({sessionId,correct,subject:'memory',points:correct?10:0,level:1,ts:'2026-10-20T12:00:00Z',itemId:'chart-'+i}));}""")
   workspace(page).locator('#profileSelect').select_option('teen')
   workspace(page).locator('#navMenu [data-section=progress]').click();assert page.locator('#bankCoverage').count()==0
-  assert page.locator('.accuracy-ring svg').count()>0;assert page.locator('#sessionEvolution svg circle').count()==3;rows=page.locator('.progress-chart-data tbody tr').evaluate_all('(rows)=>rows.map(r=>[...r.cells].map(c=>c.textContent))');assert [[r[0],r[2],r[3]] for r in rows]==[['1','2','50%'],['2','2','100%'],['3','2','0%']];assert all('2026' in r[1] for r in rows)
+  assert page.locator('.accuracy-ring svg').count()>0;assert page.locator('#sessionEvolution svg .chart-point').count()==3;rows=page.locator('.progress-chart-data tbody tr').evaluate_all('(rows)=>[...rows].map(r=>[...r.cells].map(c=>c.textContent))');assert [[r[0],r[2],r[4]] for r in rows]==[['1','2','50%'],['2','2','100%'],['3','2','0%']];assert all('2026' in r[1] for r in rows)
   page.set_viewport_size({'width':1280,'height':1000});page.locator('#progress').screenshot(path='/tmp/varied-progress-1280.png')
   page.set_viewport_size({'width':390,'height':1000});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1');page.locator('#progress').screenshot(path='/tmp/varied-progress-390.png')
   for source,name in [(scene,'scene'),(route,'route')]:
