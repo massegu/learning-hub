@@ -13,8 +13,13 @@ try:
   area(page, 'executive').click();page.locator('[data-interaction-kind=symbols]').click();page.wait_for_selector('#startInteractive')
   assert page.evaluate('__requests.at(-1).interaction_only') is True
   assert page.evaluate('__requests.at(-1).interaction_kind')=='symbols'
-  assert page.locator('[data-support-link]:visible').inner_text().endswith('learninghub2026@proton.me')
-  assert page.locator('[data-support-link]:visible').get_attribute('href')=='mailto:learninghub2026%40proton.me'
+  support=page.locator('[data-support-link]').first
+  assert support.inner_text().endswith('learninghub2026@proton.me')
+  assert support.get_attribute('href')=='mailto:learninghub2026%40proton.me'
+  def set_level(value):
+   options=page.locator('#activityOptions')
+   if not options.evaluate('(element)=>element.open'):options.locator('summary').click()
+   page.locator('#exerciseLevelSelect').select_option(str(value))
   page.clock.install();page.clock.pause_at(page.evaluate('Date.now()+1000'));page.add_style_tag(content='*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}')
   def history():return page.evaluate('__profiles.find(p=>p.id==="primary").progress.history||[]')
   def play_symbols(fail_wait=False):
@@ -30,7 +35,7 @@ try:
     page.clock.run_for(650)
    return item
   symbol=play_symbols();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class');assert history()[-1]['interactionSummary']['correctTrials']==len(symbol['interactionTask']['trials'])
-  page.locator('#exerciseLevelSelect').select_option('3');page.wait_for_function('()=>__current?.interactionTask?.level===3');advanced=play_symbols(True)
+  set_level(3);page.wait_for_function('()=>__current?.interactionTask?.level===3');advanced=play_symbols(True)
   assert history()[-1]['correct'] is False;assert history()[-1]['interactionSummary']['noGoErrors']==1
   old_attempts=len(history());page.locator('[data-interaction-kind=movement]').click();page.wait_for_selector('#startInteractive');movement=page.evaluate('__current');assert movement['interactionTask']['kind']=='movement'
   page.locator('#startInteractive').click()
@@ -58,7 +63,7 @@ try:
   page.locator('#interactiveObservations summary').click();assert 'caja pequeña' not in page.locator('#interactiveObservations').inner_text()
   observations=page.evaluate('__profiles.find(p=>p.id==="primary").progress.interactiveObservations');assert all('description' not in entry for entry in observations);assert observations[-1]['report']=='described'
   # Level 1: choosing the single valid difference scores once and reveals Next.
-  area(page, 'attention').click();page.locator('#attentionPhotos').click();page.locator('#exerciseLevelSelect').select_option('1')
+  area(page, 'attention').click();page.locator('#attentionPhotos').click();set_level(1)
   page.wait_for_function('()=>__current?.photoTask?.kind==="differences"&&__current?.level===1');photo=page.evaluate('__current');assert page.locator('#multiCheck').is_hidden()
   # Exercise both supported selection modes deterministically. Presence/movement
   # scenes use text choices: an absent object cannot have a hitbox in image B.
