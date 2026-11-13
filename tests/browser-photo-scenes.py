@@ -10,6 +10,10 @@ try:
   browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_EXECUTABLE') or '/usr/bin/chromium',args=['--no-sandbox']);page=browser.new_page(viewport={'width':1360,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');workspace(page).locator('#profileSelect').select_option('teen')
   page.evaluate('''()=>{const old=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return old(it,...args)}}''')
+  def set_level(value):
+   options=page.locator('#activityOptions')
+   if not options.evaluate('(element)=>element.open'):options.locator('summary').click()
+   page.locator('#exerciseLevelSelect').select_option(str(value))
   area(page, 'memory').click();page.locator('#photoModeSwitch [data-photos=true]').click();page.wait_for_selector('#showMemoryPhoto')
   assert page.evaluate('__requests.at(-1).photos_only') is True
   assert page.evaluate('__requests.at(-1).client_revision')==13
@@ -34,7 +38,7 @@ try:
   assert page.locator('#home').evaluate("e=>e.classList.contains('active-section')")
   assert page.locator('#exercisePrompt').inner_text()==prompt
   area(page, 'attention').click();page.locator('#attentionPhotos').click();page.wait_for_selector('.photo-comparison img')
-  page.locator('#exerciseLevelSelect').select_option('2');page.wait_for_function('()=>__current?.level===2&&__current?.photoTask?.kind==="differences"');
+  set_level(2);page.wait_for_function('()=>__current?.level===2&&__current?.photoTask?.kind==="differences"');
   difference=page.evaluate('__current');assert difference['photoTask']['kind']=='differences'
   assert page.locator('.photo-comparison img').count()==2
   for width in [1360,390]:
@@ -45,14 +49,14 @@ try:
   page.get_by_role('button',name='Señalar: '+first,exact=True).click()
   for value in difference['answers'][1:]:page.get_by_role('button',name=value,exact=True).click()
   page.locator('#multiCheck').click();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
-  page.locator('#exerciseNext').click();page.locator('#exerciseLevelSelect').select_option('3');page.wait_for_function('()=>__current?.domain==="attention"&&__current?.level===3&&__current?.type==="photoDifference"')
+  page.locator('#exerciseNext').click();set_level(3);page.wait_for_function('()=>__current?.domain==="attention"&&__current?.level===3&&__current?.type==="photoDifference"')
   assert page.locator('#exercise').evaluate("e=>e.classList.contains('visual-only-differences')")
   assert not page.locator('#exerciseOptions .multi-select-grid').is_visible()
   assert 'pulsa directamente' in page.locator('.photo-mark-help').inner_text()
   task3=page.evaluate('__current');assert page.locator('.photo-hit').count()==len(task3['opts'])
   for value in task3['answers']:page.get_by_role('button',name='Señalar: '+value,exact=True).click()
   page.locator('#multiCheck').click();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
-  page.locator('#exerciseNext').click();page.locator('#exerciseLevelSelect').select_option('2');page.wait_for_function('()=>__current?.domain==="attention"&&__current?.level===2&&__current?.type==="photoDifference"')
+  page.locator('#exerciseNext').click();set_level(2);page.wait_for_function('()=>__current?.domain==="attention"&&__current?.level===2&&__current?.type==="photoDifference"')
   difference2=page.evaluate('__current');wrong=next(x for x in difference2['opts'] if x not in difference2['answers']);page.get_by_role('button',name=wrong,exact=True).click();page.locator('#multiCheck').click();assert 'bad' in page.locator('#exerciseFeedback').get_attribute('class')
   with page.expect_download() as download:
    page.evaluate('''({memory,difference})=>WorksheetGenerator.generate([[memory,difference],[memory,difference]],__profiles.find(x=>x.id==='teen'))''',{'memory':memory,'difference':difference})
@@ -67,7 +71,7 @@ try:
      source=ROOT/page.evaluate('(id)=>PhotoLibrary.scenes[id].path',memory['photoTask']['sceneId']);assert source.read_bytes() in images
      pair=page.evaluate('(id)=>PhotoLibrary.pairs[id]',difference['photoTask']['pairId']);base=page.evaluate('(id)=>PhotoLibrary.scenes[id].path',pair['sceneId']);assert (ROOT/base).read_bytes() in images;assert (ROOT/pair['path']).read_bytes() in images
   page.set_viewport_size({'width':1360,'height':1000})
-  area(page, 'memory').click();page.locator('#photoModeSwitch [data-photos=true]').click();page.locator('#exerciseLevelSelect').select_option('3')
+  area(page, 'memory').click();page.locator('#photoModeSwitch [data-photos=true]').click();set_level(3)
   page.wait_for_function('()=>__current?.domain==="memory"&&__current?.level===3&&__current?.photoTask?.evidence?.length===3')
   advanced=page.evaluate('__current');page.locator('#showMemoryPhoto').click();page.wait_for_selector('.everyday-photo img')
   page.clock.run_for(advanced['revealMs']+100)
