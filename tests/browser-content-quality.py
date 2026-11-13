@@ -11,6 +11,9 @@ try:
   page=browser.new_page(viewport={'width':1280,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#profileSelect',state='attached')
   page.evaluate('''()=>{const old=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return old(it,...args)}}''')
+  def open_level_options():
+   options=page.locator('#activityOptions')
+   if not options.evaluate('(element)=>element.open'):options.locator('summary').click()
   # Force one reviewed source through the actual younger local adapter.
   workspace(page).locator('#profileSelect').select_option('early')
   page.evaluate('''()=>{const original=EarlyContent.adaptResponse;window.__restoreSelect=()=>EarlyContent.adaptResponse=original;EarlyContent.adaptResponse=(response,payload,profile,options)=>original(response,payload,profile,payload.domain==='attention'?{accept:it=>it.qualityDescriptor?.semanticFamily==='attention.omission'}:payload.domain==='language'?{accept:it=>it.qualityDescriptor?.semanticFamily==='language.sentence_order'}:options)}''')
@@ -26,7 +29,7 @@ try:
   page.set_viewport_size({'width':1280,'height':1000});workspace(page).locator('#profileSelect').select_option('teen')
   page.evaluate('''()=>{window.__fixture=FunctionalContent.pool('teen','english',3).find(it=>it.qualityDescriptor.semanticFamily==='english.sequence');LearningAPI.requestContent=async()=>({items:[structuredClone(__fixture)],usage:{used:2,limit:500}})}''')
   area(page, 'english').click();page.wait_for_function('()=>window.__current?.qualityEvidence?.age==="teen"&&document.querySelector("#exercisePrompt").textContent===__current.q')
-  page.evaluate('window.__current=null');page.locator('#exerciseLevelSelect').select_option('3');page.wait_for_function('()=>window.__current?.level===3&&document.querySelector("#exercisePrompt").textContent===__current.q')
+  page.evaluate('window.__current=null');open_level_options();page.locator('#exerciseLevelSelect').select_option('3');page.wait_for_function('()=>window.__current?.level===3&&document.querySelector("#exercisePrompt").textContent===__current.q')
   assert page.locator('#exerciseLevelSelect').input_value()=='3'
   assert 'before cutting' in page.locator('#exercisePrompt').inner_text()
   page.locator('[data-answer]').evaluate_all('(els,a)=>els.find(e=>e.dataset.answer===a).click()',page.evaluate('__fixture.a'))
@@ -38,7 +41,7 @@ try:
   # New everyday writing uses the existing manual review and printable source.
   page.evaluate("()=>{window.__fixture=FunctionalContent.pool('teen','literacy',3).find(it=>it.qualityDescriptor.semanticFamily==='reading.recommendation'&&it.qualityDescriptor.scenarioFamily==='home.messages');window.__current=null}")
   area(page, 'literacy').click();page.wait_for_function('()=>window.__current?.writingPurpose&&document.querySelector("#exercisePrompt").textContent===__current.q')
-  page.locator('.language-mode-btn[data-mode=writing]').click();page.locator('#exerciseLevelSelect').select_option('3')
+  page.locator('.language-mode-btn[data-mode=writing]').click();open_level_options();page.locator('#exerciseLevelSelect').select_option('3')
   page.wait_for_function('()=>document.querySelector(".language-mode-btn[data-mode=writing]").classList.contains("active")&&document.querySelector("#exerciseLevelSelect").value==="3"&&document.querySelector("#writingCriteria li")')
   assert page.locator('#textAnswerArea').is_visible();assert page.locator('#writingCriteria li').count()==3
   assert page.locator('#exerciseOptions [data-answer]').count()==0
