@@ -21,8 +21,10 @@ try:
     capability=page.evaluate('(domain)=>ModalityCatalog.forArea(__profiles.find(p=>p.id===document.querySelector("#profileSelect").value),domain,Number(document.querySelector("#exerciseLevelSelect").value))',domain)
     assert page.locator('#activityOptions').is_visible(),(age,domain)
     assert page.locator('#activityOptions details').count()==0
-    assert page.locator('#activityOptions .activity-toolbar button:visible').count()>0,(age,domain)
-    assert page.locator('#activityOptions .activity-toolbar>.mode-switch:not(.hidden)').evaluate_all('(els)=>els.every(e=>getComputedStyle(e).display==="contents")'),(age,domain,'nested visual groups')
+    assert page.locator('#exerciseModalities').is_visible(),(age,domain,'modalities should be visible without opening professional options')
+    assert not page.locator('#activityOptions').evaluate('(e)=>e.open'),(age,domain,'professional options remain collapsed')
+    assert page.locator('#exerciseModalities .activity-toolbar button:visible').count()>0,(age,domain)
+    assert page.locator('#exerciseModalities .activity-toolbar>.mode-switch:not(.hidden)').evaluate_all('(els)=>els.every(e=>getComputedStyle(e).display==="contents")'),(age,domain,'nested visual groups')
     for kind in ['symbols','movement','auditory']:
      button=page.locator(f'[data-interaction-kind="{kind}"]')
      assert button.is_visible()==(kind in capability['interactionKinds']),(age,domain,kind,capability)
@@ -44,13 +46,13 @@ try:
      assert page.locator('[data-speed-mode=screen]').is_visible()==capability['speed']['screen']
      assert page.locator('[data-speed-mode=room]').is_visible()==capability['speed']['room']
      assert page.locator('#speedUnpairedMode').is_visible()==capability['speed']['unpaired']
-    buttons=page.locator('#activityOptions .activity-toolbar button:visible').all()
+    buttons=page.locator('#exerciseModalities .activity-toolbar button:visible').all()
     assert all(button.get_attribute('aria-pressed') in ['true','false'] for button in buttons),(age,domain)
     assert all(button.evaluate('(e)=>e.getBoundingClientRect().height>=44') for button in buttons),(age,domain,'touch target')
     if age=='primary' and domain=='attention':
      for width,name in [(1440,'desktop'),(768,None),(390,'mobile')]:
       page.set_viewport_size({'width':width,'height':1000});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),(width,domain)
-      if name:page.locator('#activityOptions').screenshot(path=f'/tmp/learning-hub-modalities-{name}.png')
+      if name:page.locator('#exerciseModalities').screenshot(path=f'/tmp/learning-hub-modalities-{name}.png')
      focus_target=page.locator('#documentModeSwitch [data-documents=false]')
      focus_target.evaluate('(e)=>e.focus({focusVisible:true})')
      assert float(focus_target.evaluate('(e)=>parseFloat(getComputedStyle(e).outlineWidth)'))>=3,'keyboard focus must be clearly visible'

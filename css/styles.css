@@ -2714,6 +2714,21 @@ body {
 [data-age-theme="studio"] .primary-btn { background:#405481!important; border-color:#2c3d60!important; color:white!important; }
 [data-age-theme="studio"] .language-topic { background:#e4e9f4; color:#263954; }
 [data-age-theme="studio"] .hero-visual { display:none; }
+/* Youth visual accent: a restrained hip-hop/graffiti influence on labels only.
+   Instructions, stimuli and response text keep the regular readable typeface. */
+#appShell:is([data-age-route="middle"],[data-age-route="teen"]) #exercisePill,
+#appShell:is([data-age-route="middle"],[data-age-route="teen"]) #exerciseTopic,
+#appShell:is([data-age-route="middle"],[data-age-route="teen"]) #exercise .block-banner,
+#appShell:is([data-age-route="middle"],[data-age-route="teen"]) #exercise .language-topic {
+  font-family:Impact,"Arial Black",sans-serif;
+  font-weight:800;
+  letter-spacing:.045em;
+}
+#appShell:is([data-age-route="middle"],[data-age-route="teen"]) #exercise .block-banner,
+#appShell:is([data-age-route="middle"],[data-age-route="teen"]) #exercise .language-topic {
+  text-transform:uppercase;
+  text-shadow:1px 1px 0 color-mix(in srgb,currentColor 13%,transparent);
+}
 @media(max-width:600px) { .structured-stimulus-list { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; } .structured-stimulus-list li { padding:12px; } .structured-stimulus-table th,.structured-stimulus-table td { padding:12px; min-width:95px; } }
 @media(max-width:640px) {
   #exercise:not(.early-primary) .section-intro { flex-direction:column; align-items:stretch; gap:18px; }
@@ -2741,6 +2756,7 @@ body {
 #exercise.speed-active #exerciseVisual th,#exercise.speed-active #exerciseVisual td{padding:.35rem .6rem!important;font-size:1rem!important;line-height:1.25!important}
 /* Pair recall uses a calm, bounded reading surface rather than a page-wide ledger. */
 .association-frame{max-width:48rem;margin:1rem auto;border:1px solid #dce7e1;border-radius:1rem;overflow:hidden;background:#fff;box-shadow:0 8px 24px #173b2910}
+.homework-board{max-width:58rem;margin:1rem auto;border:2px solid #91aa95;border-radius:.75rem;background:#fbfaf4;box-shadow:0 5px 0 #d8dfd1;overflow:hidden;color:#263f3a}.homework-board-heading{display:flex;align-items:center;gap:.6rem;padding:.7rem 1rem;background:#e7efe0;border-bottom:1px solid #c8d6c5;text-transform:uppercase;letter-spacing:.06em;font-size:.85rem;color:#486556}.homework-board-scroll{overflow-x:auto}.homework-board table{width:100%;border-collapse:collapse;margin:0!important}.homework-board th,.homework-board td{padding:.8rem 1rem;border-bottom:1px solid #d9dfd6;text-align:left;vertical-align:middle}.homework-board thead th{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:#5a7167;background:#f1f3e8}.homework-board tbody th{min-width:9rem;white-space:nowrap;color:#365a52}.homework-board tbody tr:last-child th,.homework-board tbody tr:last-child td{border-bottom:0}.homework-area-icon{display:inline-flex;width:2.4rem;height:2.4rem;margin-right:.55rem;vertical-align:middle;align-items:center;justify-content:center}.bioart-area-icon{display:block;width:2.4rem;height:2.4rem}.homework-board td{line-height:1.5}
 #exercise .memory-associations{width:100%;border-collapse:collapse;margin:0!important;font-size:1.12rem}
 #exercise .memory-associations thead th{background:#edf5f0;color:#486556;text-transform:uppercase;letter-spacing:.08em;font-size:.72rem;padding:1rem 1.25rem;text-align:left;border:0}
 #exercise .memory-associations tbody th,#exercise .memory-associations tbody td{padding:.8rem 1.25rem;border:0;border-top:1px solid #edf1ee;text-align:left;background:#fff;font-weight:500}

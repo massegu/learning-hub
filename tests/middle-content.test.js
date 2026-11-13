@@ -1,5 +1,5 @@
 const test=require('node:test'),assert=require('node:assert/strict');
-const bank=require('../supabase/functions/request-learning-content/middle-content'),model=require('../js/activity-model'),locale=require('../js/locale-content'),stages=require('../js/age-stages'),load=require('./edge-harness');
+const bank=require('../supabase/functions/request-learning-content/middle-content'),curriculum=require('../js/curriculum'),model=require('../js/activity-model'),locale=require('../js/locale-content'),stages=require('../js/age-stages'),load=require('./edge-harness');
 const profile={age_band:'middle',progress:{ageRoute:'middle'}};
 const domains=['middleLanguage','middleMath','middleReading','english','literacy','attention','executive','memory','speedReasoning','applied'];
 const visible=it=>JSON.stringify([it.q,it.stimulus,it.memoryContent,it.memoryQuestion,it.opts&&[...it.opts].sort(),it.a,it.answer,it.sample]);
@@ -16,7 +16,7 @@ test('all middle activities retain complete evidence and consistent seven-countr
         assert.throws(()=>model.printable({...local,stimulus:[]},profile));
       }
       if(it.type==='order')assert.deepEqual([...it.tokens].sort(),[...it.answer].sort());
-      if(it.memoryContent)assert.ok(it.memoryContent.some(x=>x.detail===it.a));
+      if(it.memoryContent)assert.ok(it.mechanic==='memory_homework_board'?it.memoryContent.some(x=>x.detail.endsWith(': '+it.a)):it.memoryContent.some(x=>x.detail===it.a));
       if(it.type==='self'){assert.equal(it.assessment,'self');assert.ok(it.writingRubric.length>=3);assert.ok(it.sample);assert.equal(it.a,undefined);const projection=model.printable(it,profile);assert.equal(projection.responseType,'written');assert.deepEqual(projection.writingRubric,it.writingRubric);assert.ok(projection.stimulus.every(b=>b.type!=='list'||JSON.stringify(b.items)!==JSON.stringify(it.writingRubric)));}
       assert.doesNotMatch(JSON.stringify(it),/\b(?:de|a) el\b/u);
       assert.doesNotMatch(JSON.stringify(it),/\b(?:hipoteca|factura|embarque|euros|vosotros)\b/iu);
@@ -26,7 +26,10 @@ test('all middle activities retain complete evidence and consistent seven-countr
 test('middle stages alter stimuli and actual algebra/statistics/clock/recall demands',()=>{
   for(const d of domains){const pools=[1,2,3].map(l=>bank.pool(d,l));for(let j=0;j<pools[0].length;j++)assert.equal(new Set(pools.map(xs=>visible(xs[j]))).size,3,pools[0][j].contentKey);}
   for(const l of [1,2,3]){
-    for(const it of bank.pool('memory',l))assert.equal(it.memoryContent.length,l+4);
+    for(const it of bank.pool('memory',l).filter(x=>x.mechanic!=='memory_homework_board'))assert.equal(it.memoryContent.length,l+4);
+    const boards=curriculum.pool('middle','memory',l).filter(x=>x.mechanic==='memory_homework_board'),expectedRows=[3,4,5][l-1];
+    assert.equal(boards.length,5);
+    for(const it of boards){assert.equal(it.stimulus[0].presentation,'homeworkBoard');assert.equal(it.stimulus[0].rows.length,expectedRows);assert.equal(it.memoryContent.length,expectedRows);assert.ok(it.stimulus[0].rows.some(([area,task])=>it.memoryQuestion===`¿Qué hay que hacer en ${area}?`&&task===it.a));assert.doesNotThrow(()=>model.printable(it,profile));}
     for(const d of ['executive','literacy'])for(const it of bank.pool(d,l).filter(x=>x.type==='order'))assert.equal(it.answer.length,l+3);
     for(const it of bank.pool('middleMath',l)){
       if(it.mechanic==='equation'){

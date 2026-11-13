@@ -310,7 +310,7 @@
           if(index===it.recallSequence.length){
             visual.innerHTML='';$('#exercisePrompt').textContent=displayMemoryQuestion(it);renderOrderExercise(it);return;
           }
-          visual.innerHTML=`<div class="sequence-flash"><small>${index+1} / ${it.recallSequence.length}</small>${window.ActivityModel.visualLabel(it.recallSequence[index++],{...it.lexicalSenses,memory:true})}</div>`;
+          const slide=it.recallSequence[index++];visual.innerHTML=`<div class="sequence-flash" role="group" aria-roledescription="diapositiva" aria-label="Imagen ${index} de ${it.recallSequence.length}: ${escapeHtml(window.ActivityModel.memoryLabel(slide))}"><small aria-hidden="true">${index} / ${it.recallSequence.length}</small>${window.ActivityModel.visualLabel(slide,{...it.lexicalSenses,memory:true})}</div>`;
           setTimeout(()=>{if(currentItem!==it)return;visual.innerHTML='<div class="sequence-flash" aria-hidden="true">·</div>';setTimeout(step,250);},it.sequenceStepMs);
         };step();
       };return;
@@ -1043,6 +1043,7 @@
     $('#appShell').classList.toggle('early-experience',Boolean(window.ContentPolicy.forProfile(p)));
     $('#appShell').classList.toggle('school-experience',Boolean(window.SchoolJourney.forProfile(p)));
     $('#appShell').dataset.ageTheme=window.AgeStages.forProfile(p)?.theme || '';
+    $('#appShell').dataset.ageRoute=window.AgeStages.route(p) || '';
     // Keep the professional workspace visually consistent; age adaptation lives in the activity content.
     $('#appShell').dataset.design='calma';
     $('#appShell').classList.remove('mobile-nav-open');$('#workspaceMenu').setAttribute('aria-expanded','false');
@@ -1274,6 +1275,8 @@
     $('#attentionPhotos').setAttribute('aria-pressed',String(photoOnly&&subject==='attention'));
     syncLanguageModeButtons();
     $('#wordFitMode').setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily==='words'));
+    const hasAvailableModality=$$('#exerciseModalities button').some(button=>!button.closest('.hidden'));
+    $('#exerciseModalities').classList.toggle('hidden',!hasAvailableModality);
     syncActivitySettings();
     counter = 0;
     renderEarlyTaskGuide();

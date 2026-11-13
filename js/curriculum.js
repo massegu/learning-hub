@@ -14,8 +14,8 @@ function materialKey(value){
 }
 function finish(item,age,domain,level,key,mechanic){
  const id=`curriculum-v2-${age}-${domain}-${level}-${key}`;
- const memoryMaterialKey=domain==='memory'?materialKey([item.recallSequence?'sequence':item.recallEvidence?.kind||'associations',item.stimulus]):null;
- const earlyMechanic=domain==='language'?'vocabulary':domain==='attention'?'matching':domain==='social'?'inference':domain==='reading'?(item.responseType==='order'?'sequencing':'literal'):domain==='speedReasoning'?'speedCompare':domain==='memory'?(item.memoryResponse==='spatial'?'rememberPlace':'rememberOrder'):'planning';
+ const memoryMaterialKey=domain==='memory'?materialKey([item.recallSequence?'sequence':item.stimulus?.some(block=>block.presentation==='homeworkBoard')?'homeworkBoard':item.recallEvidence?.kind||'associations',item.stimulus]):null;
+ const earlyMechanic=domain==='language'?'vocabulary':domain==='attention'?'matching':domain==='social'?'inference':domain==='reading'?(item.responseType==='order'?'sequencing':'literal'):domain==='speedReasoning'?'speedCompare':domain==='memory'?(item.stimulus?.some(block=>block.presentation==='homeworkBoard')?'rememberHomework':item.memoryResponse==='spatial'?'rememberPlace':'rememberOrder'):'planning';
  return {...item,...(domain==='memory'?{lexicalSenses:{...item.lexicalSenses,banana:true}}:{}),...(item.speedTask?{speedRevision:4}:{}),id,contentKey:id,semanticKey:item.passageKey||memoryMaterialKey||id,...(memoryMaterialKey?{memoryMaterialKey}:{}),domain,level,mechanic,
   ...(age==='early'?{ageProfile:{id:'early',revision:1,context:'school',mechanic:earlyMechanic,family:`${domain}-${mechanic}`}}:{}),
   ...(age==='teen'?{teenReview:{version:3,context:mechanic}}:{}),
@@ -129,6 +129,16 @@ function validateSelectiveRecall(item){
 function spatialPositions(size){return Array.from({length:size*size},(_,i)=>`Fila ${Math.floor(i/size)+1}, columna ${i%size+1}`);}
 function memory(age,level){
  const rank=ages.indexOf(age),count=rank===0?[2,3,4][level-1]:5+(level-1)*(rank<2?1:2),items=[];
+ if(['early','junior','middle'].includes(age)){
+  const tasks=age==='early'?[['Lectura','Leer el cuento de animales, página 3'],['Números','Hacer dos sumas, página 5'],['Ciencias','Dibujar una hoja, página 4'],['Arte','Terminar el dibujo, página 2'],['Música','Practicar la canción, página 6']]:age==='junior'?[['Lectura','Leer el cómic y responder los ejercicios 1 y 2, página 8'],['Números','Resolver los problemas 3 a 5, página 12'],['Ciencias','Anotar qué cambia en el experimento de semillas, página 6'],['Arte','Diseñar la portada del cómic, página 4'],['Música','Practicar el ritmo de la canción, página 7']]:[['Lengua','Leer la entrevista y anotar dos ideas, página 18'],['Matemáticas','Resolver los ejercicios 4 y 5, página 32'],['Ciencias','Completar el esquema del experimento, página 11'],['Historia','Comparar las dos fuentes, actividad 3'],['Comunicación','Revisar el guion del vídeo, apartado 2']];
+  const rowsPerLevel=age==='early'?[1,2,3]:age==='junior'?[2,3,4]:[3,4,5],rowCount=rowsPerLevel[level-1];
+  for(let v=0;v<tasks.length;v++){
+   const rows=Array.from({length:rowCount},(_,i)=>tasks[(v+i)%tasks.length]),ask=(v+level-1)%rows.length,[area,answer]=rows[ask];
+   const alternatives=tasks.filter(([,detail])=>!rows.some(([,shown])=>shown===detail)).map(([,detail])=>detail),visibleWrong=rows.filter((_,i)=>i!==ask).map(([,detail])=>detail),otherWrong=rotate(alternatives,v%alternatives.length).slice(0,2-visibleWrong.length),wrongOptions=shuffled([...new Set([...visibleWrong,...otherWrong])],v+level*17).slice(0,2);
+   const options=shuffled([answer,...wrongOptions],v+level*17+1);
+   items.push(finish({type:'memoryReveal',responseType:'choice',requiresStimulus:true,q:'Mira la pizarra. Luego la taparemos.',memoryQuestion:`¿Qué hay que hacer en ${area}?`,stimulus:[{type:'table',label:'Pizarra de deberes',presentation:'homeworkBoard',rows}],memoryContent:rows.map(([subject,detail])=>({detail:`${subject}: ${detail}`})),a:answer,opts:options,answerEvidence:{type:'tableCell',block:0,row:ask,column:1,subjectColumn:0},revealMs:10000,topic:'Memoria · pizarra de deberes',why:`En ${area} aparece: ${answer}.`},age,'memory',level,`homework-board-${v}`,'memory_homework_board'));
+  }
+ }
  for(let v=0;v<120;v++){
   const materials=[...new Set([...memoryCategories[v%memoryCategories.length].items,...memoryCategories[(v+3)%memoryCategories.length].items,...(rank===0?objects:rank===1?schoolObjects:functionalObjects).slice(v%6,v%6+4)])];
   const featured=memoryCategories[v%memoryCategories.length].items[Math.floor(v/memoryCategories.length)%4];
@@ -1048,13 +1058,14 @@ function pool(age,domain,level=1){
  }
  return structuredClone(cache.get(key)).map(it=>domain==='applied'?{...it,domain,...(age==='early'?{ageProfile:{...it.ageProfile,mechanic:'chooseObject'}}:{})}:it);
 }
-function generate(age,domain,level=1,focus=null){
+function generate(age,domain,level=1,focus=null,options={}){
  const actual=domain==='applied'?'executive':domain,key=[age,actual,level].join(':');
  if(!cache.has(key))pool(age,actual,level);
- const groupKey=key+':'+(focus||'all');
+ const excluded=new Set(options.excludeMechanics||[]),groupKey=key+':'+(focus||'all')+':'+[...excluded].sort().join(',');
  if(!generationGroups.has(groupKey)){
   const grouped=new Map();
   for(const item of cache.get(key)||[]){
+   if(excluded.has(item.mechanic))continue;
    const written=item.type==='self'||item.responseType==='written'||item.type==='order'&&!item.qualityEvidence;
    if(focus&&(focus==='writing'?!written:written))continue;
    if(!grouped.has(item.mechanic))grouped.set(item.mechanic,[]);

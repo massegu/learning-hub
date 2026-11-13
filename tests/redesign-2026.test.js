@@ -67,7 +67,7 @@ test('account preferences are grouped and destructive actions remain distinct',(
  for(const id of ['newProfileBtn','deleteProfileBtn','independentSessionBtn','profilePrivacyBtn','resetProgressBtn','changePasswordBtn','signOutBtn'])assert.ok(html.includes(`id="${id}"`),`${id} remains available`);
 });
 
-test('exercise has one focused presentation with in-flow return and expandable professional options',()=>{
+test('exercise keeps modalities visible, professional difficulty compact and activity metadata at the bottom',()=>{
  assert.ok(html.includes('id="exerciseReturnHome"'));
  assert.ok(!html.includes('id="sharedActivityToggle"'));
  assert.ok(!html.includes('id="sharedActivityExit"'));
@@ -76,11 +76,17 @@ test('exercise has one focused presentation with in-flow return and expandable p
  assert.ok(app.includes("if(id==='exercise'){window.scrollTo(0,0);$('#exerciseHeading').focus({preventScroll:true});}"));
  assert.ok(app.includes("$('#exerciseReturnHome').addEventListener('click',()=>switchSection('home'))"));
  assert.ok(html.includes('<details id="activityOptions" class="activity-settings"'));
- assert.ok(html.includes('<summary id="activityOptionsSummary">Opciones del profesional</summary>'));
+ assert.ok(html.includes('<section id="exerciseModalities" class="exercise-modalities"'));
+ assert.ok(html.includes('<summary id="activityOptionsSummary">Dificultad y opciones del profesional</summary>'));
+ assert.ok(html.indexOf('id="exerciseModalities"')<html.indexOf('id="activityOptions"'));
+ assert.ok(html.indexOf('id="exerciseNext"')<html.indexOf('class="exercise-meta exercise-meta-footer"'));
+ assert.ok(html.includes('id="exerciseCounter"'));
  assert.ok(css.includes('#appShell[data-design].exercise-focus .sidebar'));
  assert.ok(css.includes('#appShell[data-design].exercise-focus{grid-template-columns:minmax(0,1fr)'));
  assert.ok(css.includes('.exercise-navigation'));
  assert.ok(css.includes('#activityOptions .level-control::before{content:none'));
+ assert.ok(css.includes('#appShell[data-design] .exercise-modalities .activity-toolbar'));
+ assert.ok(css.includes('#appShell[data-design] #exercise .exercise-meta-footer'));
  assert.ok(css.includes('#appShell[data-design].exercise-focus #exercise{width:100%;max-width:1680px'));
  assert.ok(!css.includes('.shared-activity-bar'));
 });
