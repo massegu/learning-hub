@@ -28,7 +28,10 @@ try:
   for family in ['crossedKeys','rapidAgenda','ruleChoice']:
    page.evaluate('(family)=>{window.__fixture=Curriculum.processingChallenges("middle",3).find(it=>it.speedFamily===family);window.__current=null}',family)
    area(page, 'speedReasoning').click();page.wait_for_function('()=>__current?.speedFamily==="'+family+'"');page.wait_for_selector('#startSpeedTrial');page.locator('#startSpeedTrial').click()
-   assert page.locator('#exerciseVisual .processing-sources').is_visible()
+   assert page.locator('#exerciseVisual .processing-sources').count()==(0 if family=='crossedKeys' else 1)
+   if family=='crossedKeys':
+    assert page.locator('#exerciseVisual table.structured-stimulus-table th').all_text_contents()==['Código','Zona','Mesa']
+    assert 'Primera clave' not in page.locator('#exerciseVisual').inner_text() and 'Segunda clave' not in page.locator('#exerciseVisual').inner_text()
    if family=='ruleChoice':
     assert page.locator('.speed-choice').evaluate_all('(els)=>els.map(e=>e.dataset.answer)')==['Izquierda','Derecha'];assert 'ignora' in page.locator('#exercisePrompt').inner_text()
    for width in [1360,390]:
@@ -44,7 +47,7 @@ try:
     with zipfile.ZipFile(io.BytesIO(outer.read(name))) as doc:
      xml=doc.read('word/document.xml').decode();assert '¿Son animales todos los elementos de la lista?' in xml;assert '¿Son animales todas las imágenes?' not in xml;assert 'Primero pulsa Empezar' not in xml
      if '_01.' in name:assert not any(n.startswith('word/media/') for n in doc.namelist())
-     else:assert 'Segunda clave' in xml
+     else:assert all(value in xml for value in ['Código','Zona','Mesa']) and 'Segunda clave' not in xml and 'Primera clave' not in xml
   page.evaluate('window.__fixture=Curriculum.practice("middle","attention",2).find(x=>x.mechanic==="attention_plan_intruder")');area(page, 'attention').click();page.wait_for_selector('#exerciseVisual .stimulus-caption');assert page.locator('#exerciseVisual .stimulus-caption').all_text_contents()==['Plan acordado','Lista que debes revisar'];page.locator('#exercise').screenshot(path='/tmp/attention-plan-separated.png')
   # The privacy mode also suppresses the new structured observation, not just scored exercises.
   page.set_viewport_size({'width':1360,'height':1000});page.evaluate('()=>{LearningAPI.requestContent=window.__realRequestContent;}')

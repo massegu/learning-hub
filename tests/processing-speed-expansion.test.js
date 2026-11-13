@@ -10,6 +10,14 @@ test('new processing families have one factually correct answer at each age/leve
  const agenda=c.processingChallenges('teen',3).find(x=>x.speedFamily==='rapidAgenda'),bad=structuredClone(agenda);bad.stimulus[1].rows.push([...bad.stimulus[1].rows.find(r=>r[0]===bad.a)]);assert.throws(()=>c.validateSpeed(bad));
  const rule=c.processingChallenges('primary',3).find(x=>x.speedFamily==='ruleChoice');rule.stimulus[0].rows[1][1]='Consonante';assert.throws(()=>c.validateSpeed(rule));
 });
+test('crossed-key exercises use one compact table and validate all three columns',()=>{
+ for(const age of ['junior','primary','middle','teen'])for(const level of [1,2,3])for(const it of c.processingChallenges(age,level).filter(x=>x.speedFamily==='crossedKeys')){
+  assert.equal(it.stimulus.length,1);assert.deepEqual(it.stimulus[0].rows[0],['Código','Zona','Mesa']);
+  assert.ok(it.stimulus[0].rows.slice(1).every(row=>row.length===3));assert.ok(!it.stimulus.some(block=>/Primera clave|Segunda clave/.test(block.label||'')));
+  assert.doesNotThrow(()=>c.validateSpeed(it));
+  const broken=structuredClone(it);broken.stimulus[0].rows.find(row=>row[0]===broken.speedEvidence.target)[2]='Mesa inexistente';assert.throws(()=>c.validateSpeed(broken));
+ }
+});
 test('environment search is explicitly observed and cannot enter scored speed pools or invent a different clue',()=>{
  for(const age of ['junior','primary','middle','teen'])for(const level of [1,2,3]){
   assert.ok(!c.pool(age,'speedReasoning',level).some(x=>x.roomSpeedTask));

@@ -66,10 +66,10 @@
       else {
         if (!Array.isArray(block.rows) || !block.rows.length || !block.rows.every(row => Array.isArray(row) && row.length && row.every(x => typeof x === 'string' && x.trim()))) throw new Error('La tabla del estímulo está incompleta.');
         elements += block.rows.length; stimulusText.push(...block.rows.flat());
-        if (block.rows.some(row => row.length > 2)) throw new Error('Tabla demasiado compleja para 6-7.');
+        if (block.rows.some(row => row.length > (block.presentation==='spatial'?3:2)) || block.presentation==='spatial'&&block.rows.some(row=>row.length!==block.rows[0].length)) throw new Error('Tabla demasiado compleja para 6-7.');
       }
     }
-    if (elements > (item.type==='memoryReveal'?early.memoryElements[levelIndex(item)]:early.maxElements) || (item.opts || []).length > (item.memoryResponse==='spatial'?4:early.maxOptions) || (item.tokens || []).length > (item.memoryResponse==='order'?early.memoryElements[levelIndex(item)]:early.maxSteps))
+    if (elements > (item.type==='memoryReveal'?early.memoryElements[levelIndex(item)]:early.maxElements) || (item.opts || []).length > (item.memoryResponse==='spatial'?6:early.maxOptions) || (item.tokens || []).length > (item.memoryResponse==='order'?early.memoryElements[levelIndex(item)]:early.maxSteps))
       throw new Error('Demasiados elementos para el perfil 6-7.');
     if (words(stimulusText.join(' ')) > early.maxWords) throw new Error('El estímulo contiene demasiada lectura.');
     for (const text of [...pieces, ...stimulusText]) {

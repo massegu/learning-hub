@@ -136,7 +136,7 @@ try:
     assert page.evaluate('__requests.at(-1).domain')=='attention',(age,'room search must remain in attention')
   # A stale backend response may not turn the auditory-only mode into a spatial memory task.
   workspace(page).locator('#profileSelect').select_option('primary');area(page,'memory').click();page.wait_for_function('()=>window.__current?.domain==="memory"')
-  assert page.locator('#exerciseTopic .bioart-area-icon').count()==1,'BioArt-inspired area mark should appear alongside the exercise family'
+  assert page.locator('#exerciseTopic .bioart-area-icon').count()==0,'BioArt artwork is stimulus content, not a topic decoration'
   page.evaluate('''()=>{window.__restoreAudioContent=LearningAPI.requestContent;LearningAPI.requestContent=async payload=>{const result=await window.__restoreAudioContent(payload);if(payload.memory_audio_only)result.items[0].audioMemory=false;return result}}''')
   page.locator('#memoryAudioModeButton').click();page.wait_for_selector('#retryContentLoad:not(.hidden)')
   assert 'no corresponde a memoria auditiva' in page.locator('#exercisePrompt').inner_text().lower()

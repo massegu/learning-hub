@@ -2714,22 +2714,13 @@ body {
 [data-age-theme="studio"] .primary-btn { background:#405481!important; border-color:#2c3d60!important; color:white!important; }
 [data-age-theme="studio"] .language-topic { background:#e4e9f4; color:#263954; }
 [data-age-theme="studio"] .hero-visual { display:none; }
-/* Youth visual accent: a restrained hip-hop/graffiti influence on labels only.
-   Instructions, stimuli and response text keep the regular readable typeface. */
-#appShell:is([data-age-route="middle"],[data-age-route="teen"]) #exercisePill,
-#appShell:is([data-age-route="middle"],[data-age-route="teen"]) #exerciseTopic,
-#appShell:is([data-age-route="middle"],[data-age-route="teen"]) #exercise .block-banner,
-#appShell:is([data-age-route="middle"],[data-age-route="teen"]) #exercise .language-topic {
-  font-family:Impact,"Arial Black",Arial,sans-serif;
+/* Youth display type stays on the compact area pill, not on large headings. */
+#appShell:is([data-age-route="middle"],[data-age-route="teen"]) #exercisePill {
+  font-family:"Arial Black",Arial,sans-serif;
   font-weight:800;
-  letter-spacing:.035em;
-  font-size:1.05rem;
+  letter-spacing:.04em;
+  font-size:.78rem;
   line-height:1.35;
-}
-#appShell:is([data-age-route="middle"],[data-age-route="teen"]) #exercise .block-banner,
-#appShell:is([data-age-route="middle"],[data-age-route="teen"]) #exercise .language-topic {
-  text-transform:uppercase;
-  text-shadow:1px 1px 0 color-mix(in srgb,currentColor 13%,transparent);
 }
 @media(max-width:600px) { .structured-stimulus-list { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; } .structured-stimulus-list li { padding:12px; } .structured-stimulus-table th,.structured-stimulus-table td { padding:12px; min-width:95px; } }
 @media(max-width:640px) {
@@ -2747,10 +2738,8 @@ body {
 .spatial-answer-grid .option-btn{min-height:6rem;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:.5rem;text-align:center}
 
 /* Keep the activity family and its instruction legible as one reading unit. */
-#appShell[data-design] #exerciseTopic.language-topic{display:flex;align-items:center;gap:.55rem;margin:0;padding:0;border:0;border-radius:0;background:transparent!important;color:var(--accent-dark)!important;font:800 1.05rem/1.35 Impact,"Arial Black",Arial,sans-serif;letter-spacing:.035em}
+#appShell[data-design] #exerciseTopic.language-topic{display:block;margin:0;padding:0;border:0;border-radius:0;background:transparent!important;color:var(--accent-dark)!important;font-family:inherit;font-size:.95rem;font-weight:750;line-height:1.45;letter-spacing:normal}
 #appShell[data-design] #exerciseTopic.language-topic.hidden{display:none!important}
-#appShell[data-design] #exerciseTopic .exercise-topic-icon{display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center}
-#appShell[data-design] #exerciseTopic .exercise-topic-icon .bioart-area-icon{width:1.6rem;height:1.6rem}
 #appShell[data-design] #exercise:has(#exerciseTopic:not(.hidden)) #exercisePrompt{margin:5px 0 16px;padding:0;border:0;border-radius:0;background:transparent!important;color:var(--ink)!important;font-family:inherit;font-weight:750;line-height:1.4;box-shadow:none}
 .homework-board caption.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 .spatial-answer-grid small{font-size:.8rem}.sequence-flash{min-height:10rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;font-size:2rem}.sequence-flash svg{width:6rem;height:6rem}

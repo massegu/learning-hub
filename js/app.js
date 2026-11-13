@@ -333,7 +333,8 @@
   }
   function renderSpatialResponse(it){
     $('#exerciseOptions').classList.add('structured-options');
-    $('#exerciseOptions').innerHTML=`<div class="spatial-answer-grid" style="--grid-size:${it.gridSize}" role="group" aria-label="Marca en la cuadrícula la posición que recuerdas">${window.Curriculum.spatialPositions(it.gridSize).map(o=>`<button class="option-btn" data-answer="${escapeHtml(o)}" aria-label="${escapeHtml(o)}"><span aria-hidden="true">${it.spatialAnswer==='grid'?'＋':'·'}</span>${it.spatialAnswer==='grid'?'':`<small>${escapeHtml(o)}</small>`}</button>`).join('')}</div>`;
+    const rows=it.gridRows||it.gridSize,columns=it.gridColumns||it.gridSize;
+    $('#exerciseOptions').innerHTML=`<div class="spatial-answer-grid" style="--grid-size:${columns}" role="group" aria-label="Marca en la cuadrícula la posición que recuerdas">${window.Curriculum.spatialPositions(rows,columns).map(o=>`<button class="option-btn" data-answer="${escapeHtml(o)}" aria-label="${escapeHtml(o)}"><span aria-hidden="true">${it.spatialAnswer==='grid'?'＋':'·'}</span>${it.spatialAnswer==='grid'?'':`<small>${escapeHtml(o)}</small>`}</button>`).join('')}</div>`;
     $$('#exerciseOptions .option-btn').forEach(b=>b.onclick=()=>checkOption(b,b.dataset.answer));
   }
   function renderRoomSpeed(it){
@@ -374,7 +375,7 @@
       $('#exercise').classList.add('speed-active');
       it._timing={started:performance.now(),valid:measured,measured};
       const settings={illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:true,senses:it.lexicalSenses};
-      $('#exerciseVisual').innerHTML=['crossedKeys','rapidAgenda','ruleChoice'].includes(it.speedFamily)?`<div class="processing-sources ${it.speedFamily==='crossedKeys'?'two-keys':''}">${it.stimulus.map(block=>`<div class="processing-source">${window.ActivityModel.interactiveStimulus([block],settings)}</div>`).join('')}</div>`:window.ActivityModel.interactiveStimulus(it.stimulus,settings);
+      $('#exerciseVisual').innerHTML=['rapidAgenda','ruleChoice'].includes(it.speedFamily)?`<div class="processing-sources">${it.stimulus.map(block=>`<div class="processing-source">${window.ActivityModel.interactiveStimulus([block],settings)}</div>`).join('')}</div>`:window.ActivityModel.interactiveStimulus(it.stimulus,settings);
       const options=it.speedFamily==='ruleChoice'?['Izquierda','Derecha']:shuffle(it.opts);
       $('#exerciseOptions').innerHTML=options.map((o,i)=>`<button class="option-btn speed-choice" data-answer="${escapeHtml(o)}" aria-label="${escapeHtml(o)}"><small class="speed-key" aria-hidden="true">${i+1}</small>${it.speedFamily==='ruleChoice'?`<span aria-hidden="true">${o==='Izquierda'?'←':'→'}</span> `:''}${escapeHtml(o)}</button>`).join('');
       $$('#exerciseOptions .speed-choice').forEach(b=>b.onclick=()=>checkOption(b,b.dataset.answer));
@@ -1462,9 +1463,7 @@
     $("#exerciseVisual").innerHTML = "";
     $("#textAnswerArea").classList.add("hidden");
     $("#selfAssessment").classList.add("hidden");
-    const topicText=it.topic||it.theme||'';
-    const topicIcon=window.BioArtIcons?.svgForArea(SUBJECT_META[subject]?.name||subject)||'';
-    $("#exerciseTopic").innerHTML=`${topicIcon?`<span class="exercise-topic-icon">${topicIcon}</span>`:''}<span>${escapeHtml(topicText)}</span>`;
+    $("#exerciseTopic").textContent=it.topic||it.theme||'';
     $("#exerciseTopic").classList.toggle(
       "hidden",
       !$("#exerciseTopic").textContent,

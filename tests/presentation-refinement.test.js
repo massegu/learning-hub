@@ -42,3 +42,9 @@ test('BioArt area marks cover exercise domains and board captions stay screen-re
  }
  const css=fs.readFileSync('css/styles.css','utf8');assert.match(css,/\.homework-board caption\.sr-only\{position:absolute/);
 });
+test('BioArt is rendered as a memory-scene stimulus and not as an area decoration',()=>{
+ assert.ok(bioart.stimulusArtwork('la maleta'));
+ const html=model.interactiveStimulus([{type:'table',presentation:'memoryScene',rows:[['la mesa','la maleta']],positions:[4]}]);
+ assert.match(html,/aria-label="Escena para recordar"/);assert.match(html,/M23 19v-5q0-5 5-5/);
+ assert.doesNotMatch(html,/bioart-area-icon/);
+});
