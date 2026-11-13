@@ -10,13 +10,16 @@ try:
   browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_EXECUTABLE') or '/usr/bin/chromium',args=['--no-sandbox']);page=browser.new_page(viewport={'width':1440,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#profileSelect',state='attached');page.clock.install()
   page.evaluate('''()=>{window.__completedCalls=0;const save=LearningAPI.saveResult;LearningAPI.saveResult=(id,row)=>{if(row.itemId?.startsWith('executed-v'))window.__completedCalls++;return save(id,row);};const original=LearningAPI.requestContent;LearningAPI.requestContent=async payload=>{if(payload.executed_only){window.__executionRequest=payload;return {items:[structuredClone(window.__task)],usage:{used:1,limit:500}};}return original(payload);}}''')
+  def open_level_options():
+   options=page.locator('#activityOptions')
+   if not options.evaluate('(element)=>element.open'):options.locator('summary').click()
   for age in ['early','teen']:
    workspace(page).locator('#profileSelect').select_option(age)
    for domain,kinds in [('attention',['cancel','compare','follow']),('memory',['serial','spatial','update']),('executive',['plan','switch','inhibit'])]:
-    area(page, domain).click();page.locator('#exerciseLevelSelect').select_option('2')
+    area(page, domain).click();open_level_options();page.locator('#exerciseLevelSelect').select_option('2')
     for kind in kinds:
      page.evaluate('''({age,domain,kind})=>{window.__task=ExecutedTasks.pool(age,domain,2).find(x=>x.execution.kind===kind);window.__executionRequest=null;}''',{'age':age,'domain':domain,'kind':kind})
-     page.locator('#executedMode').click();page.wait_for_function('()=>window.__executionRequest?.executed_only&&document.querySelector(".executed-area")');assert page.evaluate('__executionRequest.client_revision')==12
+     page.locator('#executedMode').click();page.wait_for_function('()=>window.__executionRequest?.executed_only&&document.querySelector(".executed-area")');assert page.evaluate('__executionRequest.client_revision')==13
      completed_before=page.evaluate('__completedCalls');
      if kind=='switch':assert page.locator('.executed-rule-intro').is_visible() and 'LIBRO → A' in page.locator('.executed-rule-intro').inner_text()
      page.locator('.executed-area').get_by_role('button',name='Empezar',exact=True).press('Enter')
@@ -84,9 +87,9 @@ try:
    assert 'Reconstruye' in z.read('word/document.xml').decode() or 'reconstruye' in z.read('word/document.xml').decode()
    expected=bytes(page.evaluate("Array.from(PhosphorArt.png(StimulusArt.forLabel(__task.execution.sequence[0])))"));assert any(z.read(name)==expected for name in z.namelist() if name.startswith('word/media/'))
   # Every activity tab shares a minimum target height; older submodes join the toolbar.
-  area(page, 'executive').click();page.locator('#interactionModeBtn').click()
+  area(page, 'attention').click();open_level_options();page.locator('#interactionModeBtn').click()
   boxes=page.locator('.activity-toolbar button:visible').evaluate_all('(els)=>els.map(e=>({h:e.getBoundingClientRect().height,y:e.getBoundingClientRect().y}))');assert all(b['h']>=44 for b in boxes);assert page.locator('.activity-toolbar').evaluate('(e)=>e.scrollWidth<=e.clientWidth+1');assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
-  page.wait_for_selector('#exerciseVisual table');page.locator('#exercise').screenshot(path='/tmp/phase2-toolbar-desktop.png')
+  page.wait_for_selector('#roomDescription');page.locator('#exercise').screenshot(path='/tmp/phase2-toolbar-desktop.png')
   # Existing pictograms stay legible at mobile widths in the timed speed renderer.
   page.evaluate("()=>{const previous=LearningAPI.requestContent;LearningAPI.requestContent=async payload=>payload.domain==='speedReasoning'?{items:[Curriculum.pool('teen','speedReasoning',1).find(x=>x.speedFamily==='category'&&!x.qualityEvidence)],usage:{used:1,limit:500}}:previous(payload);}")
   area(page, 'speedReasoning').click();page.locator('#practiceSpeedTrial').click();page.set_viewport_size({'width':390,'height':844})

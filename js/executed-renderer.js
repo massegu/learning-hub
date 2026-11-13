@@ -1,9 +1,9 @@
 (function(root){
 'use strict';
-function mount(item,{visual,area,onFinish}){
+function mount(item,{visual,area,onFinish,iconProfile}){
  const task=item.execution;let stopped=false,finished=false,timer=null,response=[],round=0,trialOpen=false;
  const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
- const picture=label=>{const n=node('span',undefined,'executed-picture');n.innerHTML=root.ActivityModel.visualLabel(label);return n;};
+ const picture=label=>{const n=node('span',undefined,'executed-picture');n.innerHTML=root.ActivityModel.visualLabel(label,{iconProfile});return n;};
  const later=(fn,ms)=>{clearTimeout(timer);timer=setTimeout(()=>{if(!stopped&&!finished)fn();},ms);};
  const button=(label,fn)=>{const b=node('button',label,'secondary-btn');b.type='button';b.onclick=fn;return b;};
  const message=node('p','Cuando estés preparado, empieza.','executed-status');message.setAttribute('role','status');message.setAttribute('aria-live','polite');

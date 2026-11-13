@@ -1495,7 +1495,7 @@
       }return;
     }
     if(it.type==='executed'){
-      $('#exercisePrompt').textContent=it.q;stopExecuted=window.ExecutedRenderer.mount(it,{visual:$('#exerciseVisual'),area:$('#exerciseOptions'),onFinish:(ok,why)=>{if(currentItem!==it)return;const pts=saveResult(subject,ok,it.id,it.mechanic);showFeedback(ok,pts,(ok?'Actividad completada correctamente. ':'Revisa el resultado. ')+why);}});return;
+      $('#exercisePrompt').textContent=it.q;stopExecuted=window.ExecutedRenderer.mount(it,{visual:$('#exerciseVisual'),area:$('#exerciseOptions'),iconProfile:profile,onFinish:(ok,why)=>{if(currentItem!==it)return;const pts=saveResult(subject,ok,it.id,it.mechanic);showFeedback(ok,pts,(ok?'Actividad completada correctamente. ':'Revisa el resultado. ')+why);}});return;
     }
     if (it.visual)
       $("#exerciseVisual").innerHTML =
