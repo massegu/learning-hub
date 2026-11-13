@@ -36,7 +36,7 @@ try:
   assert page.evaluate("localStorage.getItem('lh_current_profile')")=='early'
   area(page, 'language').click()
   page.wait_for_selector('#exerciseOptions .option-btn, #orderCheck')
-  page.locator('#changePasswordBtn').click();assert page.locator('#passwordDialog').is_visible()
+  workspace(page).locator('#changePasswordBtn').click();assert page.locator('#passwordDialog').is_visible()
   page.locator('#newPassword').fill('ClaveNueva123!');page.locator('#repeatPassword').fill('Distinta123!');page.locator('#savePassword').click()
   assert 'no coinciden' in page.locator('#passwordMessage').inner_text();assert page.evaluate('__changes.length')==0
   page.locator('#repeatPassword').fill('ClaveNueva123!');page.evaluate('window.__updateFail=true');page.locator('#savePassword').click()
@@ -61,7 +61,7 @@ try:
    area(page, domain).click();page.wait_for_selector('#exerciseOptions .option-btn')
    assert 'Cannot read' not in page.locator('#exercisePrompt').inner_text()
    assert page.evaluate('__requests.at(-1).profile_id')=='another-teen'
-  page.locator('#signOutBtn').click();page.wait_for_selector('#authForgotPassword')
+  workspace(page).locator('#signOutBtn').click();page.wait_for_selector('#authForgotPassword')
   page.locator('#authEmail').fill('')
   page.locator('#authForgotPassword').click();assert page.evaluate('__resets.length')==0
   page.locator('#authEmail').fill('review@example.invalid');page.locator('#authForgotPassword').click();page.wait_for_function('__resets.length===1')
