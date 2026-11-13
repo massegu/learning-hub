@@ -2720,10 +2720,10 @@ body {
 #appShell:is([data-age-route="middle"],[data-age-route="teen"]) #exerciseTopic,
 #appShell:is([data-age-route="middle"],[data-age-route="teen"]) #exercise .block-banner,
 #appShell:is([data-age-route="middle"],[data-age-route="teen"]) #exercise .language-topic {
-  font-family:"Arial Black",Arial,sans-serif;
+  font-family:Impact,"Arial Black",Arial,sans-serif;
   font-weight:800;
-  letter-spacing:.025em;
-  font-size:1rem;
+  letter-spacing:.035em;
+  font-size:1.05rem;
   line-height:1.35;
 }
 #appShell:is([data-age-route="middle"],[data-age-route="teen"]) #exercise .block-banner,
@@ -2747,7 +2747,7 @@ body {
 .spatial-answer-grid .option-btn{min-height:6rem;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:.5rem;text-align:center}
 
 /* Keep the activity family and its instruction legible as one reading unit. */
-#appShell[data-design] #exerciseTopic.language-topic{display:flex;align-items:center;gap:.55rem;margin:0;padding:0;border:0;border-radius:0;background:transparent!important;color:var(--accent-dark)!important;font:800 .95rem/1.35 "Arial Black",Arial,sans-serif;letter-spacing:.025em}
+#appShell[data-design] #exerciseTopic.language-topic{display:flex;align-items:center;gap:.55rem;margin:0;padding:0;border:0;border-radius:0;background:transparent!important;color:var(--accent-dark)!important;font:800 1.05rem/1.35 Impact,"Arial Black",Arial,sans-serif;letter-spacing:.035em}
 #appShell[data-design] #exerciseTopic.language-topic.hidden{display:none!important}
 #appShell[data-design] #exerciseTopic .exercise-topic-icon{display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center}
 #appShell[data-design] #exerciseTopic .exercise-topic-icon .bioart-area-icon{width:1.6rem;height:1.6rem}
