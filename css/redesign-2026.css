@@ -172,6 +172,30 @@
 #appShell[data-design] .exercise-navigation{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 auto 14px;max-width:1440px}
 #appShell[data-design] .exercise-navigation>span{color:var(--muted);font-size:.85rem}
 #appShell[data-design] .exercise-navigation button{min-height:44px}
+#appShell[data-design].exercise-focus #exercise .section-intro.block-banner{display:flex;align-items:center;margin:0 0 8px;padding:8px 14px;border:1px solid var(--line);border-left:4px solid var(--accent)!important;border-radius:12px;background:#fff!important;box-shadow:none}
+#appShell[data-design].exercise-focus #exercise .section-intro.block-banner>div{display:flex;align-items:center;gap:0 12px;flex-wrap:wrap;min-width:0}
+#appShell[data-design].exercise-focus #exercisePill{padding:4px 8px;font-size:.63rem;line-height:1.25}
+#appShell[data-design].exercise-focus #exerciseHeading{gap:8px;margin:0;font-size:clamp(1rem,1.5vw,1.25rem);line-height:1.25}
+#appShell[data-design].exercise-focus #exerciseHeading::before{width:34px;height:34px;border-radius:9px}
+#appShell[data-design].exercise-focus #exerciseDescription{margin:0;color:var(--muted);font-size:.84rem;line-height:1.35}
+#appShell[data-design] .exercise-modalities{margin:0 0 8px;padding:9px 12px;border:1px solid var(--line);border-radius:13px;background:#fff}
+#appShell[data-design] .exercise-modalities>h4{margin:0 0 7px;color:var(--muted);font-size:.78rem;font-weight:750}
+#appShell[data-design] .exercise-modalities .activity-toolbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));align-items:stretch;gap:7px;margin:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none}
+#appShell[data-design] .exercise-modalities .activity-toolbar>.mode-switch:not(.hidden){display:contents!important}
+#appShell[data-design] .exercise-modalities .activity-toolbar button{display:inline-flex;align-items:center;justify-content:center;width:100%;min-width:0;min-height:46px;height:auto;margin:0;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:inherit;font-size:.91rem;font-weight:750;line-height:1.3;text-align:center;white-space:normal;cursor:pointer}
+#appShell[data-design] .exercise-modalities .activity-toolbar button[aria-pressed="true"]{background:var(--accent)!important;border-color:var(--accent)!important;color:#fff!important;box-shadow:0 2px 0 var(--accent-dark)}
+#appShell[data-design] .exercise-modalities .activity-toolbar button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+#appShell[data-design] .exercise-modalities .activity-toolbar button.hidden{display:none!important}
+#appShell[data-design] .exercise-modalities #documentModeHint{margin:7px 0 0;padding:8px 10px;border-left:3px solid var(--accent);border-radius:0 7px 7px 0;background:var(--accent-soft);color:var(--muted);font-size:.8rem;line-height:1.4}
+#appShell[data-design] #activityOptions{margin:0 0 8px;padding:0;border-radius:11px}
+#appShell[data-design] #activityOptions>summary{min-height:40px;padding:7px 12px;font-size:.82rem}
+#appShell[data-design] #activityOptions .activity-settings-content{padding:8px 12px 10px}
+#appShell[data-design] #activityOptions .level-control{margin:0}
+#appShell[data-design] #exercise .exercise-meta-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin:14px 0 0;padding-top:10px;border-top:1px solid var(--line);color:var(--muted);font-size:.75rem}
+#appShell[data-design] #exercise .exercise-meta-footer .exercise-account-usage{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap}
+#appShell[data-design] #exercise .exercise-meta-footer .daily-usage{margin:0}
+#appShell[data-design] #exercise .exercise-meta-footer .bank-size-hint{font-size:.72rem}
+#appShell[data-design] #exercise .exercise-meta-footer .mini-score{padding:3px 7px;border-radius:6px;background:var(--accent-soft);color:var(--accent-dark)}
 #appShell[data-design] .language-topic{background:#FFF0EE!important;color:#8F3932!important;border-left:4px solid #FF7468!important;border-radius:8px}
 #appShell[data-design] #exerciseVisual .reading-passage:not(:has(.practice-document)){background:#FBF9F7!important;border:1px solid #E6DCD5;border-left:4px solid #FF7468!important;border-radius:13px;color:var(--ink)}
 #appShell[data-design] #exerciseVisual .reading-passage:not(:has(.practice-document))>.stimulus-caption{color:#8F3932}
@@ -200,7 +224,12 @@
  #appShell[data-design] .professional-mission{align-items:flex-start;flex-direction:column}
  #appShell[data-design] .professional-mission .secondary-btn{width:100%}
  #appShell[data-design] .exercise-navigation{align-items:flex-start;flex-direction:column}
+ #appShell[data-design] .exercise-modalities .activity-toolbar{grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr))}
+ #appShell[data-design].exercise-focus #exerciseDescription{flex-basis:100%;padding-left:2px}
+ #appShell[data-design] #exercise .exercise-meta-footer{align-items:flex-start;flex-direction:column}
+ #appShell[data-design] #exercise .exercise-meta-footer .exercise-account-usage{justify-content:flex-start}
 }
+@media(max-width:520px){#appShell[data-design] .exercise-modalities .activity-toolbar{grid-template-columns:minmax(0,1fr)}}
 
 #appShell[data-design] .evolution-chart{display:block;width:100%;height:auto;min-height:190px;margin:8px 0 2px;overflow:visible;background:#fff;border:1px solid var(--line);border-radius:16px}
 #appShell[data-design] .evolution-chart .chart-grid{stroke:#DCE4E8;stroke-dasharray:4 6}

@@ -14,8 +14,8 @@ function materialKey(value){
 }
 function finish(item,age,domain,level,key,mechanic){
  const id=`curriculum-v2-${age}-${domain}-${level}-${key}`;
- const memoryMaterialKey=domain==='memory'?materialKey([item.recallSequence?'sequence':item.recallEvidence?.kind||'associations',item.stimulus]):null;
- const earlyMechanic=domain==='language'?'vocabulary':domain==='attention'?'matching':domain==='social'?'inference':domain==='reading'?(item.responseType==='order'?'sequencing':'literal'):domain==='speedReasoning'?'speedCompare':domain==='memory'?(item.memoryResponse==='spatial'?'rememberPlace':'rememberOrder'):'planning';
+ const memoryMaterialKey=domain==='memory'?materialKey([item.recallSequence?'sequence':item.stimulus?.some(block=>block.presentation==='homeworkBoard')?'homeworkBoard':item.recallEvidence?.kind||'associations',item.stimulus]):null;
+ const earlyMechanic=domain==='language'?'vocabulary':domain==='attention'?'matching':domain==='social'?'inference':domain==='reading'?(item.responseType==='order'?'sequencing':'literal'):domain==='speedReasoning'?'speedCompare':domain==='memory'?(item.stimulus?.some(block=>block.presentation==='homeworkBoard')?'rememberHomework':item.memoryResponse==='spatial'?'rememberPlace':'rememberOrder'):'planning';
  return {...item,...(domain==='memory'?{lexicalSenses:{...item.lexicalSenses,banana:true}}:{}),...(item.speedTask?{speedRevision:4}:{}),id,contentKey:id,semanticKey:item.passageKey||memoryMaterialKey||id,...(memoryMaterialKey?{memoryMaterialKey}:{}),domain,level,mechanic,
   ...(age==='early'?{ageProfile:{id:'early',revision:1,context:'school',mechanic:earlyMechanic,family:`${domain}-${mechanic}`}}:{}),
   ...(age==='teen'?{teenReview:{version:3,context:mechanic}}:{}),
@@ -126,9 +126,19 @@ function validateSelectiveRecall(item){
  if(!Array.isArray(item.answers)||new Set(item.answers).size!==expected.length||item.answers.length!==expected.length||!expected.every(x=>item.answers.includes(x))||!item.opts?.every(x=>typeof x==='string')||!item.answers.every(x=>item.opts.includes(x)))throw new Error('La respuesta no corresponde a las imágenes recordadas.');
  return expected;
 }
-function spatialPositions(size){return Array.from({length:size*size},(_,i)=>`Fila ${Math.floor(i/size)+1}, columna ${i%size+1}`);}
+function spatialPositions(rows,columns=rows){return Array.from({length:rows*columns},(_,i)=>`Fila ${Math.floor(i/columns)+1}, columna ${i%columns+1}`);}
 function memory(age,level){
  const rank=ages.indexOf(age),count=rank===0?[2,3,4][level-1]:5+(level-1)*(rank<2?1:2),items=[];
+ if(['early','junior','middle'].includes(age)){
+  const tasks=age==='early'?[['Lectura','Leer el cuento de animales, página 3'],['Números','Hacer dos sumas, página 5'],['Ciencias','Dibujar una hoja, página 4'],['Arte','Terminar el dibujo, página 2'],['Música','Practicar la canción, página 6']]:age==='junior'?[['Lectura','Leer el cómic y responder los ejercicios 1 y 2, página 8'],['Números','Resolver los problemas 3 a 5, página 12'],['Ciencias','Anotar qué cambia en el experimento de semillas, página 6'],['Arte','Diseñar la portada del cómic, página 4'],['Música','Practicar el ritmo de la canción, página 7']]:[['Lengua','Leer la entrevista y anotar dos ideas, página 18'],['Matemáticas','Resolver los ejercicios 4 y 5, página 32'],['Ciencias','Completar el esquema del experimento, página 11'],['Historia','Comparar las dos fuentes, actividad 3'],['Comunicación','Revisar el guion del vídeo, apartado 2']];
+  const rowsPerLevel=age==='early'?[1,2,3]:age==='junior'?[2,3,4]:[3,4,5],rowCount=rowsPerLevel[level-1];
+  for(let v=0;v<tasks.length;v++){
+   const rows=Array.from({length:rowCount},(_,i)=>tasks[(v+i)%tasks.length]),ask=(v+level-1)%rows.length,[area,answer]=rows[ask];
+   const alternatives=tasks.filter(([,detail])=>!rows.some(([,shown])=>shown===detail)).map(([,detail])=>detail),visibleWrong=rows.filter((_,i)=>i!==ask).map(([,detail])=>detail),otherWrong=rotate(alternatives,v%alternatives.length).slice(0,2-visibleWrong.length),wrongOptions=shuffled([...new Set([...visibleWrong,...otherWrong])],v+level*17).slice(0,2);
+   const options=shuffled([answer,...wrongOptions],v+level*17+1);
+   items.push(finish({type:'memoryReveal',responseType:'choice',requiresStimulus:true,q:'Mira la pizarra. Luego la taparemos.',memoryQuestion:`¿Qué hay que hacer en ${area}?`,stimulus:[{type:'table',label:'Pizarra de deberes',presentation:'homeworkBoard',rows}],memoryContent:rows.map(([subject,detail])=>({detail:`${subject}: ${detail}`})),a:answer,opts:options,answerEvidence:{type:'tableCell',block:0,row:ask,column:1,subjectColumn:0},revealMs:10000,topic:'Memoria · pizarra de deberes',why:`En ${area} aparece: ${answer}.`},age,'memory',level,`homework-board-${v}`,'memory_homework_board'));
+  }
+ }
  for(let v=0;v<120;v++){
   const materials=[...new Set([...memoryCategories[v%memoryCategories.length].items,...memoryCategories[(v+3)%memoryCategories.length].items,...(rank===0?objects:rank===1?schoolObjects:functionalObjects).slice(v%6,v%6+4)])];
   const featured=memoryCategories[v%memoryCategories.length].items[Math.floor(v/memoryCategories.length)%4];
@@ -140,18 +150,18 @@ function memory(age,level){
    revealMs:Math.max(6000,count*1400),sequenceStepMs:1400,recallSequence:[...values],
    recallEvidence:{kind:'sequence',block:0,reverse},topic:'Memoria · secuencias',
    why:rank===0?'Recuerda los elementos en el mismo orden.':expected.join(' → ')},age,'memory',level,`sequence-${v}`,'memory_sequence'));
-  const size=rank===0?2:3,capacity=size*size,load=Math.min(capacity,level+(rank===0?1:2));
-  const places=shuffled(Array.from({length:capacity},(_,i)=>i),v+41),marked=values.slice(0,load),grid=Array.from({length:size},()=>Array(size).fill('—'));
-  marked.forEach((x,i)=>{grid[Math.floor(places[i]/size)][places[i]%size]=x;});
+  const size=rank===0?2:3,gridRows=size,gridColumns=rank===0&&level===2?3:size,capacity=gridRows*gridColumns,load=Math.min(capacity,level+(rank===0?1:2));
+  const places=shuffled(Array.from({length:capacity},(_,i)=>i),v+41),marked=values.slice(0,load),grid=Array.from({length:gridRows},()=>Array(gridColumns).fill('—'));
+  marked.forEach((x,i)=>{grid[Math.floor(places[i]/gridColumns)][places[i]%gridColumns]=x;});
   // Level 3 asks for two positions for older groups; ordered binding prevents a swapped answer.
   const dual=rank>=2&&level===3,target=marked[0],target2=marked[1];
-  const pos=n=>`Fila ${Math.floor(n/size)+1}, columna ${n%size+1}`;
+  const pos=n=>`Fila ${Math.floor(n/gridColumns)+1}, columna ${n%gridColumns+1}`;
   const a=dual?pos(places[0])+' → '+pos(places[1]):pos(places[0]);
-  const opts=dual?[a,pos(places[1])+' → '+pos(places[0]),pos(places[0])+' → '+pos(places[2]),pos(places[2])+' → '+pos(places[1])]:spatialPositions(size);
+  const opts=dual?[a,pos(places[1])+' → '+pos(places[0]),pos(places[0])+' → '+pos(places[2]),pos(places[2])+' → '+pos(places[1])]:spatialPositions(gridRows,gridColumns);
   items.push(finish({type:'memoryReveal',responseType:'choice',memoryResponse:dual?'spatialPair':'spatial',spatialAnswer:!dual&&v%2===0?'grid':'coordinates',requiresStimulus:true,
    q:'Mira dónde está cada imagen. Después taparemos el cuadro.',memoryQuestion:dual?`¿Dónde estaban ${target} y ${target2}, en ese orden?`:`¿Dónde ${/^(los|las) /.test(target)?'estaban':'estaba'} ${target}?`,
    stimulus:[{...R(grid),presentation:'spatial',label:'Filas de arriba abajo; columnas de izquierda a derecha.'}],memoryContent:marked.map(detail=>({detail})),
-   a,opts,gridSize:size,revealMs:Math.max(6000,load*1800),recallEvidence:{kind:'spatial',block:0,targets:dual?[target,target2]:[target]},topic:'Memoria · posiciones',why:a},age,'memory',level,`spatial-${v}`,'memory_spatial'));
+   a,opts,gridSize:size,gridRows,gridColumns,revealMs:Math.max(6000,load*1800),recallEvidence:{kind:'spatial',block:0,targets:dual?[target,target2]:[target]},topic:'Memoria · posiciones',why:a},age,'memory',level,`spatial-${v}`,'memory_spatial'));
   const unseen=materials.find(x=>!values.includes(x));
   items.push(finish({type:'memoryReveal',responseType:'choice',requiresStimulus:true,q:'Mira estas imágenes. Después las taparemos.',memoryQuestion:'¿Qué imagen estaba en el grupo?',stimulus:[{type:'list',items:[...values],presentation:'cards'}],memoryContent:values.map(detail=>({detail})),a:values[v%values.length],opts:[values[v%values.length],unseen],revealMs:Math.max(6000,count*1300),answerEvidence:{type:'listItem',block:0,index:v%values.length},topic:'Memoria · reconocimiento'},age,'memory',level,`recognition-${v}`,'memory_recognition'));
   if(rank>0){
@@ -170,8 +180,8 @@ function memory(age,level){
     revealMs:Math.max(6000,shown.length*1500),topic:'Memoria · recuerdo por categoría',why:'De la categoría '+category.name+' aparecieron: '+answers.join(', ')+'. No basta con pertenecer a la categoría: la imagen también tenía que estar en el grupo.'},age,'memory',level,`category-${v}`,'memory_category'));
   }
   if(v<36){
-   const spots=['la mesa','el estante','la alfombra','la ventana','el banco','la silla','el armario','la puerta','el rincón'],sceneValues=rotate(values,v%values.length),scene=spots.slice(0,count).map((place,i)=>[place,sceneValues[i]]),ask=v%scene.length;
-   if(rank===0)items.push(finish({type:'memoryReveal',responseType:'choice',requiresStimulus:true,q:'Observa la escena. Después desaparecerá.',memoryQuestion:`¿Qué imagen estaba en ${scene[ask][0]}?`,stimulus:[{type:'table',rows:scene,presentation:'memoryScene'}],memoryContent:sceneValues.map(detail=>({detail})),a:scene[ask][1],opts:rotate(sceneValues,ask).slice(0,rank===0?3:4),revealMs:Math.max(6000,count*1800),answerEvidence:{type:'tableCell',block:0,row:ask,column:1,subjectColumn:0},topic:'Memoria · escena del estudio',why:scene[ask][0]+': '+scene[ask][1]+'.'},age,'memory',level,`scene-${v}`,'memory_scene'));
+   const spots=['la mesa','el estante','la alfombra','la ventana','el banco','la silla','el armario','la puerta','el rincón'],sceneValues=rotate(values,v%values.length),scene=spots.slice(0,count).map((place,i)=>[place,sceneValues[i]]),scenePositions=shuffled(Array.from({length:spots.length},(_,i)=>i),v+73).slice(0,count),ask=v%scene.length;
+   if(rank===0)items.push(finish({type:'memoryReveal',responseType:'choice',requiresStimulus:true,q:'Observa la escena. Después desaparecerá.',memoryQuestion:`¿Qué imagen estaba en ${scene[ask][0]}?`,stimulus:[{type:'table',rows:scene,positions:scenePositions,presentation:'memoryScene'}],memoryContent:sceneValues.map(detail=>({detail})),a:scene[ask][1],opts:rotate(sceneValues,ask).slice(0,rank===0?3:4),revealMs:Math.max(6000,count*1800),answerEvidence:{type:'tableCell',block:0,row:ask,column:1,subjectColumn:0},topic:'Memoria · escena del estudio',why:scene[ask][0]+': '+scene[ask][1]+'.'},age,'memory',level,`scene-${v}`,'memory_scene'));
    // Navigating a map has a different load from recalling isolated icons.
    // Limit visits separately; the icon sequence progression stays unchanged.
    const routeCount=(rank>=3?[3,4,6]:[3,4,5])[level-1];
@@ -534,7 +544,7 @@ function processingChallenges(age,level){
  for(let v=0;v<36;v++){
   const codes=rotate(['K','M','R','T','V','Z'],v).slice(0,n),zones=rotate(['A','B','C','D','E','F'],v+level).slice(0,n),targets=rotate(['Mesa azul','Mesa roja','Mesa verde','Mesa amarilla','Mesa blanca','Mesa negra'],v+3).slice(0,n);
   const at=v%n,target=codes[at],answer=targets[at];
-  out.push(finish(choice(`¿A qué mesa lleva el código ${target}?`,[{type:'table',label:'Primera clave',header:true,rows:[['Código','Zona'],...codes.map((x,i)=>[x,zones[i]])]},{type:'table',label:'Segunda clave',header:true,rows:[['Zona','Mesa'],...zones.map((x,i)=>[x,targets[i]])]}],answer,targets.filter(x=>x!==answer).slice(0,3),{speedTask:true,speedFamily:'crossedKeys',speedEvidence:{kind:'crossedKeys',target,block:0,secondBlock:1},topic:'Velocidad · cruzar dos claves',why:`${target} lleva a la zona ${zones[at]}, que corresponde a ${answer.toLowerCase()}.`}),age,'speedReasoning',level,'crossed-keys-'+v,'speed_crossed_keys'));
+  out.push(finish(choice(`¿A qué mesa lleva el código ${target}?`,[{type:'table',header:true,rows:[['Código','Zona','Mesa'],...codes.map((code,i)=>[code,zones[i],targets[i]])]}],answer,targets.filter(x=>x!==answer).slice(0,3),{speedTask:true,speedFamily:'crossedKeys',speedEvidence:{kind:'crossedKeys',target,block:0},topic:'Velocidad · código, zona y mesa',why:`${target} corresponde a la zona ${zones[at]} y a la ${answer.toLowerCase()}.`}),age,'speedReasoning',level,'crossed-keys-'+v,'speed_crossed_keys'));
   const day=v%2?'Hoy':'Mañana',state=v%3?'Pendiente':'Hecho',priority=level===3?'Alta':null;
   const rows=Array.from({length:n+level},(_,i)=>['Tarea '+(i+1),i===at?day:i%2?'Mañana':'Hoy',i===at?state:(i%2?'Hecho':'Pendiente'),i===at?'Alta':i%2?'Alta':'Normal']);
   // Exactly one row satisfies all requested conditions. Distractors each miss
@@ -596,7 +606,8 @@ function validateSpeed(item){
  const b=item.stimulus?.[e.block];let answer;
  if(e.kind==='crossedKeys'){
   if(item.q!==`¿A qué mesa lleva el código ${e.target}?`)throw new Error('La pregunta no coincide con el código.');
-  const first=b?.rows?.slice(1).filter(r=>r[0]===e.target),second=item.stimulus?.[e.secondBlock];if(first?.length!==1)throw new Error('La primera clave no es única.');const targets=second?.rows?.slice(1).filter(r=>r[0]===first[0][1]);if(targets?.length!==1)throw new Error('La segunda clave no es única.');answer=targets[0][1];
+  if(JSON.stringify(b?.rows?.[0])!==JSON.stringify(['Código','Zona','Mesa'])||b.rows.slice(1).some(r=>r.length!==3))throw new Error('La tabla debe reunir código, zona y mesa.');
+  const dataRows=b.rows.slice(1),rows=dataRows.filter(r=>r[0]===e.target);if(rows.length!==1||!rows[0][1]||!rows[0][2]||dataRows.filter(r=>r[1]===rows[0][1]).length!==1)throw new Error('El código debe llevar a una zona y mesa únicas.');answer=rows[0][2];
  }else if(e.kind==='rapidAgenda'){
   const rows=b?.rows?.slice(1).filter(r=>r[1]===e.day&&r[2]===e.state&&(!e.priority||r[3]===e.priority));if(rows?.length!==1)throw new Error('La agenda no tiene una única coincidencia.');const expected=[`Día: ${e.day}`,`Estado: ${e.state}`,...(e.priority?['Prioridad: '+e.priority]:[])].join(' · ');if(item.stimulus?.[0]?.text!==expected)throw new Error('La consigna de agenda no coincide.');answer=rows[0][0];
  }else if(e.kind==='ruleChoice'){
@@ -1048,13 +1059,14 @@ function pool(age,domain,level=1){
  }
  return structuredClone(cache.get(key)).map(it=>domain==='applied'?{...it,domain,...(age==='early'?{ageProfile:{...it.ageProfile,mechanic:'chooseObject'}}:{})}:it);
 }
-function generate(age,domain,level=1,focus=null){
+function generate(age,domain,level=1,focus=null,options={}){
  const actual=domain==='applied'?'executive':domain,key=[age,actual,level].join(':');
  if(!cache.has(key))pool(age,actual,level);
- const groupKey=key+':'+(focus||'all');
+ const excluded=new Set(options.excludeMechanics||[]),groupKey=key+':'+(focus||'all')+':'+[...excluded].sort().join(',');
  if(!generationGroups.has(groupKey)){
   const grouped=new Map();
   for(const item of cache.get(key)||[]){
+   if(excluded.has(item.mechanic))continue;
    const written=item.type==='self'||item.responseType==='written'||item.type==='order'&&!item.qualityEvidence;
    if(focus&&(focus==='writing'?!written:written))continue;
    if(!grouped.has(item.mechanic))grouped.set(item.mechanic,[]);

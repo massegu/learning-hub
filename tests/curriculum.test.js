@@ -18,6 +18,20 @@ test('shared curriculum has fifty distinct sources and complete localized delive
  }
  assert.equal(new Set(all).size,50);
 });
+test('early level-two spatial memory uses varied rectangular layouts with consistent row and column answers',()=>{
+ const bank=curriculum.pool('early','memory',2).filter(it=>it.mechanic==='memory_spatial');
+ assert.ok(bank.length>=30);
+ const layouts=new Set();
+ for(const it of bank){
+  assert.equal(it.gridRows,2);assert.equal(it.gridColumns,3);
+  assert.equal(it.stimulus[0].rows.length,2);assert.ok(it.stimulus[0].rows.every(row=>row.length===3));
+  assert.equal(it.opts.length,6);assert.equal(new Set(it.opts).size,6);
+  const cells=it.stimulus[0].rows.flatMap((row,r)=>row.map((value,c)=>({value,r,c}))).filter(cell=>cell.value===it.recallEvidence.targets[0]);
+  assert.equal(cells.length,1);assert.equal(it.a,`Fila ${cells[0].r+1}, columna ${cells[0].c+1}`);
+  layouts.add(it.stimulus[0].rows.map(row=>row.join('|')).join('/'));
+ }
+ assert.ok(layouts.size>15,'remembered images are distributed across many non-triangular placements');
+});
 test('reading source identities rotate for ten deliveries despite changed question, level, or restored early session',()=>{
  const {api}=load();
  for(const age of ages){
@@ -53,7 +67,7 @@ test('memory requires reconstructing sequences and positions, and corrupt answer
     assert.throws(()=>model.printable(corrupt,profile(age)),/orden/);
    }
    if(it.recallEvidence?.kind==='spatial'){
-    const printed=model.printable(it,profile(age));assert.equal(printed.stimulus[0].rows.length,it.gridSize);
+    const printed=model.printable(it,profile(age));assert.equal(printed.stimulus[0].rows.length,it.gridRows||it.gridSize);
     const corrupt=structuredClone(it);corrupt.a=it.opts.find(x=>x!==it.a);assert.throws(()=>model.printable(corrupt,profile(age)),/espacial/);
     if(level===3&&['primary','middle','teen'].includes(age))assert.equal(it.recallEvidence.targets.length,2);
    }

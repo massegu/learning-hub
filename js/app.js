@@ -310,7 +310,7 @@
           if(index===it.recallSequence.length){
             visual.innerHTML='';$('#exercisePrompt').textContent=displayMemoryQuestion(it);renderOrderExercise(it);return;
           }
-          visual.innerHTML=`<div class="sequence-flash"><small>${index+1} / ${it.recallSequence.length}</small>${window.ActivityModel.visualLabel(it.recallSequence[index++],{...it.lexicalSenses,memory:true})}</div>`;
+          const slide=it.recallSequence[index++];visual.innerHTML=`<div class="sequence-flash" role="group" aria-roledescription="diapositiva" aria-label="Imagen ${index} de ${it.recallSequence.length}: ${escapeHtml(window.ActivityModel.memoryLabel(slide))}"><small aria-hidden="true">${index} / ${it.recallSequence.length}</small>${window.ActivityModel.visualLabel(slide,{...it.lexicalSenses,memory:true})}</div>`;
           setTimeout(()=>{if(currentItem!==it)return;visual.innerHTML='<div class="sequence-flash" aria-hidden="true">·</div>';setTimeout(step,250);},it.sequenceStepMs);
         };step();
       };return;
@@ -333,7 +333,8 @@
   }
   function renderSpatialResponse(it){
     $('#exerciseOptions').classList.add('structured-options');
-    $('#exerciseOptions').innerHTML=`<div class="spatial-answer-grid" style="--grid-size:${it.gridSize}" role="group" aria-label="Marca en la cuadrícula la posición que recuerdas">${window.Curriculum.spatialPositions(it.gridSize).map(o=>`<button class="option-btn" data-answer="${escapeHtml(o)}" aria-label="${escapeHtml(o)}"><span aria-hidden="true">${it.spatialAnswer==='grid'?'＋':'·'}</span>${it.spatialAnswer==='grid'?'':`<small>${escapeHtml(o)}</small>`}</button>`).join('')}</div>`;
+    const rows=it.gridRows||it.gridSize,columns=it.gridColumns||it.gridSize;
+    $('#exerciseOptions').innerHTML=`<div class="spatial-answer-grid" style="--grid-size:${columns}" role="group" aria-label="Marca en la cuadrícula la posición que recuerdas">${window.Curriculum.spatialPositions(rows,columns).map(o=>`<button class="option-btn" data-answer="${escapeHtml(o)}" aria-label="${escapeHtml(o)}"><span aria-hidden="true">${it.spatialAnswer==='grid'?'＋':'·'}</span>${it.spatialAnswer==='grid'?'':`<small>${escapeHtml(o)}</small>`}</button>`).join('')}</div>`;
     $$('#exerciseOptions .option-btn').forEach(b=>b.onclick=()=>checkOption(b,b.dataset.answer));
   }
   function renderRoomSpeed(it){
@@ -374,7 +375,7 @@
       $('#exercise').classList.add('speed-active');
       it._timing={started:performance.now(),valid:measured,measured};
       const settings={illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:true,senses:it.lexicalSenses};
-      $('#exerciseVisual').innerHTML=['crossedKeys','rapidAgenda','ruleChoice'].includes(it.speedFamily)?`<div class="processing-sources ${it.speedFamily==='crossedKeys'?'two-keys':''}">${it.stimulus.map(block=>`<div class="processing-source">${window.ActivityModel.interactiveStimulus([block],settings)}</div>`).join('')}</div>`:window.ActivityModel.interactiveStimulus(it.stimulus,settings);
+      $('#exerciseVisual').innerHTML=['rapidAgenda','ruleChoice'].includes(it.speedFamily)?`<div class="processing-sources">${it.stimulus.map(block=>`<div class="processing-source">${window.ActivityModel.interactiveStimulus([block],settings)}</div>`).join('')}</div>`:window.ActivityModel.interactiveStimulus(it.stimulus,settings);
       const options=it.speedFamily==='ruleChoice'?['Izquierda','Derecha']:shuffle(it.opts);
       $('#exerciseOptions').innerHTML=options.map((o,i)=>`<button class="option-btn speed-choice" data-answer="${escapeHtml(o)}" aria-label="${escapeHtml(o)}"><small class="speed-key" aria-hidden="true">${i+1}</small>${it.speedFamily==='ruleChoice'?`<span aria-hidden="true">${o==='Izquierda'?'←':'→'}</span> `:''}${escapeHtml(o)}</button>`).join('');
       $$('#exerciseOptions .speed-choice').forEach(b=>b.onclick=()=>checkOption(b,b.dataset.answer));
@@ -1043,6 +1044,7 @@
     $('#appShell').classList.toggle('early-experience',Boolean(window.ContentPolicy.forProfile(p)));
     $('#appShell').classList.toggle('school-experience',Boolean(window.SchoolJourney.forProfile(p)));
     $('#appShell').dataset.ageTheme=window.AgeStages.forProfile(p)?.theme || '';
+    $('#appShell').dataset.ageRoute=window.AgeStages.route(p) || '';
     // Keep the professional workspace visually consistent; age adaptation lives in the activity content.
     $('#appShell').dataset.design='calma';
     $('#appShell').classList.remove('mobile-nav-open');$('#workspaceMenu').setAttribute('aria-expanded','false');
@@ -1274,6 +1276,8 @@
     $('#attentionPhotos').setAttribute('aria-pressed',String(photoOnly&&subject==='attention'));
     syncLanguageModeButtons();
     $('#wordFitMode').setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily==='words'));
+    const hasAvailableModality=$$('#exerciseModalities button').some(button=>!button.closest('.hidden'));
+    $('#exerciseModalities').classList.toggle('hidden',!hasAvailableModality);
     syncActivitySettings();
     counter = 0;
     renderEarlyTaskGuide();
@@ -1321,7 +1325,7 @@
     const worksheet=payload.kind==='worksheet';
     const selected = payload.executed_only||payload.cognitive_only?res:window.EarlyContent.adaptResponse(res, payload, targetProfile, worksheet?{
       accept:(item,domain)=>window.WorksheetSelection.compatible(item,targetProfile,locale,domain),
-    }:{});
+    }:payload.memory_audio_only?{accept:item=>item.audioMemory===true}:{});
     // Worksheet candidates are localized/validated individually by the selector.
     // One unprintable or unlocalizable remote item must not abort the whole batch.
     if(!worksheet){
@@ -1360,7 +1364,11 @@
       $('#usageHint').textContent=`Hoy: ${res.usage.used} ${kind==='worksheet'?'fichas':kind==='game'?'juegos':'ejercicios'}`;
       $('#dailyUsageExplanation').textContent=`Tu cuota es de ${res.usage.limit} ${kind==='worksheet'?'fichas':kind==='game'?'juegos':'ejercicios'} al día. Esta cifra limita el uso de la cuenta; no es el tamaño del banco de actividades.`;
     }
-    return res?.items?.[0] || null;
+    const item=res?.items?.[0]||null;
+    if(kind==='exercise'&&domain==='memory'&&memoryAudioOnly&&item?.audioMemory!==true){
+      throw new Error('El ejercicio recibido no corresponde a memoria auditiva. Vuelve a cargarlo o elige otra modalidad.');
+    }
+    return item;
   }
   async function newExercise() {
     // A save from the previous card may still be resolving. Invalidate its UI
@@ -1455,7 +1463,7 @@
     $("#exerciseVisual").innerHTML = "";
     $("#textAnswerArea").classList.add("hidden");
     $("#selfAssessment").classList.add("hidden");
-    $("#exerciseTopic").textContent = it.topic || it.theme || "";
+    $("#exerciseTopic").textContent=it.topic||it.theme||'';
     $("#exerciseTopic").classList.toggle(
       "hidden",
       !$("#exerciseTopic").textContent,

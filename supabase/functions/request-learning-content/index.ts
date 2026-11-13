@@ -2330,7 +2330,7 @@ function matrixApplied20(age:string,level:number,v:number){
     opts:easy?opt4("El parque","La estación","La tienda","No se sabe"):opt4("La presencia de escaleras además de la distancia","Solo el color del mapa","Solo el nombre de la calle","Nada"),a:easy?"El parque":"La presencia de escaleras además de la distancia"},age,"applied",level,v);
 }
 
-function variantExercise(age:string,domain:string,level:number,subdomain:string|null=null,documentsOnly:boolean|null=null,photosOnly:boolean=false,interactionOnly:boolean=false,interactionKind:string|null=null){
+function variantExercise(age:string,domain:string,level:number,subdomain:string|null=null,documentsOnly:boolean|null=null,photosOnly:boolean=false,interactionOnly:boolean=false,interactionKind:string|null=null,excludeMechanics:string[]=[]){
   if(!interactionOnly&&!photosOnly&&documentsOnly!==true&&Math.random()<.3){const functional=(globalThis as any).FunctionalContent.generate(age,domain,level,subdomain);if(functional)return {...functional,id:age+'-functional-'+crypto.randomUUID()};}
   if(interactionOnly){const item=(globalThis as any).Curriculum.generateInteractive(age,domain,level,interactionKind);return item?{...item,id:age+'-interactive-'+crypto.randomUUID()}:null;}
   const photos=(globalThis as any).PhotoLibrary;
@@ -2344,7 +2344,7 @@ function variantExercise(age:string,domain:string,level:number,subdomain:string|
   if(documentsOnly&&subdomain==='writing'&&(globalThis as any).DocumentLibrary.supports(age,domain)){const bank=(globalThis as any).Curriculum.pool(age,domain,level).filter((it:any)=>it.stimulus?.some((b:any)=>b.type==='document'));return {...pick(bank),id:age+'-document-writing-'+crypto.randomUUID()};}
   if(['language','middleLanguage','teenLanguage'].includes(domain)&&(subdomain==='vocabulary'||!subdomain&&Math.random()<.25)){const bank=(globalThis as any).Curriculum.vocabulary(age,domain,level);return {...pick(bank),id:age+'-vocabulary-'+crypto.randomUUID()};}
   if((globalThis as any).DocumentLibrary.supports(age,domain)&&subdomain!=='writing'&&(documentsOnly===true||documentsOnly===null&&((['attention','executive'].includes(domain)||['reading','literacy','middleReading'].includes(domain)&&subdomain!=='writing')&&Math.random()<(domain==='executive'?.25:.35))))return {...(globalThis as any).DocumentLibrary.generate(age,domain,level),id:age+"-document-"+crypto.randomUUID()};
-  if((globalThis as any).Curriculum.supports(age,domain))return {...(globalThis as any).Curriculum.generate(age,domain,level,subdomain),id:age+"-curriculum-"+crypto.randomUUID()};
+  if((globalThis as any).Curriculum.supports(age,domain))return {...(globalThis as any).Curriculum.generate(age,domain,level,subdomain,{excludeMechanics}),id:age+"-curriculum-"+crypto.randomUUID()};
   if(age==="teen"&&["teenLanguage","speedReasoning","literacy"].includes(domain))return {...(globalThis as any).TeenReview.generate(domain,level,subdomain),id:"teen-review-"+crypto.randomUUID()};
   if(age==="junior")return {...(globalThis as any).JuniorContent.generate(domain,level,subdomain),id:"junior-"+crypto.randomUUID()};
   if(age==="primary")return {...(globalThis as any).PrimaryContent.generate(domain,level,subdomain),id:"primary-"+crypto.randomUUID()};
@@ -2380,7 +2380,7 @@ function ensureWorksheetMemoryCoherence(item:any){
 }
 
 function worksheetTask(age:string, domain:string, level:number){
-  const generated=variantExercise(age,domain,level);
+  const generated=variantExercise(age,domain,level,null,null,false,false,null,['memory_homework_board']);
   if(generated) return {...generated,sourceDomain:domain};
   const pool=academicPool(age,domain,null,level);
   if(!pool.length) return {...cognitionExercise(age,pick(["attention","executive","memory"]),level),sourceDomain:domain};

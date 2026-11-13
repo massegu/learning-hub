@@ -30,6 +30,18 @@ test('answers follow the displayed grids, memory updates, rules and plan depende
   assert.ok(tasks.grade(item,expected),item.contentKey);assert.equal(tasks.grade(item,['incorrect']),false);assert.equal(tasks.grade(item,[]),false);
  }
 });
+
+test('early memory update instructions use concrete language and preserve the response rule',()=>{
+ const level1=tasks.pool('early','memory',1).find(x=>x.mechanic==='executed_memory_update');
+ assert.match(level1.q,/Mira los dibujos/);assert.match(level1.q,/ponlos en el orden nuevo/);
+ assert.doesNotMatch(level1.q,/aplica el cambio|reconstruye|inverso/);
+ assert.equal(tasks.grade(level1,level1.execution.answer),true);
+ const level3=tasks.pool('early','memory',3).find(x=>x.mechanic==='executed_memory_update');
+ assert.match(level3.q,/Empieza por el último/);assert.doesNotMatch(level3.q,/orden inverso/);
+ assert.equal(tasks.grade(level3,level3.execution.answer),true);
+ const older=tasks.pool('teen','memory',3).find(x=>x.mechanic==='executed_memory_update');
+ assert.match(older.q,/Reconstruye en orden inverso/);
+});
 function handler(){const {context}=load();let writes=0;const p={id:'p',account_id:'u',age_band:'primary',progress:{ageRoute:'early'}};context.Deno.env.get=()=> 'offline';context.createClient=()=>({auth:{getUser:async()=>({data:{user:{id:'u'}}})},from(table){let mutation=false;const q={select(){return q},eq(){return q},like(){return q},order(){return q},limit(){return q},insert(){mutation=true;return q},update(){mutation=true;return q},upsert(){mutation=true;return q},single(){return Promise.resolve(result())},maybeSingle(){return Promise.resolve(result())},then(a,b){return Promise.resolve(result()).then(a,b)}};function result(){if(mutation){writes++;return {data:null,error:null};}return {data:table==='learner_profiles'?p:table==='accounts'?{subscription_status:'active',content_locale:'es_es'}:table==='content_usage'?{used:0}:[],error:null};}return q;}});return {context,p,writes:()=>writes,request:body=>context.handler(new Request('https://offline.invalid',{method:'POST',headers:{Authorization:'Bearer offline','Content-Type':'application/json'},body:JSON.stringify({profile_id:'p',kind:'exercise',domain:'memory',level:1,client_revision:11,executed_only:true,...body})}))};}
 test('real authenticated handler gates new mode by client revision, domain and incompatible flags',async()=>{
  const h=handler();for(const extra of [{client_revision:8},{domain:'language'},{kind:'worksheet'},{executed_only:'true'},{photos_only:true},{interaction_only:true}]){const r=await h.request(extra);assert.ok([400,409].includes(r.status));assert.equal(h.writes(),0);}

@@ -4,7 +4,7 @@
   const domainMechanics = {
     social:['cooperation','perspective','boundaries'], language:['literal','vocabulary','sentence'], division:['count','addition','subtraction','compare'],
     reading:['literal','inference','sequencing'], attention:['matching','search','oddOne','findPlace'],
-    memory:['rememberObjects','rememberPlace','rememberPair','rememberOrder'],
+    memory:['rememberObjects','rememberPlace','rememberPair','rememberOrder','rememberHomework'],
     executive:['planning','inhibition','sequencing','organisation'],
     speedReasoning:['analogy','pattern','classification','relationship','speedCompare'],
     applied:['chooseObject','solveProblem','followRule','findPlace'],
@@ -12,7 +12,7 @@
   const early = Object.freeze({
     id: 'early', revision: 1, label: '6-7 años', subjects: Object.freeze(domains),
     contexts: Object.freeze(['school', 'playground', 'animals', 'toys', 'sports', 'snacks', 'birthday', 'family', 'bedroom', 'backpack', 'excursion']),
-    mechanics: Object.freeze(['cooperation','perspective','boundaries','literal', 'inference', 'vocabulary', 'sentence', 'count', 'addition', 'subtraction', 'compare', 'matching', 'search', 'oddOne', 'rememberObjects', 'rememberPlace', 'rememberPair', 'rememberOrder', 'planning', 'inhibition', 'sequencing', 'organisation', 'analogy', 'pattern', 'classification', 'relationship', 'chooseObject', 'solveProblem', 'followRule', 'findPlace', 'speedCompare']),
+    mechanics: Object.freeze(['cooperation','perspective','boundaries','literal', 'inference', 'vocabulary', 'sentence', 'count', 'addition', 'subtraction', 'compare', 'matching', 'search', 'oddOne', 'rememberObjects', 'rememberPlace', 'rememberPair', 'rememberOrder', 'rememberHomework', 'planning', 'inhibition', 'sequencing', 'organisation', 'analogy', 'pattern', 'classification', 'relationship', 'chooseObject', 'solveProblem', 'followRule', 'findPlace', 'speedCompare']),
     maxWords: 45, maxSentenceWords: 14, maxOptions: 3, maxElements: 6,
     memoryElements: Object.freeze([5, 6, 7]), maxSteps: 3,
     stimulusTypes: Object.freeze(['text', 'list', 'table']),
@@ -51,7 +51,7 @@
     const stimulusText = [];
     for (const block of item.stimulus) {
       if (!block || !early.stimulusTypes.includes(block.type)) throw new Error('Estímulo no permitido para 6-7.');
-      const presentations={text:['model','newsClipping','poster','marquee'],list:['cards','count','sequence','routeMap','speedSearch','flanker'],table:['speedComparison','comparison','spatial','associations','memoryScene','pairScan','offerComparison']};
+      const presentations={text:['model','newsClipping','poster','marquee'],list:['cards','count','sequence','routeMap','speedSearch','flanker'],table:['speedComparison','comparison','spatial','associations','memoryScene','pairScan','offerComparison','homeworkBoard']};
       if(block.presentation && !presentations[block.type].includes(block.presentation))throw new Error('Presentación no compatible con el estímulo.');
       if(block.presentation==='model' && !block.text?.startsWith('Modelo: '))throw new Error('El modelo no declara una referencia legible.');
       if(block.label!==undefined){if(typeof block.label!=='string'||!block.label.trim())throw new Error('Falta el título del estímulo.');pieces.push(block.label);stimulusText.push(block.label);}
@@ -66,10 +66,10 @@
       else {
         if (!Array.isArray(block.rows) || !block.rows.length || !block.rows.every(row => Array.isArray(row) && row.length && row.every(x => typeof x === 'string' && x.trim()))) throw new Error('La tabla del estímulo está incompleta.');
         elements += block.rows.length; stimulusText.push(...block.rows.flat());
-        if (block.rows.some(row => row.length > 2)) throw new Error('Tabla demasiado compleja para 6-7.');
+        if (block.rows.some(row => row.length > (block.presentation==='spatial'?3:2)) || block.presentation==='spatial'&&block.rows.some(row=>row.length!==block.rows[0].length)) throw new Error('Tabla demasiado compleja para 6-7.');
       }
     }
-    if (elements > (item.type==='memoryReveal'?early.memoryElements[levelIndex(item)]:early.maxElements) || (item.opts || []).length > (item.memoryResponse==='spatial'?4:early.maxOptions) || (item.tokens || []).length > (item.memoryResponse==='order'?early.memoryElements[levelIndex(item)]:early.maxSteps))
+    if (elements > (item.type==='memoryReveal'?early.memoryElements[levelIndex(item)]:early.maxElements) || (item.opts || []).length > (item.memoryResponse==='spatial'?6:early.maxOptions) || (item.tokens || []).length > (item.memoryResponse==='order'?early.memoryElements[levelIndex(item)]:early.maxSteps))
       throw new Error('Demasiados elementos para el perfil 6-7.');
     if (words(stimulusText.join(' ')) > early.maxWords) throw new Error('El estímulo contiene demasiada lectura.');
     for (const text of [...pieces, ...stimulusText]) {

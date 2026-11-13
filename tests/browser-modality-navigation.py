@@ -21,8 +21,10 @@ try:
     capability=page.evaluate('(domain)=>ModalityCatalog.forArea(__profiles.find(p=>p.id===document.querySelector("#profileSelect").value),domain,Number(document.querySelector("#exerciseLevelSelect").value))',domain)
     assert page.locator('#activityOptions').is_visible(),(age,domain)
     assert page.locator('#activityOptions details').count()==0
-    assert page.locator('#activityOptions .activity-toolbar button:visible').count()>0,(age,domain)
-    assert page.locator('#activityOptions .activity-toolbar>.mode-switch:not(.hidden)').evaluate_all('(els)=>els.every(e=>getComputedStyle(e).display==="contents")'),(age,domain,'nested visual groups')
+    assert page.locator('#exerciseModalities').is_visible(),(age,domain,'modalities should be visible without opening professional options')
+    assert not page.locator('#activityOptions').evaluate('(e)=>e.open'),(age,domain,'professional options remain collapsed')
+    assert page.locator('#exerciseModalities .activity-toolbar button:visible').count()>0,(age,domain)
+    assert page.locator('#exerciseModalities .activity-toolbar>.mode-switch:not(.hidden)').evaluate_all('(els)=>els.every(e=>getComputedStyle(e).display==="contents")'),(age,domain,'nested visual groups')
     for kind in ['symbols','movement','auditory']:
      button=page.locator(f'[data-interaction-kind="{kind}"]')
      assert button.is_visible()==(kind in capability['interactionKinds']),(age,domain,kind,capability)
@@ -44,13 +46,13 @@ try:
      assert page.locator('[data-speed-mode=screen]').is_visible()==capability['speed']['screen']
      assert page.locator('[data-speed-mode=room]').is_visible()==capability['speed']['room']
      assert page.locator('#speedUnpairedMode').is_visible()==capability['speed']['unpaired']
-    buttons=page.locator('#activityOptions .activity-toolbar button:visible').all()
+    buttons=page.locator('#exerciseModalities .activity-toolbar button:visible').all()
     assert all(button.get_attribute('aria-pressed') in ['true','false'] for button in buttons),(age,domain)
     assert all(button.evaluate('(e)=>e.getBoundingClientRect().height>=44') for button in buttons),(age,domain,'touch target')
     if age=='primary' and domain=='attention':
      for width,name in [(1440,'desktop'),(768,None),(390,'mobile')]:
       page.set_viewport_size({'width':width,'height':1000});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),(width,domain)
-      if name:page.locator('#activityOptions').screenshot(path=f'/tmp/learning-hub-modalities-{name}.png')
+      if name:page.locator('#exerciseModalities').screenshot(path=f'/tmp/learning-hub-modalities-{name}.png')
      focus_target=page.locator('#documentModeSwitch [data-documents=false]')
      focus_target.evaluate('(e)=>e.focus({focusVisible:true})')
      assert float(focus_target.evaluate('(e)=>parseFloat(getComputedStyle(e).outlineWidth)'))>=3,'keyboard focus must be clearly visible'
@@ -105,6 +107,7 @@ try:
    page.evaluate('window.__current=null');before=page.evaluate('__requests.length');button.click()
    page.wait_for_function('(n)=>__requests.length>n&&(__current||!document.querySelector("#retryContentLoad").classList.contains("hidden"))',arg=before)
    item=page.evaluate('__current');assert item,(age,domain,selector,page.locator('#exercisePrompt').inner_text())
+   if domain=='memory' and selector=='#memoryAudioModeButton':assert item.get('audioMemory') is True,(age,'audio mode must never render spatial/visual memory',item)
    request=page.evaluate('__requests.at(-1)');assert request['domain']==domain and request['profile_id']==age,(request,age,domain)
    for key,value in expected.items():assert request.get(key)==value,(age,domain,selector,key,value,request)
    if domain=='attention':assert request.get('interaction_kind')!='symbols',request
@@ -131,6 +134,25 @@ try:
    if room_available:
     page.evaluate('window.__current=null');room.click();page.wait_for_function('()=>__requests.at(-1)?.interaction_kind==="room"')
     assert page.evaluate('__requests.at(-1).domain')=='attention',(age,'room search must remain in attention')
+  # A stale backend response may not turn the auditory-only mode into a spatial memory task.
+  workspace(page).locator('#profileSelect').select_option('primary');area(page,'memory').click();page.wait_for_function('()=>window.__current?.domain==="memory"')
+  assert page.locator('#exerciseTopic .bioart-area-icon').count()==0,'BioArt artwork is stimulus content, not a topic decoration'
+  page.evaluate('''()=>{window.__restoreAudioContent=LearningAPI.requestContent;LearningAPI.requestContent=async payload=>{const result=await window.__restoreAudioContent(payload);if(payload.memory_audio_only)result.items[0].audioMemory=false;return result}}''')
+  page.locator('#memoryAudioModeButton').click();page.wait_for_selector('#retryContentLoad:not(.hidden)')
+  assert 'no corresponde a memoria auditiva' in page.locator('#exercisePrompt').inner_text().lower()
+  assert page.locator('#exerciseVisual .audio-memory-card').count()==0
+  assert page.locator('#progressSaveStatus').inner_text()==''
+  page.evaluate('()=>{LearningAPI.requestContent=window.__restoreAudioContent}')
+  page.locator('#retryContentLoad').click();page.wait_for_function('()=>window.__current?.audioMemory===true')
+  page.locator('#exercise').screenshot(path='/tmp/learning-hub-memory-desktop.png')
+  page.set_viewport_size({'width':390,'height':844});page.locator('#exercise').screenshot(path='/tmp/learning-hub-memory-mobile.png');page.set_viewport_size({'width':1440,'height':1000})
+  board=page.evaluate('''()=>ActivityModel.interactiveStimulus([{type:'table',label:'Pizarra de deberes',presentation:'homeworkBoard',rows:[['Números','Hacer dos sumas, página 5']]}])''')
+  page.locator('#exerciseVisual').evaluate('(e,html)=>e.innerHTML=html',board)
+  assert page.locator('.homework-board caption').inner_text()=='Área y tarea anotada'
+  assert page.locator('.homework-board caption').evaluate('(e)=>getComputedStyle(e).position==="absolute"&&getComputedStyle(e).clip!="auto"'),'table caption remains screen-reader-only rather than appearing over the board'
+  assert page.locator('.homework-board .bioart-area-icon').count()==1
+  page.locator('#exercise').screenshot(path='/tmp/learning-hub-homework-board.png')
+  page.locator('#exerciseVisual').evaluate('(e)=>e.replaceChildren()')
   # A previous success must disappear during a failed content request; retry only reloads content.
   page.clock.install();workspace(page).locator('#profileSelect').select_option('primary');page.evaluate('window.__current=null');area(page,'attention').click()
   page.wait_for_function('()=>window.__current?.domain==="attention"')

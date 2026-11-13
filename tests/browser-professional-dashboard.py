@@ -59,6 +59,11 @@ try:
    assert page.locator('#exerciseReturnHome').evaluate('(e)=>getComputedStyle(e).position==="static"'),age
    assert page.locator('#sharedActivityToggle,#sharedActivityBar,#sharedActivityExit').count()==0,age
    assert not page.locator('#activityOptions').evaluate('(e)=>e.open'),age
+   assert page.locator('#exerciseModalities').is_visible(),age
+   assert page.locator('#exerciseModalities .activity-toolbar button:visible').count()>0,age
+   prompt_box=page.locator('#exercisePrompt').bounding_box()
+   assert prompt_box and prompt_box['y']+prompt_box['height']<page.evaluate('innerHeight'),(age,'first exercise should be visible without scrolling',prompt_box)
+   assert page.locator('#exerciseNext').evaluate('(next)=>Boolean(next.compareDocumentPosition(document.querySelector(".exercise-meta-footer"))&Node.DOCUMENT_POSITION_FOLLOWING)'),age
    assert page.locator('#exerciseHeading').evaluate('(e)=>document.activeElement===e'),age
    if age in ['early','primary','teen']:
     page.screenshot(path=str(shots/f'exercise-{age}.png'),full_page=True)
@@ -69,8 +74,8 @@ try:
    assert page.evaluate('(key)=>localStorage.getItem(key)',key)=='attention',age
    if age=='teen':
     page.locator('#activityOptions > summary').click()
-    assert page.locator('#activityOptions .activity-toolbar button:visible').count()>0
     assert page.locator('#exerciseLevelSelect').is_visible()
+    assert page.locator('#exerciseModalities .activity-toolbar button:visible').count()>0
     page.locator('#activityOptions').evaluate('(e)=>e.open=false')
     page.locator('#exerciseOptions [data-answer]').evaluate_all('(els,a)=>els.find(e=>e.dataset.answer===a).click()',page.evaluate('__current.a'))
     page.wait_for_function('()=>document.querySelector("#progressSaveStatus").textContent.includes("guardados")')

@@ -52,11 +52,11 @@ try:
     page.locator('#orderCheck').click()
    elif it.get('type')=='memoryReveal':
     if it.get('memoryResponse') in ['spatial','spatialPair']:
-     assert page.locator('#exerciseVisual .recall-grid [role=cell]').count()==it['gridSize']**2
+     assert page.locator('#exerciseVisual .recall-grid [role=cell]').count()==(it.get('gridRows',it['gridSize'])*it.get('gridColumns',it['gridSize']))
     page.clock.fast_forward(it['revealMs']+50);assert page.locator('#exerciseVisual').inner_text()==''
     if it.get('memoryResponse')=='spatial':
      positions=page.locator('#exerciseOptions .spatial-answer-grid button').evaluate_all('(els)=>els.map(e=>e.dataset.answer)')
-     expected=[f'Fila {r+1}, columna {c+1}' for r in range(it['gridSize']) for c in range(it['gridSize'])]
+     expected=[f'Fila {r+1}, columna {c+1}' for r in range(it.get('gridRows',it['gridSize'])) for c in range(it.get('gridColumns',it['gridSize']))]
      assert positions==expected,(positions,expected)
      screenshot(f'{age}-spatial-response-L{it["level"]}')
     if it.get('memoryResponse')=='order':

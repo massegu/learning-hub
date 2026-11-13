@@ -51,7 +51,7 @@ function mount(item,{visual,area,onFinish}){
  }
  function ready(text){clearTimeout(timer);trialOpen=false;message.textContent=text;message.classList.remove('executed-next-cue');visual.replaceChildren(message);if(task.kind==='switch'){const intro=node('section',undefined,'executed-rule-intro'),rows=node('div',undefined,'executed-rule-rows');intro.append(node('h2','Regla inicial'));rows.append(node('p','LIBRO → A'),node('p','PELOTA → B'));intro.append(rows,node('p','Si aparece ↔, intercambia las respuestas.'));visual.append(intro);}area.replaceChildren(button('Empezar',start));}
  const interrupt=()=>{if(document.hidden&&!finished&&!stopped)ready('La actividad se ha interrumpido. Vuelve a empezar cuando estés preparado; este intento no se registra.');};
- document.addEventListener('visibilitychange',interrupt);ready('Observa la consigna. Pulsa Empezar cuando estés preparado.');
+ document.addEventListener('visibilitychange',interrupt);ready('Pulsa Empezar para comenzar.');
  return ()=>{stopped=true;clearTimeout(timer);document.removeEventListener('visibilitychange',interrupt);area.classList.remove('executed-area');};
 }
 root.ExecutedRenderer={mount};
