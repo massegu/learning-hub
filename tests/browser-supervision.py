@@ -23,6 +23,9 @@ try:
   checks=0
   for age in ['junior','primary','middle','teen']:
    workspace(page).locator('#profileSelect').select_option(age);area(page, 'executive').click()
+   options=page.locator('#activityOptions')
+   if not options.evaluate('(element)=>element.open'):
+    options.locator('summary').click()
    for level in [1,3]:
     page.locator('#exerciseLevelSelect').select_option(str(level));page.wait_for_selector('#multiCheck');page.wait_for_function('(level)=>__current?.level===level',arg=level)
     for correct in [False,True]:
