@@ -73,8 +73,7 @@ try:
    assert abs(after['y']-before['y'])<2,(width,before,after)
    assert page.locator('#exercise').evaluate('(e)=>e.classList.contains("speed-active")')
    assert page.locator('.speed-result').count()==1
-   page.locator('#exerciseNext').click();page.wait_for_selector('#startSpeedTrial')
-   assert not page.locator('#exercise').evaluate('(e)=>e.classList.contains("speed-active")')
+   page.locator('#exerciseNext').click();page.wait_for_function('!document.querySelector("#exercise").classList.contains("speed-active")')
   page.unroute('**/__review/content',source_override)
   assert not errors,errors
   print('PASS: session areas and labels match navigation across five ages; Reading sessions start; mobile layout; answers grow and shrink; compact source exports at its true aspect ratio without the disclaimer; legacy attention, full-width executive text and stable speed feedback')

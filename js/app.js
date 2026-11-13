@@ -1869,9 +1869,7 @@
     const route=window.AgeStages.route(profile);
     landing.classList.remove('hidden');
     const subjects=ageData().subjects;
-    const priority=['attention','memory','executive','speedReasoning','applied','social','language','middleLanguage','teenLanguage','reading','middleReading','literacy','english','geometry','division','middleMath','teenMath'];
-    const order=domain=>{const n=priority.indexOf(domain);return n<0?99:n;};
-    const sorted=[...subjects].sort((a,b)=>order(a)-order(b));
+    const sorted=orderedAreas(subjects);
     let remembered=null;
     try{const saved=localStorage.getItem(`lh_v16_last_subject_${profile.id}`);if(subjects.includes(saved))remembered=saved;}catch{}
     const lastAnswered=[...state.history].reverse().find(row=>subjects.includes(row.subject))?.subject||null;
@@ -1912,6 +1910,7 @@
   }
   function areaGroupFor(domain){return ['geometry','division','middleMath','teenMath'].includes(domain)?'math':
     ['language','middleLanguage','teenLanguage','reading','middleReading','literacy','english','communication'].includes(domain)?'language':'cognitive';}
+  function orderedAreas(subjects){return ['cognitive','language','math'].flatMap(group=>subjects.filter(domain=>areaGroupFor(domain)===group));}
   function renderHomeLevels() {
     const subjects=ageData().subjects,labels={cognitive:'Áreas cognitivas',language:'Lenguaje y comunicación',math:'Matemáticas'};
     const groups=['cognitive','language','math'].filter(group=>subjects.some(s=>areaGroupFor(s)===group));
@@ -2157,7 +2156,7 @@
       `Actividad ${guidedSession.index + 1} de ${guidedSession.plan.length} · ${subjectLabel(guidedSession.plan[guidedSession.index])}`;
   }
   function buildSessionBuilder() {
-    const domains = ageData().subjects;
+    const domains = orderedAreas(ageData().subjects);
     const holder = $("#sessionDomainOptions");
     if (!holder) return;
     holder.innerHTML = domains
