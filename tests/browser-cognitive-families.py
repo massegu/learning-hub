@@ -11,6 +11,9 @@ try:
   browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_EXECUTABLE') or ('/usr/bin/chromium' if Path('/usr/bin/chromium').exists() else p.chromium.executable_path),args=['--no-sandbox']);page=browser.new_page(viewport={'width':1440,'height':1050});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#profileSelect',state='attached');page.clock.install()
   page.evaluate('''()=>{window.__saves=0;window.__current=null;const save=LearningAPI.saveResult;LearningAPI.saveResult=(id,row)=>{if(row.itemId?.startsWith('cognitive-v'))window.__saves++;return save(id,row);};const request=LearningAPI.requestContent;LearningAPI.requestContent=async body=>{const response=await request(body);window.__current=response.items?.[0];window.__lastPayload=body;return response;};}''')
+  def open_level_options():
+   options=page.locator('#activityOptions')
+   if not options.evaluate('(element)=>element.open'):options.locator('summary').click()
   for age in ['early','junior','primary','middle','teen']:
    workspace(page).locator('#profileSelect').select_option(age);reading_domain={'middle':'literacy','primary':'literacy','teen':'literacy'}.get(age,'reading');wait_for_area(page, reading_domain);area(page, reading_domain).click();assert not page.locator('#cognitiveMode').is_visible();area(page, 'executive').click()
    page.locator('#cognitiveFamilyModes [data-cognitive-family=""]').click();page.wait_for_function('()=>window.__current?.type==="cognitiveTask"&&document.querySelector(".cognitive-area")')
@@ -18,13 +21,13 @@ try:
     for kind in ['rules','words','deduction','change','information','contradiction']:
      family_domain=({'middle':'middleLanguage','teen':'teenLanguage'}.get(age,'language') if kind=='words' else 'attention' if kind=='contradiction' else 'executive')
      area(page, family_domain).click()
-     page.locator('#exerciseLevelSelect').select_option(str(level))
+     open_level_options();page.locator('#exerciseLevelSelect').select_option(str(level))
      if kind=='words':page.locator('#wordFitMode').click()
      else:page.locator(f'#cognitiveFamilyModes [data-cognitive-family="{kind}"]').click()
      page.wait_for_function('({kind,level})=>window.__current?.type==="cognitiveTask"&&__current.cognitiveTask.kind===kind&&__current.level===level&&document.querySelector(".cognitive-area")',arg={'kind':kind,'level':level})
      item=page.evaluate('__current');task=item['cognitiveTask'];before=page.evaluate('__saves')
      if kind=='rules' and level==1 and age!='early':assert 'Adivina la regla' in page.locator('#exercisePrompt').inner_text()
-     assert page.evaluate('__lastPayload.client_revision')==12
+     assert page.evaluate('__lastPayload.client_revision')==13
      assert page.locator('#printCognitive').count()==(0 if kind=='rules' else 1)
      page.locator('.cognitive-area').get_by_role('button',name='Empezar',exact=True).press('Enter')
      if kind=='rules':
