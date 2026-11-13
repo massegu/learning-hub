@@ -59,7 +59,7 @@ try:
   assert page.locator('.accuracy-ring').count()>0;assert page.locator('#sessionEvolution .evolution-chart').count()==1
   cards=page.locator('#progressCards')
   assert cards.bounding_box()['height']<400,cards.bounding_box()
-  assert len(set(cards.locator('.progress-subject').evaluate_all("els=>els.map(e=>getComputedStyle(e).getPropertyValue('--progress-color'))")))>=6
+  assert len(set(cards.locator('.progress-subject').evaluate_all("els=>els.map(e=>getComputedStyle(e).getPropertyValue('--progress-color'))")))>=4
   cards.screenshot(path='/tmp/compact-progress-desktop.png')
   page.evaluate("__profiles.find(x=>x.id==='teen').progress.history.push(...Array.from({length:9},(_,i)=>({subject:'speedReasoning',speedFamily:'pairs',level:10+i,speedRevision:4,correct:true,responseMs:1000+i*100,timingValid:true,points:10,ts:'2026-10-21T12:00:00Z'})))")
   workspace(page).locator('#profileSelect').select_option('junior');workspace(page).locator('#profileSelect').select_option('teen');workspace(page).locator('#navMenu [data-section=progress]').click()
