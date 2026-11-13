@@ -1286,7 +1286,10 @@
     $('#attentionPhotos').setAttribute('aria-pressed',String(photoOnly&&subject==='attention'));
     syncLanguageModeButtons();
     $('#wordFitMode').setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily==='words'));
-    const hasAvailableModality=$$('#exerciseModalities button').some(button=>!button.closest('.hidden'));
+    const hasAvailableModality=$$('#exerciseModalities button').some(button=>{
+      const hiddenAncestor=button.closest('.hidden');
+      return !hiddenAncestor||hiddenAncestor.id==='exerciseModalities';
+    });
     $('#exerciseModalities').classList.toggle('hidden',!hasAvailableModality);
     syncActivitySettings();
     counter = 0;
