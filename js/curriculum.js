@@ -216,7 +216,7 @@ function memory(age,level){
  if(photos?.supports(age,'memory'))items.push(...photos.pool(age,'memory',level));
  return items;
 }
-function speed(age,level){
+function speed(age,level,ageYears=null){
  const rank=ages.indexOf(age),pool=[];
  const vocabularies=[['figures',['○','□','△','☆']],['objects',['libro','pelota','manzana','botella']],['arrows',['↑','→','↓','←']],['orientation',['↗','↘','↙','↖']],['pictograms',['gorra','regalo','lápiz','tijeras']],...(rank>0?[['characters',['A','7','B','3']],['mixed',['A','↑','7','☆']]]:[])];
  for(let v=0;v<96;v++){
@@ -240,7 +240,7 @@ function speed(age,level){
    pool.push(finish(choice('¿Qué opción es idéntica al modelo?',[T('Modelo: '+model)],model,[wrong,(model[0]==='K'?'M':'K')+model.slice(1),(model[0]==='K'?'M':'K')+wrong.slice(1)],{speedTask:true,speedFamily:'match',topic:'Velocidad · coincidencia exacta',speedEvidence:{kind:'model',block:0},why:'Compara todos los caracteres, también el último.'}),age,'speedReasoning',level,`match-${v}`,'speed_match'));
   }
  }
- return pool.concat(speedExpansion(age,level),processingChallenges(age,level));
+ return pool.concat(speedExpansion(age,level,ageYears),processingChallenges(age,level));
 }
 // Situations ask for an actual decision and correction, with plausible near misses.
 const contexts={
@@ -579,7 +579,7 @@ function validateRoomSpeed(item){
  for(const key of ['type','responseType','q','stimulus','sample','roomSpeedTask'])if(JSON.stringify(item[key])!==JSON.stringify(expected[key]))throw new Error('La consigna del entorno no coincide con la actividad revisada.');
 }
 
-function speedExpansion(age,level){
+function speedExpansion(age,level,ageYears=null){
  const rank=ages.indexOf(age),items=[],glyphs=['○','□','△','☆'];
  for(let v=0;v<48;v++){
   const length=rank===0?Math.min(6,3+level):6+level*4+rank,target=glyphs[v%4],amount=1+v%Math.min(5,length-1);
@@ -598,11 +598,29 @@ function speedExpansion(age,level){
    const key=rotate(['K','M','R','T','V','Z'],v),numbers=key.map((_,i)=>String(1+(i+v)%9)),code=shuffled(key,v+level).slice(0,level+1),answer=code.map(x=>numbers[key.indexOf(x)]).join(' · '),wrong=[...code].reverse().map(x=>numbers[key.indexOf(x)]).join(' · ');
    items.push(finish(choice('Traduce todos los códigos en el orden mostrado.',[{type:'table',header:true,rows:[['Código','Número'],...key.map((x,i)=>[x,numbers[i]])]},T('Secuencia: '+code.join(' · '))],answer,[wrong,code.map((x,i)=>i===0?'0':numbers[key.indexOf(x)]).join(' · ')],{speedTask:true,speedFamily:'translation',speedEvidence:{kind:'translation',block:0,codeBlock:1,code},topic:'Velocidad · traducción de claves',why:'Busca cada código en la clave y conserva el orden.'}),age,'speedReasoning',level,'translate-'+v,'speed_translation'));
   }
+  const years=Number(ageYears)||({early:7,junior:8,primary:10,middle:13,teen:16}[age]);
+  if(v<12){
+   const variants=[
+    ['animales','un animal pequeño que viva en casa','gato'],
+    ['frutas','una fruta roja y redonda','manzana'],
+    ['deportes','un deporte de equipo en el que se use una pelota','fútbol'],
+    ['material escolar','algo que sirva para escribir y tenga tinta','bolígrafo']
+   ],[category,conditions,example]=variants[v%variants.length],constrained=years>=9;
+   const q=constrained?`Escribe una palabra de ${category} que ${conditions}.`:`Escribe una palabra de ${category}.`;
+   items.push(finish({type:'self',responseType:'written',requiresStimulus:true,q,stimulus:[T(constrained?'Piensa una palabra que cumpla las dos pistas. Después compárala con el ejemplo.':'Piensa una palabra de esta categoría. Después compárala con el ejemplo.')],sample:constrained?`Ejemplo posible: ${example}.`:`Ejemplo: ${example}.`,assessment:'self',writingPurpose:'category_word',speedFamily:'wordProduction',speedRevision:4,speedEvidence:{kind:'wordProduction',category,condition:constrained?conditions:null,ageYears:years},interactiveOnly:true,topic:'Velocidad · encontrar una palabra',mechanic:'speed_word_production',why:constrained?'Comprueba que la palabra sea de la categoría y cumpla las dos pistas.':'Comprueba que la palabra sea de esta categoría.'},age,'speedReasoning',level,`word-production-${v}`,'speed_word_production'));
+  }
+  if(['middle','teen'].includes(age)&&v<24){
+   const first=['RITMO','PIXEL','RAP','GRAFITI','SONIDO','CREW'][v%6],diff=['RITM0','PIXELS','RAP','GRAF1TI','SON1DO','CREW!'][v%6],same=v%2===0,second=same?first:diff;
+   items.push(finish(choice('¿Las dos palabras dicen lo mismo?',[{type:'table',rows:[[first,second]],presentation:'typographyCompare'}],same?'Sí':'No',[same?'No':'Sí'],{speedTask:true,speedFamily:'typographyCompare',speedRevision:4,speedEvidence:{kind:'typographyEqual',block:0},interactiveOnly:true,topic:'Velocidad · comparar letras y estilos',why:same?'Las letras coinciden; cambia el estilo visual.':'Hay al menos una letra distinta, aunque el estilo puede distraer.'}),age,'speedReasoning',level,`typography-${v}`,'speed_typography_compare'));
+  }
  }
  return items;
 }
 function validateSpeed(item){
  const e=item.speedEvidence;if(!e)return;
+ if(e.kind==='wordProduction'){
+  const years=Number(e.ageYears);if(item.type!=='self'||item.responseType!=='written'||item.speedFamily!=='wordProduction'||!e.category||years<6||years>18||years>=9&&!e.condition||years<9&&e.condition)throw new Error('La producción de palabras no coincide con la edad ni las pistas.');return;
+ }
  const b=item.stimulus?.[e.block];let answer;
  if(e.kind==='crossedKeys'){
   if(item.q!==`¿A qué mesa lleva el código ${e.target}?`)throw new Error('La pregunta no coincide con el código.');
@@ -624,6 +642,8 @@ function validateSpeed(item){
  else if(e.kind==='translation'){
   if(item.stimulus?.[e.codeBlock]?.text!=='Secuencia: '+e.code.join(' · '))throw new Error('Falta la secuencia de códigos.');
   answer=e.code.map(x=>{const rows=b?.rows?.filter(r=>r[0]===x);if(rows?.length!==1)throw new Error('La clave no es única.');return rows[0][1];}).join(' · ');
+ }else if(e.kind==='typographyEqual'){
+  if(b?.presentation!=='typographyCompare'||b.rows?.length!==1||b.rows[0]?.length!==2)throw new Error('Faltan las dos palabras para comparar.');answer=b.rows[0][0]===b.rows[0][1]?'Sí':'No';
  }else return;
  if(!b||answer!==item.a)throw new Error('La respuesta de velocidad no corresponde al estímulo.');
 }
@@ -1044,12 +1064,12 @@ const cache=new Map(),generationGroups=new Map();let reasoningProvider=null,writ
 function registerReasoning(provider){reasoningProvider=provider;generationGroups.clear();for(const key of cache.keys())if(key.includes(':executive:'))cache.delete(key);}
 
 function registerWriting(provider){writingProvider=provider;cache.clear();generationGroups.clear();}
-function supports(age,domain){return ages.includes(age)&&(['social','executive','applied','memory','speedReasoning'].includes(domain)||(['early','junior'].includes(age)?domain==='reading':['primary','middle','teen'].includes(age)&&['literacy','reading','middleReading'].includes(domain)));}
-function pool(age,domain,level=1){
+function supports(age,domain){return ages.includes(age)&&(['social','communication','executive','applied','memory','speedReasoning'].includes(domain)||(['early','junior'].includes(age)?domain==='reading':['primary','middle','teen'].includes(age)&&['literacy','reading','middleReading'].includes(domain)));}
+function pool(age,domain,level=1,ageYears=null){
  if(!supports(age,domain))return [];
- const actual=domain==='applied'?'executive':domain,readingDomain=['reading','middleReading','literacy'].includes(actual),key=[age,actual,level].join(':');
+ const actual=domain==='applied'?'executive':domain,readingDomain=['reading','middleReading','literacy'].includes(actual),ageYearKey=actual==='speedReasoning'?Number(ageYears)||'default':'',key=[age,actual,level,ageYearKey].join(':');
  if(!cache.has(key)){
-  const bank=actual==='social'?social(age,level):readingDomain?reading(age,actual,level):actual==='memory'?memory(age,level):actual==='speedReasoning'?speed(age,level):executive(age,level);
+  const bank=actual==='social'?social(age,level):actual==='communication'?(root.CommunicationContent||(typeof require==='function'&&require('./communication-content'))).pool(age,level):readingDomain?reading(age,actual,level):actual==='memory'?memory(age,level):actual==='speedReasoning'?speed(age,level,ageYears):executive(age,level);
   if(readingDomain&&writingProvider&&['junior','primary','middle'].includes(age))bank.push(...writingProvider(age,level).map(it=>({...it,domain:actual,originalDomain:it.domain,passageKey:'writing-legacy:'+age+':'+(it.juniorProfile?.context||it.schoolProfile?.context)})));
   if(actual==='executive'&&reasoningProvider&&age!=='early')bank.push(...reasoningProvider(age,level).map(it=>({...it,domain:'executive',topic:'Funciones ejecutivas · razonamiento',mechanic:'executive_reasoning_'+it.mechanic,contentKey:'merged-'+it.contentKey})));
   bank.push(...practice(age,actual,level));
@@ -1059,9 +1079,10 @@ function pool(age,domain,level=1){
  }
  return structuredClone(cache.get(key)).map(it=>domain==='applied'?{...it,domain,...(age==='early'?{ageProfile:{...it.ageProfile,mechanic:'chooseObject'}}:{})}:it);
 }
-function generate(age,domain,level=1,focus=null,options={}){
- const actual=domain==='applied'?'executive':domain,key=[age,actual,level].join(':');
- if(!cache.has(key))pool(age,actual,level);
+function generate(age,domain,level=1,focus=null,ageYears=null,options={}){
+ if(ageYears&&typeof ageYears==='object'){options=ageYears;ageYears=null;}
+ const actual=domain==='applied'?'executive':domain,ageYearKey=actual==='speedReasoning'?Number(ageYears)||'default':'',key=[age,actual,level,ageYearKey].join(':');
+ if(!cache.has(key))pool(age,actual,level,ageYears);
  const excluded=new Set(options.excludeMechanics||[]),groupKey=key+':'+(focus||'all')+':'+[...excluded].sort().join(',');
  if(!generationGroups.has(groupKey)){
   const grouped=new Map();

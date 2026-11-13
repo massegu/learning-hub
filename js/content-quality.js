@@ -26,6 +26,9 @@ const definitions=[
  ['reading.document_evidence','Distinguir conclusiones justificadas de suposiciones','inference',[]],
  ['reading.summary','Seleccionar lo importante para comunicarlo','sourceDetails',['writing_summary']],
  ['reading.invitation','Invitar indicando datos necesarios','messageParts',['writing_invitation']],
+ ['communication.ask_help','Pedir ayuda expresando qué obstáculo aparece','messageParts',[]],
+ ['communication.clarify','Solicitar el dato necesario para entender una indicación','missingInformation',[]],
+ ['communication.express_need','Comunicar una necesidad y proponer una petición concreta','messageParts',[]],
  ['reading.request','Solicitar información o permiso','messageParts',['writing_inquiry_email','writing_request_email']],
  ['reading.correction','Corregir una afirmación con datos de una fuente','evidence',['writing_correct_claim']],
  ['reading.instructions','Dar instrucciones que otra persona pueda seguir','steps',['writing_clear_instructions','writing_rewrite_instructions']],
@@ -80,6 +83,8 @@ const definitions=[
  ['memory.recent','Conservar solo la parte reciente de una secuencia','elements',['memory_recent']],
  ['memory.selective','Recordar solo los elementos de la categoría pedida','distractors',['memory_category']],
  ['speed.compare','Comprobar con agilidad si dos estímulos coinciden','distractorSimilarity',[]],
+ ['speed.word_production','Generar una palabra de una categoría o que cumpla pistas','wordGeneration',['speed_word_production']],
+ ['speed.typography_compare','Comparar palabras conservando la atención a sus letras','distractorSimilarity',['speed_typography_compare']],
  ['speed.category','Decidir si varios estímulos pertenecen a una categoría','elements',['speed_category']],
  ['speed.key','Aplicar una clave visible para responder','keyEntries',['speed_key']],
  ['speed.match','Reconocer un modelo entre alternativas','distractorSimilarity',['speed_match']],
@@ -123,10 +128,19 @@ function family(it,domain){
   if(domain==='attention')return ({matching:'attention.exact_match',search:'attention.count',oddOne:'attention.relevance',findPlace:'attention.position'})[x]||'unclassified';
   if(domain==='language'){const n=Number((it.ageProfile.family||'').split('-').at(-1));return ({0:'language.context_meaning',1:'language.classification',2:'language.opposites',3:'reading.literal',4:'language.context_meaning',5:'language.spelling',6:'language.spelling',7:'language.phonology',8:'language.agreement',9:'language.structure'})[n]||'unclassified';}
   if(domain==='division')return ({count:'math.count',addition:'math.add',subtraction:'math.subtract',compare:'math.compare'})[x]||'unclassified';}
+  if(!m&&domain==='memory'&&it.ageProfile){
+   const family=String(it.ageProfile.family||'').split('-').at(-1);
+   return ({0:'memory.recognition',1:'memory.spatial',2:'memory.association',3:'memory.serial'})[family]||'unclassified';
+  }
  if(m.startsWith('speed_compare_'))return 'speed.compare';
  if(m.startsWith('memory_audio_'))return 'memory.recognition';
+ if(m==='memory_scene'||m.startsWith('memory_photo'))return 'memory.scene';
+ if(m==='memory_spatial')return 'memory.spatial';
+ if(m==='memory_route')return 'memory.route';
+ if(m==='memory_association')return 'memory.association';
  if(m==='memory_sequence'&&it.recallEvidence?.reverse)return 'memory.reverse';
  if(m==='memory_sequence'&&it.recallEvidence?.takeLast)return 'memory.recent';
+ if(m==='memory_homework_board'||m==='memory_sequence')return 'memory.serial';
  if(m.startsWith('document_attention_'))return 'attention.document_lookup';
  if(/^document_(reading|literacy|middleReading)_/.test(m))return ['reading.document_purpose','reading.document_relations','reading.document_evidence'][Math.max(0,Math.min(2,(it.level||1)-1))];
  if(m.startsWith('executive_reasoning_'))return 'executive.reason';

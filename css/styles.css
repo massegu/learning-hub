@@ -2844,6 +2844,20 @@ body {
 #exercise .reading-passage>.stimulus-caption{font-weight:750;color:#355b43;font-size:.88rem;letter-spacing:.025em;margin:1.25rem 0 .65rem;line-height:1.5}
 #exercise .reading-passage>.stimulus-caption:first-child{margin-top:0}
 #exercise .reading-passage .stimulus-paragraph+.stimulus-paragraph{margin-top:1rem}
+.reader-assist{display:flex;align-items:center;flex-wrap:wrap;gap:.45rem;margin:0 0 .65rem;padding:.55rem;border:1px solid #d6dfeb;border-radius:.7rem;background:#f4f6fa;color:#263954}
+.reader-assist strong{margin-inline:.3rem}.reader-assist button{min-height:2.7rem;padding:.35rem .65rem;font-size:.9rem}
+#exercise .reading-passage{font-size:calc(1rem * var(--reader-scale,1));line-height:1.65}
+#exercise .reading-passage.reader-wide-spacing{letter-spacing:.045em;word-spacing:.12em;line-height:1.9}
+#exercise .reading-passage.reader-warm{background:#fbf4e7!important;color:#2d332e!important}
+#exercise .reading-passage.reader-clear-font,#exercise .reading-passage.reader-clear-font *{font-family:"Atkinson Hyperlegible",Arial,sans-serif!important}
+.typography-compare{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;max-width:52rem;margin:1rem auto}
+.typeface-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.65rem;min-height:11rem;padding:1rem;border:2px solid #d5dfea;border-radius:1rem;background:#fff;color:#183c50;min-width:0}
+.typeface-card>span{text-transform:uppercase;font-size:.75rem;font-weight:750;letter-spacing:.08em;color:#4f6572}
+.typeface-card>strong{font-size:clamp(2rem,6vw,3.75rem);line-height:1.15;overflow-wrap:anywhere}
+.graffiti-word>strong{font-family:"Arial Black",Arial,sans-serif;letter-spacing:.08em;color:#2754b6;-webkit-text-stroke:.7px #183c50;text-shadow:2px 2px 0 #f3c947,4px 4px 0 #dce7fa}
+.print-word>strong{font-family:Georgia,"Times New Roman",serif;font-weight:700;letter-spacing:.12em;color:#8b3455}
+.reader-assist button[aria-pressed=true]{background:#315e82;color:#fff}
+@media(max-width:560px){.typography-compare{gap:.5rem}.typeface-card{min-height:8rem;padding:.5rem}.typeface-card>strong{font-size:clamp(1.4rem,7vw,2.4rem)}.reader-assist{gap:.35rem}.reader-assist button{flex:1 1 auto}}
 #exercise .structured-stimulus-table th{color:#234a36;background:#e7eee3}
 #exercise .structured-stimulus-table td{background:#fff;vertical-align:top}
 #exercise .structured-stimulus-table tr:nth-child(odd) td{background:#f7faf5}

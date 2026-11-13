@@ -10,7 +10,9 @@ test('shared curriculum has fifty distinct sources and complete localized delive
   for(const level of [1,2,3])for(const d of [domain,'memory','speedReasoning','executive']){
    const bank=curriculum.pool(age,d,level);assert.ok(bank.length);
    for(const it of bank)for(const country of Object.keys(locale.labels)){
-    const local=locale.localizeItem(it,country,d),printed=model.printable(local,profile(age));
+    const local=locale.localizeItem(it,country,d);
+    if(it.interactiveOnly){assert.throws(()=>model.printable(local,profile(age)),/solo en pantalla/);assert.doesNotThrow(()=>model.forDelivery(local,profile(age),d));continue;}
+    const printed=model.printable(local,profile(age));
     assert.ok(printed.stimulus.length);assert.equal(local.level,level);assert.equal(local.domain,d);if(it.type==='self'&&!it.writingPurpose){const quote=it.sample.match(/«(.+)»/)[1];assert.ok(it.stimulus[0].text.includes(quote));assert.equal(it.writingRubric.length,3);}
     assert.equal(new Set(printed.options.map(x=>x.toLocaleLowerCase('es'))).size,printed.options.length);
    }
@@ -76,7 +78,8 @@ test('memory requires reconstructing sequences and positions, and corrupt answer
 });
 test('processing speed answers derive from comparisons or keys, and timing summaries exclude unmeasured/invalid trials',()=>{
  for(const age of ages)for(const level of [1,2,3])for(const it of curriculum.pool(age,'speedReasoning',level)){
-  assert.equal(it.speedTask,true);if(it.qualityEvidence){assert.ok(require('../js/functional-content').validate(it));continue;}assert.ok(it.mechanic.startsWith('speed_compare_')||['speed_key','speed_match','speed_category','speed_search','speed_pairs','speed_flanker','speed_translation','speed_crossed_keys','speed_rapid_agenda','speed_rule_choice','speed_unpaired'].includes(it.mechanic));
+  if(it.speedFamily==='wordProduction'){assert.equal(it.type,'self');assert.equal(it.responseType,'written');assert.doesNotThrow(()=>curriculum.validateSpeed(it));continue;}
+  assert.equal(it.speedTask,true);if(it.qualityEvidence){assert.ok(require('../js/functional-content').validate(it));continue;}assert.ok(it.mechanic.startsWith('speed_compare_')||['speed_key','speed_match','speed_category','speed_search','speed_pairs','speed_flanker','speed_translation','speed_crossed_keys','speed_rapid_agenda','speed_rule_choice','speed_unpaired','speed_typography_compare'].includes(it.mechanic));
   const b=it.stimulus[0];
   if(it.speedEvidence.kind==='equal')assert.equal(it.a,b.rows[0][0]===b.rows[0][1]?'Sí':'No');
   if(it.speedEvidence.kind==='key')assert.equal(it.a,b.rows.find(row=>row[0]===it.speedEvidence.target)[1]);

@@ -13,6 +13,7 @@ await import("./photo-library.js");
 await import("./content-quality.js");
 await import("./transfer-content.js");
 await import("./functional-content.js");
+await import("./communication-content.js");
 await import("./cognitive-families.js");
 await import("./executed-tasks.js");
 await import("./curriculum.js");
@@ -49,11 +50,11 @@ const LIMITS:any = {
 };
 
 const SUBJECTS:any = {
-  early:["social","language","division","reading","attention","executive","memory","speedReasoning","applied"],
-  junior:["social","language","division","reading","attention","executive","memory","speedReasoning","applied"],
-  primary:["social","geometry","language","division","reading","english","literacy","attention","executive","memory","speedReasoning","applied"],
-  middle:["social","middleLanguage","middleMath","middleReading","english","literacy","attention","executive","memory","speedReasoning","applied"],
-  teen:["teenLanguage","teenMath","social","english","literacy","attention","executive","memory","speedReasoning","applied"]
+  early:["social","language","division","reading","attention","executive","memory","speedReasoning","applied","communication"],
+  junior:["social","language","division","reading","attention","executive","memory","speedReasoning","applied","communication"],
+  primary:["social","geometry","language","division","reading","english","literacy","attention","executive","memory","speedReasoning","applied","communication"],
+  middle:["social","middleLanguage","middleMath","middleReading","english","literacy","attention","executive","memory","speedReasoning","applied","communication"],
+  teen:["teenLanguage","teenMath","social","english","literacy","attention","executive","memory","speedReasoning","applied","communication"]
 };
 
 const THEMES:any = {
@@ -2330,7 +2331,7 @@ function matrixApplied20(age:string,level:number,v:number){
     opts:easy?opt4("El parque","La estación","La tienda","No se sabe"):opt4("La presencia de escaleras además de la distancia","Solo el color del mapa","Solo el nombre de la calle","Nada"),a:easy?"El parque":"La presencia de escaleras además de la distancia"},age,"applied",level,v);
 }
 
-function variantExercise(age:string,domain:string,level:number,subdomain:string|null=null,documentsOnly:boolean|null=null,photosOnly:boolean=false,interactionOnly:boolean=false,interactionKind:string|null=null,excludeMechanics:string[]=[]){
+function variantExercise(age:string,domain:string,level:number,subdomain:string|null=null,documentsOnly:boolean|null=null,photosOnly:boolean=false,interactionOnly:boolean=false,interactionKind:string|null=null,ageYears:number|null=null,excludeMechanics:string[]=[]){
   if(!interactionOnly&&!photosOnly&&documentsOnly!==true&&Math.random()<.3){const functional=(globalThis as any).FunctionalContent.generate(age,domain,level,subdomain);if(functional)return {...functional,id:age+'-functional-'+crypto.randomUUID()};}
   if(interactionOnly){const item=(globalThis as any).Curriculum.generateInteractive(age,domain,level,interactionKind);return item?{...item,id:age+'-interactive-'+crypto.randomUUID()}:null;}
   const photos=(globalThis as any).PhotoLibrary;
@@ -2344,7 +2345,7 @@ function variantExercise(age:string,domain:string,level:number,subdomain:string|
   if(documentsOnly&&subdomain==='writing'&&(globalThis as any).DocumentLibrary.supports(age,domain)){const bank=(globalThis as any).Curriculum.pool(age,domain,level).filter((it:any)=>it.stimulus?.some((b:any)=>b.type==='document'));return {...pick(bank),id:age+'-document-writing-'+crypto.randomUUID()};}
   if(['language','middleLanguage','teenLanguage'].includes(domain)&&(subdomain==='vocabulary'||!subdomain&&Math.random()<.25)){const bank=(globalThis as any).Curriculum.vocabulary(age,domain,level);return {...pick(bank),id:age+'-vocabulary-'+crypto.randomUUID()};}
   if((globalThis as any).DocumentLibrary.supports(age,domain)&&subdomain!=='writing'&&(documentsOnly===true||documentsOnly===null&&((['attention','executive'].includes(domain)||['reading','literacy','middleReading'].includes(domain)&&subdomain!=='writing')&&Math.random()<(domain==='executive'?.25:.35))))return {...(globalThis as any).DocumentLibrary.generate(age,domain,level),id:age+"-document-"+crypto.randomUUID()};
-  if((globalThis as any).Curriculum.supports(age,domain))return {...(globalThis as any).Curriculum.generate(age,domain,level,subdomain,{excludeMechanics}),id:age+"-curriculum-"+crypto.randomUUID()};
+  if((globalThis as any).Curriculum.supports(age,domain))return {...(globalThis as any).Curriculum.generate(age,domain,level,subdomain,ageYears,{excludeMechanics}),id:age+"-curriculum-"+crypto.randomUUID()};
   if(age==="teen"&&["teenLanguage","speedReasoning","literacy"].includes(domain))return {...(globalThis as any).TeenReview.generate(domain,level,subdomain),id:"teen-review-"+crypto.randomUUID()};
   if(age==="junior")return {...(globalThis as any).JuniorContent.generate(domain,level,subdomain),id:"junior-"+crypto.randomUUID()};
   if(age==="primary")return {...(globalThis as any).PrimaryContent.generate(domain,level,subdomain),id:"primary-"+crypto.randomUUID()};
@@ -2380,8 +2381,10 @@ function ensureWorksheetMemoryCoherence(item:any){
 }
 
 function worksheetTask(age:string, domain:string, level:number){
-  const generated=variantExercise(age,domain,level,null,null,false,false,null,['memory_homework_board']);
-  if(generated) return {...generated,sourceDomain:domain};
+  for(let attempt=0;attempt<16;attempt++){
+    const generated=variantExercise(age,domain,level,null,null,false,false,null,null,['memory_homework_board']);
+    if(generated&&!generated.interactiveOnly)return {...generated,sourceDomain:domain};
+  }
   const pool=academicPool(age,domain,null,level);
   if(!pool.length) return {...cognitionExercise(age,pick(["attention","executive","memory"]),level),sourceDomain:domain};
   return {...structuredClone(pick(pool)),sourceDomain:domain};
@@ -2410,7 +2413,7 @@ Deno.serve(async (req:Request)=>{
   if(body.session_only!==undefined&&typeof body.session_only!=='boolean')return new Response(JSON.stringify({error:'Modalidad de sesión no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   const sessionOnly=body.session_only===true;
   if(sessionOnly&&Number(body.client_revision||1)<6)return new Response(JSON.stringify({error:'Actualiza la página para abrir sesiones independientes.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
-  const progress=sessionOnly?{ageRoute:profile.progress?.ageRoute}:profile.progress||{};
+  const progress=sessionOnly?{ageRoute:profile.progress?.ageRoute,ageYears:profile.progress?.ageYears}:profile.progress||{};
   const date=todayUTC();
   const delivery=progress._delivery?.seen ? {...progress._delivery,date} : {date,seen:{}};
   const cost=kind==="worksheet"?1:Math.max(1,Math.min(Number(body.count||1),kind==="exercise"?10:1));
@@ -2424,7 +2427,7 @@ Deno.serve(async (req:Request)=>{
   const requestedDomains=kind==="worksheet" ? (Array.isArray(body.domains)&&body.domains.length?body.domains:(globalThis as any).Curriculum.visible(SUBJECTS[age]||[],age)) : [body.domain];
   if(!SUBJECTS[age] || !Number.isInteger(level) || (kind!=="game" && (!Array.isArray(requestedDomains)||!requestedDomains.length||requestedDomains.some((d:any)=>!SUBJECTS[age].includes(d)))))
     return new Response(JSON.stringify({error:"Área o nivel no permitido para este perfil."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
-  if(body.client_revision!==undefined&&![1,2,3,4,5,6,7,8,9,10,11,12].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.client_revision!==undefined&&![1,2,3,4,5,6,7,8,9,10,11,12,13].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.memory_audio_only!==undefined&&(typeof body.memory_audio_only!=='boolean'||body.memory_audio_only&&(kind!=='exercise'||body.domain!=='memory'||body.photos_only||body.interaction_only||body.documents_only||body.executed_only||body.cognitive_only)))return new Response(JSON.stringify({error:'Modalidad de memoria auditiva no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.memory_audio_only&&Number(body.client_revision||1)<12)return new Response(JSON.stringify({error:'Actualiza la página para abrir la memoria auditiva.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.speed_mechanic!==undefined&&(!(kind==='exercise'&&body.domain==='speedReasoning'&&body.speed_mechanic==='unpaired')||body.room_speed_only||body.photos_only||body.documents_only||body.interaction_only||body.cognitive_only||body.executed_only))return new Response(JSON.stringify({error:'Mecánica de velocidad no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -2530,7 +2533,7 @@ Deno.serve(async (req:Request)=>{
       if(row.mechanic_signature) recentEntries.push(row.mechanic_signature);
     }
     const compatibleExercise=()=>{
-      const item=body.room_speed_only?pick((globalThis as any).Curriculum.roomSpeedPool(age,level)):variantExercise(age,domain,level,subdomain,typeof body.documents_only==='boolean'?body.documents_only:null,body.photos_only===true,body.interaction_only===true,body.interaction_kind||null);
+      const item=body.room_speed_only?pick((globalThis as any).Curriculum.roomSpeedPool(age,level)):variantExercise(age,domain,level,subdomain,typeof body.documents_only==='boolean'?body.documents_only:null,body.photos_only===true,body.interaction_only===true,body.interaction_kind||null,progress.ageYears||null);
       if(!item||!compatibleSource(item)||Number(body.client_revision||1)<2&&(item.type==='documentReview'||item.selectiveRecall)||Number(body.client_revision||1)<3&&item.photoTask)return null;
       return regionalCandidate(item,locale,domain,age);
     };
@@ -2551,7 +2554,7 @@ Deno.serve(async (req:Request)=>{
       items=generatedItems(domain,n,recentEntries,compatibleExercise,bank);
     }else if(domain==="attention"){
       items=generatedItems(domain,n,recentEntries,compatibleExercise);
-    } else if(["executive","memory","speedReasoning","applied","social","language","middleLanguage","teenLanguage","division","geometry","middleMath","teenMath","reading","middleReading","english","literacy"].includes(domain)){
+    } else if(["executive","memory","speedReasoning","applied","social","language","middleLanguage","teenLanguage","division","geometry","middleMath","teenMath","reading","middleReading","english","literacy","communication"].includes(domain)){
       items=generatedItems(domain,n,recentEntries,compatibleExercise);
     } else {
       const seen=new Set(recentEntries);
@@ -2574,7 +2577,7 @@ Deno.serve(async (req:Request)=>{
     delivery.seen ||= {};
     delivery.seen[domain] ||= [];
     for(const it of items){
-      const generated=["attention","executive","memory","speedReasoning","applied","social","language","middleLanguage","teenLanguage","division","geometry","middleMath","teenMath","reading","middleReading","english","literacy"].includes(domain);
+      const generated=["attention","executive","memory","speedReasoning","applied","social","language","middleLanguage","teenLanguage","division","geometry","middleMath","teenMath","reading","middleReading","english","literacy","communication"].includes(domain);
       const sig=generated?contentSignature(domain,it):keyOf(domain,subdomain,it);
       delivery.seen[domain].push(sig);if(it.qualityDescriptor?.scenarioFamily)delivery.seen[domain].push(domain+':scenario:'+it.qualityDescriptor.scenarioFamily);
       if(generated){delivery.seen[domain].push(mechanicSignature(domain,it));delivery.seen[domain].push(domain+':semantic:'+familyOf(it,domain));}
@@ -2582,7 +2585,7 @@ Deno.serve(async (req:Request)=>{
     }
     delivery.seen[domain]=delivery.seen[domain].slice(-450);
     const seenInsert=items.map((it:any)=>{
-      const generated=["attention","executive","memory","speedReasoning","applied","social","language","middleLanguage","teenLanguage","division","geometry","middleMath","teenMath","reading","middleReading","english","literacy"].includes(domain);
+      const generated=["attention","executive","memory","speedReasoning","applied","social","language","middleLanguage","teenLanguage","division","geometry","middleMath","teenMath","reading","middleReading","english","literacy","communication"].includes(domain);
       const itemSig=generated?contentSignature(domain,it):keyOf(domain,subdomain,it);
       return {
         user_id:user.id,
