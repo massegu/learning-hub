@@ -1324,7 +1324,7 @@
     const worksheet=payload.kind==='worksheet';
     const selected = payload.executed_only||payload.cognitive_only?res:window.EarlyContent.adaptResponse(res, payload, targetProfile, worksheet?{
       accept:(item,domain)=>window.WorksheetSelection.compatible(item,targetProfile,locale,domain),
-    }:{});
+    }:payload.memory_audio_only?{accept:item=>item.audioMemory===true}:{});
     // Worksheet candidates are localized/validated individually by the selector.
     // One unprintable or unlocalizable remote item must not abort the whole batch.
     if(!worksheet){
@@ -1363,7 +1363,11 @@
       $('#usageHint').textContent=`Hoy: ${res.usage.used} ${kind==='worksheet'?'fichas':kind==='game'?'juegos':'ejercicios'}`;
       $('#dailyUsageExplanation').textContent=`Tu cuota es de ${res.usage.limit} ${kind==='worksheet'?'fichas':kind==='game'?'juegos':'ejercicios'} al día. Esta cifra limita el uso de la cuenta; no es el tamaño del banco de actividades.`;
     }
-    return res?.items?.[0] || null;
+    const item=res?.items?.[0]||null;
+    if(kind==='exercise'&&domain==='memory'&&memoryAudioOnly&&item?.audioMemory!==true){
+      throw new Error('El ejercicio recibido no corresponde a memoria auditiva. Vuelve a cargarlo o elige otra modalidad.');
+    }
+    return item;
   }
   async function newExercise() {
     // A save from the previous card may still be resolving. Invalidate its UI
@@ -1458,7 +1462,9 @@
     $("#exerciseVisual").innerHTML = "";
     $("#textAnswerArea").classList.add("hidden");
     $("#selfAssessment").classList.add("hidden");
-    $("#exerciseTopic").textContent = it.topic || it.theme || "";
+    const topicText=it.topic||it.theme||'';
+    const topicIcon=window.BioArtIcons?.svgForArea(SUBJECT_META[subject]?.name||subject)||'';
+    $("#exerciseTopic").innerHTML=`${topicIcon?`<span class="exercise-topic-icon">${topicIcon}</span>`:''}<span>${escapeHtml(topicText)}</span>`;
     $("#exerciseTopic").classList.toggle(
       "hidden",
       !$("#exerciseTopic").textContent,

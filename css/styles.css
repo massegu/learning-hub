@@ -2720,9 +2720,11 @@ body {
 #appShell:is([data-age-route="middle"],[data-age-route="teen"]) #exerciseTopic,
 #appShell:is([data-age-route="middle"],[data-age-route="teen"]) #exercise .block-banner,
 #appShell:is([data-age-route="middle"],[data-age-route="teen"]) #exercise .language-topic {
-  font-family:Impact,"Arial Black",sans-serif;
+  font-family:"Arial Black",Arial,sans-serif;
   font-weight:800;
-  letter-spacing:.045em;
+  letter-spacing:.025em;
+  font-size:1rem;
+  line-height:1.35;
 }
 #appShell:is([data-age-route="middle"],[data-age-route="teen"]) #exercise .block-banner,
 #appShell:is([data-age-route="middle"],[data-age-route="teen"]) #exercise .language-topic {
@@ -2743,6 +2745,14 @@ body {
 .recall-grid [role=cell]{display:flex;align-items:center;justify-content:center;min-height:6rem;padding:.6rem;text-align:center;background:#fff;border:2px solid #bccdbf;border-radius:.6rem;overflow-wrap:anywhere}
 .recall-grid .picture-icon svg{width:3rem;height:3rem}
 .spatial-answer-grid .option-btn{min-height:6rem;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:.5rem;text-align:center}
+
+/* Keep the activity family and its instruction legible as one reading unit. */
+#appShell[data-design] #exerciseTopic.language-topic{display:flex;align-items:center;gap:.55rem;margin:0;padding:0;border:0;border-radius:0;background:transparent!important;color:var(--accent-dark)!important;font:800 .95rem/1.35 "Arial Black",Arial,sans-serif;letter-spacing:.025em}
+#appShell[data-design] #exerciseTopic.language-topic.hidden{display:none!important}
+#appShell[data-design] #exerciseTopic .exercise-topic-icon{display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center}
+#appShell[data-design] #exerciseTopic .exercise-topic-icon .bioart-area-icon{width:1.6rem;height:1.6rem}
+#appShell[data-design] #exercise:has(#exerciseTopic:not(.hidden)) #exercisePrompt{margin:5px 0 16px;padding:0;border:0;border-radius:0;background:transparent!important;color:var(--ink)!important;font-family:inherit;font-weight:750;line-height:1.4;box-shadow:none}
+.homework-board caption.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 .spatial-answer-grid small{font-size:.8rem}.sequence-flash{min-height:10rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;font-size:2rem}.sequence-flash svg{width:6rem;height:6rem}
 .speed-key{display:inline-block;margin-right:1rem;padding:.2rem .5rem;border:1px solid currentColor;border-radius:.25rem;font-size:.85rem}.speed-result{font-size:1rem;font-weight:400;line-height:1.6;color:#163c2c}
 @media(max-width:480px){.recall-grid [role=cell]{min-height:5rem;padding:.3rem;font-size:.9rem}.recall-grid{gap:.3rem}.recall-grid .picture-icon svg{width:2rem;height:2rem}}

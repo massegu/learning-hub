@@ -1,5 +1,6 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
 const curriculum=require('../js/curriculum'),model=require('../js/activity-model'),art=require('../js/stimulus-art'),docs=require('../js/document-library');
+const bioart=require('../js/bioart-icons');
 test('map recall keeps its visit progression while youngest icon loads are reduced',()=>{
  const ages=['early','junior','primary','middle','teen'];assert.equal(curriculum.memoryCategories.length,15);
  for(const age of ages)for(const level of [1,2,3]){
@@ -34,4 +35,10 @@ test('reviewed Fluent SVGs remain local, licensed, identifiable and printable',(
  assert.doesNotMatch(art.svg('balloon-red'),/fluent-emoji-flat/);assert.doesNotMatch(art.svg('dot'),/fluent-emoji-flat/);
  for(const [label,key] of [['museo','museum'],['monumento','monument'],['obra de arte','artwork'],['comercio','storefront'],['visitante','person']]){assert.equal(art.forLabel(label),key);assert.match(model.visualLabel(label),/class="picture-icon"/);}
  const route=model.interactiveStimulus([{type:'list',items:['Museo','Mercado'],positions:[0,1],presentation:'routeMap'}]);assert.match(route,/memory-route/);assert.ok((route.match(/<svg /g)||[]).length>=3,'museum and commerce pictograms render in the visit map');
+});
+test('BioArt area marks cover exercise domains and board captions stay screen-reader-only',()=>{
+ for(const [area,key] of [['Memoria','science'],['Atención','science'],['Funciones ejecutivas','art'],['Velocidad de procesamiento','art'],['Lenguaje','reading']]){
+  assert.equal(bioart.forArea(area),key);assert.match(bioart.svgForArea(area),/class="bioart-area-icon"/);
+ }
+ const css=fs.readFileSync('css/styles.css','utf8');assert.match(css,/\.homework-board caption\.sr-only\{position:absolute/);
 });
