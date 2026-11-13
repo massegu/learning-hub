@@ -33,7 +33,9 @@ try:
     assert it['type']=='order'
     for token in it['answer']:page.get_by_role('button',name=token,exact=True).click()
     page.locator('#orderCheck').click();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
-    page.evaluate('window.__current=null');page.locator('#exerciseLevelSelect').select_option('3');it=current();assert it['type']=='documentReview';assert page.locator('#multiCheck').is_disabled()
+    page.evaluate('window.__current=null');options=page.locator('#activityOptions')
+    if not options.evaluate('(element)=>element.open'):options.locator('summary').click()
+    page.locator('#exerciseLevelSelect').select_option('3');it=current();assert it['type']=='documentReview';assert page.locator('#multiCheck').is_disabled()
     for label in it['answers']:page.get_by_role('button',name=label,exact=True).click()
     page.locator('#multiCheck').click();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
    page.evaluate('window.__current=null');page.locator('#documentModeSwitch [data-documents=false]').click();it=current();assert not any(b['type']=='document' for b in it.get('stimulus',[]))
