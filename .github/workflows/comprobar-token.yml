@@ -1,0 +1,17 @@
+name: Comprobar acceso de publicación
+on:
+  schedule:
+    - cron: '15 6 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  comprobar-acceso:
+    runs-on: ubuntu-latest
+    environment: beta
+    env:
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF_BETA }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/deploy-supabase.py --access-check

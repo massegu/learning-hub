@@ -1,0 +1,2706 @@
+(function(root){
+'use strict';
+const text=value=>({type:'text',text:value}),table=rows=>({type:'table',header:true,rows});
+const documents={
+ 'invoice-co-v1':{title:'Factura de Papelería Norte',kind:'Factura',country:'Colombia',width:1024,height:1536,path:'assets/documents/invoice-co-v1.png',
+  transcript:[text('FACTURA · Papelería Norte · F-1048. Fecha: 14/10/2026. Moneda: pesos colombianos (COP).'),table([['Producto','Cantidad','Precio unitario','Importe'],['Cuadernos','2','6.000','12.000'],['Carpetas','3','2.000','6.000'],['Lápices','4','1.000','4.000']]),text('Subtotal: 22.000. Entrega: 3.000. TOTAL: 25.000. Pagar antes del 20/10/2026.')],
+  facts:{subtotal:22000,delivery:3000,total:25000,issued:'14/10/2026',due:'20/10/2026'},
+  questions:[['¿Cuál es el total que debe pagarse?','25.000 COP',['22.000 COP','3.000 COP','12.000 COP']],['¿Cuánto cuestan los dos cuadernos juntos?','12.000 COP',['6.000 COP','22.000 COP','25.000 COP']],['¿Qué dato falta en un plan que solo reserva 22.000 COP para pagar toda la factura?','Los 3.000 COP de entrega',['Los 12.000 COP de cuadernos','Los 6.000 COP de carpetas','Los 4.000 COP de lápices']]]},
+ 'receipt-co-v1':{title:'Recibo de Tienda Barrio Verde',kind:'Recibo de compra',country:'Colombia',width:1024,height:1536,path:'assets/documents/receipt-co-v1.png',
+  transcript:[text('Tienda Barrio Verde · RECIBO DE COMPRA · R-0312 · 15/10/2026 · 10:35. Moneda: pesos colombianos (COP).'),table([['Producto','Cantidad','Importe'],['Pan','1','5.000'],['Leche','2','8.000'],['Manzanas','1','6.000']]),text('TOTAL: 19.000. Pagado: 20.000. Cambio: 1.000. Gracias por tu visita.')],
+  facts:{total:19000,paid:20000,change:1000,milkCount:2,milkAmount:8000},
+  questions:[['¿Cuánto dinero se entregó para pagar?','20.000 COP',['19.000 COP','1.000 COP','8.000 COP']],['¿Qué cantidad corresponde al importe de las dos unidades de leche?','8.000 COP',['4.000 COP','19.000 COP','2.000 COP']],['Al revisar el pago, alguien dice que deben devolver 2.000 COP. ¿Qué corrección corresponde?','El cambio es 1.000 COP: se pagaron 20.000 y el total es 19.000',['El cambio es 2.000 COP porque se compraron dos unidades de leche','No hay cambio porque el total es 20.000 COP','El cambio es 8.000 COP, igual al importe de la leche']]]},
+ 'catalogue-co-v1':{title:'Catálogo escolar de Papelería Norte',kind:'Catálogo',country:'Colombia',width:1024,height:1536,path:'assets/documents/catalogue-co-v1.png',
+  transcript:[text('CATÁLOGO ESCOLAR · Papelería Norte. Moneda: pesos colombianos (COP). Válido hasta el 31/10/2026.'),table([['Producto','Precio'],['Cuaderno azul','6.000'],['Carpeta verde','2.000'],['Lápiz','1.000'],['Cartuchera','8.000']]),text('Paquete A: cuaderno + carpeta · 7.000. Paquete B: cartuchera + lápiz · 8.500. Recogida en tienda: sin cargo.')],
+  facts:{notebook:6000,folder:2000,pencil:1000,pencilCase:8000,packageA:7000,packageB:8500,validUntil:'31/10/2026'},
+  questions:[['¿Qué producto tiene un precio de 8.000 COP?','La cartuchera',['El cuaderno azul','La carpeta verde','El lápiz']],['Necesitas un cuaderno y una carpeta. ¿Qué opción tiene menor precio?','El paquete A por 7.000 COP',['Los dos productos por separado por 8.000 COP','El paquete B por 8.500 COP','La cartuchera por 8.000 COP']],['El plan propone comprar el paquete B para conseguir un cuaderno y una carpeta. ¿Qué debe corregirse?','Elegir el paquete A, que incluye los dos productos necesarios',['Añadir otro lápiz al paquete B','Comprar solo la cartuchera','Cambiar el paquete B por un lápiz suelto']]]},
+ 'brochure-co-v1':{title:'Folleto del taller de dibujo',kind:'Folleto',country:'Colombia',width:1024,height:1536,path:'assets/documents/brochure-co-v1.png',
+  transcript:[text('TALLER DE DIBUJO · Centro Cultural La Plaza. Sábado 24/10/2026. De 10:00 a 12:00.'),table([['Dato','Condición'],['Edad','De 12 a 18 años'],['Inscripción','Hasta el 22/10/2026'],['Materiales','Incluidos'],['Precio','Actividad gratuita'],['Llegada','15 minutos antes'],['Para entrar','Trae tu confirmación de inscripción']])],
+  facts:{date:'24/10/2026',registration:'22/10/2026',start:'10:00',finish:'12:00',earlyMinutes:15,minAge:12,maxAge:18},
+  questions:[['¿Hasta qué fecha se puede hacer la inscripción?','22/10/2026',['24/10/2026','31/10/2026','20/10/2026']],['Si el taller empieza a las 10:00 y pide llegar quince minutos antes, ¿a qué hora debes estar allí?','09:45',['10:00','10:15','09:15']],['El plan propone inscribirse el 23/10 y llegar a las 10:00 del día del taller. ¿Qué dos cambios hacen falta?','Inscribirse como máximo el 22/10 y llegar a las 09:45',['Inscribirse el 24/10 y llegar a las 09:45','Inscribirse el 22/10 y llegar a las 10:00','Inscribirse el 23/10 y llegar a las 09:45']]]}
+};
+const authoredDocuments=[
+  [
+    "poster-mx",
+    "Cartel de cine en el patio",
+    "Cartel",
+    "México",
+    [
+      "CINE EN EL PATIO · Centro Juvenil Nube · Ciudad de México",
+      "Viernes 23/10/2026 · Entrada a las 17:30 · Película a las 18:00",
+      "Entrada gratuita. Trae una manta. Si llueve, la proyección pasa al salón 2."
+    ],
+    [
+      [
+        "¿A qué hora empieza la película?",
+        "18:00",
+        [
+          "17:30",
+          "19:00",
+          "16:30"
+        ]
+      ],
+      [
+        "Si llueve, ¿qué cambia?",
+        "El lugar de la proyección",
+        [
+          "El día",
+          "El precio",
+          "La película"
+        ]
+      ],
+      [
+        "¿Para qué se publica este cartel?",
+        "Para invitar y explicar cómo asistir",
+        [
+          "Para resumir la película",
+          "Para vender mantas",
+          "Para anunciar una cancelación"
+        ]
+      ]
+    ],
+    "Escribe un mensaje de 3–4 frases a una amiga para invitarla. Incluye hora, qué llevar y el plan si llueve.",
+    "Te invito al cine del viernes. La película empieza a las 18:00. Lleva una manta; si llueve, iremos al salón 2."
+  ],
+  [
+    "ticket-es",
+    "Entrada del museo de ciencia",
+    "Entrada",
+    "España",
+    [
+      "MUSEO ABIERTO · Valencia",
+      "Domingo 25/10/2026 · Acceso: 11:00 · Sala: Inventos",
+      "Esta entrada permite una visita. El taller de robots requiere reserva aparte."
+    ],
+    [
+      [
+        "¿A qué sala da acceso la entrada?",
+        "Inventos",
+        [
+          "Robots",
+          "Cine",
+          "Biblioteca"
+        ]
+      ],
+      [
+        "¿Basta esta entrada para participar en el taller?",
+        "No; el taller requiere otra reserva",
+        [
+          "Sí; permite todas las actividades",
+          "Solo después de las 12:00",
+          "Solo si llueve"
+        ]
+      ],
+      [
+        "¿Qué información conviene comprobar antes de salir?",
+        "La fecha y la hora de acceso",
+        [
+          "El color del museo",
+          "La duración de una película",
+          "La marca del teléfono"
+        ]
+      ]
+    ],
+    "Redacta un correo de 4–5 frases al museo: quieres ir también al taller. Explica qué entrada tienes y pregunta cómo reservar.",
+    "Tengo una entrada para Inventos el 25/10 a las 11:00. Quisiera asistir también al taller de robots. ¿Cómo puedo reservar una plaza?"
+  ],
+  [
+    "menu-ar",
+    "Menú del recreo",
+    "Menú",
+    "Argentina",
+    [
+      "CAFÉ DEL PATIO · Rosario · Precios en pesos argentinos (ARS)",
+      "Sándwich de queso: 2.400 ARS · Ensalada: 3.200 ARS",
+      "Agua: 900 ARS · Combo sándwich + agua: 3.000 ARS",
+      "El combo no incluye postre. Consulta los ingredientes antes de pedir si tienes alergias."
+    ],
+    [
+      [
+        "¿Cuánto cuesta la ensalada?",
+        "3.200 ARS",
+        [
+          "2.400 ARS",
+          "900 ARS",
+          "3.000 ARS"
+        ]
+      ],
+      [
+        "¿Qué incluye el combo?",
+        "Un sándwich y agua",
+        [
+          "Ensalada y postre",
+          "Sándwich y postre",
+          "Solo agua"
+        ]
+      ],
+      [
+        "¿Qué debe hacer quien tiene una alergia?",
+        "Consultar los ingredientes antes de pedir",
+        [
+          "Pedir el combo sin preguntar",
+          "Suponer que todos los platos son iguales",
+          "Consultar después de comer"
+        ]
+      ]
+    ],
+    "Escribe una respuesta de 3–4 frases a alguien que dice que el combo trae postre. Corrige la información con una prueba del menú.",
+    "El combo incluye sándwich y agua por 3.000 ARS. El menú aclara que no incluye postre. Conviene leer esa condición antes de pedir."
+  ],
+  [
+    "notice-cl",
+    "Aviso de biblioteca",
+    "Aviso escolar",
+    "Chile",
+    [
+      "BIBLIOTECA DEL CENTRO · Valparaíso",
+      "Del lunes 26 al miércoles 28/10/2026 la sala de lectura estará cerrada por reparación.",
+      "El préstamo seguirá abierto de 09:00 a 13:00 en la entrada norte. Las devoluciones podrán hacerse en el buzón."
+    ],
+    [
+      [
+        "¿Dónde se atienden los préstamos?",
+        "En la entrada norte",
+        [
+          "En la sala cerrada",
+          "En el patio",
+          "En el buzón"
+        ]
+      ],
+      [
+        "¿Se puede devolver un libro mientras la sala está cerrada?",
+        "Sí, en el buzón",
+        [
+          "No, hasta el jueves",
+          "Solo a las 18:00",
+          "Solo con una reserva"
+        ]
+      ],
+      [
+        "¿Qué titular resume el aviso sin exagerarlo?",
+        "Cierra la sala, pero continúan préstamo y devoluciones",
+        [
+          "Cierra toda la biblioteca",
+          "No se admiten devoluciones",
+          "El centro suspende todas las clases"
+        ]
+      ]
+    ],
+    "Reescribe «La biblioteca cierra y no se pueden devolver libros» para el grupo de clase. Usa dos datos del aviso y no añadas información.",
+    "La sala de lectura cierra del 26 al 28. Los préstamos continúan en la entrada norte de 09:00 a 13:00 y se pueden devolver libros en el buzón."
+  ],
+  [
+    "transport-co",
+    "Cambio de parada",
+    "Transporte",
+    "Colombia",
+    [
+      "RUTA JOVEN · Bogotá · Aviso del 20/10/2026",
+      "El sábado 24 la parada Parque se traslada a Biblioteca por obras.",
+      "Línea A: Centro 16:20 · Biblioteca 16:50 · Terminal 17:10",
+      "El cambio solo afecta al sábado 24. No cambia la tarifa."
+    ],
+    [
+      [
+        "¿Dónde para la línea A a las 16:50?",
+        "Biblioteca",
+        [
+          "Parque",
+          "Centro",
+          "Terminal"
+        ]
+      ],
+      [
+        "¿Se aplica el aviso el domingo 25?",
+        "El aviso solo indica el sábado 24",
+        [
+          "Sí, todo el mes",
+          "Sí, todos los domingos",
+          "Solo por la mañana"
+        ]
+      ],
+      [
+        "¿Qué dato evita esperar en el lugar equivocado?",
+        "El traslado de Parque a Biblioteca",
+        [
+          "El color del autobús",
+          "El nombre del conductor",
+          "El precio de un libro"
+        ]
+      ]
+    ],
+    "Escribe un mensaje breve a un compañero que piensa esperar en Parque el sábado. Explica la nueva parada y la hora sin generalizar el cambio a toda la semana.",
+    "El sábado 24 debes esperar en Biblioteca, no en Parque. La línea A pasa allí a las 16:50. El aviso solo afecta a ese sábado."
+  ],
+  [
+    "infographic-cr",
+    "Agua en la escuela",
+    "Infografía",
+    "Costa Rica",
+    [
+      "AGUA EN NUESTRA ESCUELA · San José · Recuento de una semana",
+      "Se revisaron 20 grifos: 15 cerraban bien y 5 tenían fugas.",
+      "El equipo reparó 4 de los 5 grifos con fugas. Queda uno pendiente.",
+      "Los datos describen esta escuela durante esa semana. No representan a todas las escuelas."
+    ],
+    [
+      [
+        "¿Cuántos grifos tenían fugas?",
+        "5",
+        [
+          "20",
+          "15",
+          "4"
+        ]
+      ],
+      [
+        "Después de las reparaciones, ¿cuántos siguen pendientes?",
+        "1",
+        [
+          "4",
+          "5",
+          "15"
+        ]
+      ],
+      [
+        "¿Qué frase respeta el alcance de los datos?",
+        "En esta escuela se detectaron cinco fugas esa semana",
+        [
+          "Todas las escuelas tienen cinco fugas",
+          "Ya no queda ninguna fuga",
+          "Todos los grifos estaban dañados"
+        ]
+      ]
+    ],
+    "Escribe un pie de infografía de 35–50 palabras para la web escolar. Incluye el resultado, lo pendiente y el límite de los datos.",
+    "Durante una semana se revisaron veinte grifos de nuestra escuela. Cinco tenían fugas y cuatro ya se repararon. Queda uno pendiente. Este recuento describe nuestro centro y esa semana; no permite concluir cómo están los grifos de otras escuelas."
+  ],
+  [
+    "post-pa",
+    "Publicación del club de intercambio",
+    "Publicación social",
+    "Panamá",
+    [
+      "CLUB REUSA · Ciudad de Panamá · Publicación del 19/10/2026",
+      "Intercambio de libros: sábado 24, de 10:00 a 12:00, en el patio.",
+      "Trae hasta tres libros en buen estado. Participar no garantiza encontrar un título concreto.",
+      "Comentario de una usuaria: «Seguro que será la mejor actividad del año»."
+    ],
+    [
+      [
+        "¿Cuántos libros se pueden llevar como máximo?",
+        "3",
+        [
+          "1",
+          "10",
+          "12"
+        ]
+      ],
+      [
+        "¿Está garantizado conseguir el libro que buscas?",
+        "No; depende de lo que se lleve",
+        [
+          "Sí, cualquier título",
+          "Solo llevando un libro",
+          "Solo llegando al final"
+        ]
+      ],
+      [
+        "¿Qué parte es una opinión?",
+        "«Será la mejor actividad del año»",
+        [
+          "El sábado 24",
+          "De 10:00 a 12:00",
+          "Hasta tres libros"
+        ]
+      ]
+    ],
+    "Redacta 4–5 frases para el boletín: distingue un hecho del anuncio, una inferencia razonable y la opinión del comentario. Señala cuál es cada una.",
+    "Hecho: el intercambio será el sábado 24/10/2026 de 10:00 a 12:00. Inferencia: habrá títulos diferentes según los libros que lleven las personas. Opinión: decir que será la mejor actividad del año expresa una valoración que aún no se ha comprobado."
+  ],
+  [
+    "label-mx",
+    "Etiqueta de bebida",
+    "Etiqueta",
+    "México",
+    [
+      "BEBIDA DE AVENA · Guadalajara",
+      "Contenido: 250 ml · Ingredientes: agua, avena y cacao.",
+      "Contiene avena. Puede contener trazas de leche.",
+      "Agitar antes de abrir. Una vez abierta, conservar refrigerada y consumir en 24 horas."
+    ],
+    [
+      [
+        "¿Cuánto contiene el envase?",
+        "250 ml",
+        [
+          "24 ml",
+          "500 ml",
+          "100 ml"
+        ]
+      ],
+      [
+        "¿Qué hay que hacer después de abrirlo?",
+        "Refrigerarlo y consumirlo en 24 horas",
+        [
+          "Dejarlo al sol",
+          "Guardarlo abierto una semana",
+          "Agitarlo sin refrigerar"
+        ]
+      ],
+      [
+        "¿Qué dato interesa especialmente a alguien con alergia a la leche?",
+        "Puede contener trazas de leche",
+        [
+          "El lugar de fabricación",
+          "El color del envase",
+          "La cantidad de cacao no indicada"
+        ]
+      ]
+    ],
+    "Escribe instrucciones de dos pasos para quien acaba de abrir la bebida. Mantén las condiciones y el plazo exactos.",
+    "1. Guarda la bebida abierta en el refrigerador. 2. Consúmela dentro de las siguientes 24 horas."
+  ],
+  [
+    "form-es",
+    "Solicitud de préstamo de cámara",
+    "Formulario",
+    "España",
+    [
+      "CENTRO JOVEN · Sevilla · Solicitud de cámara",
+      "Datos obligatorios: nombre, fecha de recogida, fecha de devolución y firma.",
+      "Ejemplo: Alex Ruiz · Recogida: 26/10/2026 · Devolución: sin completar · Firma: Alex Ruiz",
+      "Guardar borrador no envía la solicitud. Al enviarla se genera un comprobante."
+    ],
+    [
+      [
+        "¿Qué dato obligatorio falta en el ejemplo?",
+        "La fecha de devolución",
+        [
+          "El nombre",
+          "La firma",
+          "La fecha de recogida"
+        ]
+      ],
+      [
+        "¿Guardar el borrador completa la entrega?",
+        "No; hay que enviarlo y obtener el comprobante",
+        [
+          "Sí, siempre",
+          "Solo si tiene firma",
+          "Solo por la mañana"
+        ]
+      ],
+      [
+        "¿Qué diferencia hay entre borrador y solicitud enviada?",
+        "Solo el envío genera comprobante",
+        [
+          "El borrador se recoge en persona",
+          "El envío elimina el nombre",
+          "No hay ninguna diferencia"
+        ]
+      ]
+    ],
+    "Redacta un correo breve al equipo para explicar por qué la solicitud aún no está lista y qué dos pasos faltan.",
+    "La solicitud todavía no está lista: falta la fecha de devolución. Después de completarla, hay que enviarla y guardar el comprobante. Guardar el borrador no equivale a entregarla."
+  ],
+  [
+    "map-cl",
+    "Plano del centro cultural",
+    "Plano",
+    "Chile",
+    [
+      "CENTRO CULTURAL · Concepción · Plano esquemático",
+      "Entrada → Patio → Biblioteca",
+      "Desde el patio: a la izquierda, Taller; a la derecha, Sala de música.",
+      "La biblioteca tiene acceso sin escalones desde el patio. El taller solo se alcanza por una escalera."
+    ],
+    [
+      [
+        "¿Qué espacio está entre la entrada y la biblioteca?",
+        "El patio",
+        [
+          "El taller",
+          "La sala de música",
+          "La calle"
+        ]
+      ],
+      [
+        "¿Qué destino tiene acceso sin escalones desde el patio?",
+        "La biblioteca",
+        [
+          "El taller",
+          "Todos los espacios",
+          "La escalera"
+        ]
+      ],
+      [
+        "¿Qué indicación lleva del patio al taller?",
+        "Ir a la izquierda y subir la escalera",
+        [
+          "Ir a la derecha",
+          "Salir a la calle",
+          "Atravesar la biblioteca"
+        ]
+      ]
+    ],
+    "Una visitante está en la entrada y quiere llegar a la biblioteca sin subir escalones. Escribe dos o tres frases dirigidas a ella: indica por qué espacio debe pasar y qué acceso debe usar. No inventes distancias ni horarios.",
+    "Desde la entrada, avanza hasta el patio. Sigue hacia la biblioteca. Ese acceso no tiene escalones."
+  ],
+  [
+    "schedule-ar",
+    "Horario de talleres",
+    "Horario",
+    "Argentina",
+    [
+      "CENTRO ABIERTO · Córdoba · Sábado 24/10/2026",
+      "Fotografía: 10:00–11:00 · Aula 1",
+      "Música: 10:30–11:30 · Aula 2",
+      "Dibujo: 11:15–12:15 · Aula 1",
+      "Para asistir a un taller completo debes estar desde el inicio hasta el final."
+    ],
+    [
+      [
+        "¿En qué aula se hace Música?",
+        "Aula 2",
+        [
+          "Aula 1",
+          "Patio",
+          "Biblioteca"
+        ]
+      ],
+      [
+        "¿Qué dos talleres puedes hacer completos sin solapamiento?",
+        "Fotografía y Dibujo",
+        [
+          "Fotografía y Música",
+          "Música y Dibujo",
+          "Los tres"
+        ]
+      ],
+      [
+        "¿Por qué no se pueden completar Música y Dibujo?",
+        "Coinciden entre las 11:15 y las 11:30",
+        [
+          "Son en la misma aula",
+          "Empiezan a la misma hora",
+          "Uno no tiene hora de fin"
+        ]
+      ]
+    ],
+    "Escribe una recomendación de 4–5 frases para quien quiere hacer dos talleres completos. Apóyala en las horas y explica una combinación que no sirve.",
+    "Recomiendo Fotografía y Dibujo. Fotografía termina a las 11:00 y Dibujo comienza a las 11:15, así que no coinciden. Música y Dibujo se solapan de 11:15 a 11:30 y no permiten asistir a ambos completos."
+  ],
+  [
+    "advert-co",
+    "Anuncio de datos móviles",
+    "Anuncio",
+    "Colombia",
+    [
+      "CONECTA JOVEN · Bogotá · Precios en pesos colombianos (COP)",
+      "Plan de 30 días: 20.000 COP · Incluye 4 GB.",
+      "Titular publicitario: «¡Navega sin límites!»",
+      "Después de 4 GB se reduce la velocidad. No incluye llamadas. La renovación es manual."
+    ],
+    [
+      [
+        "¿Cuántos datos incluye a la velocidad inicial?",
+        "4 GB",
+        [
+          "30 GB",
+          "20 GB",
+          "Sin límite"
+        ]
+      ],
+      [
+        "¿Qué ocurre al consumir los 4 GB?",
+        "Se reduce la velocidad",
+        [
+          "Se renueva automáticamente",
+          "Se incluyen llamadas",
+          "Se cancela el teléfono"
+        ]
+      ],
+      [
+        "¿Qué contradicción debe aclararse en el titular?",
+        "«Sin límites» omite la reducción tras 4 GB",
+        [
+          "El plan dura treinta días",
+          "La renovación es manual",
+          "El precio aparece en COP"
+        ]
+      ]
+    ],
+    "Reescribe el anuncio para informar a estudiantes sin exagerar. Conserva precio, duración, datos y condición de velocidad.",
+    "Por 20.000 COP tienes un plan de treinta días con 4 GB a la velocidad inicial. Después se reduce la velocidad. No incluye llamadas y la renovación es manual."
+  ],
+  [
+    "instructions-cr",
+    "Cómo entregar un audio",
+    "Instrucciones",
+    "Costa Rica",
+    [
+      "RADIO ESCOLAR · Heredia · Entrega de una entrevista",
+      "1. Graba la entrevista con permiso de la persona.",
+      "2. Escucha el audio y comprueba que se entiende.",
+      "3. Exporta un archivo MP3 de hasta 10 MB.",
+      "4. Envía el MP3 y guarda el comprobante. No se aceptan enlaces privados."
+    ],
+    [
+      [
+        "¿Qué formato se pide?",
+        "MP3",
+        [
+          "PDF",
+          "JPG",
+          "DOCX"
+        ]
+      ],
+      [
+        "¿Sirve enviar un enlace privado en lugar del archivo?",
+        "No; se pide el MP3",
+        [
+          "Sí, siempre",
+          "Solo si es largo",
+          "Solo después de escucharlo"
+        ]
+      ],
+      [
+        "¿Qué paso comprueba la calidad antes de entregar?",
+        "Escuchar el audio y revisar que se entiende",
+        [
+          "Guardar el comprobante",
+          "Cambiar el nombre de la clase",
+          "Enviar un enlace privado"
+        ]
+      ]
+    ],
+    "Reescribe «Graba y mándalo como sea» como una guía de cuatro pasos para tu clase. Incluye permiso, revisión, formato y comprobante.",
+    "Pide permiso y graba la entrevista. Escucha el audio para comprobar que se entiende. Exporta un MP3 de hasta 10 MB. Envía el archivo y guarda el comprobante."
+  ],
+  [
+    "news-pa",
+    "Dos fuentes sobre el patio",
+    "Noticia y comparación",
+    "Panamá",
+    [
+      "BOLETÍN DEL CENTRO · Ciudad de Panamá · 19/10/2026",
+      "Fuente A · Consejo de estudiantes: respondieron 40 personas y 30 pidieron más sombra.",
+      "Fuente B · Registro del centro: hay 160 estudiantes; se instalaron dos toldos la semana pasada.",
+      "Ninguna fuente mide aún si los toldos cubren la zona solicitada."
+    ],
+    [
+      [
+        "¿Cuántas personas respondieron a la consulta?",
+        "40",
+        [
+          "30",
+          "160",
+          "2"
+        ]
+      ],
+      [
+        "¿Qué no permiten afirmar todavía las dos fuentes?",
+        "Que la sombra ya cubre la zona solicitada",
+        [
+          "Que se instalaron dos toldos",
+          "Que treinta personas pidieron sombra",
+          "Que hay ciento sesenta estudiantes"
+        ]
+      ],
+      [
+        "¿Qué aporta la fuente B que no aporta la A?",
+        "La instalación de dos toldos",
+        [
+          "La preferencia de treinta participantes",
+          "La cantidad de respuestas",
+          "Una medida de la sombra actual"
+        ]
+      ]
+    ],
+    "Escribe una nota de 45–65 palabras para el boletín. Relaciona ambas fuentes, atribuye cada dato y explica qué falta comprobar.",
+    "Según el consejo de estudiantes, treinta de las cuarenta personas que respondieron pidieron más sombra. El registro del centro indica que se instalaron dos toldos. Son datos distintos y complementarios. Todavía falta comprobar si los toldos cubren la zona que se solicitó; ninguna de las fuentes lo mide."
+  ]
+];
+for(const [id,title,kind,country,lines,questions,brief,sample] of authoredDocuments){
+ documents[id]={title,kind,country,width:1024,height:1536,path:`assets/documents/${id}.png`,transcript:lines.map(text),questions,brief,sample,minAge:['news-pa','advert-co','form-es'].includes(id)?'middle':'junior'};
+}
+// Executive tasks ask the learner to apply conditions and review a proposed plan.
+// Attention and literacy retain locating and interpreting source information.
+const screenDocuments={
+ 'boarding-es-v2':{title:'Tarjeta de embarque a Bilbao',kind:'Tarjeta de embarque',country:'España',minAge:'primary',layout:'boarding',width:1200,height:700,path:'assets/documents/boarding-es-v2.png',
+  transcript:[text('AIRE NORTE · TARJETA DE EMBARQUE. Pasajero: Alex Ruiz. Vuelo AN204. Fecha: 24/10/2026.'),text('MAD · Madrid → BIO · Bilbao. Embarque: 10:00. Cierre de puerta: 10:20. Salida: 10:35. Llegada: 11:45. Puerta: B12. Asiento: 14A. Grupo: 2.'),text('Equipaje incluido: 1 bolsa de 40 × 30 × 20 cm bajo el asiento. Presenta tu documento de identidad y esta tarjeta. Los horarios son locales.')],
+  questions:[['¿Cuál es la puerta de embarque?','B12',['14A','AN204','Grupo 2']],['¿Qué dos datos indican cuándo empieza el embarque y cuándo cierra la puerta?','10:00 y 10:20',['10:20 y 10:35','10:00 y 11:45','10:35 y 11:45']],['Alex llega a la puerta a las 10:25. ¿Qué condición de la tarjeta ya no cumple?','La puerta cierra a las 10:20',['El avión sale a las 11:45','El embarque empieza a las 10:35','El grupo 2 no puede llevar bolsa']]]},
+ 'email-es-v2':{title:'Un cambio en la salida al museo',kind:'Correo en pantalla',country:'España',minAge:'primary',layout:'email',width:1200,height:860,path:'assets/documents/email-es-v2.png',
+  transcript:[text('Bandeja de entrada · Mensaje seleccionado. De: Aula de ciencias <aula@colegio.example>. Para: Grupo de ciencias. Fecha: 22/10/2026, 16:10. Asunto: Cambio de punto de encuentro.'),text('La salida al museo es el sábado 24 de octubre. Nos reunimos a las 09:15 en la entrada norte, en lugar de la puerta principal. El autobús sale a las 09:30. La hora de regreso sigue siendo las 13:00.'),text('Trae una botella de agua y la autorización firmada. Confirma tu asistencia respondiendo a este mensaje antes del viernes 23 a las 18:00. Archivo adjunto: autorizacion.pdf. Un borrador guardado no cuenta como respuesta enviada.')],
+  questions:[['¿Dónde se reúne ahora el grupo?','En la entrada norte',['En la puerta principal','En el museo','En la parada del centro']],['¿Qué hora corresponde al encuentro y cuál a la salida del autobús?','09:15 y 09:30',['09:30 y 13:00','09:15 y 13:00','16:10 y 18:00']],['¿Qué combinación coincide con el mensaje?','Confirmar antes del viernes a las 18:00 y llevar la autorización firmada',['Confirmar el sábado y llevar la autorización firmada','Guardar un borrador y llevar solo agua','Responder antes de las 18:00 y reunirse en la puerta principal']]]},
+ 'booking-es-v2':{title:'Reserva de salas en pantalla',kind:'Panel de reservas',country:'España',minAge:'primary',layout:'booking',width:1200,height:850,path:'assets/documents/booking-es-v2.png',
+  transcript:[text('BIBLIOTECA ABIERTA · Reservas del 24/10/2026. Sesión de lectura para 6 personas, de 10:00 a 11:00. Se necesita acceso sin escalones.'),table([['Sala','Plazas','10:00–11:00','Acceso'],['Roble','6','Libre','Sin escalones'],['Pino','8','Ocupada','Sin escalones'],['Olmo','4','Libre','Sin escalones'],['Abedul','8','Libre','Solo escalera']]),text('Elige una sala y pulsa Confirmar reserva. Una selección sin confirmar no guarda la reserva. Las reservas se cancelan desde Mis reservas.')],
+  questions:[['¿Qué sala está ocupada de 10:00 a 11:00?','Pino',['Roble','Olmo','Abedul']],['¿Qué sala está libre, admite a seis personas y tiene acceso sin escalones?','Roble',['Pino','Olmo','Abedul']],['¿Qué par de datos corresponde a Abedul?','8 plazas y acceso solo por escalera',['8 plazas y acceso sin escalones','4 plazas y acceso solo por escalera','6 plazas y acceso sin escalones']]]},
+ 'orders-es-v2':{title:'Preparación de pedidos en pantalla',kind:'Panel de pedidos',country:'España',minAge:'middle',layout:'orders',width:1200,height:850,path:'assets/documents/orders-es-v2.png',
+  transcript:[text('TALLER DE BICICLETAS · Pedidos de hoy, 22/10/2026. Hora actual: 15:00. Para salir hoy, un pedido debe estar revisado y tener el pago confirmado. El transporte admite hasta 8 cajas por pedido.'),table([['Pedido','Revisión','Pago','Cajas'],['P-104','Terminada','Confirmado','6'],['P-105','Pendiente','Confirmado','4'],['P-106','Terminada','Pendiente','3'],['P-107','Terminada','Confirmado','9']]),text('Hora límite de recogida: 16:30. Marca Preparado y después Solicitar recogida. Guardar una nota interna no solicita el transporte.')],
+  questions:[['¿Cuántas cajas tiene el pedido P-107?','9',['6','4','3']],['¿Qué pedido puede salir hoy con las condiciones del panel?','P-104',['P-105','P-106','P-107']],['¿Qué combinación coincide con P-105?','Revisión pendiente, pago confirmado y 4 cajas',['Revisión terminada, pago pendiente y 4 cajas','Revisión pendiente, pago confirmado y 6 cajas','Revisión terminada, pago confirmado y 9 cajas']]]}
+};
+Object.assign(documents,screenDocuments);
+const documentPlans={
+ "invoice-co-v1": {
+  "goal": "organizar el pago completo de la factura",
+  "steps": [
+   "Revisar los productos y la entrega",
+   "Reservar el importe completo",
+   "Pagar antes de la fecha límite"
+  ],
+  "checks": [
+   [
+    "Importe reservado",
+    "25.000",
+    "22.000"
+   ],
+   [
+    "Entrega incluida",
+    "3.000",
+    "0"
+   ],
+   [
+    "Fecha de pago",
+    "19/10/2026",
+    "21/10/2026",
+    "antes del 20/10/2026"
+   ]
+  ]
+ },
+ "receipt-co-v1": {
+  "goal": "comprobar el pago y registrar la compra",
+  "steps": [
+   "Comprobar los productos comprados",
+   "Comparar el total con el dinero entregado y el cambio",
+   "Anotar el gasto final y guardar el recibo"
+  ],
+  "checks": [
+   [
+    "Gasto anotado",
+    "19.000",
+    "20.000"
+   ],
+   [
+    "Dinero entregado",
+    "20.000",
+    "19.000"
+   ],
+   [
+    "Cambio recibido",
+    "1.000",
+    "2.000"
+   ]
+  ]
+ },
+ "catalogue-co-v1": {
+  "goal": "comprar un cuaderno y una carpeta con un máximo de 7.000 COP",
+  "steps": [
+   "Comparar los productos y los paquetes",
+   "Elegir una compra que cumpla la lista y el límite de precio",
+   "Recoger la compra en la tienda"
+  ],
+  "checks": [
+   [
+    "Compra elegida",
+    "Paquete A",
+    "Paquete B"
+   ],
+   [
+    "Importe reservado",
+    "7.000",
+    "8.500"
+   ],
+   [
+    "Productos incluidos",
+    "cuaderno + carpeta",
+    "cartuchera + lápiz"
+   ]
+  ]
+ },
+ "brochure-co-v1": {
+  "goal": "preparar la asistencia al taller de una persona de 16 años",
+  "steps": [
+   "Hacer la inscripción dentro del plazo",
+   "Guardar la confirmación para llevarla al taller",
+   "Llegar quince minutos antes del inicio"
+  ],
+  "checks": [
+   [
+    "Inscripción prevista",
+    "22/10/2026",
+    "23/10/2026"
+   ],
+   [
+    "Hora de inicio anotada",
+    "10:00",
+    "10:15"
+   ],
+   [
+    "Materiales previstos",
+    "Incluidos",
+    "No incluidos"
+   ],
+   [
+    "Antelación de llegada",
+    "15 minutos antes",
+    "Al comenzar el taller"
+   ]
+  ]
+ },
+ "notice-cl": {
+  "goal": "pedir prestado un libro mientras la sala está cerrada",
+  "steps": [
+   "Comprobar los días y el horario del servicio",
+   "Acudir a la entrada norte durante el horario de préstamo",
+   "Pedir el libro en el servicio que sigue abierto"
+  ],
+  "checks": [
+   [
+    "Entrada elegida",
+    "entrada norte",
+    "entrada sur"
+   ],
+   [
+    "Horario de préstamo",
+    "09:00 a 13:00",
+    "15:00 a 18:00"
+   ],
+   [
+    "Lugar para devolver libros",
+    "buzón",
+    "sala de lectura"
+   ]
+  ]
+ },
+ "schedule-ar": {
+  "goal": "asistir completos a Fotografía y Dibujo",
+  "steps": [
+   "Entrar al aula de Fotografía antes de que empiece",
+   "Completar Fotografía y esperar al siguiente taller",
+   "Asistir a Dibujo desde el inicio hasta el final"
+  ],
+  "checks": [
+   [
+    "Fotografía anotada",
+    "10:00–11:00",
+    "10:30–11:30"
+   ],
+   [
+    "Dibujo anotado",
+    "11:15–12:15",
+    "11:00–12:00"
+   ],
+   [
+    "Aula para Fotografía y Dibujo",
+    "Aula 1",
+    "Aula 2"
+   ]
+  ]
+ },
+ "instructions-cr": {
+  "goal": "entregar una entrevista que se pueda escuchar y cumpla las instrucciones",
+  "steps": [
+   "Grabar con permiso y comprobar que el audio se entiende",
+   "Exportar el archivo con el formato y tamaño pedidos",
+   "Enviar el archivo y guardar el comprobante"
+  ],
+  "checks": [
+   [
+    "Formato de entrega",
+    "MP3",
+    "PDF"
+   ],
+   [
+    "Límite de tamaño",
+    "hasta 10 MB",
+    "15 MB"
+   ],
+   [
+    "Comprobación del sonido",
+    "Escucha el audio",
+    "No escuchar el audio"
+   ],
+   [
+    "Archivo que se envía",
+    "Envía el MP3",
+    "Enviar solo un enlace privado"
+   ]
+  ]
+ },
+ "form-es": {
+  "goal": "completar y entregar una solicitud de cámara",
+  "steps": [
+   "Completar todos los datos obligatorios que faltan",
+   "Enviar la solicitud después de revisarla",
+   "Guardar el comprobante que se genera al enviar"
+  ],
+  "checks": [
+   [
+    "Nombre",
+    "Completar el nombre",
+    "Dejar el nombre vacío",
+    "nombre"
+   ],
+   [
+    "Recogida",
+    "Indicar la fecha de recogida",
+    "Omitir la fecha de recogida",
+    "fecha de recogida"
+   ],
+   [
+    "Devolución",
+    "Indicar la fecha de devolución",
+    "Omitir la fecha de devolución",
+    "fecha de devolución"
+   ],
+   [
+    "Entrega",
+    "Enviar y obtener el comprobante",
+    "Guardar solo un borrador",
+    "Al enviarla se genera un comprobante"
+   ]
+  ]
+ }
+};
+Object.assign(documentPlans,{
+ 'boarding-es-v2':{goal:'preparar el embarque sin confundir horarios',steps:['Comprobar puerta, grupo y equipaje','Llegar al embarque con documento y tarjeta','Subir cuando llamen al grupo indicado'],checks:[['Puerta','B12','14A'],['Inicio del embarque','10:00','10:35'],['Cierre de puerta','10:20','10:35'],['Grupo','2','1']]},
+ 'email-es-v2':{goal:'confirmar y preparar la salida al museo',steps:['Leer el cambio y descargar la autorización','Enviar la confirmación antes del plazo','Acudir a la entrada norte con agua y autorización'],checks:[['Punto de encuentro','entrada norte','puerta principal'],['Hora de encuentro','09:15','09:30'],['Regreso','13:00','16:10'],['Confirmación','respondiendo a este mensaje','Un borrador guardado']]},
+ 'booking-es-v2':{goal:'reservar una sala para el grupo',steps:['Comparar plazas, horario y acceso de las salas','Seleccionar la sala Roble','Pulsar Confirmar reserva'],checks:[['Personas','6','8'],['Horario','10:00 a 11:00','11:00 a 12:00'],['Acceso necesario','sin escalones','Solo escalera'],['Cierre de la reserva','Confirmar reserva','Elegir sin confirmar']]},
+ 'orders-es-v2':{goal:'preparar y solicitar la recogida de un pedido válido',steps:['Comprobar revisión, pago y número de cajas','Marcar el pedido P-104 como Preparado','Pulsar Solicitar recogida antes de las 16:30'],checks:[['Pago','confirmado','Pendiente'],['Máximo de cajas','8','9'],['Hora límite','16:30','17:00'],['Acción final','Solicitar recogida','Guardar una nota interna']]}
+});
+function executiveTask(age,level,id){
+ const doc=get(id),plan=documentPlans[id];
+ const base={id:`document-plan-${age}-${level}-${id}`,contentKey:`document-plan-v2:${age}:${level}:${id}`,passageKey:`document:${id}`,domain:'executive',level,requiresStimulus:true,currencyContext:'foreign',documentPlan:{age,id,level},topic:'Funciones ejecutivas · '+doc.kind,
+  taskFocus:level===1?'planificar con el documento':'supervisar un plan con el documento',
+  stimulus:[text(`Usa el documento para ${plan.goal}.`),{type:'document',documentId:id}],
+  ...(age==='junior'?{juniorProfile:{route:age,level}}:{}),...(['primary','middle'].includes(age)?{schoolProfile:{route:age,level}}:{})};
+ if(level===1)return {...base,type:'order',responseType:'order',mechanic:'document_executive_plan',q:'Ordena las acciones para cumplir el objetivo. Consulta las condiciones del documento.',tokens:[plan.steps[2],plan.steps[0],plan.steps[1]],answer:[...plan.steps],why:'Primero comprueba y prepara lo necesario; después realiza la acción y completa el cierre.'};
+ const errors=level===2?1:Math.min(3,plan.checks.length-1),offset=Object.keys(documentPlans).indexOf(id)%plan.checks.length;
+ const rows=plan.checks.map(([label,expected,wrong],i)=>[label,(i-offset+plan.checks.length)%plan.checks.length<errors?wrong:expected]);
+ return {...base,type:'documentReview',responseType:'multiple',mechanic:'document_executive_audit',
+  q:'Este es el plan propuesto. Consulta el documento y marca todas las partes que debes corregir.',
+  stimulus:[...base.stimulus,{type:'table',header:true,label:'Plan propuesto: compruébalo con el documento',rows:[['Parte del plan','Propuesta'],...rows]}],
+  opts:rows.map(row=>row[0]),answers:rows.filter((row,i)=>row[1]!==plan.checks[i][1]).map(row=>row[0]),
+  why:rows.flatMap((row,i)=>row[1]===plan.checks[i][1]?[]:[row[0]+': debe ser «'+plan.checks[i][1]+'».']).join(' ')};
+}
+function validateExecutiveTask(item){
+ const meta=item.documentPlan,plan=documentPlans[meta?.id],doc=get(meta?.id);
+ if(!plan||!doc||item.domain!=='executive'||![1,2,3].includes(meta.level)||item.level!==meta.level||!supports(meta.age,'executive'))throw new Error('Plan documental incompatible.');
+ const source=JSON.stringify(doc.transcript);
+ if(plan.checks.some(check=>!source.includes(check[3]||check[1])))throw new Error('Las condiciones del plan no corresponden al documento.');
+ const canonical=executiveTask(meta.age,meta.level,meta.id),locale=root.LocaleContent||(typeof require==='function'&&require('./locale-content'));
+ const expected=item.localization?locale.localizeItem(canonical,item.localization.locale,'executive'):canonical;
+ for(const key of ['type','responseType','stimulus','answer','answers'])if(JSON.stringify(item[key])!==JSON.stringify(expected[key]))throw new Error('El plan o sus respuestas no coinciden con el documento.');
+ const values=expected.tokens||expected.opts,received=item.tokens||item.opts;
+ if(!Array.isArray(received)||received.length!==values.length||new Set(received).size!==values.length||!values.every(x=>received.includes(x)))throw new Error('Faltan opciones del plan documental.');
+ return true;
+}
+// Generated document dimensions.
+const documentHeights={"advert-co": 1020, "brochure-co-v1": 1040, "catalogue-co-v1": 1161, "form-es": 1070, "infographic-cr": 1240, "instructions-cr": 1105, "invoice-co-v1": 1321, "label-mx": 920, "map-cl": 1440, "menu-ar": 1020, "news-pa": 1020, "notice-cl": 935, "post-pa": 1020, "poster-mx": 785, "receipt-co-v1": 1285, "schedule-ar": 955, "ticket-es": 820, "transport-co": 920};
+for(const [id,height] of Object.entries(documentHeights))documents[id].height=height;
+// Realistic document dimensions.
+documents["receipt-co-v1"].width=650;documents["receipt-co-v1"].height=1120;
+documents["boarding-es-v2"].width=1200;documents["boarding-es-v2"].height=700;
+documents["email-es-v2"].width=1200;documents["email-es-v2"].height=860;
+documents["booking-es-v2"].width=1200;documents["booking-es-v2"].height=850;
+documents["orders-es-v2"].width=1200;documents["orders-es-v2"].height=850;
+// Editorial document dimensions.
+documents["invoice-co-v1"].width=1000;documents["invoice-co-v1"].height=1000;documents["invoice-co-v1"].design="editorial";
+documents["catalogue-co-v1"].width=1000;documents["catalogue-co-v1"].height=1040;documents["catalogue-co-v1"].design="editorial";
+documents["brochure-co-v1"].width=1000;documents["brochure-co-v1"].height=900;documents["brochure-co-v1"].design="editorial";
+documents["poster-mx"].width=1000;documents["poster-mx"].height=950;documents["poster-mx"].design="editorial";
+documents["ticket-es"].width=1200;documents["ticket-es"].height=590;documents["ticket-es"].design="editorial";
+documents["menu-ar"].width=900;documents["menu-ar"].height=1000;documents["menu-ar"].design="editorial";
+documents["notice-cl"].width=1000;documents["notice-cl"].height=830;documents["notice-cl"].design="editorial";
+documents["transport-co"].width=1200;documents["transport-co"].height=740;documents["transport-co"].design="editorial";
+documents["infographic-cr"].width=1100;documents["infographic-cr"].height=920;documents["infographic-cr"].design="editorial";
+documents["post-pa"].width=1000;documents["post-pa"].height=920;documents["post-pa"].design="editorial";
+documents["label-mx"].width=850;documents["label-mx"].height=1060;documents["label-mx"].design="editorial";
+documents["form-es"].width=1100;documents["form-es"].height=960;documents["form-es"].design="editorial";
+documents["schedule-ar"].width=1200;documents["schedule-ar"].height=800;documents["schedule-ar"].design="editorial";
+documents["advert-co"].width=1000;documents["advert-co"].height=880;documents["advert-co"].design="editorial";
+documents["instructions-cr"].width=1100;documents["instructions-cr"].height=920;documents["instructions-cr"].design="editorial";
+documents["news-pa"].width=1200;documents["news-pa"].height=980;documents["news-pa"].design="editorial";
+const attentionAdvanced={
+ 'invoice-co-v1':['¿Qué combinación coincide con el subtotal y la entrega, en ese orden?','22.000 COP y 3.000 COP',['25.000 COP y 3.000 COP','22.000 COP y 6.000 COP','12.000 COP y 4.000 COP']],
+ 'receipt-co-v1':['¿Qué combinación coincide con el total y el cambio, en ese orden?','19.000 COP y 1.000 COP',['20.000 COP y 1.000 COP','19.000 COP y 2.000 COP','8.000 COP y 6.000 COP']],
+ 'catalogue-co-v1':['¿Qué combinación coincide con el precio del paquete B y su contenido?','8.500 COP: cartuchera y lápiz',['7.000 COP: cartuchera y lápiz','8.500 COP: cuaderno y carpeta','8.000 COP: cuaderno y lápiz']],
+ 'brochure-co-v1':['¿Qué combinación coincide con la fecha límite de inscripción y el horario del taller?','22/10/2026 y de 10:00 a 12:00',['24/10/2026 y de 10:00 a 12:00','22/10/2026 y de 09:45 a 12:00','31/10/2026 y de 10:00 a 12:00']]
+};
+const readingQuestions={
+ "invoice-co-v1": [
+  [
+   "¿Para qué sirve esta factura?",
+   "Para detallar una compra y el importe pendiente",
+   [
+    "Para invitar a un taller",
+    "Para explicar cómo usar un cuaderno"
+   ]
+  ],
+  [
+   "¿Qué relación hay entre cantidad, precio unitario e importe?",
+   "El importe de cada producto corresponde a todas sus unidades",
+   [
+    "El importe es siempre el precio de una sola unidad",
+    "La cantidad indica el dinero entregado"
+   ]
+  ],
+  [
+   "¿Qué afirmación está respaldada por la factura?",
+   "La compra incluye productos y un cargo de entrega",
+   [
+    "La compra ya se ha pagado en efectivo",
+    "Todos los productos tienen el mismo precio"
+   ]
+  ]
+ ],
+ "receipt-co-v1": [
+  [
+   "¿Qué deja registrado este recibo?",
+   "Una compra con el pago y el dinero devuelto",
+   [
+    "Una reserva para otro día",
+    "Una lista de precios sin compra"
+   ]
+  ],
+  [
+   "¿Qué diferencia hay entre «total» y «pagado»?",
+   "El total es el coste de la compra; pagado es el dinero entregado",
+   [
+    "Ambos indican el precio de la leche",
+    "El total incluye solo el cambio"
+   ]
+  ],
+  [
+   "¿Qué no se puede concluir a partir del recibo?",
+   "Que la compra se entregó a domicilio",
+   [
+    "Que se compraron pan, leche y manzanas",
+    "Que se devolvió parte del dinero entregado"
+   ]
+  ]
+ ],
+ "catalogue-co-v1": [
+  [
+   "¿Qué ofrece este catálogo?",
+   "Productos escolares y paquetes con sus precios",
+   [
+    "Una compra ya pagada",
+    "Las normas de una biblioteca"
+   ]
+  ],
+  [
+   "¿Por qué aparecen productos sueltos y paquetes?",
+   "Para presentar distintas formas de comprar los artículos",
+   [
+    "Porque todos los paquetes tienen el mismo contenido",
+    "Porque los productos sueltos son gratuitos"
+   ]
+  ],
+  [
+   "¿Qué información necesitarías preguntar antes de pedir una entrega a casa?",
+   "Si se ofrece entrega y cuánto cuesta",
+   [
+    "Qué incluye el paquete A",
+    "Hasta cuándo es válido el catálogo"
+   ]
+  ]
+ ],
+ "brochure-co-v1": [
+  [
+   "¿A quién se dirige este folleto?",
+   "A personas de 12 a 18 años interesadas en dibujar",
+   [
+    "Solo a quienes ya trabajan como artistas",
+    "A quienes quieren comprar materiales"
+   ]
+  ],
+  [
+   "¿Qué significa que los materiales estén incluidos en una actividad gratuita?",
+   "El folleto no pide comprarlos ni pagar por participar",
+   [
+    "Cada participante debe comprarlos al llegar",
+    "Solo se puede asistir llevando materiales propios"
+   ]
+  ],
+  [
+   "¿Qué afirmación añade una promesa que el folleto no hace?",
+   "Todas las personas saldrán sabiendo dibujar retratos",
+   [
+    "El taller dura dos horas",
+    "Hay que llevar la confirmación de inscripción"
+   ]
+  ]
+ ],
+ "poster-mx": [
+  [
+   "¿Qué anuncia este cartel?",
+   "Una proyección de cine con entrada gratuita",
+   [
+    "Una venta de películas",
+    "Una clase de música"
+   ]
+  ],
+  [
+   "¿Por qué se indican dos horas distintas?",
+   "Una corresponde a la entrada y otra al comienzo de la película",
+   [
+    "Se proyectan dos películas",
+    "Una es para los días de lluvia"
+   ]
+  ],
+  [
+   "¿Qué afirmación no está justificada por el cartel?",
+   "Se entregará una manta a cada asistente",
+   [
+    "La lluvia puede cambiar el espacio de proyección",
+    "Hay tiempo de entrada antes de la película"
+   ]
+  ]
+ ],
+ "ticket-es": [
+  [
+   "¿Qué función tiene esta entrada?",
+   "Permitir una visita a una sala del museo",
+   [
+    "Reservar todas las actividades del museo",
+    "Pedir prestado un robot"
+   ]
+  ],
+  [
+   "¿Qué significa «reserva aparte»?",
+   "El taller exige una gestión adicional a esta entrada",
+   [
+    "El taller se celebra fuera del museo",
+    "La entrada incluye automáticamente el taller"
+   ]
+  ],
+  [
+   "¿Qué afirmación excede la información de la entrada?",
+   "La visita dura exactamente dos horas",
+   [
+    "La entrada permite una visita",
+    "El taller requiere su propia reserva"
+   ]
+  ]
+ ],
+ "menu-ar": [
+  [
+   "¿Para qué consulta alguien este menú?",
+   "Para conocer la oferta de comida y sus precios",
+   [
+    "Para confirmar una compra ya pagada",
+    "Para conocer el horario de un taller"
+   ]
+  ],
+  [
+   "¿Qué implica la expresión «el combo no incluye postre»?",
+   "El precio del combo no cubre un postre",
+   [
+    "El postre sustituye al agua",
+    "Todos los pedidos llevan postre gratis"
+   ]
+  ],
+  [
+   "¿Qué afirmación sería necesario comprobar por otra vía?",
+   "Que el sándwich es adecuado para una alergia concreta",
+   [
+    "Que el menú ofrece ensalada",
+    "Que el combo incluye agua"
+   ]
+  ]
+ ],
+ "notice-cl": [
+  [
+   "¿Por qué se ha publicado este aviso?",
+   "Para explicar cambios temporales por una reparación",
+   [
+    "Para anunciar un cierre definitivo",
+    "Para presentar un libro nuevo"
+   ]
+  ],
+  [
+   "¿Qué diferencia establece el aviso entre espacio y servicio?",
+   "Una sala cierra mientras algunos servicios siguen funcionando",
+   [
+    "Cerrar una sala significa suspender todos los servicios",
+    "El buzón sustituye también el préstamo"
+   ]
+  ],
+  [
+   "¿Qué afirmación no permite sostener el aviso?",
+   "Que el préstamo funcionará con ese horario todo el año",
+   [
+    "Que el cierre de la sala es temporal",
+    "Que se pueden hacer devoluciones por el buzón"
+   ]
+  ]
+ ],
+ "transport-co": [
+  [
+   "¿Qué propósito tiene este aviso de transporte?",
+   "Informar de un cambio temporal de parada",
+   [
+    "Anunciar una nueva tarifa",
+    "Vender entradas para la biblioteca"
+   ]
+  ],
+  [
+   "¿Qué significa que el cambio «solo afecta al sábado 24»?",
+   "La información del traslado se limita a esa fecha",
+   [
+    "La línea deja de existir después del sábado",
+    "La nueva parada se usará todo el mes"
+   ]
+  ],
+  [
+   "¿Qué afirmación necesitaría otra fuente?",
+   "El motivo de que las obras duren un solo día",
+   [
+    "Que las obras causan el cambio de parada",
+    "Que el aviso mantiene la tarifa"
+   ]
+  ]
+ ],
+ "infographic-cr": [
+  [
+   "¿Qué presenta esta infografía?",
+   "Resultados de una revisión de grifos en una escuela",
+   [
+    "Una norma para todas las escuelas",
+    "La venta de grifos nuevos"
+   ]
+  ],
+  [
+   "¿Por qué se distinguen fugas detectadas y reparadas?",
+   "Porque detectar un problema no significa que ya esté resuelto",
+   [
+    "Porque los grifos reparados nunca tuvieron fugas",
+    "Porque se revisaron dos escuelas distintas"
+   ]
+  ],
+  [
+   "¿Qué dato adicional permitiría estudiar la evolución del problema?",
+   "Otra revisión de la misma escuela en una fecha posterior",
+   [
+    "El color de la infografía",
+    "La opinión de alguien que no vio los grifos"
+   ]
+  ]
+ ],
+ "post-pa": [
+  [
+   "¿Qué busca esta publicación?",
+   "Animar a participar en un intercambio de libros",
+   [
+    "Garantizar la venta de cualquier título",
+    "Pedir una devolución a la biblioteca"
+   ]
+  ],
+  [
+   "¿Por qué se advierte que no se garantiza un título concreto?",
+   "La oferta depende de los libros que lleven los participantes",
+   [
+    "No se permite elegir ningún libro",
+    "El club entrega el mismo título a todo el mundo"
+   ]
+  ],
+  [
+   "¿Cómo se relaciona el comentario con el anuncio?",
+   "Expresa una expectativa personal, sin probar el resultado de la actividad",
+   [
+    "Certifica que la actividad ya ha terminado",
+    "Añade una condición obligatoria de participación"
+   ]
+  ]
+ ],
+ "label-mx": [
+  [
+   "¿Qué clase de información reúne esta etiqueta?",
+   "Ingredientes, contenido y pautas de conservación",
+   [
+    "Una cita para visitar una fábrica",
+    "Una valoración de clientes"
+   ]
+  ],
+  [
+   "¿Qué diferencia hay entre ingredientes y posibles trazas?",
+   "La etiqueta distingue la composición de una posible presencia de leche",
+   [
+    "Las trazas son instrucciones para abrir el envase",
+    "La leche es el único ingrediente declarado"
+   ]
+  ],
+  [
+   "¿Qué conclusión no está respaldada por la etiqueta?",
+   "La bebida es adecuada para todas las personas con alergias",
+   [
+    "Hay instrucciones para conservarla después de abrirla",
+    "Se declara una posible presencia de leche"
+   ]
+  ]
+ ],
+ "form-es": [
+  [
+   "¿Para qué sirve este formulario?",
+   "Para solicitar una cámara e indicar las fechas de uso",
+   [
+    "Para publicar una fotografía",
+    "Para comprar una cámara"
+   ]
+  ],
+  [
+   "¿Por qué se distingue guardar de enviar?",
+   "Son acciones diferentes y solo una formaliza la entrega",
+   [
+    "Ambas garantizan que el centro ha recibido la solicitud",
+    "Guardar equivale a devolver la cámara"
+   ]
+  ],
+  [
+   "¿Qué no demuestra por sí solo un comprobante de envío?",
+   "Que la solicitud haya sido aprobada",
+   [
+    "Que se haya realizado un envío",
+    "Que se haya superado la fase de borrador"
+   ]
+  ]
+ ],
+ "map-cl": [
+  [
+   "¿Para qué puede usarse este plano?",
+   "Para orientarse entre los espacios del centro",
+   [
+    "Para saber las horas de apertura",
+    "Para conocer el precio de los talleres"
+   ]
+  ],
+  [
+   "¿Qué información permite comparar dos rutas?",
+   "Indica qué acceso tiene escalones y cuál no",
+   [
+    "Indica cuántos minutos dura cada recorrido",
+    "Indica qué sala abre antes"
+   ]
+  ],
+  [
+   "¿Qué información tendrías que consultar fuera del plano?",
+   "Si la biblioteca está abierta a la hora de tu visita",
+   [
+    "Qué lugar comunica la entrada con la biblioteca",
+    "A qué lado del patio está el taller"
+   ]
+  ]
+ ],
+ "schedule-ar": [
+  [
+   "¿Qué organiza este horario?",
+   "Talleres con sus horas y aulas",
+   [
+    "El precio de una matrícula",
+    "Los libros prestados en una semana"
+   ]
+  ],
+  [
+   "¿Qué implica asistir a un taller «completo»?",
+   "Estar presente durante todo el intervalo indicado",
+   [
+    "Llegar solo al final",
+    "Asistir a cualquier parte del taller"
+   ]
+  ],
+  [
+   "¿Qué no se puede afirmar con este horario?",
+   "Que quien asista obtendrá un certificado",
+   [
+    "Que las actividades tienen duraciones delimitadas",
+    "Que hay actividades simultáneas"
+   ]
+  ]
+ ],
+ "advert-co": [
+  [
+   "¿Qué intenta conseguir este anuncio?",
+   "Promover la contratación de un plan de datos",
+   [
+    "Confirmar que se ha pagado una factura",
+    "Informar de una avería general"
+   ]
+  ],
+  [
+   "¿Cómo deben leerse el titular y las condiciones?",
+   "Juntos: las condiciones precisan el alcance de la oferta",
+   [
+    "Solo importa el titular más llamativo",
+    "Las condiciones describen otro producto"
+   ]
+  ],
+  [
+   "¿Qué reformulación explica la oferta sin exagerar?",
+   "Plan de 30 días con 4 GB a la velocidad inicial y reducción posterior",
+   [
+    "Velocidad máxima ilimitada durante treinta días",
+    "Llamadas y datos sin condiciones"
+   ]
+  ]
+ ],
+ "instructions-cr": [
+  [
+   "¿Qué objetivo tienen estas instrucciones?",
+   "Explicar cómo preparar y entregar una entrevista de audio",
+   [
+    "Promocionar una emisora comercial",
+    "Elegir a la persona ganadora de un concurso"
+   ]
+  ],
+  [
+   "¿Por qué se escucha la grabación antes de exportarla?",
+   "Para comprobar su claridad antes de preparar el archivo final",
+   [
+    "Para sustituir el permiso de la persona",
+    "Para evitar tener que enviar un archivo"
+   ]
+  ],
+  [
+   "¿Qué afirmación añade una obligación que no aparece?",
+   "La entrevista debe durar exactamente cinco minutos",
+   [
+    "Se necesita permiso para grabar",
+    "La entrega tiene una condición de tamaño de archivo"
+   ]
+  ]
+ ],
+ "news-pa": [
+  [
+   "¿Sobre qué asunto informan las dos fuentes?",
+   "La petición de sombra y una actuación del centro",
+   [
+    "La apertura de un nuevo centro",
+    "El resultado de una elección"
+   ]
+  ],
+  [
+   "¿Por qué conviene leer juntas las dos fuentes?",
+   "Una recoge preferencias y la otra una actuación y el tamaño del centro",
+   [
+    "Ambas miden exactamente la misma cosa",
+    "Una demuestra que todas las personas respondieron"
+   ]
+  ],
+  [
+   "¿Qué conclusión exige datos que aún no se tienen?",
+   "La actuación ha satisfecho la petición de sombra",
+   [
+    "Hay una petición de más sombra entre quienes respondieron",
+    "El centro ha instalado toldos"
+   ]
+  ]
+ ]
+};
+Object.assign(readingQuestions,{
+ 'boarding-es-v2':[['¿Para qué sirve esta tarjeta?','Para identificar el vuelo y organizar el embarque',['Para reservar un hotel','Para consultar todas las salidas del aeropuerto']],['¿Por qué conviene mirar el cierre de puerta además de la salida?','Porque la puerta cierra antes de que salga el avión',['Porque ambas horas son iguales','Porque la llegada indica cuándo embarcar']],['¿Qué afirmación no permite asegurar la tarjeta?','Que se puede llevar una maleta grande en la bodega sin pagar',['Que el vuelo llega a Bilbao','Que hay que presentar un documento de identidad']]],
+ 'email-es-v2':[['¿Cuál es la novedad principal del correo?','Cambia el punto de encuentro de la salida',['Se cancela la visita','Cambia la hora de regreso']],['¿Por qué guardar un borrador no basta para confirmar?','Porque la confirmación tiene que enviarse como respuesta',['Porque hay que comprar un billete','Porque la autorización sustituye a la respuesta']],['¿Qué información no aparece en el mensaje?','El precio de la entrada al museo',['La hora de regreso','El lugar de encuentro']]],
+ 'booking-es-v2':[['¿Qué permite hacer esta pantalla?','Consultar y reservar salas',['Comprar libros','Cambiar la hora del reloj']],['¿Por qué no basta con elegir la sala con más plazas?','También debe estar libre y tener el acceso necesario',['Todas las salas tienen seis plazas','La capacidad no aparece en la pantalla']],['¿Qué no puede afirmarse con este panel?','Que Roble estará libre también de 11:00 a 12:00',['Que Pino está ocupada de 10:00 a 11:00','Que Olmo tiene cuatro plazas']]],
+ 'orders-es-v2':[['¿Para qué sirve el panel?','Para comprobar qué pedidos pueden enviarse',['Para diseñar una bicicleta','Para publicar una oferta']],['¿Por qué P-107 no puede enviarse en este transporte?','Porque supera el máximo de ocho cajas',['Porque el pago está pendiente','Porque falta revisar el pedido']],['¿Qué afirmación exige consultar otros datos?','Que P-104 llegará mañana a su destino',['Que P-104 tiene seis cajas','Que la recogida tiene una hora límite']]]
+});
+// Original everyday materials, reviewed against their rendered source images.
+const everydayDocuments = {
+ "everyday-airport-departures": {
+  "title": "Panel de salidas del aeropuerto",
+  "kind": "Pantalla informativa",
+  "country": "España",
+  "width": 1600,
+  "height": 1000,
+  "path": "assets/documents/everyday-es-2026/airport-departures.png",
+  "design": "everyday",
+  "minAge": "primary",
+  "transcript": [
+   {
+    "type": "text",
+    "text": "Aeropuerto Bahía. Salidas. 27/10/2026, 10:20. Terminal 1. Bilbao BH 204: 10:35, B04, última llamada. Valencia BH 318: 10:50, B12, embarcando. Sevilla BH 526: prevista 11:10, nueva hora 11:45, C03. Lisboa BH 642: 11:25, C08, a la hora. Palma BH 710: 11:40, B09, a la hora. El vuelo a Valencia cambia de B06 a B12."
+   }
+  ],
+  "facts": {
+   "valenciaGate": "B12",
+   "sevilleDelayMinutes": 35,
+   "currentTime": "10:20"
+  },
+  "questions": [
+   [
+    "¿Por qué puerta se embarca a Valencia?",
+    "B12",
+    [
+     "B06",
+     "C03",
+     "B04"
+    ]
+   ],
+   [
+    "¿Cuántos minutos de retraso lleva el vuelo a Sevilla?",
+    "35 minutos",
+    [
+     "15 minutos",
+     "20 minutos",
+     "45 minutos"
+    ]
+   ],
+   [
+    "Son las 10:20. ¿Cuánto falta para la salida prevista a Valencia?",
+    "30 minutos",
+    [
+     "15 minutos",
+     "40 minutos",
+     "50 minutos"
+    ]
+   ]
+  ],
+  "plan": {
+   "goal": "preparar el embarque del vuelo a Valencia",
+   "steps": [
+    "Localizar BH 318 en el panel actualizado",
+    "Comprobar la puerta B12 y preparar el equipaje",
+    "Dirigirse a B12 mientras el vuelo está embarcando"
+   ],
+   "checks": [
+    [
+     "Puerta actual",
+     "B12",
+     "B06",
+     "B12"
+    ],
+    [
+     "Hora de salida",
+     "10:50",
+     "11:45",
+     "10:50"
+    ],
+    [
+     "Estado del vuelo",
+     "embarcando",
+     "última llamada",
+     "embarcando"
+    ]
+   ]
+  },
+  "readingQuestions": [
+   [
+    "¿Para qué sirve el panel de salidas?",
+    "Para consultar horarios, puertas y estados de los vuelos",
+    [
+     "Para elegir un asiento",
+     "Para pagar una maleta"
+    ]
+   ],
+   [
+    "¿Por qué conviene buscar el número de vuelo y no solo la ciudad?",
+    "Porque el número permite identificar el vuelo concreto que necesitas",
+    [
+     "Porque todas las ciudades tienen una sola salida",
+     "Porque el número indica el precio"
+    ]
+   ],
+   [
+    "¿Qué cambio debe tenerse en cuenta para llegar al vuelo a Valencia?",
+    "La puerta actual es B12 aunque antes fuera B06",
+    [
+     "El destino cambia a Sevilla",
+     "El vuelo se retrasa hasta las 11:45"
+    ]
+   ]
+  ]
+ },
+ "everyday-bus-shelter-ad": {
+  "title": "Anuncio de una ruta en autobús",
+  "kind": "Display publicitario",
+  "country": "España",
+  "width": 900,
+  "height": 1400,
+  "path": "assets/documents/everyday-es-2026/bus-shelter-ad.png",
+  "design": "everyday",
+  "minAge": "junior",
+  "transcript": [
+   {
+    "type": "text",
+    "text": "Mueve Bahía. Línea 24. Centro a Playa Norte, sin transbordos. Sábados y domingos de 09:00 a 21:00. Frecuencia: cada 20 minutos. Trayecto aproximado: 35 minutos. Billete sencillo: 1,50 €. Menores de 6 años: gratis. Válido del 1 al 30 de noviembre de 2026."
+   }
+  ],
+  "facts": {
+   "fare": 1.5,
+   "frequencyMinutes": 20,
+   "journeyMinutes": 35,
+   "freeUnderAge": 6
+  },
+  "questions": [
+   [
+    "¿Qué línea va a Playa Norte?",
+    "La línea 24",
+    [
+     "La línea 12",
+     "La línea 35",
+     "La línea 20"
+    ]
+   ],
+   [
+    "¿Cuánto cuestan dos billetes sencillos?",
+    "3 €",
+    [
+     "1,50 €",
+     "2 €",
+     "4,50 €"
+    ]
+   ],
+   [
+    "Si sales a las 10:00, ¿a qué hora llegarás aproximadamente?",
+    "A las 10:35",
+    [
+     "A las 10:20",
+     "A las 10:15",
+     "A las 10:45"
+    ]
+   ]
+  ],
+  "plan": {
+   "goal": "preparar el viaje a Playa Norte",
+   "steps": [
+    "Comprobar que el viaje será un sábado o domingo",
+    "Preparar 1,50 € para el billete sencillo",
+    "Tomar la línea 24 hacia Playa Norte"
+   ],
+   "checks": [
+    [
+     "Línea",
+     "24",
+     "12",
+     "24"
+    ],
+    [
+     "Duración aproximada",
+     "35 minutos",
+     "20 minutos",
+     "35 minutos"
+    ],
+    [
+     "Precio del billete",
+     "1,50 €",
+     "3 €",
+     "1,50 €"
+    ]
+   ]
+  },
+  "readingQuestions": [
+   [
+    "¿Qué servicio anuncia este cartel?",
+    "Un autobús directo del centro a la playa los fines de semana",
+    [
+     "Un tren diario al aeropuerto",
+     "Un autobús escolar de lunes a viernes"
+    ]
+   ],
+   [
+    "¿Qué significa «sin transbordos» en este anuncio?",
+    "Que no necesitas cambiar de autobús durante el trayecto",
+    [
+     "Que el trayecto no tiene paradas",
+     "Que todos los billetes son gratuitos"
+    ]
+   ],
+   [
+    "¿Qué dato del anuncio impide usar este servicio especial un martes?",
+    "Funciona los sábados y domingos",
+    [
+     "El trayecto dura unos 35 minutos",
+     "El billete cuesta 1,50 €"
+    ]
+   ]
+  ]
+ },
+ "everyday-museum-brochure": {
+  "title": "Folleto de un museo de ciencia",
+  "kind": "Folleto de tres cuerpos",
+  "country": "España",
+  "width": 1600,
+  "height": 1100,
+  "path": "assets/documents/everyday-es-2026/museum-brochure.png",
+  "design": "everyday",
+  "minAge": "junior",
+  "transcript": [
+   {
+    "type": "text",
+    "text": "Museo Prisma, Plaza del Faro 8, Bahía. Horario: martes a viernes 10:00–18:00; sábados y domingos 10:00–20:00; lunes cerrado. Último acceso una hora antes del cierre. General 8 €; 6 a 17 años 5 €; menores de 6 gratis. Taller Construye un robot: sábados 12:00–13:00, de 10 a 14 años, suplemento 4 €, reserva previa. La entrada no incluye el taller."
+   }
+  ],
+  "facts": {
+   "general": 8,
+   "child": 5,
+   "workshopExtra": 4,
+   "weekendLastEntry": "19:00"
+  },
+  "questions": [
+   [
+    "¿Qué día cierra el museo?",
+    "Los lunes",
+    [
+     "Los martes",
+     "Los sábados",
+     "Los domingos"
+    ]
+   ],
+   [
+    "¿Cuánto paga una persona de 12 años por entrada y taller?",
+    "9 €",
+    [
+     "5 €",
+     "8 €",
+     "12 €"
+    ]
+   ],
+   [
+    "¿Basta la entrada general para asistir al taller?",
+    "No; hay que reservar y pagar el suplemento",
+    [
+     "Sí, todos los talleres están incluidos",
+     "Sí, si llegas antes de las 12:00",
+     "No; el museo solo abre los lunes"
+    ]
+   ]
+  ],
+  "plan": {
+   "goal": "asistir al taller del museo con 12 años",
+   "steps": [
+    "Comprobar la edad y reservar el taller del sábado",
+    "Preparar 9 € para la entrada y el suplemento",
+    "Acudir al taller antes de su inicio a las 12:00"
+   ],
+   "checks": [
+    [
+     "Edad del taller",
+     "10 a 14 años",
+     "6 a 9 años",
+     "10 a 14 años"
+    ],
+    [
+     "Inicio del taller",
+     "12:00",
+     "13:00",
+     "12:00"
+    ],
+    [
+     "Suplemento",
+     "4 €",
+     "8 €",
+     "4 €"
+    ]
+   ]
+  },
+  "readingQuestions": [
+   [
+    "¿Qué información reúne el folleto?",
+    "Horarios, precios y condiciones de una visita y un taller",
+    [
+     "Un catálogo de robots en venta",
+     "Las normas de un aeropuerto"
+    ]
+   ],
+   [
+    "¿Por qué no basta con comprar la entrada para hacer el taller?",
+    "Porque el taller requiere reserva y un suplemento",
+    [
+     "Porque la entrada solo permite visitar los lunes",
+     "Porque el taller es para mayores de 18 años"
+    ]
+   ],
+   [
+    "¿Qué afirmación contradice el folleto?",
+    "La entrada de 5 € incluye el taller de robots",
+    [
+     "Los lunes el museo cierra",
+     "El taller tiene un límite de edad"
+    ]
+   ]
+  ]
+ },
+ "everyday-school-catalogue": {
+  "title": "Catálogo de material para el día a día",
+  "kind": "Catálogo de productos",
+  "country": "España",
+  "width": 1200,
+  "height": 1400,
+  "path": "assets/documents/everyday-es-2026/school-catalogue.png",
+  "design": "everyday",
+  "minAge": "junior",
+  "transcript": [
+   {
+    "type": "text",
+    "text": "Trazo, colección otoño 2026. Mochila Cometa 18 €, 18 L. Botella Brisa 9 €, 600 ml. Estuche Órbita 7 €, 22 cm. Libreta Bosque 5 €, A5, 80 hojas. Pack de clase: mochila, estuche y libreta por 26 €, ahorro 4 €. No incluye botella. IVA incluido. Recogida gratis; envío 3 €. Válido hasta 30/11/2026."
+   }
+  ],
+  "facts": {
+   "backpack": 18,
+   "bottle": 9,
+   "case": 7,
+   "notebook": 5,
+   "bundle": 26,
+   "delivery": 3,
+   "saving": 4
+  },
+  "questions": [
+   [
+    "¿Qué producto tiene una capacidad de 600 ml?",
+    "La botella Brisa",
+    [
+     "La mochila Cometa",
+     "El estuche Órbita",
+     "La libreta Bosque"
+    ]
+   ],
+   [
+    "¿Cuánto cuesta el pack con envío?",
+    "29 €",
+    [
+     "26 €",
+     "30 €",
+     "33 €"
+    ]
+   ],
+   [
+    "¿Cuánto ahorras con el pack frente a comprar sus tres productos por separado?",
+    "4 €",
+    [
+     "3 €",
+     "5 €",
+     "7 €"
+    ]
+   ]
+  ],
+  "plan": {
+   "goal": "comprar el pack de clase con envío",
+   "steps": [
+    "Comprobar los tres productos incluidos en el pack",
+    "Reservar 29 € para el pack y el envío",
+    "Confirmar el pedido con entrega a domicilio"
+   ],
+   "checks": [
+    [
+     "Precio del pack",
+     "26 €",
+     "30 €",
+     "26 €"
+    ],
+    [
+     "Envío",
+     "3 €",
+     "Gratis",
+     "3 €"
+    ],
+    [
+     "Ahorro del pack",
+     "4 €",
+     "9 €",
+     "4 €"
+    ]
+   ]
+  },
+  "readingQuestions": [
+   [
+    "¿Qué permite comparar este catálogo?",
+    "Productos, características, precios y un pack",
+    [
+     "Resultados de un partido",
+     "Salidas de autobuses"
+    ]
+   ],
+   [
+    "¿Por qué el pack cuesta menos que sus tres productos por separado?",
+    "Porque aplica una oferta conjunta de 4 € de ahorro",
+    [
+     "Porque elimina el IVA de toda la compra",
+     "Porque incluye menos hojas en la libreta"
+    ]
+   ],
+   [
+    "¿Qué compra no cumple el objetivo de tener una botella?",
+    "Comprar únicamente el pack de clase",
+    [
+     "Comprar la botella Brisa",
+     "Comprar el pack y una botella aparte"
+    ]
+   ]
+  ]
+ },
+ "everyday-grocery-receipt": {
+  "title": "Ticket de una compra pequeña",
+  "kind": "Ticket de compra",
+  "country": "España",
+  "width": 700,
+  "height": 1300,
+  "path": "assets/documents/everyday-es-2026/grocery-receipt.png",
+  "design": "everyday",
+  "minAge": "junior",
+  "transcript": [
+   {
+    "type": "text",
+    "text": "Mercado Azahar, Plaza del Mercado 12, Bahía. Caja 02. Ticket 004821. 27/10/2026 17:42. Pan integral 1,20 €. Leche 1 L 1,10 €. Manzanas 1 kg 2,40 €. Yogures pack 1,80 €. Pasta 500 g 1,50 €. Total 8,00 €, IVA incluido. Efectivo 10 €, cambio 2 €. 5 artículos."
+   }
+  ],
+  "facts": {
+   "total": 8,
+   "paid": 10,
+   "change": 2,
+   "items": 5,
+   "apples": 2.4
+  },
+  "questions": [
+   [
+    "¿Cuánto ha costado toda la compra?",
+    "8 €",
+    [
+     "10 €",
+     "2 €",
+     "6 €"
+    ]
+   ],
+   [
+    "¿Qué cambio corresponde a un pago de 10 €?",
+    "2 €",
+    [
+     "1 €",
+     "3 €",
+     "8 €"
+    ]
+   ],
+   [
+    "Sin los yogures, ¿cuánto costaría la compra?",
+    "6,20 €",
+    [
+     "6,80 €",
+     "7,20 €",
+     "9,80 €"
+    ]
+   ]
+  ],
+  "plan": {
+   "goal": "comprobar el cambio antes de salir de la tienda",
+   "steps": [
+    "Leer el total de 8,00 € en el ticket",
+    "Comparar el total con los 10 € entregados",
+    "Comprobar que se devuelven 2 € y guardar el ticket"
+   ],
+   "checks": [
+    [
+     "Total",
+     "8,00 €",
+     "10 €",
+     "8,00 €"
+    ],
+    [
+     "Efectivo entregado",
+     "10 €",
+     "8,00 €",
+     "10 €"
+    ],
+    [
+     "Cambio",
+     "2 €",
+     "1 €",
+     "2 €"
+    ]
+   ]
+  },
+  "readingQuestions": [
+   [
+    "¿Qué deja registrado este ticket?",
+    "Los productos comprados, el total y el cambio",
+    [
+     "Una reserva para otro día",
+     "Los horarios de la tienda"
+    ]
+   ],
+   [
+    "¿Qué relación hay entre efectivo, total y cambio?",
+    "El cambio es la diferencia entre el efectivo y el total",
+    [
+     "El cambio es un producto más",
+     "El efectivo se suma al precio de cada producto"
+    ]
+   ],
+   [
+    "¿Qué afirmación no se puede asegurar con este ticket?",
+    "Que la compra se entregó a domicilio",
+    [
+     "Que se pagó en efectivo",
+     "Que se compraron cinco artículos"
+    ]
+   ]
+  ]
+ },
+ "everyday-boarding-pass": {
+  "title": "Tarjeta de embarque con cambio de puerta",
+  "kind": "Tarjeta de embarque",
+  "country": "España",
+  "width": 1500,
+  "height": 850,
+  "path": "assets/documents/everyday-es-2026/boarding-pass.png",
+  "design": "everyday",
+  "minAge": "primary",
+  "transcript": [
+   {
+    "type": "text",
+    "text": "Bahía Air. Tarjeta de embarque ficticia. Viajero Demo. Madrid MAD a Valencia VLC. Vuelo BH 318, 27/10/2026. Salida 10:50. Asiento 14A. Embarque 10:15; cierre de puerta 10:35; grupo 2. Puerta impresa B06. Aviso recibido 10:05: nueva puerta B12 para BH 318."
+   }
+  ],
+  "facts": {
+   "seat": "14A",
+   "printedGate": "B06",
+   "updatedGate": "B12",
+   "close": "10:35",
+   "departure": "10:50"
+  },
+  "questions": [
+   [
+    "¿Cuál es el asiento asignado?",
+    "14A",
+    [
+     "B06",
+     "B12",
+     "2"
+    ]
+   ],
+   [
+    "Tras el aviso, ¿a qué puerta debes ir?",
+    "B12",
+    [
+     "B06",
+     "14A",
+     "C03"
+    ]
+   ],
+   [
+    "Si llegas a la puerta a las 10:40, ¿ha terminado el plazo de embarque?",
+    "Sí, la puerta cierra a las 10:35",
+    [
+     "No; puedes llegar hasta las 10:50",
+     "No; la puerta cierra a las 10:45",
+     "Sí; la puerta cierra a las 10:15"
+    ]
+   ]
+  ],
+  "plan": {
+   "goal": "embarcar sin confundir puerta y asiento",
+   "steps": [
+    "Leer la tarjeta y el aviso con la nueva puerta",
+    "Acudir a B12 antes de las 10:35",
+    "Embarcar con el grupo 2 y localizar el asiento 14A"
+   ],
+   "checks": [
+    [
+     "Puerta actual",
+     "B12",
+     "B06",
+     "B12"
+    ],
+    [
+     "Cierre de puerta",
+     "10:35",
+     "10:50",
+     "10:35"
+    ],
+    [
+     "Asiento",
+     "14A",
+     "B12",
+     "14A"
+    ]
+   ]
+  },
+  "readingQuestions": [
+   [
+    "¿Para qué sirve esta tarjeta?",
+    "Para organizar el acceso a un vuelo concreto",
+    [
+     "Para reservar un hotel",
+     "Para consultar todos los vuelos del aeropuerto"
+    ]
+   ],
+   [
+    "¿Por qué debes leer también el aviso recibido?",
+    "Porque actualiza la puerta que aparece impresa",
+    [
+     "Porque cambia el asiento a B12",
+     "Porque cancela el vuelo"
+    ]
+   ],
+   [
+    "¿Qué hora debes respetar para no llegar después del cierre de puerta?",
+    "Las 10:35, aunque el avión salga a las 10:50",
+    [
+     "Las 10:50, porque es la salida",
+     "Las 10:40, porque es antes de la salida"
+    ]
+   ]
+  ]
+ },
+ "everyday-video-recipe": {
+  "title": "Información en un vídeo de cocina",
+  "kind": "Captura de vídeo",
+  "country": "España",
+  "width": 1600,
+  "height": 1050,
+  "path": "assets/documents/everyday-es-2026/video-recipe.png",
+  "design": "everyday",
+  "minAge": "junior",
+  "transcript": [
+   {
+    "type": "text",
+    "text": "Aula en Vídeo. Verduras al horno, paso a paso. Reproducción pausada en 00:42 de 03:20. Paso 2: precalienta el horno. Subtítulo: Pon el horno a 180 °C antes de introducir la bandeja. Preparación 10 min; horneado 20 min; 2 personas. Guantes para retirar la bandeja. Ingredientes: 2 zanahorias, 1 calabacín, 1 cucharada de aceite. Capítulos 00:00 Ingredientes, 00:35 Precalentar, 01:05 Preparar verduras, 01:50 Hornear, 02:50 Servir."
+   }
+  ],
+  "facts": {
+   "temperatureC": 180,
+   "prepMinutes": 10,
+   "ovenMinutes": 20,
+   "servings": 2,
+   "positionSeconds": 42,
+   "durationSeconds": 200
+  },
+  "questions": [
+   [
+    "¿A qué temperatura hay que precalentar el horno?",
+    "180 °C",
+    [
+     "160 °C",
+     "200 °C",
+     "120 °C"
+    ]
+   ],
+   [
+    "¿Cuánto suman la preparación y el horneado indicados?",
+    "30 minutos",
+    [
+     "20 minutos",
+     "10 minutos",
+     "40 minutos"
+    ]
+   ],
+   [
+    "¿En qué momento empieza el capítulo de hornear?",
+    "En 01:50",
+    [
+     "En 00:35",
+     "En 01:05",
+     "En 02:50"
+    ]
+   ]
+  ],
+  "plan": {
+   "goal": "seguir la preparación de las verduras",
+   "steps": [
+    "Precalentar el horno a 180 °C",
+    "Preparar las verduras e introducir la bandeja",
+    "Hornear 20 minutos y retirar la bandeja con guantes"
+   ],
+   "checks": [
+    [
+     "Temperatura",
+     "180 °C",
+     "200 °C",
+     "180 °C"
+    ],
+    [
+     "Horneado",
+     "20 min",
+     "10 min",
+     "20 min"
+    ],
+    [
+     "Personas",
+     "2 personas",
+     "4 personas",
+     "2 personas"
+    ]
+   ]
+  },
+  "readingQuestions": [
+   [
+    "¿Qué explica el vídeo mostrado?",
+    "Cómo preparar verduras al horno",
+    [
+     "Cómo reparar un horno",
+     "Cómo plantar zanahorias"
+    ]
+   ],
+   [
+    "¿Para qué sirven los capítulos que aparecen a la derecha?",
+    "Para localizar diferentes partes de la explicación",
+    [
+     "Para indicar el precio de los ingredientes",
+     "Para cambiar el número de personas"
+    ]
+   ],
+   [
+    "¿Qué instrucción debe cumplirse antes de introducir la bandeja?",
+    "Precalentar el horno a 180 °C",
+    [
+     "Retirar la bandeja con guantes",
+     "Servir las verduras"
+    ]
+   ]
+  ]
+ },
+ "everyday-cinema-poster": {
+  "title": "Póster de cine al aire libre",
+  "kind": "Póster cultural",
+  "country": "España",
+  "width": 1000,
+  "height": 1400,
+  "path": "assets/documents/everyday-es-2026/cinema-poster.png",
+  "design": "everyday",
+  "minAge": "junior",
+  "transcript": [
+   {
+    "type": "text",
+    "text": "Centro Juvenil Faro. Cine bajo las estrellas. Actividad a partir de 8 años. Sábado 14 de noviembre de 2026. Apertura 18:30; película 19:00. Patio del centro juvenil. Gratis. Aforo 80 personas. Trae manta. Si llueve, salón 2. Menores de 12 años deben ir con persona adulta."
+   }
+  ],
+  "facts": {
+   "doors": "18:30",
+   "film": "19:00",
+   "capacity": 80,
+   "adultUnderAge": 12,
+   "rainRoom": "salón 2"
+  },
+  "questions": [
+   [
+    "¿A qué hora empieza la película?",
+    "A las 19:00",
+    [
+     "A las 18:30",
+     "A las 19:30",
+     "A las 20:00"
+    ]
+   ],
+   [
+    "¿Cuánto tiempo hay entre la apertura y la película?",
+    "30 minutos",
+    [
+     "15 minutos",
+     "45 minutos",
+     "60 minutos"
+    ]
+   ],
+   [
+    "¿Puede ir sola una persona de 10 años?",
+    "No; debe ir con una persona adulta",
+    [
+     "Sí; puede ir sola desde los 8 años",
+     "Sí; la entrada gratuita permite ir sin compañía",
+     "No; solo pueden entrar mayores de 18 años"
+    ]
+   ]
+  ],
+  "plan": {
+   "goal": "ir al cine con una persona de 10 años",
+   "steps": [
+    "Acordar la asistencia con una persona adulta",
+    "Preparar una manta y consultar si llueve",
+    "Llegar con tiempo para la película de las 19:00"
+   ],
+   "checks": [
+    [
+     "Inicio de película",
+     "19:00",
+     "18:30",
+     "19:00"
+    ],
+    [
+     "Alternativa por lluvia",
+     "salón 2",
+     "Patio",
+     "salón 2"
+    ],
+    [
+     "Aforo",
+     "80 personas",
+     "120 personas",
+     "80 personas"
+    ]
+   ]
+  },
+  "readingQuestions": [
+   [
+    "¿Cuál es la finalidad del póster?",
+    "Invitar a una proyección e indicar sus condiciones",
+    [
+     "Vender mantas",
+     "Anunciar el cierre del centro juvenil"
+    ]
+   ],
+   [
+    "¿Por qué aparecen dos lugares para la proyección?",
+    "Porque el lugar cambia si llueve",
+    [
+     "Porque hay dos películas a la misma hora",
+     "Porque cada edad tiene una sala obligatoria"
+    ]
+   ],
+   [
+    "¿Qué afirmación no está respaldada por el cartel?",
+    "Que una persona de 10 años puede acudir sola",
+    [
+     "Que la entrada es gratuita",
+     "Que el aforo tiene un límite"
+    ]
+   ]
+  ]
+ },
+ "everyday-queue-display": {
+  "title": "Pantalla de turnos de atención",
+  "kind": "Display de turnos",
+  "country": "España",
+  "width": 1400,
+  "height": 950,
+  "path": "assets/documents/everyday-es-2026/queue-display.png",
+  "design": "everyday",
+  "minAge": "junior",
+  "transcript": [
+   {
+    "type": "text",
+    "text": "Oficina de Atención Ciudadana, 11:26. Última llamada: A028 al puesto 3. En atención: A026 puesto 1; B014 puesto 2; A028 puesto 3. Las letras A y B corresponden a trámites distintos. El resguardo de ejemplo tiene código A029 y todavía no ha sido llamado."
+   }
+  ],
+  "facts": {
+   "latest": "A028",
+   "latestDesk": 3,
+   "ticket": "A029",
+   "called": false
+  },
+  "questions": [
+   [
+    "¿Qué turno acaba de ser llamado?",
+    "A028",
+    [
+     "A029",
+     "B014",
+     "A026"
+    ]
+   ],
+   [
+    "¿A qué puesto debe ir A028?",
+    "Al puesto 3",
+    [
+     "Al puesto 1",
+     "Al puesto 2",
+     "Al puesto 4"
+    ]
+   ],
+   [
+    "Con el resguardo A029, ¿debes acercarte ya a un puesto?",
+    "No, todavía no ha sido llamado",
+    [
+     "Sí, debes ir al puesto 3",
+     "Sí, debes ir al puesto 2",
+     "Sí, porque A029 aparece en tu resguardo"
+    ]
+   ]
+  ],
+  "plan": {
+   "goal": "esperar correctamente con el resguardo A029",
+   "steps": [
+    "Leer el código A029 de tu resguardo",
+    "Compararlo con los turnos llamados en la pantalla",
+    "Seguir esperando hasta que se anuncie A029"
+   ],
+   "checks": [
+    [
+     "Resguardo",
+     "A029",
+     "A028",
+     "A029"
+    ],
+    [
+     "Última llamada",
+     "A028",
+     "A029",
+     "A028"
+    ],
+    [
+     "Puesto de A028",
+     "puesto 3",
+     "puesto 2",
+     "puesto 3"
+    ]
+   ]
+  },
+  "readingQuestions": [
+   [
+    "¿Para qué sirve la pantalla?",
+    "Para avisar de los turnos y el puesto al que deben acudir",
+    [
+     "Para publicar los nombres de las personas",
+     "Para cobrar los trámites"
+    ]
+   ],
+   [
+    "¿Por qué no basta con fijarse solo en el número?",
+    "Porque las letras distinguen trámites diferentes",
+    [
+     "Porque las letras indican el precio",
+     "Porque todos los turnos van al puesto 3"
+    ]
+   ],
+   [
+    "¿Qué indica comparar A029 con los turnos en atención?",
+    "Que el resguardo de ejemplo aún debe esperar",
+    [
+     "Que A029 ya está en el puesto 3",
+     "Que debe cambiar su código por B014"
+    ]
+   ]
+  ]
+ },
+ "everyday-rail-disruption": {
+  "title": "Aviso de una incidencia ferroviaria",
+  "kind": "Pantalla de estación",
+  "country": "España",
+  "width": 1500,
+  "height": 1000,
+  "path": "assets/documents/everyday-es-2026/rail-disruption.png",
+  "design": "everyday",
+  "minAge": "primary",
+  "transcript": [
+   {
+    "type": "text",
+    "text": "Red Bahía, Estación Central, 27/10/2026 08:10. Línea R2 interrumpida entre Centro y Jardines hasta las 12:00. Sustitución R2-B desde salida norte. Billete de tren válido sin suplemento. Cada 15 minutos. Tiempo adicional aproximado 20 minutos. Próximo autobús 08:15. Resto de R2 normal."
+   }
+  ],
+  "facts": {
+   "replacement": "R2-B",
+   "exit": "norte",
+   "next": "08:15",
+   "frequencyMinutes": 15,
+   "extraMinutes": 20,
+   "until": "12:00"
+  },
+  "questions": [
+   [
+    "¿Dónde se toma el autobús de sustitución?",
+    "En la parada provisional de la salida norte",
+    [
+     "En la salida sur",
+     "En el andén del tren",
+     "En la entrada del museo"
+    ]
+   ],
+   [
+    "¿Hay que pagar otro billete?",
+    "No, sirve el billete de tren",
+    [
+     "Sí, hay que pagar un suplemento",
+     "Sí, necesitas dos billetes nuevos",
+     "No se admite ningún billete de tren"
+    ]
+   ],
+   [
+    "Si se mantiene la frecuencia, ¿cuándo saldrá el siguiente al de las 08:15?",
+    "A las 08:30",
+    [
+     "A las 08:20",
+     "A las 08:25",
+     "A las 08:45"
+    ]
+   ]
+  ],
+  "plan": {
+   "goal": "continuar el viaje durante la interrupción",
+   "steps": [
+    "Leer el aviso y localizar la salida norte",
+    "Ir a la parada provisional con el billete de tren",
+    "Tomar el autobús R2-B hacia el tramo interrumpido"
+   ],
+   "checks": [
+    [
+     "Autobús",
+     "R2-B",
+     "R2-C",
+     "R2-B"
+    ],
+    [
+     "Salida",
+     "norte",
+     "sur",
+     "norte"
+    ],
+    [
+     "Tiempo adicional",
+     "20 minutos",
+     "15 minutos",
+     "20 minutos"
+    ]
+   ]
+  },
+  "readingQuestions": [
+   [
+    "¿Qué comunica el aviso?",
+    "Una interrupción y una alternativa para continuar el viaje",
+    [
+     "El cierre permanente de toda la red",
+     "Un cambio de precio para todos los billetes"
+    ]
+   ],
+   [
+    "¿Por qué puede servirte el billete de tren en el autobús?",
+    "Porque es un servicio de sustitución sin coste adicional",
+    [
+     "Porque todos los autobuses son siempre gratis",
+     "Porque hay que comprar un billete nuevo"
+    ]
+   ],
+   [
+    "¿Qué cambio conviene hacer en tu plan de viaje?",
+    "Reservar unos 20 minutos adicionales y buscar la salida norte",
+    [
+     "Llegar 20 minutos más tarde sin cambiar el trayecto",
+     "Esperar el tren en cualquier andén sin leer el aviso"
+    ]
+   ]
+  ]
+ },
+ "everyday-online-order": {
+  "title": "Pantalla de recogida de un pedido",
+  "kind": "Captura de una tienda",
+  "country": "España",
+  "width": 1300,
+  "height": 1150,
+  "path": "assets/documents/everyday-es-2026/online-order.png",
+  "design": "everyday",
+  "minAge": "junior",
+  "transcript": [
+   {
+    "type": "text",
+    "text": "Trazo online. Pedido TZ-2048, realizado 26/10/2026. Listo para recoger. Calle del Olmo 18. Martes a sábado, 10:00–14:00 y 17:00–20:00. Domingo y lunes cerrado. Recoger antes del cierre del sábado 31/10/2026. Código R7K-42. Otra persona puede recogerlo mostrando el código. Estuche 7 €, libreta 5 €, total ya pagado 12 €. Recogida gratis. No volver a pagar."
+   }
+  ],
+  "facts": {
+   "code": "R7K-42",
+   "totalPaid": 12,
+   "deadline": "31/10/2026 20:00",
+   "closedDays": [
+    "domingo",
+    "lunes"
+   ]
+  },
+  "questions": [
+   [
+    "¿Qué código hay que mostrar para recogerlo?",
+    "R7K-42",
+    [
+     "TZ-2048",
+     "R7K-24",
+     "004821"
+    ]
+   ],
+   [
+    "¿Cuánto debes pagar al recogerlo?",
+    "Nada, los 12 € ya están pagados",
+    [
+     "12 €",
+     "3 €",
+     "15 €"
+    ]
+   ],
+   [
+    "¿Puedes recogerlo un martes a las 15:00?",
+    "No; la tienda cierra de 14:00 a 17:00",
+    [
+     "Sí, abre de forma continua",
+     "Sí, la recogida permite entrar a cualquier hora",
+     "No, los martes cierra todo el día"
+    ]
+   ]
+  ],
+  "plan": {
+   "goal": "recoger un pedido que ya está pagado",
+   "steps": [
+    "Comprobar el horario y el plazo de recogida",
+    "Guardar el código R7K-42 antes de ir a la tienda",
+    "Mostrar el código en caja y recoger sin volver a pagar"
+   ],
+   "checks": [
+    [
+     "Código",
+     "R7K-42",
+     "TZ-2048",
+     "R7K-42"
+    ],
+    [
+     "Total ya pagado",
+     "12 €",
+     "15 €",
+     "12 €"
+    ],
+    [
+     "Recogida",
+     "gratis",
+     "3 €",
+     "Recogida gratis"
+    ]
+   ]
+  },
+  "readingQuestions": [
+   [
+    "¿Qué comunica esta pantalla del pedido?",
+    "Que el pedido está listo para recoger y ya está pagado",
+    [
+     "Que el pedido está cancelado",
+     "Que falta pagar un envío"
+    ]
+   ],
+   [
+    "¿Por qué es importante guardar el código?",
+    "Porque hay que mostrarlo en caja para recoger el pedido",
+    [
+     "Porque es una contraseña de pago",
+     "Porque indica el precio del pedido"
+    ]
+   ],
+   [
+    "¿Qué acción se ajusta a las condiciones de recogida?",
+    "Ir durante el horario de apertura antes de que termine el plazo",
+    [
+     "Ir el domingo a cualquier hora",
+     "Pagar otros 12 € al llegar"
+    ]
+   ]
+  ]
+ },
+ "everyday-sports-schedule": {
+  "title": "Programa de actividades de un polideportivo",
+  "kind": "Programa semanal",
+  "country": "España",
+  "width": 1400,
+  "height": 1100,
+  "path": "assets/documents/everyday-es-2026/sports-schedule.png",
+  "design": "everyday",
+  "minAge": "junior",
+  "transcript": [
+   {
+    "type": "text",
+    "text": "Polideportivo La Vega, noviembre 2026. Baloncesto lunes 17:00–18:00, 10–12 años, pista 1, 4 plazas. Baile urbano martes 17:30–18:30, 13–15, sala 2, completo. Escalada miércoles 18:00–19:00, 13–17, rocódromo, 3 plazas. Fútbol sala jueves 17:00–18:00, 10–12, pista 2, 6 plazas. Yoga viernes 18:00–19:00, 16–18, sala 1, 5 plazas. Inscripciones hasta 30/10; 12 €/mes por actividad; menores con autorización. Agua y calzado deportivo. Material de escalada incluido. Grupos completos con lista de espera."
+   }
+  ],
+  "facts": {
+   "monthlyFee": 12,
+   "climbingPlaces": 3,
+   "basketballPlaces": 4,
+   "footballPlaces": 6,
+   "danceFull": true
+  },
+  "questions": [
+   [
+    "¿Dónde se hace fútbol sala?",
+    "En la pista 2",
+    [
+     "En la pista 1",
+     "En la sala 2",
+     "En el rocódromo"
+    ]
+   ],
+   [
+    "¿Cuánto cuestan dos actividades al mes?",
+    "24 €",
+    [
+     "12 €",
+     "18 €",
+     "36 €"
+    ]
+   ],
+   [
+    "Con 14 años, ¿qué actividad con plazas libres puedes elegir?",
+    "Escalada",
+    [
+     "Baloncesto",
+     "Fútbol sala",
+     "Baile urbano, sin lista de espera"
+    ]
+   ]
+  ],
+  "plan": {
+   "goal": "inscribirse en escalada con 14 años",
+   "steps": [
+    "Comprobar la edad y las plazas de escalada",
+    "Preparar la autorización y la cuota de 12 €",
+    "Inscribirse antes del 30 de octubre en recepción"
+   ],
+   "checks": [
+    [
+     "Plazas de escalada",
+     "3 plazas",
+     "6 plazas",
+     "3 plazas"
+    ],
+    [
+     "Horario de escalada",
+     "18:00–19:00",
+     "17:00–18:00",
+     "18:00–19:00"
+    ],
+    [
+     "Cuota mensual",
+     "12 €",
+     "24 €",
+     "12 €/mes"
+    ]
+   ]
+  },
+  "readingQuestions": [
+   [
+    "¿Qué permite elegir este programa?",
+    "Una actividad según horario, edad y plazas",
+    [
+     "Una película según su duración",
+     "Un vuelo según su destino"
+    ]
+   ],
+   [
+    "¿Por qué no basta con que te guste una actividad para apuntarte?",
+    "También debes cumplir la edad y comprobar las plazas",
+    [
+     "Porque todas las actividades son para mayores de edad",
+     "Porque todas se hacen a la misma hora"
+    ]
+   ],
+   [
+    "¿Qué significa que baile urbano esté completo?",
+    "Que puedes consultar la lista de espera, pero no hay plaza libre inmediata",
+    [
+     "Que la actividad ha terminado para siempre",
+     "Que puedes entrar sin inscribirte"
+    ]
+   ]
+  ]
+ }
+};
+for(const [id,entry] of Object.entries(everydayDocuments)){
+ const {plan,readingQuestions:reading,...doc}=entry;documents[id]=doc;
+ documentPlans[id]=plan;readingQuestions[id]=reading;
+}
+function get(id){return documents[id]||null;}
+function supports(age,domain){return ['junior','primary','middle','teen'].includes(age)&&['attention','executive','literacy','reading','middleReading'].includes(domain)&&!(age==='junior'&&domain==='literacy');}
+function pool(age,domain,level=1){
+ if(!supports(age,domain))return [];
+ const source=Object.keys(documents).filter(id=>domain!=='executive'||Object.hasOwn(documentPlans,id)).filter(id=>!documents[id].minAge?age!=='junior'||id==='catalogue-co-v1':['early','junior','primary','middle','teen'].indexOf(age)>=['early','junior','primary','middle','teen'].indexOf(documents[id].minAge));
+ if(domain==='executive')return source.map(id=>executiveTask(age,level,id));
+ return source.map(id=>{
+  const doc=get(id),tuple=domain==='attention'&&level===3?(attentionAdvanced[id]||doc.questions[2]):domain!=='attention'?readingQuestions[id][level-1]:doc.questions[level-1],q=tuple[0],a=tuple[1],opts=[a,...tuple[2]];
+  return {id:`document-${age}-${domain}-${level}-${id}`,contentKey:`document-v1:${age}:${domain}:${level}:${id}`,passageKey:`document:${id}`,domain,level,
+   type:'standard',responseType:'choice',requiresStimulus:true,currencyContext:'foreign',taskFocus:domain==='attention'?'localizar y contrastar datos':domain==='executive'?'supervisar decisiones':'comprender propósito, relaciones y límites',topic:doc.kind+' · interpretar un documento',
+   stimulus:[...(['invoice-co-v1','receipt-co-v1','catalogue-co-v1'].includes(id)?[text('Los importes están en pesos colombianos (COP).')]:[]),{type:'document',documentId:id}],q,a,opts,
+   why:a+'. Comprueba los datos directamente en el documento.',mechanic:`document_${domain}_${doc.kind.replace(/\s/g,'_')}_${level}`,
+   ...(age==='junior'?{juniorProfile:{route:age,level}}:{}),...(['primary','middle'].includes(age)?{schoolProfile:{route:age,level}}:{})};
+ });
+}
+function generate(age,domain,level){const bank=pool(age,domain,level);return bank[Math.floor(Math.random()*bank.length)]||null;}
+const api={validateExecutiveTask,documents,get,supports,pool,generate};root.DocumentLibrary=api;
+if(typeof module!=='undefined')module.exports=api;
+})(typeof window==='undefined'?globalThis:window);

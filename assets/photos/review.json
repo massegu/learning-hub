@@ -1,0 +1,133 @@
+{
+  "origin": "AI-generated photorealistic scenes using image_gen; not photographs of actual customers, their homes or workplaces.",
+  "review": "Each source and edit visually inspected against js/photo-library.js. Original 12 pairs ask about colour changes. Cafe and sports add quantity, presence, orientation, object identity and open/closed state; incidental texture changes are not assessed. The museumComparison pair adds an everyday people-centred scene with three localized differences: scarf pattern, guide fold and a small lapel pin. Difference tasks progress from three labelled candidate regions at level 1 to four at level 2 and six unlabelled, directly clickable regions at level 3.",
+  "images": [
+    {
+      "file": "bus-a.png",
+      "sha256": "207ae47ea4a394c729871dd83b4d77c9a9abdf9bf4688ae916f10123d74a4f1b"
+    },
+    {
+      "file": "bus-b.png",
+      "sha256": "902d65858d393aad7eaad20dc9754be25c2a2bc41c278d9bc17474f693c57417"
+    },
+    {
+      "file": "cafe-a.png",
+      "sha256": "62aab7dadf9e7ec44a9efaa659b19e398fa437de877fb659e91d89e12d9f81da"
+    },
+    {
+      "file": "cafe-b.png",
+      "sha256": "b55b87c4e4e38bbf3ef74b5990df31a33784caed22496cb0ed94d34d2892d1bf"
+    },
+    {
+      "file": "city-a.png",
+      "sha256": "64c6f8a0f33e2fd56ecf41f934451b32499ced5b0b688ef9ca6b6797116baf2e"
+    },
+    {
+      "file": "city-b.png",
+      "sha256": "9d37a5ac737bc78b556c2f25b9421d51974e2a6de964b6bac9e1f635f5283534"
+    },
+    {
+      "file": "desk-a.png",
+      "sha256": "b6007981e971135295de1b6aaeeaf6bec1138cc9499df34305fe17acf9f6b839"
+    },
+    {
+      "file": "desk-b.png",
+      "sha256": "95d244f13dde26a33f8392e83e5180abfa0be51f42d2022efa162cf383916f42"
+    },
+    {
+      "file": "entry-a.png",
+      "sha256": "f0ae1628be809b3019bdf7592f72d7cbbc56b43fc7b2e45177f2e323b04de360"
+    },
+    {
+      "file": "entry-b.png",
+      "sha256": "74d8c3efa373fb1870ca0998cda5e4ebde2bed8e00b4fc7a90eef6ee44115d1f"
+    },
+    {
+      "file": "factory-a.png",
+      "sha256": "ca3d93df03eb063c79465d70603db82a806e7a43dfeff48f8d93544a79411430"
+    },
+    {
+      "file": "factory-b.png",
+      "sha256": "6e09f32140c1831cae1f0994a0e48fccb45ead8b670d533f4935ac2919608608"
+    },
+    {
+      "file": "kitchen-a.png",
+      "sha256": "7f2dc018b52c9939865db63568586af3df0478187eeaedb58d9f75cd98de5aad"
+    },
+    {
+      "file": "kitchen-b.png",
+      "sha256": "c8ed4f6d571838c64a117f8d46305eb85daa483daf8c3858cce073ee53e01ed0"
+    },
+    {
+      "file": "living-a.png",
+      "sha256": "3a0a1b3874d548737bf671a1aa69285241d4918d5c80831960ea9d0c286dacf9"
+    },
+    {
+      "file": "living-b.png",
+      "sha256": "e8095180a2a4f8e21eb2cb4cd93ed2e29a7b6e0616bec9e47dc85e3b42b79a89"
+    },
+    {
+      "file": "market-a.png",
+      "sha256": "a880ee63c4088d67f18b3a5f31e4490f4ec1af2c7f7f7c42ceb7ad65d4cce891"
+    },
+    {
+      "file": "market-b.png",
+      "sha256": "3d4f763cec9eb59ef5c21270a7aa563bc0326e127e8f5327af5918d6d34fe40c"
+    },
+    {
+      "file": "museum-comparison-a.png",
+      "sha256": "dd0c53f0a64e4eb8d1a22d94a1375796ff3ed7a7c5e9e22352460bf67d81cf61"
+    },
+    {
+      "file": "museum-comparison-b.png",
+      "sha256": "f35b1a9197d582f4c794c7fe5574a3635e74ac7216c966f4e3352d2e4e657d6a"
+    },
+    {
+      "file": "nature-a.png",
+      "sha256": "6c672c4c796b2ef308514d760b63b6352eb68f65381610b3476c1ee44a4c762f"
+    },
+    {
+      "file": "nature-b.png",
+      "sha256": "446fb5d4a6abb85f76a23a01867656e65eac1bf86c1feff8216ba51fa213ee73"
+    },
+    {
+      "file": "park-a.png",
+      "sha256": "d9ac11aad18ec4efccec9d72587413894a17220c6d91bf3103013baf8e562db9"
+    },
+    {
+      "file": "park-b.png",
+      "sha256": "976bcc156a8857d87f0a4e021e90ae62bbaa7e09c295c7e819d6f9d7de6345d1"
+    },
+    {
+      "file": "picnic-a.png",
+      "sha256": "a07b89f56678b3a0a0983de923876684da930fa5ade263a5fe0240f610788bed"
+    },
+    {
+      "file": "picnic-b.png",
+      "sha256": "83b932a902db9b92ed89783fb17a05115cc01e80d66313653c8470f409bf57e9"
+    },
+    {
+      "file": "sports-a.png",
+      "sha256": "a59821a793472eca71402e15fc4568b6e40f0e65e5d88f28877fd7991962ecaf"
+    },
+    {
+      "file": "sports-b.png",
+      "sha256": "cd2166c270457e0740a14461eed5745fed179bd58e2da551cb52bd0ce03856be"
+    },
+    {
+      "file": "street-a.png",
+      "sha256": "c7db7f3e53d685444961704b5c1e445e4d395e55aa4ddf8622977411a67784e4"
+    },
+    {
+      "file": "street-b.png",
+      "sha256": "b90c1a518beb5d7dcb9d56c6dba6a31f8c0e9def16d4ff535faa29dc5821e693"
+    }
+  ],
+  "activeDifferencePairs": [
+    "street",
+    "park",
+    "city",
+    "factory",
+    "museumComparison"
+  ]
+}

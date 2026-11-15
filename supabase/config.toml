@@ -1,0 +1,4 @@
+# Only the Stripe endpoint accepts requests without a Supabase gateway JWT.
+# It verifies Stripe HMAC signatures, and manually authenticates checkout/portal.
+[functions.stripe-webhook]
+verify_jwt = false

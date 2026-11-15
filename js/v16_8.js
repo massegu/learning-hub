@@ -44,16 +44,18 @@
     const map={
       middleLanguage:"Lenguaje 13-15",
       middleMath:"Matemáticas 13-15",
-      middleReading:"Lectura 13-15",
+      middleReading:"Lectura + Escritura 13-15",
       teenLanguage:"Lenguaje 16-18",
       teenMath:"Matemáticas 16-18",
       language:`Lenguaje ${label.replace(" años","")}`,
       division:`Matemáticas ${label.replace(" años","")}`,
-      reading:`Lectura ${label.replace(" años","")}`
+      reading:`Lectura + Escritura ${label.replace(" años","")}`
     };
     $$("#navMenu .nav-item[data-subject]").forEach(b=>{
       const s=b.dataset.subject;
       if(!map[s]) return;
+      const caption=b.querySelector('.nav-area-label');
+      if(caption){if(caption.textContent!==map[s])caption.textContent=map[s];return;}
       const icon=(b.textContent||"").trim().split(/\s+/)[0];
       b.textContent=`${icon} ${map[s]}`;
     });
@@ -69,22 +71,22 @@
 
   function patchDescriptions(){
     const route=currentRoute();
-    if(route==="early" || route==="junior"){
+    // The explicit early profile supplies its own child-facing descriptions.
+    if(route!=="junior") return;
       const active=$("#navMenu .nav-item.active[data-subject]")?.dataset.subject;
       const desc=$("#exerciseDescription");
       if(!desc) return;
       const d={
         division:"Cálculo, problemas cotidianos, series, tiempo y dinero ajustados a la edad.",
-        language:"Comprensión, vocabulario, inferencias y uso funcional del lenguaje.",
-        reading:"Comprensión literal e inferencial con textos breves adecuados a la edad.",
+        language:"Gramática, ortografía y vocabulario con ejemplos y textos.",
+        reading:"Lee el texto y usa sus pistas para comprender lo que ocurre.",
         attention:"Búsqueda, comparación, consignas y selección de información relevante.",
-        executive:"Secuenciación, planificación, control de impulsos y organización.",
+        executive:"Planifica, razona y revisa decisiones con varias condiciones.",
         memory:"Memoria visual y funcional con dificultad progresiva.",
-        speedReasoning:"Comparación rápida, patrones, cálculo y razonamiento.",
+        speedReasoning:"Comparación de figuras y códigos con tiempo de respuesta y precisión.",
         applied:"Situaciones cotidianas que integran varias habilidades cognitivas."
       };
       if(d[active]) desc.textContent=d[active];
-    }
   }
 
   function patchUI(){
@@ -94,8 +96,9 @@
   }
 
   function start(){
-    let n=0;
-    const timer=setInterval(()=>{patchUI(); if(++n>180) clearInterval(timer);},120);
+    patchUI();
+    const profiles=$("#profileSelect");
+    if(profiles)new MutationObserver(patchUI).observe(profiles,{childList:true});
     document.addEventListener("change",e=>{
       if(["profileSelect","newProfileAge"].includes(e.target?.id)) setTimeout(patchUI,40);
     },true);

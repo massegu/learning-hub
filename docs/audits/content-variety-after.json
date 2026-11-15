@@ -1,0 +1,612 @@
+{
+  "method": "600 seeded candidate draws per age/domain at level 2; not delivered-user telemetry",
+  "samples": 600,
+  "rows": [
+    {
+      "age": "early",
+      "domain": "language",
+      "families": {
+        "lang_temporal_connector": 23,
+        "lang_capital_period": 24,
+        "vocabulary_context": 81,
+        "lang_sentence_order": 23,
+        "lang_sentence_type": 21,
+        "lang_singular_plural": 27,
+        "lang_description": 21,
+        "lang_note_read": 20,
+        "lang_build_word": 21,
+        "lang_word_spacing": 27,
+        "lang_revision": 18,
+        "lang_story_sequence": 27,
+        "lang_vocabulary_category": 19,
+        "vocabulary_contrast": 68,
+        "lang_list_read": 21,
+        "lang_dialogue": 29,
+        "lang_initial_sound": 22,
+        "lang_antonym": 18,
+        "lang_rhyme": 24,
+        "lang_question_mark": 19,
+        "lang_synonym": 26,
+        "lang_syllable_count": 21
+      }
+    },
+    {
+      "age": "early",
+      "domain": "reading",
+      "families": {
+        "reading_writing": 295,
+        "reading_literal": 305
+      }
+    },
+    {
+      "age": "early",
+      "domain": "memory",
+      "families": {
+        "memory_sequence": 141,
+        "memory_spatial": 143,
+        "memory_association": 156,
+        "memory_recognition": 160
+      }
+    },
+    {
+      "age": "early",
+      "domain": "speedReasoning",
+      "families": {
+        "speed_compare_pictograms": 96,
+        "speed_compare_objects": 94,
+        "speed_category": 93,
+        "speed_compare_arrows": 104,
+        "speed_compare_figures": 116,
+        "speed_compare_orientation": 97
+      }
+    },
+    {
+      "age": "early",
+      "domain": "executive",
+      "families": {
+        "executive_planning": 207,
+        "executive_reasoning": 200,
+        "executive_supervision": 193
+      }
+    },
+    {
+      "age": "early",
+      "domain": "attention",
+      "families": {
+        "att_ticket_lookup": 28,
+        "att_compare_rows": 40,
+        "att_position": 36,
+        "att_letter_scan": 27,
+        "att_grid_location": 36,
+        "att_symbol_frequency": 31,
+        "att_relevant_info": 37,
+        "att_schedule": 38,
+        "att_filter_rule": 36,
+        "att_odd_one": 32,
+        "att_offer_lookup": 27,
+        "att_compare_lists": 33,
+        "att_line_departure": 38,
+        "att_exact_code": 44,
+        "att_double_rule": 35,
+        "att_target_count": 29,
+        "att_table_cross": 30,
+        "att_instruction": 23
+      }
+    },
+    {
+      "age": "junior",
+      "domain": "language",
+      "families": {
+        "spelling_1": 54,
+        "spelling_0": 76,
+        "grammar_1": 89,
+        "grammar_0": 74,
+        "grammar_2": 77,
+        "vocabulary_context": 84,
+        "vocabulary_contrast": 85,
+        "spelling_2": 61
+      }
+    },
+    {
+      "age": "junior",
+      "domain": "reading",
+      "families": {
+        "document_reading_Infografía_2": 13,
+        "document_reading_Entrada_2": 13,
+        "writing_2": 64,
+        "writing_0": 60,
+        "writing_summary": 50,
+        "document_reading_Publicación_social_2": 14,
+        "reading_literal": 57,
+        "document_reading_Horario_2": 20,
+        "document_reading_Catálogo_2": 29,
+        "writing_1": 53,
+        "document_reading_Instrucciones_2": 15,
+        "reading_inference": 53,
+        "document_reading_Transporte_2": 22,
+        "reading_writing": 54,
+        "document_reading_Menú_2": 15,
+        "document_reading_Cartel_2": 18,
+        "document_reading_Etiqueta_2": 20,
+        "document_reading_Aviso_escolar_2": 15,
+        "document_reading_Plano_2": 15
+      }
+    },
+    {
+      "age": "junior",
+      "domain": "memory",
+      "families": {
+        "memory_sequence": 117,
+        "memory_recognition": 136,
+        "memory_recent": 111,
+        "memory_spatial": 115,
+        "memory_association": 121
+      }
+    },
+    {
+      "age": "junior",
+      "domain": "speedReasoning",
+      "families": {
+        "speed_compare_pictograms": 53,
+        "speed_compare_objects": 64,
+        "speed_compare_figures": 61,
+        "speed_category": 65,
+        "speed_compare_arrows": 58,
+        "speed_match": 64,
+        "speed_compare_orientation": 66,
+        "speed_key": 58,
+        "speed_compare_characters": 61,
+        "speed_compare_mixed": 50
+      }
+    },
+    {
+      "age": "junior",
+      "domain": "executive",
+      "families": {
+        "executive_reasoning": 53,
+        "document_executive_Aviso_escolar_2": 36,
+        "executive_reasoning_analogy": 60,
+        "executive_verification": 49,
+        "executive_supervision": 45,
+        "executive_reasoning_deduction": 60,
+        "executive_reasoning_series": 57,
+        "document_executive_Catálogo_2": 39,
+        "executive_reasoning_classification": 44,
+        "executive_criteria": 44,
+        "document_executive_Instrucciones_2": 30,
+        "document_executive_Horario_2": 36,
+        "executive_planning": 47
+      }
+    },
+    {
+      "age": "junior",
+      "domain": "attention",
+      "families": {
+        "document_attention_Catálogo_2": 16,
+        "table_rules": 111,
+        "target_count": 87,
+        "document_attention_Aviso_escolar_2": 20,
+        "document_attention_Etiqueta_2": 20,
+        "document_attention_Plano_2": 15,
+        "position": 104,
+        "document_attention_Infografía_2": 21,
+        "exact_match": 91,
+        "document_attention_Entrada_2": 27,
+        "document_attention_Menú_2": 18,
+        "document_attention_Transporte_2": 14,
+        "document_attention_Instrucciones_2": 20,
+        "document_attention_Cartel_2": 10,
+        "document_attention_Horario_2": 11,
+        "document_attention_Publicación_social_2": 15
+      }
+    },
+    {
+      "age": "primary",
+      "domain": "language",
+      "families": {
+        "grammar_2": 89,
+        "vocabulary_contrast": 61,
+        "spelling_2": 60,
+        "grammar_1": 83,
+        "spelling_0": 68,
+        "vocabulary_context": 73,
+        "spelling_1": 72,
+        "grammar_0": 94
+      }
+    },
+    {
+      "age": "primary",
+      "domain": "literacy",
+      "families": {
+        "writing_rewrite_instructions": 28,
+        "writing_invitation": 22,
+        "document_literacy_Infografía_2": 15,
+        "reading_writing": 24,
+        "document_literacy_Catálogo_2": 20,
+        "document_literacy_Menú_2": 17,
+        "writing_caption_evidence": 18,
+        "document_literacy_Entrada_2": 12,
+        "writing_clear_instructions": 26,
+        "reading_literal": 24,
+        "document_literacy_Horario_2": 12,
+        "writing_public_notice": 16,
+        "writing_practical_message": 19,
+        "writing_0": 33,
+        "document_literacy_Instrucciones_2": 15,
+        "reading_inference": 20,
+        "writing_recommendation": 28,
+        "writing_1": 22,
+        "writing_fact_inference_opinion": 30,
+        "document_literacy_Plano_2": 14,
+        "document_literacy_Factura_2": 10,
+        "document_literacy_Etiqueta_2": 16,
+        "writing_2": 14,
+        "document_literacy_Publicación_social_2": 13,
+        "document_literacy_Recibo_de_compra_2": 20,
+        "writing_directions": 24,
+        "writing_correct_claim": 23,
+        "document_literacy_Transporte_2": 13,
+        "document_literacy_Folleto_2": 10,
+        "document_literacy_Aviso_escolar_2": 11,
+        "writing_inquiry_email": 24,
+        "document_literacy_Cartel_2": 7
+      }
+    },
+    {
+      "age": "primary",
+      "domain": "memory",
+      "families": {
+        "memory_association": 114,
+        "memory_spatial": 115,
+        "memory_sequence": 113,
+        "memory_recognition": 131,
+        "memory_recent": 127
+      }
+    },
+    {
+      "age": "primary",
+      "domain": "speedReasoning",
+      "families": {
+        "speed_compare_objects": 66,
+        "speed_compare_arrows": 50,
+        "speed_compare_mixed": 58,
+        "speed_category": 57,
+        "speed_compare_characters": 66,
+        "speed_key": 51,
+        "speed_compare_figures": 63,
+        "speed_compare_orientation": 72,
+        "speed_compare_pictograms": 63,
+        "speed_match": 54
+      }
+    },
+    {
+      "age": "primary",
+      "domain": "executive",
+      "families": {
+        "executive_criteria": 47,
+        "executive_reasoning_analogy": 58,
+        "executive_reasoning_deduction": 52,
+        "document_executive_Aviso_escolar_2": 17,
+        "executive_verification": 56,
+        "document_executive_Catálogo_2": 22,
+        "executive_planning": 50,
+        "executive_supervision": 51,
+        "executive_reasoning_fraction_complement": 46,
+        "document_executive_Factura_2": 17,
+        "executive_reasoning": 51,
+        "executive_reasoning_series": 53,
+        "document_executive_Folleto_2": 15,
+        "document_executive_Recibo_de_compra_2": 27,
+        "document_executive_Horario_2": 23,
+        "document_executive_Instrucciones_2": 15
+      }
+    },
+    {
+      "age": "primary",
+      "domain": "attention",
+      "families": {
+        "document_attention_Recibo_de_compra_2": 16,
+        "exact_match": 105,
+        "position": 89,
+        "document_attention_Horario_2": 15,
+        "scan": 103,
+        "table_rules": 92,
+        "document_attention_Catálogo_2": 9,
+        "document_attention_Entrada_2": 16,
+        "document_attention_Transporte_2": 12,
+        "document_attention_Plano_2": 14,
+        "document_attention_Menú_2": 21,
+        "document_attention_Folleto_2": 11,
+        "document_attention_Infografía_2": 14,
+        "document_attention_Cartel_2": 10,
+        "document_attention_Publicación_social_2": 17,
+        "document_attention_Aviso_escolar_2": 18,
+        "document_attention_Factura_2": 18,
+        "document_attention_Instrucciones_2": 10,
+        "document_attention_Etiqueta_2": 10
+      }
+    },
+    {
+      "age": "middle",
+      "domain": "middleLanguage",
+      "families": {
+        "spelling_0": 79,
+        "grammar_1": 79,
+        "grammar_2": 62,
+        "vocabulary_context": 86,
+        "spelling_1": 73,
+        "vocabulary_contrast": 69,
+        "spelling_2": 89,
+        "grammar_0": 63
+      }
+    },
+    {
+      "age": "middle",
+      "domain": "literacy",
+      "families": {
+        "writing_directions": 27,
+        "writing_recommendation": 18,
+        "writing_invitation": 26,
+        "document_literacy_Etiqueta_2": 9,
+        "document_literacy_Plano_2": 13,
+        "writing_0": 15,
+        "writing_clear_instructions": 21,
+        "document_literacy_Anuncio_2": 14,
+        "document_literacy_Aviso_escolar_2": 7,
+        "writing_compare_sources": 26,
+        "document_literacy_Noticia_y_comparación_2": 12,
+        "document_literacy_Transporte_2": 11,
+        "writing_practical_message": 23,
+        "reading_literal": 14,
+        "writing_1": 22,
+        "writing_public_notice": 21,
+        "document_literacy_Folleto_2": 13,
+        "document_literacy_Catálogo_2": 12,
+        "reading_inference": 12,
+        "document_literacy_Instrucciones_2": 11,
+        "document_literacy_Cartel_2": 15,
+        "writing_inquiry_email": 24,
+        "writing_rewrite_instructions": 19,
+        "reading_writing": 20,
+        "document_literacy_Recibo_de_compra_2": 10,
+        "writing_request_email": 20,
+        "writing_rewrite_advert": 19,
+        "writing_fact_inference_opinion": 17,
+        "writing_2": 19,
+        "document_literacy_Factura_2": 18,
+        "document_literacy_Publicación_social_2": 13,
+        "document_literacy_Menú_2": 9,
+        "document_literacy_Horario_2": 13,
+        "document_literacy_Entrada_2": 10,
+        "writing_correct_claim": 15,
+        "writing_caption_evidence": 19,
+        "document_literacy_Formulario_2": 9,
+        "document_literacy_Infografía_2": 4
+      }
+    },
+    {
+      "age": "middle",
+      "domain": "memory",
+      "families": {
+        "memory_recognition": 118,
+        "memory_recent": 124,
+        "memory_spatial": 115,
+        "memory_association": 122,
+        "memory_sequence": 121
+      }
+    },
+    {
+      "age": "middle",
+      "domain": "speedReasoning",
+      "families": {
+        "speed_compare_orientation": 54,
+        "speed_compare_figures": 57,
+        "speed_compare_arrows": 62,
+        "speed_compare_objects": 65,
+        "speed_compare_mixed": 75,
+        "speed_compare_pictograms": 62,
+        "speed_compare_characters": 56,
+        "speed_key": 57,
+        "speed_category": 54,
+        "speed_match": 58
+      }
+    },
+    {
+      "age": "middle",
+      "domain": "executive",
+      "families": {
+        "executive_supervision": 55,
+        "executive_reasoning_analogy": 48,
+        "executive_reasoning_fraction_complement": 47,
+        "document_executive_Horario_2": 17,
+        "document_executive_Factura_2": 24,
+        "executive_criteria": 46,
+        "document_executive_Aviso_escolar_2": 23,
+        "executive_reasoning_deduction": 46,
+        "executive_reasoning": 61,
+        "document_executive_Formulario_2": 20,
+        "executive_reasoning_pattern": 45,
+        "executive_planning": 50,
+        "document_executive_Recibo_de_compra_2": 19,
+        "document_executive_Catálogo_2": 16,
+        "executive_verification": 50,
+        "document_executive_Instrucciones_2": 16,
+        "document_executive_Folleto_2": 17
+      }
+    },
+    {
+      "age": "middle",
+      "domain": "attention",
+      "families": {
+        "table_rules": 93,
+        "document_attention_Publicación_social_2": 11,
+        "position": 102,
+        "document_attention_Aviso_escolar_2": 19,
+        "code": 100,
+        "state_count": 95,
+        "document_attention_Catálogo_2": 19,
+        "document_attention_Plano_2": 15,
+        "document_attention_Noticia_y_comparación_2": 12,
+        "document_attention_Instrucciones_2": 10,
+        "document_attention_Menú_2": 6,
+        "document_attention_Recibo_de_compra_2": 9,
+        "document_attention_Horario_2": 11,
+        "document_attention_Factura_2": 14,
+        "document_attention_Folleto_2": 11,
+        "document_attention_Entrada_2": 12,
+        "document_attention_Etiqueta_2": 13,
+        "document_attention_Infografía_2": 14,
+        "document_attention_Anuncio_2": 9,
+        "document_attention_Formulario_2": 9,
+        "document_attention_Transporte_2": 6,
+        "document_attention_Cartel_2": 10
+      }
+    },
+    {
+      "age": "teen",
+      "domain": "teenLanguage",
+      "families": {
+        "teenLanguage_grammar_0": 81,
+        "teenLanguage_grammar_2": 65,
+        "teenLanguage_spelling_0": 91,
+        "vocabulary_context": 82,
+        "teenLanguage_spelling_2": 85,
+        "teenLanguage_spelling_1": 66,
+        "teenLanguage_grammar_1": 59,
+        "vocabulary_contrast": 71
+      }
+    },
+    {
+      "age": "teen",
+      "domain": "literacy",
+      "families": {
+        "writing_rewrite_instructions": 27,
+        "writing_inquiry_email": 20,
+        "writing_clear_instructions": 29,
+        "writing_practical_message": 30,
+        "reading_inference": 20,
+        "document_literacy_Factura_2": 11,
+        "document_literacy_Plano_2": 13,
+        "writing_public_notice": 33,
+        "writing_request_email": 24,
+        "document_literacy_Publicación_social_2": 15,
+        "writing_correct_claim": 25,
+        "writing_compare_sources": 21,
+        "document_literacy_Infografía_2": 17,
+        "document_literacy_Formulario_2": 12,
+        "writing_invitation": 25,
+        "writing_caption_evidence": 29,
+        "writing_fact_inference_opinion": 17,
+        "writing_directions": 29,
+        "document_literacy_Noticia_y_comparación_2": 13,
+        "document_literacy_Folleto_2": 10,
+        "document_literacy_Horario_2": 14,
+        "document_literacy_Instrucciones_2": 8,
+        "document_literacy_Transporte_2": 11,
+        "writing_recommendation": 17,
+        "reading_literal": 21,
+        "document_literacy_Aviso_escolar_2": 8,
+        "document_literacy_Anuncio_2": 23,
+        "document_literacy_Catálogo_2": 11,
+        "document_literacy_Etiqueta_2": 7,
+        "document_literacy_Entrada_2": 3,
+        "writing_rewrite_advert": 27,
+        "document_literacy_Cartel_2": 11,
+        "document_literacy_Recibo_de_compra_2": 9,
+        "document_literacy_Menú_2": 10
+      }
+    },
+    {
+      "age": "teen",
+      "domain": "memory",
+      "families": {
+        "memory_sequence": 131,
+        "memory_recognition": 128,
+        "memory_spatial": 116,
+        "memory_association": 109,
+        "memory_recent": 116
+      }
+    },
+    {
+      "age": "teen",
+      "domain": "speedReasoning",
+      "families": {
+        "speed_compare_mixed": 55,
+        "speed_category": 74,
+        "speed_compare_characters": 61,
+        "speed_match": 55,
+        "speed_key": 64,
+        "speed_compare_arrows": 64,
+        "speed_compare_pictograms": 59,
+        "speed_compare_objects": 57,
+        "speed_compare_orientation": 42,
+        "speed_compare_figures": 69
+      }
+    },
+    {
+      "age": "teen",
+      "domain": "executive",
+      "families": {
+        "document_executive_Formulario_2": 13,
+        "executive_reasoning_speedReasoning_task_2": 55,
+        "document_executive_Horario_2": 23,
+        "executive_criteria": 54,
+        "executive_reasoning": 59,
+        "document_executive_Factura_2": 14,
+        "document_executive_Instrucciones_2": 28,
+        "executive_verification": 45,
+        "executive_reasoning_speedReasoning_task_0": 62,
+        "executive_reasoning_speedReasoning_task_1": 44,
+        "document_executive_Folleto_2": 24,
+        "executive_supervision": 44,
+        "document_executive_Aviso_escolar_2": 14,
+        "document_executive_Recibo_de_compra_2": 14,
+        "executive_planning": 39,
+        "document_executive_Catálogo_2": 18,
+        "executive_reasoning_speedReasoning_task_3": 50
+      }
+    },
+    {
+      "age": "teen",
+      "domain": "attention",
+      "families": {
+        "att_compare_rows": 26,
+        "document_attention_Recibo_de_compra_2": 14,
+        "att_instruction": 17,
+        "att_symbol_frequency": 24,
+        "document_attention_Transporte_2": 12,
+        "att_compare_lists": 20,
+        "att_filter_rule": 24,
+        "att_double_rule": 29,
+        "document_attention_Noticia_y_comparación_2": 19,
+        "att_ticket_lookup": 22,
+        "document_attention_Anuncio_2": 12,
+        "document_attention_Aviso_escolar_2": 15,
+        "document_attention_Formulario_2": 7,
+        "att_grid_location": 16,
+        "document_attention_Plano_2": 13,
+        "att_target_count": 20,
+        "document_attention_Menú_2": 10,
+        "att_table_cross": 25,
+        "document_attention_Horario_2": 8,
+        "att_schedule": 19,
+        "att_line_departure": 19,
+        "att_position": 25,
+        "document_attention_Infografía_2": 10,
+        "att_offer_lookup": 23,
+        "att_letter_scan": 24,
+        "att_exact_code": 23,
+        "document_attention_Folleto_2": 14,
+        "att_relevant_info": 29,
+        "att_odd_one": 22,
+        "document_attention_Cartel_2": 6,
+        "document_attention_Entrada_2": 11,
+        "document_attention_Factura_2": 7,
+        "document_attention_Instrucciones_2": 6,
+        "document_attention_Publicación_social_2": 11,
+        "document_attention_Catálogo_2": 11,
+        "document_attention_Etiqueta_2": 7
+      }
+    }
+  ]
+}

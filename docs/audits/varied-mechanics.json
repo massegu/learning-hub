@@ -1,0 +1,216 @@
+{
+  "before": [
+    {
+      "age": "early",
+      "domain": "memory",
+      "templates": 288,
+      "distinctMaterial": 255,
+      "mechanics": 4
+    },
+    {
+      "age": "early",
+      "domain": "speedReasoning",
+      "templates": 144,
+      "distinctMaterial": 48,
+      "mechanics": 6
+    },
+    {
+      "age": "early",
+      "domain": "executive",
+      "templates": 30,
+      "distinctMaterial": 14,
+      "mechanics": 3
+    },
+    {
+      "age": "junior",
+      "domain": "memory",
+      "templates": 432,
+      "distinctMaterial": 295,
+      "mechanics": 6
+    },
+    {
+      "age": "junior",
+      "domain": "speedReasoning",
+      "templates": 336,
+      "distinctMaterial": 114,
+      "mechanics": 10
+    },
+    {
+      "age": "junior",
+      "domain": "executive",
+      "templates": 84,
+      "distinctMaterial": 73,
+      "mechanics": 10
+    },
+    {
+      "age": "primary",
+      "domain": "memory",
+      "templates": 432,
+      "distinctMaterial": 312,
+      "mechanics": 6
+    },
+    {
+      "age": "primary",
+      "domain": "speedReasoning",
+      "templates": 336,
+      "distinctMaterial": 116,
+      "mechanics": 10
+    },
+    {
+      "age": "primary",
+      "domain": "executive",
+      "templates": 84,
+      "distinctMaterial": 73,
+      "mechanics": 10
+    },
+    {
+      "age": "middle",
+      "domain": "memory",
+      "templates": 432,
+      "distinctMaterial": 312,
+      "mechanics": 6
+    },
+    {
+      "age": "middle",
+      "domain": "speedReasoning",
+      "templates": 336,
+      "distinctMaterial": 146,
+      "mechanics": 10
+    },
+    {
+      "age": "middle",
+      "domain": "executive",
+      "templates": 84,
+      "distinctMaterial": 73,
+      "mechanics": 10
+    },
+    {
+      "age": "teen",
+      "domain": "memory",
+      "templates": 432,
+      "distinctMaterial": 312,
+      "mechanics": 6
+    },
+    {
+      "age": "teen",
+      "domain": "speedReasoning",
+      "templates": 336,
+      "distinctMaterial": 147,
+      "mechanics": 10
+    },
+    {
+      "age": "teen",
+      "domain": "executive",
+      "templates": 84,
+      "distinctMaterial": 73,
+      "mechanics": 10
+    }
+  ],
+  "after": [
+    {
+      "age": "early",
+      "domain": "memory",
+      "templates": 552,
+      "distinctMaterial": 551,
+      "mechanics": 6
+    },
+    {
+      "age": "early",
+      "domain": "speedReasoning",
+      "templates": 288,
+      "distinctMaterial": 94,
+      "mechanics": 9
+    },
+    {
+      "age": "early",
+      "domain": "executive",
+      "templates": 34,
+      "distinctMaterial": 18,
+      "mechanics": 4
+    },
+    {
+      "age": "junior",
+      "domain": "memory",
+      "templates": 792,
+      "distinctMaterial": 671,
+      "mechanics": 8
+    },
+    {
+      "age": "junior",
+      "domain": "speedReasoning",
+      "templates": 528,
+      "distinctMaterial": 255,
+      "mechanics": 14
+    },
+    {
+      "age": "junior",
+      "domain": "executive",
+      "templates": 280,
+      "distinctMaterial": 209,
+      "mechanics": 14
+    },
+    {
+      "age": "primary",
+      "domain": "memory",
+      "templates": 792,
+      "distinctMaterial": 672,
+      "mechanics": 8
+    },
+    {
+      "age": "primary",
+      "domain": "speedReasoning",
+      "templates": 528,
+      "distinctMaterial": 249,
+      "mechanics": 14
+    },
+    {
+      "age": "primary",
+      "domain": "executive",
+      "templates": 280,
+      "distinctMaterial": 209,
+      "mechanics": 14
+    },
+    {
+      "age": "middle",
+      "domain": "memory",
+      "templates": 792,
+      "distinctMaterial": 672,
+      "mechanics": 8
+    },
+    {
+      "age": "middle",
+      "domain": "speedReasoning",
+      "templates": 528,
+      "distinctMaterial": 295,
+      "mechanics": 14
+    },
+    {
+      "age": "middle",
+      "domain": "executive",
+      "templates": 280,
+      "distinctMaterial": 209,
+      "mechanics": 14
+    },
+    {
+      "age": "teen",
+      "domain": "memory",
+      "templates": 792,
+      "distinctMaterial": 672,
+      "mechanics": 8
+    },
+    {
+      "age": "teen",
+      "domain": "speedReasoning",
+      "templates": 528,
+      "distinctMaterial": 288,
+      "mechanics": 14
+    },
+    {
+      "age": "teen",
+      "domain": "executive",
+      "templates": 280,
+      "distinctMaterial": 209,
+      "mechanics": 14
+    }
+  ]
+}

@@ -11,7 +11,7 @@
     language: {
       name: "Lenguaje",
       icon: "Aa",
-      desc: "Comprensión, cohesión, inferencias, vocabulario y uso funcional del lenguaje.",
+      desc: "Gramática, ortografía y vocabulario con ejemplos y textos.",
     },
     division: {
       name: "Divisiones",
@@ -19,39 +19,44 @@
       desc: "Divisiones por una y dos cifras.",
     },
     reading: {
-      name: "Lectura",
+      name: "Lectura + Escritura",
       icon: "▤",
-      desc: "Comprensión literal e inferencial.",
+      desc: "Lee el texto y usa sus pistas para responder.",
     },
     middleLanguage: {
-      name: "Lenguaje 12-13",
+      name: "Lenguaje 13-15",
       icon: "Aa",
-      desc: "Comprensión, inferencias, cohesión, pragmática y precisión lingüística.",
+      desc: "Gramática, ortografía y vocabulario para comunicar ideas con claridad.",
     },
     middleMath: {
-      name: "Matemáticas 12-13",
+      name: "Matemáticas 13-15",
       icon: "∑",
       desc: "Porcentajes, fracciones, ecuaciones, proporcionalidad y geometría.",
     },
     middleReading: {
-      name: "Lectura 12-13",
+      name: "Lectura + Escritura 13-15",
       icon: "▤",
-      desc: "Comprensión literal, inferencias y uso de evidencias.",
+      desc: "Comprende el texto y deduce ideas a partir de sus pistas.",
     },
     teenLanguage: {
-      name: "Lenguaje 14-17",
+      name: "Lenguaje 16-18",
       icon: "Aa",
-      desc: "Argumentación, inferencias, ambigüedad, pensamiento crítico y precisión lingüística.",
+      desc: "Gramática, ortografía y vocabulario en distintos contextos.",
     },
     teenMath: {
-      name: "Matemáticas 14-17",
+      name: "Matemáticas 16-18",
       icon: "∑",
       desc: "Porcentajes, ecuaciones y proporcionalidad.",
     },
     social: {
       name: "Social Lab",
       icon: "◎",
-      desc: "Cognición social, perspectiva, pragmática, ambigüedad, intención e impacto.",
+      desc: "Comprende situaciones, escucha otros puntos de vista y practica cómo convivir.",
+    },
+    communication: {
+      name: "Comunicación funcional",
+      icon: "◉",
+      desc: "Practica pedir ayuda, aclarar indicaciones y expresar necesidades en situaciones cotidianas.",
     },
     english: {
       name: "English Lab",
@@ -71,17 +76,17 @@
     executive: {
       name: "Funciones ejecutivas",
       icon: "↻",
-      desc: "Nivel 1: secuenciación · Nivel 2: priorización y distractores · Nivel 3: planificación con restricciones e imprevistos.",
+      desc: "Planifica, razona y revisa. Comprueba decisiones y resuelve situaciones con varias condiciones.",
     },
     memory: {
       name: "Memoria",
       icon: "▦",
-      desc: "Listas, conversaciones, recorridos, asociaciones, encargos y memoria funcional.",
+      desc: "Recuerda secuencias, posiciones y asociaciones con dificultad progresiva.",
     },
     speedReasoning: {
-      name: "Velocidad y razonamiento",
+      name: "Velocidad de procesamiento",
       icon: "◇",
-      desc: "Comparación rápida, códigos, patrones, discriminación visual y razonamiento.",
+      desc: "Compara figuras y códigos. Practica respuestas ágiles y precisas.",
     },
     applied: {
       name: "Cognición aplicada",
@@ -94,11 +99,13 @@
       label: "10-12 años",
       subjects: [
         "geometry",
+        "social",
         "language",
         "division",
         "reading",
         "english",
         "literacy",
+        "communication",
         "attention",
         "executive",
         "memory",
@@ -107,13 +114,15 @@
       ],
     },
     middle: {
-      label: "12-13 años",
+      label: "13-15 años",
       subjects: [
         "middleLanguage",
+        "social",
         "middleMath",
         "middleReading",
         "english",
         "literacy",
+        "communication",
         "attention",
         "executive",
         "memory",
@@ -122,13 +131,14 @@
       ],
     },
     teen: {
-      label: "14-17 años",
+      label: "16-18 años",
       subjects: [
         "teenLanguage",
         "teenMath",
         "social",
         "english",
         "literacy",
+        "communication",
         "attention",
         "executive",
         "memory",
@@ -143,10 +153,29 @@
     state = null,
     subject = null,
     mode = "grammar",
+    documentOnly = false,
+    photoOnly = false,
+    memoryAudioOnly = false,
+    interactionOnly = false,
+    roomSpeedOnly = false, speedUnpairedOnly=false, cognitiveOnly=false, cognitiveFamily="", executedOnly=false, stopExecuted=null,stopReaderAssist=null,
+    interactionKind = 'symbols',
+    configuredSubject = null,
     currentItem = null,
     counter = 0,
+    requestGeneration = 0,
     guidedSession = null;
   const API = window.LearningAPI;
+  const supportEmail=String(window.LH_CONFIG?.supportEmail||'').trim();
+  if(/^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(supportEmail)){
+    $$('[data-support-link]').forEach(link=>{link.href='mailto:'+encodeURIComponent(supportEmail);link.textContent='Ayuda y contacto: '+supportEmail;link.closest('.support-contact').classList.remove('hidden');});
+  }
+  let memoryCountdown = null, memoryExposureVersion = 0;
+  function stopMemoryCountdown() {
+    stopInteraction();
+    if(stopReaderAssist){stopReaderAssist();stopReaderAssist=null;}
+    if(stopExecuted){stopExecuted();stopExecuted=null;}
+    clearTimeout(memoryCountdown);memoryCountdown=null;memoryExposureVersion++;
+  }
   const ICONS = {
     book: "📘",
     pencil: "✏️",
@@ -193,6 +222,12 @@
     pasta: "🍝",
     eggs: "🥚",
     juice: "🧃",
+    ball: "⚽",
+    doll: "🧸",
+    bear: "🧸",
+    car: "🚗",
+    cap: "🧢",
+    gift: "🎁",
   };
   const iconFor = (k) => ICONS[k] || "•";
   const safeImage = (src) =>
@@ -210,35 +245,200 @@
         : `<div class="icon-grid level-${it.level || 1}">${(it.icons || []).map((k) => `<div class="icon-cell">${iconFor(k)}</div>`).join("")}</div>`;
     visual.innerHTML = targetPair + cards;
   }
+  function displayMemoryQuestion(it){return it.photoTask?.kind==='recall'?String(it.memoryQuestion||'¿Qué recuerdas?').replace(/\s(?=\d+\))/g,'\n'):it.memoryQuestion||'¿Qué recuerdas?';}
+  function memoryRecallContext(it){
+    if(it.mechanic!=='memory_plan_recall')return '';
+    const context=it.stimulus?.find(block=>block.type==='text'&&block.text)?.text;
+    return context?`<aside class="memory-recall-context"><strong>Contexto del plan</strong><p>${escapeHtml(context)}</p></aside>`:'';
+  }
   function renderMemoryExercise(it) {
+    if(it.audioMemory){
+      const visual=$('#exerciseVisual'),area=$('#exerciseOptions');let heard=false;
+      stopInteraction();
+      visual.innerHTML=`<section class="audio-memory-card"><span class="audio-memory-icon" aria-hidden="true">♫</span><p class="audio-memory-title">${escapeHtml(it.audioTitle)}</p><p>Escucha el audio. Puedes reproducirlo otra vez si lo necesitas.</p><p id="memoryAudioStatus" role="status" aria-live="polite">Pulsa «Reproducir audio» para empezar.</p></section>`;
+      area.innerHTML='<button id="playMemoryAudio" class="primary-btn">Reproducir audio</button><button id="answerMemoryAudio" class="secondary-btn" disabled>Responder</button>';
+      const speak=()=>{
+        if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){$('#memoryAudioStatus').textContent='Este navegador no puede reproducir voz. Puedes pasar a otra actividad.';$('#exerciseNext').classList.remove('hidden');return;}
+        stopInteraction();const version=interactionVersion,live=()=>currentItem===it&&interactionVersion===version,status=$('#memoryAudioStatus'),play=$('#playMemoryAudio'),answer=$('#answerMemoryAudio');
+        window.speechSynthesis.cancel();heard=false;answer.disabled=true;play.disabled=true;play.textContent='Reproduciendo…';status.textContent='Escucha con atención.';
+        const voice=new SpeechSynthesisUtterance(it.audioScript);voice.lang='es-ES';voice.rate=.94;voice.pitch=1;
+        const voices=window.speechSynthesis.getVoices(),spanish=voices.find(v=>v.lang==='es-ES')||voices.find(v=>v.lang.toLowerCase().startsWith('es'));if(spanish)voice.voice=spanish;
+        interactionVoice=voice;voice.onend=()=>{if(!live())return;interactionVoice=null;heard=true;play.disabled=false;play.textContent='Reproducir otra vez';answer.disabled=false;status.textContent='Audio terminado. Cuando estés preparado, pulsa «Responder».';};
+        voice.onerror=()=>{if(!live())return;interactionVoice=null;play.disabled=false;play.textContent='Volver a intentar';status.textContent='No se ha podido reproducir el audio. Comprueba el sonido e inténtalo de nuevo.';};
+        window.speechSynthesis.speak(voice);
+      };
+      $('#playMemoryAudio').onclick=speak;
+      $('#answerMemoryAudio').onclick=()=>{if(!heard||currentItem!==it)return;stopInteraction();visual.replaceChildren();$('#exercisePrompt').textContent=displayMemoryQuestion(it);renderOptions(it);$('#exercisePrompt').scrollIntoView({block:'center',behavior:'smooth'});};
+      return;
+    }
+    if(it.photoTask?.kind==='recall'){
+      const visual=$('#exerciseVisual'),area=$('#exerciseOptions');
+      visual.innerHTML='<p class="photo-ready">Cuando estés preparado, muestra la imagen. Después se ocultará y aparecerá una pregunta sobre sus detalles.</p>';
+      area.innerHTML='<button id="showMemoryPhoto" class="primary-btn">Mostrar imagen</button>';
+      $('#showMemoryPhoto').onclick=async()=>{
+        stopMemoryCountdown();const exposureVersion=memoryExposureVersion;
+        const button=$('#showMemoryPhoto');button.disabled=true;button.textContent='Preparando imagen…';
+        try{
+          const holder=document.createElement('div');holder.innerHTML=window.ActivityModel.interactiveStimulus(it.stimulus);
+          await Promise.all([...holder.querySelectorAll('img')].map(img=>img.decode()));
+          if(currentItem!==it||exposureVersion!==memoryExposureVersion)return;
+          visual.replaceChildren(holder);area.innerHTML='';
+          const notice=document.createElement('p');notice.className='memory-timer';notice.setAttribute('role','timer');notice.setAttribute('aria-live','off');visual.append(notice);holder.querySelector('img').scrollIntoView({block:'center',behavior:'instant'});
+          const deadline=Date.now()+it.revealMs;
+          const tick=()=>{
+            if(currentItem!==it||exposureVersion!==memoryExposureVersion)return;
+            const remaining=Math.max(0,deadline-Date.now());
+            if(!remaining){stopMemoryCountdown();visual.innerHTML='';$('#exercisePrompt').textContent=displayMemoryQuestion(it);renderOptions(it);$('#exercisePrompt').scrollIntoView({block:'center',behavior:'instant'});return;}
+            const seconds=Math.ceil(remaining/1000);notice.textContent=`Tiempo para observar: ${seconds} ${seconds===1?'segundo':'segundos'}.`;
+            memoryCountdown=setTimeout(tick,Math.min(250,remaining));
+          };tick();
+        }catch(error){if(currentItem!==it||exposureVersion!==memoryExposureVersion)return;button.disabled=false;button.textContent='Volver a cargar la imagen';visual.innerHTML='<p>No se pudo cargar la imagen. Inténtalo de nuevo.</p>';}
+      };return;
+    }
     const visual = $("#exerciseVisual"),
       area = $("#exerciseOptions");
-    const cards = (it.memoryContent || [])
+    const cards = it.stimulus
+      ? `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus,{illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:!window.ContentPolicy.forProfile(profile),memory:true,senses:it.lexicalSenses})}</div>`
+      : (it.memoryContent || [])
       .map((x) =>
         x.person
           ? `<div class="memory-card"><strong>${escapeHtml(x.person)}</strong><span>${escapeHtml(x.detail)}</span></div>`
           : `<div class="memory-card"><b>${iconFor(x.icon)}</b><span>${escapeHtml(x.detail)}</span></div>`,
       )
       .join("");
-    visual.innerHTML = `<div class="memory-reveal">${cards}</div><div class="memory-timer">Memoriza la información. Después desaparecerá.</div>`;
+    const memoryInstruction = window.ContentPolicy.forProfile(profile)
+      ? "Mira bien. Después taparemos las cosas."
+      : "Memoriza la información. Después desaparecerá.";
+    if(it.recallSequence){
+      visual.innerHTML='<p>Las figuras aparecerán una a una. Después reconstruirás el orden.</p>';
+      area.innerHTML='<button id="startMemorySequence" class="primary-btn">Mostrar secuencia</button>';
+      $('#startMemorySequence').onclick=()=>{
+        area.innerHTML='';let index=0;
+        const step=()=>{
+          if(currentItem!==it)return;
+          if(index===it.recallSequence.length){
+            visual.innerHTML='';$('#exercisePrompt').textContent=displayMemoryQuestion(it);renderOrderExercise(it);return;
+          }
+          const slide=it.recallSequence[index++];visual.innerHTML=`<div class="sequence-flash" role="group" aria-roledescription="diapositiva" aria-label="Imagen ${index} de ${it.recallSequence.length}: ${escapeHtml(window.ActivityModel.memoryLabel(slide))}"><small aria-hidden="true">${index} / ${it.recallSequence.length}</small>${window.ActivityModel.visualLabel(slide,{...it.lexicalSenses,memory:true})}</div>`;
+          setTimeout(()=>{if(currentItem!==it)return;visual.innerHTML='<div class="sequence-flash" aria-hidden="true">·</div>';setTimeout(step,250);},it.sequenceStepMs);
+        };step();
+      };return;
+    }
+    visual.innerHTML = `<div class="memory-reveal">${cards}</div><div class="memory-timer">${memoryInstruction}</div>`;
     area.innerHTML = "";
     setTimeout(
       () => {
         if (currentItem !== it) return;
-        visual.innerHTML = "";
+        visual.innerHTML = memoryRecallContext(it);
         $("#exercisePrompt").textContent =
           it.memoryQuestion || "¿Qué recuerdas?";
-        if (it.type === "memoryMulti") renderMultiSelect(it);
+        if(it.memoryResponse==='order')renderOrderExercise(it);
+        else if(it.memoryResponse==='spatial')renderSpatialResponse(it);
+        else if (it.type === "memoryMulti" || it.memoryResponse==='multiple') renderMultiSelect(it);
         else renderOptions(it);
       },
       Math.max(2500, Number(it.revealMs || 6000)),
     );
   }
+  function renderSpatialResponse(it){
+    $('#exerciseOptions').classList.add('structured-options');
+    const rows=it.gridRows||it.gridSize,columns=it.gridColumns||it.gridSize;
+    $('#exerciseOptions').innerHTML=`<div class="spatial-answer-grid" style="--grid-size:${columns}" role="group" aria-label="Marca en la cuadrícula la posición que recuerdas">${window.Curriculum.spatialPositions(rows,columns).map(o=>`<button class="option-btn" data-answer="${escapeHtml(o)}" aria-label="${escapeHtml(o)}"><span aria-hidden="true">${it.spatialAnswer==='grid'?'＋':'·'}</span>${it.spatialAnswer==='grid'?'':`<small>${escapeHtml(o)}</small>`}</button>`).join('')}</div>`;
+    $$('#exerciseOptions .option-btn').forEach(b=>b.onclick=()=>checkOption(b,b.dataset.answer));
+  }
+  function renderRoomSpeed(it){
+    stopInteraction();const version=interactionVersion,visual=$('#exerciseVisual'),area=$('#exerciseOptions');let observed=null,ended=false;
+    const live=()=>currentItem===it&&interactionVersion===version;
+    const record=(report,explanation='not_requested')=>{
+      if(!live()||ended)return;ended=true;it._earlyAnswered=true;clearTimeout(interactionTimer);
+      const entry={itemId:it.contentKey,level:it.level,ts:new Date().toISOString(),elapsedMs:observed?.elapsedMs??null,timingValid:Boolean(observed?.valid),report,explanation,measurement:'self_reported_environment'};
+      profile.progress={...profile.progress,environmentSpeedObservations:[...(profile.progress.environmentSpeedObservations||[]),entry].slice(-100)};persist();
+      $('#exerciseFeedback').textContent='Observación guardada. Esta práctica no modifica tus aciertos ni los tiempos de los retos en pantalla.';$('#exerciseFeedback').className='feedback practice';area.innerHTML='';$('#exerciseNext').classList.remove('hidden');
+    };
+    $('#exercisePrompt').textContent='Localiza un objeto de tu entorno';
+    visual.innerHTML='<p>Busca solo con la vista, desde tu sitio. La consigna aparecerá al empezar. Puedes señalar o nombrar el objeto y pulsar cuando lo hayas localizado.</p><p>El tiempo incluye leer la consigna y responder con el botón. Es una observación de esta búsqueda, no una medida automática del movimiento ni un resultado comparable con los retos en pantalla.</p>';
+    area.innerHTML='<button id="startRoomSpeed" class="primary-btn">Empezar búsqueda</button>';
+    $('#startRoomSpeed').onclick=()=>{
+      if(!live())return;$('#exercisePrompt').textContent=it.q;visual.innerHTML='<p id="roomSpeedClock" role="timer" aria-live="off">0,0 s</p><p>Busca sin levantarte ni mover objetos.</p>';it._roomTiming={started:performance.now(),valid:true};
+      area.innerHTML='<button id="foundRoomSpeed" class="primary-btn">Lo he localizado</button><button id="missingRoomSpeed" class="secondary-btn">No encuentro un objeto adecuado</button><button id="stopRoomSpeed" class="secondary-btn">Detener sin completar</button>';
+      const stop=()=>{clearTimeout(interactionTimer);observed={elapsedMs:Math.round(performance.now()-it._roomTiming.started),valid:it._roomTiming.valid};};
+      $('#foundRoomSpeed').onclick=()=>{stop();visual.innerHTML=`<p>Tiempo observado: ${(observed.elapsedMs/1000).toFixed(1).replace('.',',')} s.</p><p>Comprueba el objeto: ¿cumplía todas las condiciones de la consigna?</p>`;area.innerHTML='<button id="confirmRoomSpeed" class="primary-btn">Sí, cumplía las condiciones</button><button id="rejectRoomSpeed" class="secondary-btn">No cumplía las condiciones</button>';$('#confirmRoomSpeed').onclick=()=>{
+        visual.innerHTML='<p>Has localizado el objeto en '+(observed.elapsedMs/1000).toFixed(1).replace('.',',')+' s.</p><h4>'+escapeHtml(it.roomSpeedTask.followUp)+'</h4><p>Di tu respuesta en voz alta a la persona que te acompaña, o piensa en ella. Esta parte no se cronometra ni se graba.</p>';
+        area.innerHTML='<button id="roomUseExplained" class="primary-btn">He explicado un uso</button><button id="roomUseHelp" class="secondary-btn">He necesitado ayuda</button><button id="roomUseSkipped" class="secondary-btn">Omitir explicación</button>';
+        $('#roomUseExplained').onclick=()=>record('found','explained');$('#roomUseHelp').onclick=()=>record('found','with_help');$('#roomUseSkipped').onclick=()=>record('found','skipped');
+      };$('#rejectRoomSpeed').onclick=()=>record('not_met');};
+      $('#missingRoomSpeed').onclick=()=>{stop();record('not_found');};$('#stopRoomSpeed').onclick=()=>{stop();record('skipped');};
+      const tick=()=>{if(!live()||ended||observed)return;$('#roomSpeedClock').textContent=((performance.now()-it._roomTiming.started)/1000).toFixed(1).replace('.',',')+' s';interactionTimer=setTimeout(tick,100);};tick();
+    };
+  }
+  document.addEventListener('visibilitychange',()=>{if(document.hidden&&currentItem?.roomSpeedTask&&!currentItem._earlyAnswered){currentItem._roomTiming&&(currentItem._roomTiming.valid=false);interruptPractice(currentItem);$('#restartInteraction').onclick=()=>renderRoomSpeed(currentItem);}});
+  window.addEventListener('blur',()=>{if(currentItem?._roomTiming)currentItem._roomTiming.valid=false;});
+  $('#speedModeSwitch').onclick=event=>{const button=event.target.closest('[data-speed-mode]');if(!button)return;roomSpeedOnly=button.dataset.speedMode==='room';speedUnpairedOnly=false;counter=0;setupExercise();};
+  $('#speedUnpairedMode').onclick=()=>{speedUnpairedOnly=!speedUnpairedOnly;roomSpeedOnly=false;counter=0;setupExercise();};
+  $('#memoryAudioModeButton').onclick=()=>{memoryAudioOnly=!memoryAudioOnly;photoOnly=false;executedOnly=false;cognitiveOnly=false;interactionOnly=false;documentOnly=false;counter=0;setupExercise();};
+  function renderSpeedExercise(it){
+    $('#exerciseVisual').innerHTML=window.ContentPolicy.forProfile(profile)?'<p>Mira y responde. El reloj empieza al mostrar las figuras. También puedes practicar sin medir.</p>':'<p>Responde con precisión y agilidad. El tiempo empieza al mostrar el estímulo. Puedes usar los botones o las teclas numéricas.</p>';
+    $('#exerciseOptions').innerHTML='<button id="startSpeedTrial" class="primary-btn">Mostrar y medir</button><button id="practiceSpeedTrial" class="secondary-btn">Practicar sin medir</button>';
+    const start=measured=>{
+      if(currentItem!==it)return;
+      $('#exercise').classList.add('speed-active');
+      it._timing={started:performance.now(),valid:measured,measured};
+      const settings={illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:true,senses:it.lexicalSenses};
+      $('#exerciseVisual').innerHTML=['rapidAgenda','ruleChoice'].includes(it.speedFamily)?`<div class="processing-sources">${it.stimulus.map(block=>`<div class="processing-source">${window.ActivityModel.interactiveStimulus([block],settings)}</div>`).join('')}</div>`:window.ActivityModel.interactiveStimulus(it.stimulus,settings);
+      const options=it.speedFamily==='ruleChoice'?['Izquierda','Derecha']:shuffle(it.opts);
+      $('#exerciseOptions').innerHTML=options.map((o,i)=>`<button class="option-btn speed-choice" data-answer="${escapeHtml(o)}" aria-label="${escapeHtml(o)}"><small class="speed-key" aria-hidden="true">${i+1}</small>${it.speedFamily==='ruleChoice'?`<span aria-hidden="true">${o==='Izquierda'?'←':'→'}</span> `:''}${escapeHtml(o)}</button>`).join('');
+      $$('#exerciseOptions .speed-choice').forEach(b=>b.onclick=()=>checkOption(b,b.dataset.answer));
+      // Exclude instruction reading and bring source + compact response controls into view.
+      $('#exercisePrompt').scrollIntoView({block:'start',behavior:'instant'});
+      it._timing.started=performance.now();
+    };
+    $('#startSpeedTrial').onclick=()=>start(true);$('#practiceSpeedTrial').onclick=()=>start(false);
+  }
+  document.addEventListener('visibilitychange',()=>{if(document.hidden&&currentItem?._timing)currentItem._timing.valid=false;});
+  window.addEventListener('blur',()=>{if(currentItem?._timing&&!currentItem._earlyAnswered)currentItem._timing.valid=false;});
+  document.addEventListener('keydown',event=>{
+    if(event.repeat||event.ctrlKey||event.metaKey||event.altKey||/INPUT|TEXTAREA|SELECT/.test(event.target.tagName))return;
+    if(!$('#exercise').classList.contains('active-section'))return;
+    const choices=$$('#exerciseOptions .speed-choice:not(:disabled)');const index=Number(event.key)-1;
+    if(/^[1-4]$/.test(event.key)&&choices[index]){event.preventDefault();choices[index].click();}
+    if(currentItem?.interactionTask?.kind==='symbols'&&/^[a-e]$/i.test(event.key)){
+      const button=$(`#exerciseOptions .interaction-action[data-action="${event.key.toUpperCase().charCodeAt(0)-65}"]:not(:disabled)`);
+      if(button){event.preventDefault();button.click();}
+    }
+  });
   function renderMultiSelect(it) {
+    $('#exercise').classList.toggle('visual-only-differences',it.type==='photoDifference'&&it.level>=3);
+    const single=subject==='attention'&&it.level===1&&it.answers?.length===1;
+    $('#exerciseOptions').classList.add('structured-options');
     const selected = new Set();
     const opts = shuffle(it.opts || []);
     $("#exerciseOptions").innerHTML =
-      `<div class="multi-select-grid">${opts.map((o) => `<button class="option-btn multi-option" data-value="${escapeHtml(o)}">${escapeHtml(o)}</button>`).join("")}</div><div class="multi-actions"><span id="multiCount">0/${(it.answers || []).length} seleccionados</span><button id="multiCheck" class="primary-btn">Comprobar selección</button></div>`;
+      `<div class="multi-select-grid">${opts.map((o) => `<button class="option-btn multi-option" data-value="${escapeHtml(o)}" aria-label="${escapeHtml(o)}" aria-pressed="false">${it.memoryResponse==='multiple'?window.ActivityModel.visualLabel(o,{...it.lexicalSenses,memory:subject==='memory'}):escapeHtml(o)}</button>`).join("")}</div><div class="multi-actions"><span id="multiCount" role="status">${(['multiSelect','documentReview','photoDifference'].includes(it.type)||it.memoryResponse==='multiple')?'0 seleccionadas':`0/${(it.answers || []).length} seleccionados`}</span><button id="multiCheck" class="primary-btn" ${(['multiSelect','documentReview','photoDifference'].includes(it.type)||it.memoryResponse==='multiple')?'disabled':''}>Comprobar selección</button></div>`;
+    const photoMarks=[];
+    function syncPhotoMarks(){
+      for(const {mark,option} of photoMarks){
+        mark.setAttribute('aria-pressed',option.getAttribute('aria-pressed'));
+        for(const name of ['selected','correct','wrong'])mark.classList.toggle(name,option.classList.contains(name));
+        mark.disabled=option.disabled;
+      }
+    }
+    if(it.type==='photoDifference'){
+      const image=$('.photo-comparison figure:nth-child(2) img');
+      if(image){
+        const holder=document.createElement('div');holder.className='photo-hit-image';image.before(holder);holder.append(image);
+        const regions=window.PhotoLibrary.pairs[it.photoTask.pairId].regions;
+        for(const [object,box] of Object.entries(regions)){
+          const value=window.LocaleContent.text(object,API.effectiveLocale(profile));
+          const option=$$('#exerciseOptions .multi-option').find(b=>b.dataset.value===value||b.dataset.value.startsWith(value+': '));if(!option)continue;
+          const mark=document.createElement('button');mark.type='button';mark.className='photo-hit';mark.dataset.value=value;mark.setAttribute('aria-label','Señalar: '+value);mark.setAttribute('aria-pressed','false');
+          const [left,top,width,height]=box;Object.assign(mark.style,{left:left+'%',top:top+'%',width:width+'%',height:height+'%'});
+          mark.onclick=()=>option.click();holder.append(mark);photoMarks.push({mark,option});
+        }
+        const help=document.createElement('p');help.className='photo-mark-help';help.textContent=it.level>=3?'Compara las dos imágenes y pulsa directamente sobre cada detalle que haya cambiado.':'Compara las escenas y pulsa en la imagen B los elementos que han cambiado. También puedes seleccionarlos en la lista.';$('.photo-comparison').after(help);
+      }
+    } else if(it.type==='photoDifference'){
+      const help=document.createElement('p');help.className='photo-mark-help';help.textContent='Compara A con B y marca solo los cambios que pide la consigna. Por ejemplo, si se pregunta por el color, selecciona un objeto solo cuando su color cambie de A a B.';$('.photo-comparison')?.after(help);
+    }
     $$("#exerciseOptions .multi-option").forEach(
       (b) =>
         (b.onclick = () => {
@@ -250,8 +450,10 @@
             selected.add(v);
             b.classList.add("selected");
           }
-          $("#multiCount").textContent =
-            `${selected.size}/${(it.answers || []).length} seleccionados`;
+          b.setAttribute('aria-pressed',String(selected.has(v)));
+          syncPhotoMarks();
+          $("#multiCount").textContent = (['multiSelect','documentReview','photoDifference'].includes(it.type)||it.memoryResponse==='multiple')?`${selected.size} ${selected.size===1?'seleccionada':'seleccionadas'}`:`${selected.size}/${(it.answers || []).length} seleccionados`;
+          if((['multiSelect','documentReview','photoDifference'].includes(it.type)||it.memoryResponse==='multiple'))$('#multiCheck').disabled=!selected.size;
         }),
     );
     $("#multiCheck").onclick = () => {
@@ -265,17 +467,194 @@
         else if (selected.has(b.dataset.value)) b.classList.add("wrong");
       });
       $("#multiCheck").disabled = true;
+      syncPhotoMarks();
       showFeedback(
         ok,
-        saveResult(subject, ok, it.id, "memoryMulti"),
-        ok
+        saveResult(subject, ok, it.id, it.type),
+        (['multiSelect','documentReview','photoDifference'].includes(it.type)||it.memoryResponse==='multiple')?it.why:ok
           ? "Has reconocido correctamente todos los elementos."
           : "Revisa los elementos marcados en verde.",
       );
     };
+    if(single){
+      $('#multiCheck').classList.add('hidden');$('#multiCount').textContent='Selecciona una respuesta.';
+      $('#exerciseOptions .multi-select-grid').classList.add('single-selection');
+      for(const button of $$('#exerciseOptions .multi-option')){const select=button.onclick;button.onclick=()=>{select();$('#multiCheck').click();};}
+    }
   }
+  let interactionTimer=null,interactionVersion=0,interactionAudio=null,interactionVoice=null;
+  function stopInteraction(){clearTimeout(interactionTimer);interactionTimer=null;interactionVersion++;if(interactionVoice){interactionVoice.onend=null;interactionVoice.onerror=null;window.speechSynthesis?.cancel();interactionVoice=null;}if(interactionAudio){interactionAudio.close().catch(()=>{});interactionAudio=null;}}
+  document.addEventListener('visibilitychange',()=>{
+    const it=currentItem;
+    if(!document.hidden||!$('#exercise').classList.contains('active-section')||!it?.interactionTask||it.interactionTask.kind==='room'||it._earlyAnswered)return;
+    stopInteraction();$('#exerciseVisual').innerHTML='<p>La actividad se ha interrumpido al salir de la pestaña. Vuelve a empezar cuando estés preparado.</p>';
+    $('#exerciseOptions').innerHTML='<button id="restartInteraction" class="primary-btn">Volver a empezar</button>';
+    $('#restartInteraction').onclick=()=>renderInteractiveExercise(it);
+  });
+  function renderInteractiveExercise(it){
+    stopInteraction();const version=interactionVersion,t=it.interactionTask,visual=$('#exerciseVisual'),area=$('#exerciseOptions');
+    const live=()=>currentItem===it&&version===interactionVersion;
+    const local=value=>window.LocaleContent.text(value,API.effectiveLocale(profile));
+    const recordObservation=report=>{
+      if(!live()||it._earlyAnswered)return;
+      it._earlyAnswered=true;
+      const entry={itemId:it.id,subject,kind:t.kind,level:it.level,ts:new Date().toISOString(),report};
+      profile.progress={...profile.progress,interactiveObservations:[...(profile.progress?.interactiveObservations||[]),entry].slice(-100)};
+      if(guidedSession){
+        guidedSession.answered=true;
+        if(guidedSession.mission&&guidedSession.school)profile.progress={...profile.progress,_schoolJourney:window.SchoolJourney.record(profile.progress?._schoolJourney,subject,it.id,profile)};
+      }
+      persist();
+      $('#exerciseFeedback').textContent='Práctica guardada. Este registro no modifica el porcentaje de aciertos.';$('#exerciseFeedback').className='feedback practice';
+      $('#exerciseNext').classList.remove('hidden');$$('#exerciseOptions button').forEach(b=>b.disabled=true);
+    };
+    if(t.kind==='auditory'){renderListeningExercise(it,{live,local,recordObservation});return;}
+    if(t.kind==='movement'){renderMovementExercise(it,{live,local,recordObservation});return;}
+    if(t.kind==='room'){
+      area.innerHTML='<div class="room-response"><p>Respuesta temporal: no incluyas nombres ni datos personales. La descripción no se guarda en el historial.</p><label for="roomDescription">Describe el objeto y explica por qué cumple la consigna.</label><textarea id="roomDescription" rows="4" maxlength="700" placeholder="He encontrado… Cumple la consigna porque…"></textarea><p id="roomResponseMessage" role="status"></p><button id="saveRoomObservation" class="primary-btn">Registrar respuesta</button><button id="roomNotFound" class="secondary-btn">No encuentro un objeto que cumpla la consigna</button></div>';
+      $('#saveRoomObservation').onclick=()=>{const text=$('#roomDescription').value.trim();if(text.length<10){$('#roomResponseMessage').textContent='Escribe qué has encontrado y qué característica cumple.';return;}recordObservation('described');};
+      $('#roomNotFound').onclick=()=>recordObservation('not_found');return;
+    }
+    let trial=0,correctTrials=0,noGoErrors=0;
+    const rulesTable=rules=>window.ActivityModel.interactiveStimulus([{type:'table',header:true,rows:[['Tarjeta','Qué tienes que hacer'],...rules.map(r=>[t.kind==='symbols'?r.symbol+' · '+local(r.label):r.label,r.target<0?'Espera sin hacer nada':local(t.actions[r.target])])]}],{structured:true});
+    const introduction=it.stimulus[0].text;
+    visual.innerHTML=`<div class="interactive-rules"><p>${escapeHtml(introduction)}</p>${rulesTable(t.rules)}${t.secondRules?`<p>Después de la tarjeta ${t.rules.length} cambiarán las reglas. Te avisaremos para que puedas leer la tabla nueva.</p>`:''}<p>${t.kind==='movement'?'La pantalla marca la espera. Tú o la persona que te acompaña indicáis si la habéis respetado.':'En las tarjetas de espera no pulses ningún botón. La tarjeta cambiará sola cuando termine el turno.'}</p></div>`;
+    area.innerHTML='<button id="startInteractive" class="primary-btn">Empezar las tarjetas</button>';
+    const finish=()=>{
+      it._interactionSummary={trials:t.trials.length,correctTrials,noGoErrors};
+      const ok=correctTrials/t.trials.length>=.8&&noGoErrors===0;
+      showFeedback(ok,saveResult(subject,ok,it.id,'symbol_rules'),`${correctTrials} de ${t.trials.length} tarjetas correctas. ${noGoErrors?'En '+noGoErrors+' tarjetas de espera pulsaste antes de tiempo.':'Has respetado todas las tarjetas de espera.'}`);
+    };
+    const next=()=>{
+      if(!live())return;
+      if(trial>=t.trials.length){finish();return;}
+      if(t.secondRules&&trial===t.rules.length){
+        visual.innerHTML='<div class="interactive-rules"><h4>Ahora cambian las reglas</h4><p>Lee la tabla nueva antes de seguir.</p>'+rulesTable(t.secondRules)+'</div>';
+        area.innerHTML='<button id="confirmRuleChange" class="primary-btn">He leído las reglas nuevas</button>';
+        $('#confirmRuleChange').onclick=()=>showCard();return;
+      }
+      showCard();
+    };
+    const showCard=()=>{
+      if(!live())return;
+      const activeRules=t.secondRules&&trial>=t.rules.length?t.secondRules:t.rules,rule=activeRules[t.trials[trial]];
+      let answered=false;
+      const close=(ok,report)=>{
+        if(!live()||answered)return;answered=true;clearTimeout(interactionTimer);interactionTimer=null;
+        if(ok)correctTrials++;if(rule.target<0&&!ok)noGoErrors++;
+        trial++;$$('#exerciseOptions button').forEach(b=>b.disabled=true);
+        $('#interactiveTrialFeedback').textContent=ok?'Bien. Has seguido la regla.':rule.target<0?'En esta tarjeta había que esperar sin pulsar.':'La regla indicaba: '+local(t.actions[rule.target])+'.';
+        interactionTimer=setTimeout(next,650);
+      };
+      visual.innerHTML=`<div class="interactive-trial"><div class="interactive-card" aria-label="${escapeHtml(rule.label)}">${t.kind==='symbols'?`<strong aria-hidden="true">${rule.symbol}</strong><span>${escapeHtml(local(rule.label))}</span>`:`<strong class="word-cue">${escapeHtml(rule.label)}</strong>`}</div><p id="interactiveTrialFeedback" role="status"></p><div id="interactiveWait" class="interactive-wait hidden"><p id="interactiveSeconds" role="timer" aria-live="off"></p><progress id="interactiveWaitBar" max="${t.waitMs}" value="0"></progress></div><details class="interactive-rule-help"><summary>Consultar las reglas</summary>${rulesTable(activeRules)}</details></div>`;
+      area.innerHTML=t.actions.map((label,i)=>`<button class="option-btn interaction-action" data-action="${i}">${escapeHtml(local(label))}</button>`).join('');
+      $$('.interaction-action').forEach(b=>b.onclick=()=>close(Number(b.dataset.action)===rule.target));
+      if(rule.target>=0)return;
+      const started=Date.now(),deadline=started+t.waitMs;
+      const tick=()=>{
+        if(!live()||answered)return;
+        const remaining=Math.max(0,deadline-Date.now());$('#interactiveWaitBar').value=t.waitMs-remaining;
+        $('#interactiveSeconds').textContent=remaining?`Espera: ${Math.ceil(remaining/1000)} ${remaining<=1000?'segundo':'segundos'}.`:'La espera ha terminado.';
+        if(remaining){interactionTimer=setTimeout(tick,Math.min(100,remaining));return;}
+        interactionTimer=null;
+        close(true);
+      };tick();
+    };
+    $('#startInteractive').onclick=next;
+  }
+  function interruptPractice(it){
+    stopInteraction();
+    $('#exerciseVisual').innerHTML='<p>Práctica detenida. Puedes volver a empezar cuando quieras.</p>';
+    $('#exerciseOptions').innerHTML='<button id="restartInteraction" class="primary-btn">Volver a empezar</button>';
+    $('#restartInteraction').onclick=()=>renderInteractiveExercise(it);
+  }
+  function finishObservedPractice(it,reports,recordObservation){
+    $('#exerciseVisual').innerHTML='<div class="interactive-trial"><h4>Has terminado la ronda</h4><p>La pantalla ha presentado las señales, pero no comprueba los gestos. Indica cómo ha ido la práctica.</p></div>';
+    $('#exerciseOptions').innerHTML='<button id="practiceCompleted" class="primary-btn">He realizado la práctica</button><button id="practiceDifficult" class="secondary-btn">He tenido dificultades</button><button id="practiceSkipped" class="secondary-btn">No he realizado la práctica</button>';
+    for(const [id,completion] of [['practiceCompleted','completed'],['practiceDifficult','difficult'],['practiceSkipped','skipped']])$('#'+id).onclick=()=>recordObservation({trials:reports,completion,...(it.interactionTask.audioMode?{audioMode:it.interactionTask.audioMode}:{})});
+  }
+  function renderMovementExercise(it,{live,local,recordObservation}){
+    const t=it.interactionTask,visual=$('#exerciseVisual'),area=$('#exerciseOptions'),reports=[];let trial=0;
+    visual.innerHTML='<div class="interactive-rules">'+window.ActivityModel.interactiveStimulus(it.stimulus.slice(0,2),{structured:true})+'<p>Observa cada señal y sigue la tabla. Cuando aparezca PAUSA, no hagas ningún gesto.</p></div>';
+    area.innerHTML='<button id="startInteractive" class="primary-btn">Empezar las tarjetas</button>';
+    const next=()=>{
+      if(!live())return;if(trial>=t.trials.length){finishObservedPractice(it,reports,recordObservation);return;}
+      const rule=t.rules[t.trials[trial]],entry={trial:trial+1,report:'unverified'};reports.push(entry);
+      const deadline=Date.now()+(rule.target<0?t.waitMs:1000),finishAt=deadline+4000;
+      visual.innerHTML=`<div class="interactive-trial"><div class="interactive-card"><strong class="word-cue">${escapeHtml(rule.label)}</strong></div><p id="movementAction"></p><p id="interactiveSeconds" role="timer" aria-live="off"></p></div>`;
+      area.innerHTML='<button id="movementEarly" class="secondary-btn">Marcar un adelanto o una confusión</button><button id="stopPractice" class="secondary-btn">Detener práctica</button>';
+      $('#movementEarly').onclick=()=>{entry.report='early';$('#movementEarly').disabled=true;};$('#stopPractice').onclick=()=>interruptPractice(it);
+      const tick=()=>{
+        if(!live())return;const now=Date.now(),remaining=Math.max(0,deadline-now);
+        if(rule.target<0)$('#interactiveSeconds').textContent=remaining?`Espera ${Math.ceil(remaining/1000)} segundos.`:'';
+        if(!remaining&&rule.target>=0)$('#movementAction').textContent='Ahora: '+local(t.actions[rule.target])+'.';
+        if(now>=finishAt){trial++;next();return;}interactionTimer=setTimeout(tick,100);
+      };tick();
+    };$('#startInteractive').onclick=next;
+  }
+  function renderListeningExercise(it,{live,local,recordObservation}){
+    const t=it.interactionTask,visual=$('#exerciseVisual'),area=$('#exerciseOptions');
+    let trial=0,busy=false,ready=false,playVersion=0;const reports=[];
+    const supported=t.audioMode==='words'?Boolean(window.speechSynthesis&&window.SpeechSynthesisUtterance):Boolean(window.AudioContext||window.webkitAudioContext);
+    const message=text=>{const el=$('#listeningStatus');if(el)el.textContent=text;};
+    const play=(index,done)=>{
+      if(!live()||busy)return;busy=true;const playing=++playVersion;
+      const fail=()=>{if(!live()||playing!==playVersion)return;playVersion++;busy=false;ready=false;if(interactionVoice){interactionVoice.onend=null;interactionVoice.onerror=null;window.speechSynthesis?.cancel();}clearTimeout(interactionTimer);message('No se ha podido reproducir la señal. Comprueba el sonido y vuelve a probar. Puedes elegir otra actividad.');$('#retryListening')?.classList.remove('hidden');};
+      const end=()=>{if(!live()||playing!==playVersion)return;playVersion++;clearTimeout(interactionTimer);busy=false;done();};
+      interactionTimer=setTimeout(fail,10000);
+      if(t.audioMode==='words'){
+        try{
+          const voice=new SpeechSynthesisUtterance(t.rules[index].label);voice.lang='es-ES';voice.rate=.85;voice.volume=.55;
+          const spanish=window.speechSynthesis.getVoices().find(v=>v.lang==='es-ES')||window.speechSynthesis.getVoices().find(v=>v.lang.startsWith('es'));if(spanish)voice.voice=spanish;
+          interactionVoice=voice;voice.onend=end;voice.onerror=fail;window.speechSynthesis.speak(voice);
+        }catch(_){fail();}return;
+      }
+      try{
+        const signal=t.signals[index],ctx=interactionAudio;
+        if(!ctx||ctx.state==='closed'){fail();return;}
+        ctx.resume().then(()=>{
+          if(!live())return;
+          for(let i=0;i<signal.beeps;i++){
+            const osc=ctx.createOscillator(),gain=ctx.createGain(),start=ctx.currentTime+i*.4;
+            osc.type='sine';osc.frequency.value=signal.frequency;gain.gain.setValueAtTime(0,start);gain.gain.linearRampToValueAtTime(.08,start+.015);gain.gain.setValueAtTime(.08,start+.18);gain.gain.linearRampToValueAtTime(0,start+.22);
+            osc.connect(gain);gain.connect(ctx.destination);osc.start(start);osc.stop(start+.23);
+          }
+          clearTimeout(interactionTimer);interactionTimer=setTimeout(end,signal.beeps*400+100);
+        }).catch(fail);
+      }catch(_){fail();}
+    };
+    const unlock=()=>{
+      if(t.audioMode==='tones'&&!interactionAudio){const Audio=window.AudioContext||window.webkitAudioContext;interactionAudio=new Audio();}return interactionAudio?.resume().catch(()=>{});
+    };
+    const intro=()=>{
+      visual.innerHTML=`<div class="interactive-rules listening-rules"><p>${escapeHtml(it.stimulus[0].text)}</p><p><strong>${t.audioMode==='words'?'Señales habladas':'Señales de sonido'}</strong>. Prueba el audio con los botones. Al empezar, las señales avanzarán solas. Usa un volumen cómodo.</p>${window.ActivityModel.interactiveStimulus([it.stimulus[1]],{structured:true})}<div class="listening-samples">${t.rules.map((r,i)=>`<button class="secondary-btn sample-cue" data-cue="${i}">Escuchar: ${escapeHtml(r.label)}</button>`).join('')}</div><p id="listeningStatus" role="status">${supported?'Prueba al menos una señal antes de empezar.':'Este navegador no dispone del audio necesario. Elige otra actividad o un navegador con sonido.'}</p></div>`;
+      area.innerHTML='<button id="startListening" class="primary-btn" disabled>He oído las señales. Empezar</button>';
+      $$('.sample-cue').forEach(button=>{button.disabled=!supported;button.onclick=()=>{if(busy)return;try{unlock();play(Number(button.dataset.cue),()=>{message('Señal reproducida. Repasa las demás antes de empezar si lo necesitas.');$('#startListening').disabled=false;});}catch(_){message('No se ha podido iniciar el sonido. Prueba otra actividad.');}};});
+      $('#startListening').onclick=()=>{if(!busy)next();};
+    };
+    const next=()=>{
+      if(!live())return;
+      if(trial>=t.trials.length){finishObservedPractice(it,reports,recordObservation);return;}
+      ready=false;let advanced=false;const index=t.trials[trial],rule=t.rules[index],entry={trial:trial+1,report:'unverified'};
+      visual.innerHTML=`<div class="interactive-trial"><p class="eyebrow">Señal ${trial+1} de ${t.trials.length}</p><div class="interactive-card"><strong aria-hidden="true">♪</strong><span>Escucha con atención</span></div><p id="listeningStatus" role="status">Espera a oír la señal completa antes de hacer ningún gesto.</p><p>Las señales avanzan solas. Al final indicarás cómo ha ido la práctica.</p></div>`;
+      area.innerHTML='<button id="listeningEarly" class="secondary-btn" disabled>Marcar un adelanto o una confusión</button><button id="retryListening" class="secondary-btn hidden">Volver a escuchar la señal</button><button id="skipListeningAudio" class="secondary-btn">No oigo el audio: omitir sin puntuar</button><button id="stopPractice" class="secondary-btn">Detener práctica</button>';
+      const advance=()=>{if(!live()||advanced)return;advanced=true;reports.push(entry);trial++;next();};
+      const emit=()=>play(index,()=>{ready=true;message(rule.target<0?'La señal ha terminado. Espera sin hacer ningún gesto.':'La señal ha terminado. Haz el gesto de la regla. La próxima señal llegará automáticamente.');$('#listeningEarly').disabled=false;interactionTimer=setTimeout(advance,4000);});
+      $('#retryListening').onclick=()=>{if(interactionVoice){interactionVoice.onend=null;interactionVoice.onerror=null;window.speechSynthesis?.cancel();}busy=false;$('#retryListening').classList.add('hidden');emit();};
+      $('#listeningEarly').onclick=()=>{entry.report='early';$('#listeningEarly').disabled=true;};
+      $('#skipListeningAudio').onclick=()=>{
+        if(!live()||advanced)return;entry.report='audio_unavailable';playVersion++;clearTimeout(interactionTimer);
+        if(interactionVoice){interactionVoice.onend=null;interactionVoice.onerror=null;window.speechSynthesis?.cancel();}busy=false;
+        interactionTimer=setTimeout(advance,250);
+      };
+      $('#stopPractice').onclick=()=>interruptPractice(it);
+      interactionTimer=setTimeout(emit,t.delays[trial]);
+    };
+    intro();
+  }
+
   const blankState = () => {
-    const subjects = profile ? AGE[profile.age_band].subjects : [];
+    const subjects = profile ? ageData().subjects : [];
     const scores = {},
       levels = {};
     const initial = Math.max(
@@ -304,7 +683,8 @@
   };
   function normalizeState(p) {
     const b = blankState(),
-      s = p?.progress || {};
+      s = window.Curriculum.migrate(p?.progress || {},window.AgeStages.route(p));
+    p.progress=s;
     return {
       ...b,
       ...s,
@@ -329,13 +709,33 @@
         })[c],
     );
   }
+  function subjectLabel(domain){
+    const schoolName={language:'Lenguaje',division:'Matemáticas',reading:'Lectura + Escritura'}[domain];
+    return schoolName?`${schoolName} ${ageData().label.replace(' años','')}`:SUBJECT_META[domain].name;
+  }
+  function ageLabel(p){const route=window.AgeStages.route(p);return route==='early'?'6–7 años':route==='junior'?'8–10 años':AGE[route]?.label||AGE[p.age_band]?.label||'Grupo de edad';}
   function ageData() {
-    return AGE[profile.age_band];
+    const route=window.AgeStages.route(profile);
+    const data=route==='junior'?{...AGE.primary,label:'8-10 años',subjects:window.ContentPolicy.early.subjects}:window.ContentPolicy.forProfile(profile)||AGE[profile.age_band];
+    return {...data,subjects:window.Curriculum.visible(data.subjects,route)};
   }
   function recent(s, n = 10) {
     return state.history.filter((x) => x.subject === s).slice(-n);
   }
   function recalcLevel(s) {
+    if(window.AgeStages.forProfile(profile)||['executive','speedReasoning'].includes(s)){
+      const checkpoints=profile.progress?._levelCheckpoints || {};
+      const checkpoint=checkpoints[s] || {attempt:state.totalAttempts-1};
+      const results=state.history.filter(x=>x.subject===s && x.attemptNumber>checkpoint.attempt);
+      const level=state.levels[s]||1,stage=window.AgeStages.forProfile(profile);
+      let next=window.AgeStages.next(level,results,profile);
+      if(!stage){
+        const minimum=window.ContentPolicy.forProfile(profile)?6:12,windowResults=results.slice(-minimum),accuracy=windowResults.filter(x=>x.correct).length/minimum;
+        if(windowResults.length===minimum)next=accuracy>=.85?Math.min(3,level+1):accuracy<=.4?Math.max(1,level-1):level;
+      }
+      checkpoints[s]=next!==level?{attempt:state.totalAttempts}:checkpoint;
+      profile.progress={...profile.progress,_levelCheckpoints:checkpoints};state.levels[s]=next;return;
+    }
     const r = recent(s, 10);
     if (r.length < 6) return;
     const acc = r.filter((x) => x.correct).length / r.length;
@@ -344,25 +744,120 @@
     else if (acc <= 0.42 && l > 1) l--;
     state.levels[s] = l;
   }
-  async function persist() {
-    if (profile && state) {
-      profile.progress = {
-        scores: state.scores,
-        levels: state.levels,
-        totalCorrect: state.totalCorrect,
-        totalAttempts: state.totalAttempts,
-        history: state.history.slice(-5000),
-        sessions: state.sessions.slice(-30),
-        _delivery: profile.progress?._delivery,
-      };
-      try {
-        await API.saveProgress(profile.id, profile.progress);
-      } catch (e) {
-        console.warn(e);
+  let progressSaveRevision=0;
+  let resultSaveRevision=0;
+  const unconfirmedResultWrites=new Map();
+  const pendingResultRecoveries=new Map();
+  let latestProgressSave=Promise.resolve(true);
+  function pendingResultRowsFor(id){if(!unconfirmedResultWrites.has(id))unconfirmedResultWrites.set(id,new Map());return unconfirmedResultWrites.get(id);}
+  function rememberPendingResult(id,row,state='pending'){if(id&&row?.clientAttemptId)pendingResultRowsFor(id).set(row.clientAttemptId,{row,state});}
+  function forgetPendingResult(id,attemptId){const rows=unconfirmedResultWrites.get(id);rows?.delete(attemptId);if(rows&&!rows.size)unconfirmedResultWrites.delete(id);}
+  function pendingResultStateCounts(id){
+    const states=new Map();
+    try{for(const attempt of API.pendingResults?.(id)||[])states.set(attempt.client_attempt_id,attempt.state||'pending');}catch{}
+    for(const [attemptId,entry] of unconfirmedResultWrites.get(id)||[])if(!states.has(attemptId))states.set(attemptId,entry.state||'pending');
+    const values=[...states.values()];return {total:values.length,failed:values.filter(value=>value==='failed').length,uncertain:values.filter(value=>value==='uncertain').length,pending:values.filter(value=>value==='pending').length};
+  }
+  function pendingResultStateSummary(id){const states=pendingResultStateCounts(id);return [states.failed?`${states.failed} rechazado(s)`:null,states.uncertain?`${states.uncertain} con confirmación incierta`:null,states.pending?`${states.pending} sin enviar`:null].filter(Boolean).join(', ')||'pendientes';}
+  function unconfirmedResultsFor(id){
+    return pendingResultStateCounts(id).total;
+  }
+  function setProgressSaveStatus(message,kind='',retryProgress=null,retryResult=null){
+    const status=$('#progressSaveStatus'),retry=$('#retryProgressSave');
+    if(!status)return;
+    status.textContent=message;status.className=`progress-save-status${kind?` ${kind}`:''}`;
+    if(retry){if(retryProgress!==null)retry.classList.toggle('hidden',!retryProgress);else if(!message)retry.classList.add('hidden');}
+    const resultRetry=$('#retryResultSave');if(resultRetry){if(retryResult!==null)resultRetry.classList.toggle('hidden',!retryResult);else if(!message)resultRetry.classList.add('hidden');}
+  }
+  function setPendingResultHomeStatus(message='',kind='',retry=false){
+    const status=$('#pendingResultStatus'),button=$('#retryPendingResultsHome');
+    if(!status)return;
+    status.textContent=message;status.className=`pending-result-status${kind?` ${kind}`:''}`;
+    status.classList.toggle('hidden',!message);
+    button?.classList.toggle('hidden',!retry);
+  }
+  async function recoverPendingResults(profileId,{includeFailed=false,exerciseNotice=false}={}){
+    if(!profileId||profile?.id!==profileId||profile._sessionOnly||API.isIndependent?.(profileId))return null;
+    if(pendingResultRecoveries.has(profileId))return pendingResultRecoveries.get(profileId);
+    const pendingBefore=unconfirmedResultsFor(profileId);
+    if(!pendingBefore){setPendingResultHomeStatus();return {attempted:0,confirmed:0,failed:0,uncertain:0,remaining:0};}
+    const userId=API.user?.id;
+    setPendingResultHomeStatus(`Hay ${pendingBefore} resultado(s) pendientes (${pendingResultStateSummary(profileId)}). Se está comprobando el guardado.`,'pending');
+    if(exerciseNotice)setProgressSaveStatus(`Reintentando de forma segura ${pendingBefore} resultado(s) pendiente(s)…`,'pending');
+    const operation=(async()=>{
+      let transientConfirmed=0,transientFailed=0;
+      const persistedIds=new Set((API.pendingResults?.(profileId)||[]).map(attempt=>attempt.client_attempt_id));
+      for(const [attemptId,entry] of [...(unconfirmedResultWrites.get(profileId)||new Map())]){
+        if(persistedIds.has(attemptId))continue;
+        try{const saved=await API.saveResult(profileId,entry.row);if(saved){forgetPendingResult(profileId,attemptId);transientConfirmed++;}}
+        catch(error){rememberPendingResult(profileId,entry.row,error.state||'uncertain');transientFailed++;}
       }
+      const outcome=await API.retryPendingResults(profileId,{includeFailed});
+      const stillPersistedIds=new Set((API.pendingResults?.(profileId)||[]).map(attempt=>attempt.client_attempt_id));
+      for(const attemptId of persistedIds)if(!stillPersistedIds.has(attemptId))forgetPendingResult(profileId,attemptId);
+      if(profile?.id!==profileId||API.user?.id!==userId||profile._sessionOnly)return outcome;
+      const remaining=unconfirmedResultsFor(profileId);
+      if(!remaining){
+        const recovered=outcome.confirmed+transientConfirmed;
+        setPendingResultHomeStatus(recovered?`Se recuperaron ${recovered} resultado(s) pendientes.`:'','success');
+        if(exerciseNotice){
+          const progressPending=!$('#retryProgressSave').classList.contains('hidden');
+          setProgressSaveStatus(progressPending?'Los resultados están confirmados; el progreso sigue pendiente y puedes reintentarlo.':recovered?`Se recuperaron ${recovered} resultado(s) pendientes sin duplicarlos.`:'No quedan resultados pendientes.',progressPending?'error':'success',progressPending,false);
+        }
+      }else{
+        const reason=pendingResultStateSummary(profileId);
+        setPendingResultHomeStatus(`Quedan ${remaining} resultado(s) sin confirmar (${reason}). El reintento conserva su identificador y no crea duplicados.`,'error',true);
+        if(exerciseNotice){const progressPending=!$('#retryProgressSave').classList.contains('hidden');setProgressSaveStatus(`Quedan ${remaining} resultado(s) sin confirmar (${reason}). Puedes reintentarlos de forma segura.`, 'error',progressPending,true);}
+      }
+      return {...outcome,transientConfirmed,transientFailed,remaining};
+    })();
+    pendingResultRecoveries.set(profileId,operation);
+    try{return await operation;}finally{if(pendingResultRecoveries.get(profileId)===operation)pendingResultRecoveries.delete(profileId);}
+  }
+  function persist(announce=false) {
+    if(!profile||!state)return Promise.resolve(false);
+    profile.progress = {
+      ...profile.progress,
+      scores: state.scores,
+      levels: state.levels,
+      totalCorrect: state.totalCorrect,
+      totalAttempts: state.totalAttempts,
+      history: state.history.slice(-5000),
+      sessions: state.sessions.slice(-30),
+      _delivery: profile.progress?._delivery,
+    };
+    const revision=++progressSaveRevision;
+    if(profile._sessionOnly===true||API.isIndependent?.(profile.id)){
+      if(announce)setProgressSaveStatus('Esta sesión independiente no se guarda en el perfil.','info');
+      return Promise.resolve(false);
     }
+    if(announce)setProgressSaveStatus('Guardando progreso…','pending',false,Boolean(unconfirmedResultsFor(profile.id)));
+    const save=(async()=>{
+      try{
+        await API.saveProgress(profile.id,profile.progress);
+        const unconfirmed=unconfirmedResultsFor(profile.id);
+        if(announce&&revision===progressSaveRevision)setProgressSaveStatus(unconfirmed?`Progreso guardado; quedan ${unconfirmed} resultado(s) sin confirmar.`:'Progreso guardado en este perfil.',unconfirmed?'error':'success',false,Boolean(unconfirmed));
+        return true;
+      }catch(e){
+        console.warn(e);
+        if(announce&&revision===progressSaveRevision)setProgressSaveStatus('No se pudo guardar el progreso. Puedes reintentar este guardado.','error',true,Boolean(unconfirmedResultsFor(profile.id)));
+        return false;
+      }
+    })();
+    latestProgressSave=save;
+    return save;
   }
   function saveResult(s, correct, itemId, detail = "standard") {
+    const earlyAnswer=currentItem?.id===itemId && s===subject;
+    if(earlyAnswer && currentItem._earlyAnswered)return 0;
+    if(earlyAnswer){
+      currentItem._earlyAnswered=true;
+      if(guidedSession?.mission){
+        if(guidedSession.school)profile.progress={...profile.progress,_schoolJourney:window.SchoolJourney.record(profile.progress?._schoolJourney,s,itemId,profile)};
+        else profile.progress={...profile.progress,_earlyJourney:window.EarlyJourney.record(profile.progress?._earlyJourney,s,itemId)};
+        guidedSession.answered=true;
+      }
+    }
     state.totalAttempts++;
     state.session.attempts++;
     if (correct) {
@@ -375,25 +870,52 @@
       : 0;
     state.scores[s] = (state.scores[s] || 0) + pts;
     const row = {
+      attemptNumber:state.totalAttempts,
+      clientAttemptId:API.createAttemptId(),
       ts: new Date().toISOString(),
       sessionId: state.session.id,
       sessionStartedAt: state.session.startedAt,
+      sessionOnly:profile._sessionOnly===true,
       subject: s,
       correct,
       points: pts,
       level: state.levels[s] || 1,
       itemId,
       detail,
+      ...(currentItem?._interactionSummary?{interactionSummary:currentItem._interactionSummary}:{}),
+      ...(currentItem?.id===itemId&&currentItem.speedTask?{speedFamily:currentItem.speedFamily,speedRevision:currentItem.speedRevision||2,responseMs:currentItem._timing?.measured?Math.round(performance.now()-currentItem._timing.started):null,timingValid:Boolean(currentItem._timing?.valid),curriculumRevision:2}:{}),
     };
     state.history.push(row);
     state.history = state.history.slice(-5000);
     recalcLevel(s);
-    persist();
-    API.saveResult(profile.id, row);
+    const resultProfileId=profile.id;
+    const tracked=profile._sessionOnly!==true&&!API.isIndependent?.(resultProfileId);
+    // Record the attempt in the durable outbox before starting the progress
+    // request so a reload during either network operation can recover it.
+    const resultSave=API.saveResult(resultProfileId,row).then(result=>{if(!result)return false;forgetPendingResult(resultProfileId,row.clientAttemptId);return true;},error=>{console.warn('Result insert failed',error);rememberPendingResult(resultProfileId,row,error.state||'uncertain');return false;});
+    persist(false);
+    const saveRevision=++resultSaveRevision;
+    if(tracked){
+      setProgressSaveStatus('Guardando progreso y resultado…','pending',false,false);
+      const waitForLatestProgress=async()=>{
+        while(true){const revision=progressSaveRevision,latest=latestProgressSave,ok=await latest;if(revision===progressSaveRevision)return ok;}
+      };
+      Promise.all([waitForLatestProgress(),resultSave]).then(([progressOk,resultOk])=>{
+        if(saveRevision!==resultSaveRevision||profile?.id!==resultProfileId)return;
+        const unconfirmed=unconfirmedResultsFor(resultProfileId);
+        if(progressOk&&resultOk)setProgressSaveStatus(unconfirmed?`Este intento se confirmó; quedan ${unconfirmed} resultado(s) pendiente(s).`:'Progreso y resultado guardados en este perfil.',unconfirmed?'error':'success',false,Boolean(unconfirmed));
+        else if(!progressOk&&resultOk)setProgressSaveStatus('El resultado se guardó, pero el progreso no. Puedes reintentar solo el progreso.','error',true);
+        else if(progressOk&&!resultOk)setProgressSaveStatus('El progreso se guardó; el resultado está pendiente o su confirmación se interrumpió. Puedes reintentarlo sin duplicarlo.','error',false,true);
+        else setProgressSaveStatus('El progreso y el resultado siguen sin confirmarse. Puedes reintentar cada operación de forma segura.','error',true,true);
+        if(!resultOk)setPendingResultHomeStatus(`No se confirmó el resultado (${pendingResultStateSummary(resultProfileId)}). Su identificador se conserva para reintentar sin duplicados.`,'error',true);
+      });
+    }
     updateGlobalUI();
     return pts;
   }
   function showAuth(msg = "") {
+    stopMemoryCountdown();
+    $('#privacyDialog').close();privacyTarget=null;API.setIndependent(null);
     $("#authGate").classList.remove("hidden");
     $("#appShell").classList.add("hidden");
     $("#authMessage").textContent = msg;
@@ -405,6 +927,9 @@
   async function boot() {
     try {
       const session = await API.getSession();
+      if(window.PasswordAccount?.recoveryPending()){
+        showAuth();window.PasswordAccount.resumeRecovery(session);return;
+      }
       if (!session) {
         showAuth();
         return;
@@ -419,14 +944,21 @@
     profiles = await API.listProfiles();
     hideAuth();
     renderAccountStatus();
+    checkBillingReturn();
     if (!profiles.length) {
+      profile = null;
+      currentItem = null;
+      ++requestGeneration;
+      localStorage.removeItem("lh_current_profile");
+      $("#navMenu").innerHTML = "";
       renderProfiles();
       openProfileGate();
       return;
     }
-    activateProfile(
-      localStorage.getItem("lh_current_profile") || profiles[0].id,
-    );
+    // The remembered selection may belong to a deleted profile or another
+    // account. Only activate a profile returned for the current account.
+    const remembered = localStorage.getItem("lh_current_profile");
+    activateProfile((profiles.find(p => p.id === remembered) || profiles[0]).id);
   }
   function renderAccountStatus() {
     const chip = $("#accountStatus");
@@ -457,8 +989,9 @@
     if (sub) {
       sub.textContent =
         window.LH_CONFIG?.stripeMode === "test"
-          ? "Probar pago · 19,99 €/mes"
-          : "Suscribirme · 19.99 €/mes";
+          ? "Probar pago · 30,00 €/mes"
+          : "Suscribirme · 30,00 €/mes";
+      sub.title = "Precio final: 30,00 € al mes, impuestos incluidos.";
       const canSubscribe = ["trial", "cancelled", "complimentary"].includes(st);
       sub.classList.toggle("hidden", !canSubscribe);
     }
@@ -470,13 +1003,14 @@
     sel.innerHTML = profiles
       .map(
         (p) =>
-          `<option value="${p.id}">${escapeHtml(p.name)} · ${AGE[p.age_band].label}</option>`,
+          `<option value="${p.id}">${escapeHtml(p.name)} · ${ageLabel(p)}</option>`,
       )
       .join("");
     if (profile) sel.value = profile.id;
   }
   function openProfileGate() {
     $("#profileGate").classList.remove("hidden");
+    if(!$("#newProfileName").value)$("#newProfileName").value=window.PrivacyControls.newCode();
     $("#newProfileName").focus();
   }
   function closeProfileGate() {
@@ -485,12 +1019,15 @@
   async function createProfile() {
     const name = $("#newProfileName").value.trim();
     if (!name) return;
+    const exactAge=$("#newProfileExactAge").value,route=$("#newProfileAge").value;
+    if(['early','junior'].includes(route)&&!exactAge){$('#exactAgeField').classList.add('invalid');$('#newProfileExactAge').focus();return;}
     try {
       const p = await API.createProfile(
         name,
         $("#newProfileAge").value,
         $("#newProfileLevel").value,
         "es_intl",
+        exactAge?Number(exactAge):null,
       );
       profiles.push(p);
       $("#newProfileName").value = "";
@@ -500,12 +1037,35 @@
       alert(e.message);
     }
   }
-  function activateProfile(id) {
+  function activateProfile(id,independent=false) {
+    stopMemoryCountdown();
+    progressSaveRevision++;resultSaveRevision++;setProgressSaveStatus('');
+    if(independent)setPendingResultHomeStatus();
+    $('#privacyDialog').close();privacyTarget=null;
     const p = profiles.find((x) => x.id === id);
     if (!p) return;
-    profile = p;
+    API.setIndependent(independent?id:null);
+    profile = independent?window.PrivacyControls.independent(p):p;
+    if(!independent)API.recordAccess(id);
+    $("#independentSessionBtn").textContent=independent?"Terminar sesión independiente":"Empezar sesión independiente";
+    $("#independentSessionStatus").textContent=independent?"Los resultados de esta sesión no se guardan. El uso se contabiliza por cuenta. Al terminar o recargar se descartan.":"Seguimiento individual: los resultados se guardan en este perfil.";
+    $("#deleteProfileBtn").disabled=independent;$("#profilePrivacyBtn").disabled=independent;
+    photoOnly = false;memoryAudioOnly=false;roomSpeedOnly=false;speedUnpairedOnly=false;executedOnly=false;cognitiveOnly=false;cognitiveFamily='';
+    guidedSession=null;
+    hideGuidedBar();
+    $('#appShell').classList.toggle('early-experience',Boolean(window.ContentPolicy.forProfile(p)));
+    $('#appShell').classList.toggle('school-experience',Boolean(window.SchoolJourney.forProfile(p)));
+    $('#appShell').dataset.ageTheme=window.AgeStages.forProfile(p)?.theme || '';
+    $('#appShell').dataset.ageRoute=window.AgeStages.route(p) || '';
+    // Keep the professional workspace visually consistent; age adaptation lives in the activity content.
+    $('#appShell').dataset.design='calma';
+    $('#appShell').classList.remove('mobile-nav-open');$('#workspaceMenu').setAttribute('aria-expanded','false');
+    $('#exercise').classList.toggle('early-primary',Boolean(window.ContentPolicy.forProfile(p)));
+    API.profileLocale = p.locale;
+    currentItem = null;
+    requestGeneration++;
     localStorage.setItem("lh_current_profile", id);
-    state = normalizeState(p);
+    state = normalizeState(profile);
     subject = ageData().subjects[0];
     mode = "grammar";
     counter = 0;
@@ -515,22 +1075,50 @@
     buildSessionBuilder();
     switchSection("home");
     updateGlobalUI();
+    if(!independent)recoverPendingResults(id);
+  }
+  $('#workspaceMenu').onclick=()=>{const open=$('#appShell').classList.toggle('mobile-nav-open');$('#workspaceMenu').setAttribute('aria-expanded',String(open));};
+  $('#prepareSessionBtn').onclick=()=>switchSection('sessionBuilder');
+  $('#prepareSessionHomeBtn').onclick=()=>switchSection('sessionBuilder');
+  $('#exerciseReturnHome').addEventListener('click',()=>switchSection('home'));
+  function areaIcon(domain,route){
+    const key=/Language|language|literacy|reading/i.test(domain)?'language':
+      /Math|division|geometry/i.test(domain)?'math':
+      domain==='attention'?'attention':domain==='memory'?'memory':
+      domain==='executive'?'executive':domain==='speedReasoning'?'speed':
+      domain==='social'?'social':domain==='english'?'english':'applied';
+    const paths={
+      language:'<path d="M5 5h6a3 3 0 0 1 3 3v12a3 3 0 0 0-3-3H5z"/><path d="M19 5h-2a3 3 0 0 0-3 3v12a3 3 0 0 1 3-3h2z"/>',
+      math:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h4m-2-2v4m5-2h3m-10 7h4m3-2 3 4m0-4-3 4"/>',
+      attention:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v3m0 16v3M1 12h3m16 0h3"/>',
+      memory:'<path d="M9 5a4 4 0 0 0-6 4v2a4 4 0 0 0 2 6 4 4 0 0 0 4 3c2 0 3-1 3-3V7a3 3 0 0 0-3-2Zm6 0a4 4 0 0 1 6 4v2a4 4 0 0 1-2 6 4 4 0 0 1-4 3c-2 0-3-1-3-3V7a3 3 0 0 1 3-2Z"/><path d="M6 10h3m6 0h3M7 15h2m6 0h2"/>',
+      executive:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="m15 18 2 2 4-5"/>',
+      speed:'<path d="m13 2-9 12h7l-1 8 10-13h-7z"/>',
+      social:'<path d="M20 11a6 6 0 0 1-6 6H8l-4 4v-6a6 6 0 0 1 0-9 6 6 0 0 1 10 5"/><path d="M14 5h6a3 3 0 0 1 1 5l-2 2"/>',
+      english:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-4 4-4 14 0 18m0-18c4 4 4 14 0 18"/>',
+      applied:'<path d="M6 3h12v18H6z"/><path d="m9 9 2 2 4-4M9 16h6"/>'
+    };
+    return '<svg class="redesign-line-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+paths[key]+'</svg>';
+  }
+  function navSymbol(id){
+    const p={home:'<path d="m3 11 9-8 9 8v10h-7v-6h-4v6H3z"/>',
+      training:'<path d="M4 5h16M4 12h16M4 19h16"/><circle cx="7" cy="5" r="1" fill="currentColor"/><circle cx="7" cy="12" r="1" fill="currentColor"/><circle cx="7" cy="19" r="1" fill="currentColor"/>',
+      homework:'<path d="M5 3h11l3 3v15H5z"/><path d="M15 3v4h4M9 12h6m-6 4h6"/>',
+      progress:'<path d="M3 20V4m0 16h18M7 16l4-5 3 2 5-7"/>'};
+    return '<svg class="redesign-nav-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">'+p[id]+'</svg>';
   }
   function buildNavigation() {
     const nav = $("#navMenu");
-    const items = [["home", "⌂", "Inicio"]];
-    ageData().subjects.forEach((s) =>
-      items.push(["exercise", SUBJECT_META[s].icon, SUBJECT_META[s].name, s]),
-    );
-    items.push(
-      ["sessionBuilder", "▦", "Crear sesión"],
-      ["progress", "↗", "Progreso"],
+    const items = [
+      ["home", "⌂", "Inicio"],
+      ["training", "→", "Entrenar"],
       ["homework", "⇩", "Fichas"],
-    );
+      ["progress", "↗", "Progreso"],
+    ];
     nav.innerHTML = items
       .map(
         (x, i) =>
-          `<button class="nav-item ${i === 0 ? "active" : ""}" data-section="${x[0]}" ${x[3] ? `data-subject="${x[3]}"` : ""}>${x[1]} ${x[2]}</button>`,
+          `<button class="nav-item ${i === 0 ? "active" : ""}" data-section="${x[0]}">${navSymbol(x[0])}<span>${x[2]}</span></button>`,
       )
       .join("");
     $$(".nav-item").forEach(
@@ -548,6 +1136,7 @@
   }
   const titles = {
     home: "Panel",
+    training: "Entrenar",
     exercise: "Entrenamiento",
     division: "Divisiones",
     sessionBuilder: "Crear sesión",
@@ -555,8 +1144,10 @@
     homework: "Fichas para casa",
   };
   function switchSection(id) {
+    if(id!=='exercise'){stopMemoryCountdown();interactionOnly=false;}
     $$(".section").forEach((s) => s.classList.remove("active-section"));
     $("#" + id).classList.add("active-section");
+    $('#appShell').classList.toggle('exercise-focus',id==='exercise');
     $$(".nav-item").forEach((b) =>
       b.classList.toggle(
         "active",
@@ -567,43 +1158,275 @@
     $("#sectionTitle").textContent =
       id === "exercise" ? SUBJECT_META[subject].name : titles[id];
     if (id === "progress") renderProgress();
+    if(id==='home')renderHomeAreaLanding();
+    if(id==='exercise'){window.scrollTo(0,0);$('#exerciseHeading').focus({preventScroll:true});}
+  }
+  function syncActivitySettings() {
+    const settings = $('#activityOptions');
+    if (!settings) return;
+    settings.classList.remove('hidden');
+  }
+  function syncLanguageModeButtons() {
+    $$('#languageModeSwitch .language-mode-btn[data-mode]').forEach(button=>{
+      const selected=!cognitiveOnly&&button.dataset.mode===mode;
+      button.classList.toggle('active',selected);
+      button.setAttribute('aria-pressed',String(selected));
+    });
   }
   function setupExercise() {
+    if(profile?.id&&!profile._sessionOnly){try{localStorage.setItem(`lh_v16_last_subject_${profile.id}`,subject);}catch{}}
+    if(configuredSubject!==null&&configuredSubject!==subject){documentOnly=false;photoOnly=false;memoryAudioOnly=false;interactionOnly=false;interactionKind=subject==='attention'?'room':'symbols';roomSpeedOnly=false;speedUnpairedOnly=false;cognitiveOnly=false;cognitiveFamily='';executedOnly=false;}
+    configuredSubject=subject;
+    $("#exercise").dataset.subject=subject;
+    $('#appShell').dataset.subject=subject;
     const m = SUBJECT_META[subject];
     $("#exercisePill").textContent = m.name.toUpperCase();
     $("#exerciseHeading").textContent = m.name;
     $("#exerciseDescription").textContent = m.desc;
+    if (window.ContentPolicy.forProfile(profile)) {
+      $('#exerciseHeading').textContent=window.EarlyJourney.areas[subject].title;
+      const descriptions = {
+        language: "Juega con las palabras, las letras y las frases.",
+        division: "Cuenta y resuelve problemas con cosas que conoces.",
+        reading: "Lee, responde y forma frases.",
+        attention: "Mira con calma y busca lo que te pedimos.",
+        executive: "Piensa qué hacer y ordena los pasos.",
+        memory: "Mira las cosas e intenta recordarlas.",
+        speedReasoning: "Mira, compara y responde. Primero acertar; después ganar agilidad.",
+        applied: "Piensa qué puedes hacer en cada situación.",
+      };
+      $("#exerciseDescription").textContent = descriptions[subject];
+    }
     $("#exerciseLevelSelect").value = String(state.levels[subject] || 1);
     $("#subjectScore").textContent = state.scores[subject] || 0;
-    const isLang = subject === "language";
-    $("#languageModeSwitch").classList.toggle("hidden", !isLang);
+    const isLang = ["language","middleLanguage","teenLanguage"].includes(subject);
+    const isReading=['reading','middleReading','literacy'].includes(subject);
+    if(isReading){cognitiveOnly=false;cognitiveFamily='';}
+    if(isReading){cognitiveOnly=false;cognitiveFamily='';}
+    if(isLang&&mode==='writing'||isReading&&['spelling','vocabulary'].includes(mode))mode='grammar';
+    $$('.language-mode-btn[data-mode]').forEach(b=>{
+      b.classList.toggle('hidden',isLang&&b.dataset.mode==='writing'||isReading&&['spelling','vocabulary'].includes(b.dataset.mode));
+      b.textContent=window.ContentPolicy.forProfile(profile)?({grammar:'Palabras y gramática',spelling:'Ortografía',writing:'Formar frases',vocabulary:'Vocabulario'})[b.dataset.mode]:({grammar:'Gramática',spelling:'Ortografía',writing:'Escritura',vocabulary:'Vocabulario'})[b.dataset.mode];
+      if(isReading)b.textContent=({grammar:'Lectura',writing:window.ContentPolicy.forProfile(profile)?'Formar frases':'Escritura'})[b.dataset.mode]||'';
+    });
+    $("#languageModeSwitch").classList.toggle("hidden", !isLang&&!isReading);
+    const route=window.AgeStages.route(profile);
+    const capability=window.ModalityCatalog.forArea(profile,subject,state.levels[subject]||1);
+    if(subject!=='speedReasoning'){roomSpeedOnly=false;speedUnpairedOnly=false;}
+    const roomSpeedSupport=capability.speed.room;
+    if(!roomSpeedSupport)roomSpeedOnly=false;
+    $('#speedModeSwitch').classList.toggle('hidden',subject!=='speedReasoning'||!capability.speed.screen&&!capability.speed.unpaired&&!capability.speed.room);
+    $('#speedModeSwitch [data-speed-mode="screen"]').classList.toggle('hidden',!capability.speed.screen);
+    $('#speedModeSwitch [data-speed-mode="room"]').classList.toggle('hidden',!roomSpeedSupport);
+    $('#speedUnpairedMode').classList.toggle('hidden',!capability.speed.unpaired);
+    $$('#speedModeSwitch [data-speed-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.speedMode==='room'?roomSpeedOnly:!roomSpeedOnly&&!speedUnpairedOnly)));
+    $('#speedUnpairedMode').setAttribute('aria-pressed',String(speedUnpairedOnly));
+    const documentSupport=capability.documents;
+    if(!documentSupport||isReading)documentOnly=false;
+    const photoSupport=capability.photos;
+    if(!photoSupport)photoOnly=false;
+    if(subject!=='memory')memoryAudioOnly=false;
+    const interactionSupport=capability.interactionKinds.length>0||capability.roomSearch;
+    if(!interactionSupport)interactionOnly=false;
+    const supportedInteractionKinds=capability.interactionKinds;
+    if(interactionOnly&&!['room',...supportedInteractionKinds].includes(interactionKind))interactionKind=subject==='attention'?'room':'symbols';
+    $('#interactionModeBtn').classList.toggle('hidden',!capability.roomSearch);
+    $('#interactionModeBtn').textContent='Busca a tu alrededor';
+    $('#interactionModeBtn').setAttribute('aria-pressed',String(interactionOnly&&interactionKind==='room'));
+    $('#interactionKindSwitch').classList.toggle('hidden',!interactionSupport);
+    $$('#interactionKindSwitch [data-interaction-kind]').forEach(b=>{
+      b.classList.toggle('hidden',!supportedInteractionKinds.includes(b.dataset.interactionKind));
+      b.setAttribute('aria-pressed',String(interactionOnly&&b.dataset.interactionKind===interactionKind));
+    });
+    $('#photoModeSwitch').classList.toggle('hidden',subject!=='memory');
+    $('#photoModeSwitch [data-photos="true"]').classList.toggle('hidden',!photoSupport||subject!=='memory');
+    const audioMemoryAvailable=capability.memoryAudio;
+    $('#memoryAudioModeButton').classList.toggle('hidden',!audioMemoryAvailable);
+    if(!audioMemoryAvailable)memoryAudioOnly=false;
+    $('#memoryAudioModeButton').setAttribute('aria-pressed',String(memoryAudioOnly));
+    $('#attentionPhotos').classList.toggle('hidden',!photoSupport||subject!=='attention');
+    $('#attentionPhotos').setAttribute('aria-pressed',String(photoOnly));
+    $('#photoModeSwitch [data-photos=true]').textContent=subject==='attention'?'Encuentra las diferencias':'Escenas cotidianas';
+    $$('#photoModeSwitch button').forEach(b=>b.setAttribute('aria-pressed',String(!memoryAudioOnly&&!cognitiveOnly&&!executedOnly&&(b.dataset.photos==='true')===photoOnly)));
+
+    const availableCognitiveBank=window.CognitiveFamilies.pool(route,subject,state.levels[subject]||1);
+    // Attention now has one clear task family: compare sources and find contradictions.
+    const cognitiveBank=availableCognitiveBank.filter(it=>capability.cognitiveKinds.includes(it.cognitiveTask.kind));
+    const wordFitAvailable=capability.wordFit;
+    $('#wordFitMode').classList.toggle('hidden',!wordFitAvailable);
+    $('#wordFitMode').classList.toggle('active',cognitiveOnly&&cognitiveFamily==='words');
+    $('#wordFitMode').setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily==='words'));
+    if(!cognitiveBank.length)cognitiveOnly=false;
+    $('#cognitiveMode').classList.add('hidden');
+    const families=[...new Set(cognitiveBank.map(it=>it.cognitiveTask.kind))];
+    if(subject==='attention'&&families.includes('contradiction'))cognitiveFamily='contradiction';
+    else if(!families.includes(cognitiveFamily))cognitiveFamily='';
+    const familyModes=$('#cognitiveFamilyModes');
+    familyModes.replaceChildren();
+    if(cognitiveBank.length&&!isLang&&!isReading){
+      const choices=subject==='attention'?families.map(key=>({key,label:window.CognitiveFamilies.definitions[key].title})):[{key:'',label:'Situaciones variadas'},...families.map(key=>({key,label:window.CognitiveFamilies.definitions[key].title}))];
+      for(const choice of choices){
+        const button=document.createElement('button');button.type='button';button.className='modality-button';button.dataset.cognitiveFamily=choice.key;button.textContent=choice.label;
+        button.setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily===choice.key));familyModes.append(button);
+      }
+    }
+    familyModes.classList.toggle('hidden',!familyModes.children.length);
+    if(!['attention','memory','executive'].includes(subject))executedOnly=false;
+    $('#executedMode').classList.toggle('hidden',!capability.executed);
+    $('#executedMode').textContent=subject==='attention'?'Búsqueda y secuencias':subject==='memory'?'Recuerdo activo':'Reglas y planificación';
+    $('#executedMode').setAttribute('aria-pressed',String(executedOnly));
+    $('#documentModeSwitch').classList.toggle('hidden',!['attention','executive'].includes(subject)||isReading);
+    $('#documentModeSwitch [data-documents="true"]').classList.toggle('hidden',!documentSupport||isReading);
+    $('#documentModeSwitch [data-documents="false"]').classList.toggle('hidden',!['attention','executive'].includes(subject)||isReading);
+    $('#documentModeSwitch [data-documents=false]').textContent=subject==='executive'?'Planifica y decide':'Busca y compara';
+    $('#documentModeSwitch [data-documents=true]').textContent=subject==='executive'?'Resuelve con documentos':'Explora documentos';
+    $('#photoModeSwitch [data-photos=false]').textContent='Recuerda imágenes y secuencias';
+    $('#documentModeHint').classList.add('hidden');
+    $$('#documentModeSwitch [data-documents]').forEach(b=>b.setAttribute('aria-pressed',String(!cognitiveOnly&&!executedOnly&&!interactionOnly&&!photoOnly&&(b.dataset.documents==='true')===documentOnly)));
+    $('#attentionPhotos').setAttribute('aria-pressed',String(photoOnly&&subject==='attention'));
+    syncLanguageModeButtons();
+    $('#wordFitMode').setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily==='words'));
+    const hasAvailableModality=$$('#exerciseModalities button').some(button=>{
+      const hiddenAncestor=button.closest('.hidden');
+      return !hiddenAncestor||hiddenAncestor.id==='exerciseModalities';
+    });
+    $('#exerciseModalities').classList.toggle('hidden',!hasAvailableModality);
+    syncActivitySettings();
     counter = 0;
+    renderEarlyTaskGuide();
+    renderSchoolTaskGuide();
     newExercise();
   }
-  async function requestOne(kind, domain = subject, extra = {}) {
+  $('#documentModeSwitch').addEventListener('click',event=>{
+    const button=event.target.closest('button[data-documents],#attentionPhotos');
+    if(!button)return;
+    cognitiveOnly=false;executedOnly=false;memoryAudioOnly=false;photoOnly=button.id==='attentionPhotos';
+    interactionOnly=false;documentOnly=!photoOnly&&button.dataset.documents==='true';
+    setupExercise();
+  });
+  $('#interactionModeBtn').onclick=()=>{interactionKind='room';interactionOnly=true;cognitiveOnly=false;executedOnly=false;photoOnly=false;documentOnly=false;memoryAudioOnly=false;setupExercise();};
+  $('#interactionKindSwitch').addEventListener('click',event=>{
+    const button=event.target.closest('[data-interaction-kind]');
+    if(!button)return;
+    const supported=window.ModalityCatalog.forArea(profile,subject,state.levels[subject]||1).interactionKinds;
+    if(!supported.includes(button.dataset.interactionKind))return;
+    interactionKind=button.dataset.interactionKind;interactionOnly=true;cognitiveOnly=false;executedOnly=false;photoOnly=false;documentOnly=false;memoryAudioOnly=false;setupExercise();
+  });
+  $('#photoModeSwitch').addEventListener('click',event=>{
+    const button=event.target.closest('button[data-photos]');if(!button)return;
+    cognitiveOnly=false;executedOnly=false;interactionOnly=false;memoryAudioOnly=false;photoOnly=button.dataset.photos==='true';documentOnly=false;setupExercise();
+  });
+  $('#cognitiveMode').onclick=()=>{cognitiveOnly=true;cognitiveFamily='';executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;setupExercise();};
+  $('#wordFitMode').onclick=()=>{mode='vocabulary';cognitiveOnly=true;cognitiveFamily='words';executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;setupExercise();};
+  $('#cognitiveFamilyModes').addEventListener('click',event=>{const button=event.target.closest('[data-cognitive-family]');if(!button)return;cognitiveFamily=button.dataset.cognitiveFamily;cognitiveOnly=true;executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;setupExercise();});
+  $('#executedMode').onclick=()=>{cognitiveOnly=false;executedOnly=true;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;setupExercise();};
+  async function requestForProfile(payload, targetProfile = profile) {
+    if (!targetProfile?.id) throw new Error('Selecciona o crea un perfil para empezar.');
+    const locale = API.effectiveLocale(targetProfile);
+    const localeRevision = API.localeRevision;
     const res = await API.requestContent({
-      profile_id: profile.id,
+      ...payload,
+      client_revision:13,
+      ...(targetProfile._sessionOnly?{session_only:true}:{}),
+      profile_id: targetProfile.id,
+      locale,
+    });
+    if (localeRevision !== API.localeRevision) throw new Error('La variante de español ha cambiado. Solicita contenido nuevo.');
+    if (res?.error) throw new Error(typeof res.error === 'string' ? res.error : res.error.message || 'No se pudo cargar el contenido.');
+    // Server authentication, subscription checks and usage accounting happen
+    // first. The browser never supplies local content after a rejected call.
+    const worksheet=payload.kind==='worksheet';
+    const selected = payload.executed_only||payload.cognitive_only?res:window.EarlyContent.adaptResponse(res, payload, targetProfile, worksheet?{
+      accept:(item,domain)=>window.WorksheetSelection.compatible(item,targetProfile,locale,domain),
+    }:payload.memory_audio_only?{accept:item=>item.audioMemory===true}:{});
+    // Worksheet candidates are localized/validated individually by the selector.
+    // One unprintable or unlocalizable remote item must not abort the whole batch.
+    if(!worksheet){
+      selected.items = selected.items.map((item, i) => window.LocaleContent.localizeItem(
+        item, locale, payload.domains ? payload.domains[i % payload.domains.length] : payload.domain,
+      ));
+      if (window.ContentPolicy.forProfile(targetProfile)) {
+        selected.items.forEach((item, i) => window.ActivityModel.forDelivery(
+          item, targetProfile, payload.domains ? payload.domains[i % payload.domains.length] : payload.domain,
+        ));
+      }
+    }
+    if (window.ContentPolicy.forProfile(targetProfile)) {
+      await API.saveProgress(targetProfile.id, targetProfile.progress);
+    }
+    return selected;
+  }
+  async function requestOne(kind, domain = subject, extra = {}) {
+    const res = await requestForProfile({
+      ...(kind==='exercise'&&cognitiveOnly?{cognitive_only:true,cognitive_family:cognitiveFamily||null}:{}),
+      ...(kind==='exercise'&&executedOnly?{executed_only:true}:{}),
+      ...(kind==='exercise'&&interactionOnly?{interaction_only:true,interaction_kind:interactionKind}:{}),
+      ...(kind==='exercise'&&['attention','executive'].includes(domain)&&window.DocumentLibrary?.supports(window.AgeStages.route(profile),domain)?{documents_only:documentOnly}:{}),
       kind,
       domain,
-      subdomain: domain === "language" ? mode : null,
+      ...(kind==='exercise'&&domain==='speedReasoning'?{room_speed_only:roomSpeedOnly}:{}),
+      ...(kind==='exercise'&&domain==='speedReasoning'&&speedUnpairedOnly?{speed_mechanic:'unpaired'}:{}),
+      ...(kind==='exercise'&&domain==='memory'&&memoryAudioOnly?{memory_audio_only:true}:{}),
+      ...(window.PhotoLibrary.supports(window.AgeStages.route(profile),domain)?{photos_only:photoOnly}:{}),
+      subdomain: ["language","middleLanguage","teenLanguage"].includes(domain) ? mode : ["reading","middleReading","literacy"].includes(domain)?(mode==='writing'?'writing':'reading'):null,
       level: state.levels[domain] || 1,
       count: 1,
       ...extra,
     });
     if (res?.usage) {
-      $("#usageHint").textContent =
-        `Uso hoy: ${res.usage.used}/${res.usage.limit} ${kind === "worksheet" ? "fichas" : kind === "game" ? "juegos" : "ejercicios"}`;
+      $('#usageHint').textContent=`Hoy: ${res.usage.used} ${kind==='worksheet'?'fichas':kind==='game'?'juegos':'ejercicios'}`;
+      $('#dailyUsageExplanation').textContent=`Tu cuota es de ${res.usage.limit} ${kind==='worksheet'?'fichas':kind==='game'?'juegos':'ejercicios'} al día. Esta cifra limita el uso de la cuenta; no es el tamaño del banco de actividades.`;
     }
-    return res?.items?.[0] || null;
+    const item=res?.items?.[0]||null;
+    if(kind==='exercise'&&domain==='memory'&&memoryAudioOnly&&item?.audioMemory!==true){
+      throw new Error('El ejercicio recibido no corresponde a memoria auditiva. Vuelve a cargarlo o elige otra modalidad.');
+    }
+    return item;
   }
   async function newExercise() {
+    // A save from the previous card may still be resolving. Invalidate its UI
+    // callback so it cannot display a stale success over a failed new load.
+    progressSaveRevision++;resultSaveRevision++;
+    $('#exercise').classList.remove('visual-only-differences');
+    stopMemoryCountdown();
+    $('#printCognitive')?.remove();
+    $('#exercise').classList.remove('speed-active');
+    renderEarlyTaskGuide(false);
+    $('#exerciseLevelSelect').value=String(state.levels[subject]||1);
+    const requestedProfile = profile;
+    const requestedSubject = subject;
+    const generation = ++requestGeneration;
+    currentItem = null;
+    $('#progressSaveStatus').textContent='';
+    $('#progressSaveStatus').className='progress-save-status';
+    $('#retryProgressSave').classList.add('hidden');
+    $('#retryResultSave').classList.add('hidden');
+    $('#retryContentLoad').classList.add('hidden');
+    $("#exerciseOptions").innerHTML = "";
+    $("#exerciseOptions").classList.remove('structured-options');
+    $("#exerciseVisual").innerHTML = "";
+    $("#exerciseTopic").textContent = "";
+    $("#exerciseTopic").classList.add("hidden");
+    $("#exerciseFeedback").textContent = "";
+    $("#exerciseExplanation").textContent = "";
+    $("#exerciseExplanation").classList.add("hidden");
+    $("#textAnswerArea").classList.add("hidden");
+    $("#selfAssessment").classList.add("hidden");
+    $("#textAnswerInput").value = "";
+    $("#reviseWritingAnswer").classList.add("hidden");
+    $$(".self-buttons button").forEach(b=>b.disabled=false);
+    $("#modelAnswer").textContent = "";
+    $("#exerciseNext").classList.add("hidden");
+    if(window.ContentPolicy.forProfile(profile))$('#exerciseNext').textContent='Siguiente →';
     setLoading(true);
     try {
-      currentItem = await requestOne("exercise");
+      const item = await requestOne("exercise");
+      if (profile !== requestedProfile || subject !== requestedSubject || generation !== requestGeneration) return;
+      currentItem = item;
       counter++;
       renderExercise(currentItem);
     } catch (e) {
-      showContentError(e);
+      if (profile === requestedProfile && subject === requestedSubject && generation === requestGeneration) showContentError(e);
     } finally {
       setLoading(false);
     }
@@ -612,6 +1435,7 @@
     if (v) $("#exercisePrompt").textContent = "Cargando reto…";
   }
   function friendlyContentError(e) {
+    if(e?.name==='LocaleAdaptationError')return 'No se ha podido preparar una actividad para esta variante de español. Prueba otra área.';
     const raw = String(e?.message || "");
     if (/Daily content limit reached/i.test(raw))
       return "Has alcanzado el límite de contenido de hoy para esta modalidad. Podrás continuar cuando se renueve la cuota diaria.";
@@ -625,14 +1449,25 @@
     const msg = friendlyContentError(e);
     $("#exercisePrompt").textContent = msg;
     $("#exerciseOptions").innerHTML = "";
+    $("#exerciseOptions").classList.remove('structured-options');
     $("#exerciseVisual").innerHTML = "";
     $("#exerciseNext").classList.add("hidden");
+    $('#retryContentLoad').classList.remove('hidden');
   }
   function renderExercise(it) {
+    if(stopReaderAssist){stopReaderAssist();stopReaderAssist=null;}
     if (!it) {
       $("#exercisePrompt").textContent = "No hay contenido disponible.";
       return;
     }
+    if(subject==='attention'&&it.stimulus===undefined){
+      const comparison=window.ActivityModel.comparisonStimulus(it.scenario);
+      if(comparison)it={...it,scenario:undefined,stimulus:comparison,requiresStimulus:true};
+    }
+    it = window.LocaleContent.localizeItem(it, API.effectiveLocale(profile), subject);
+    window.lastDifficultyAudit=window.AgeStages.audit(it,profile,state.levels[subject]||1);
+    currentItem = it;
+    window.ActivityModel.forDelivery(it, profile, subject);
     $("#exerciseCounter").textContent = `Ejercicio ${counter}`;
     $("#exerciseFeedback").textContent = "";
     $("#exerciseFeedback").className = "feedback";
@@ -642,11 +1477,26 @@
     $("#exerciseVisual").innerHTML = "";
     $("#textAnswerArea").classList.add("hidden");
     $("#selfAssessment").classList.add("hidden");
-    $("#exerciseTopic").textContent = it.topic || it.theme || "";
+    $("#exerciseTopic").textContent=it.topic||it.theme||'';
     $("#exerciseTopic").classList.toggle(
       "hidden",
       !$("#exerciseTopic").textContent,
     );
+    if(it.type==='cognitiveTask'){
+      $('#exercisePrompt').textContent=it.q;stopExecuted=window.CognitiveRenderer.mount(it,{visual:$('#exerciseVisual'),area:$('#exerciseOptions'),onFinish:(ok,why)=>{if(currentItem!==it)return;showFeedback(ok,saveResult(subject,ok,it.id,it.mechanic||it.semanticFamily),why);}});
+      if(it.printable!=='interactive-only'){
+        const exportButton=document.createElement('button');exportButton.id='printCognitive';exportButton.className='secondary-btn';exportButton.textContent='Descargar esta actividad en Word';
+        exportButton.onclick=async()=>{exportButton.disabled=true;const exportProfile=profile;try{
+          const response=await requestForProfile({kind:'worksheet',domain:it.domain,domains:[it.domain],questions:1,level:it.level,cognitive_only:true,cognitive_family:it.cognitiveTask.kind,cognitive_content_key:it.contentKey},exportProfile);
+          if(response?.usage)$('#usageHint').textContent='Hoy: '+response.usage.used+' fichas';
+          await window.WorksheetGenerator.generate([response.items],exportProfile);
+        }catch(error){exportButton.textContent=error?.message||'No se ha podido generar el archivo. Vuelve a intentarlo.';}finally{exportButton.disabled=false;}};
+        $('#exerciseOptions').after(exportButton);
+      }return;
+    }
+    if(it.type==='executed'){
+      $('#exercisePrompt').textContent=it.q;stopExecuted=window.ExecutedRenderer.mount(it,{visual:$('#exerciseVisual'),area:$('#exerciseOptions'),iconProfile:profile,onFinish:(ok,why)=>{if(currentItem!==it)return;const pts=saveResult(subject,ok,it.id,it.mechanic);showFeedback(ok,pts,(ok?'Actividad completada correctamente. ':'Revisa el resultado. ')+why);}});return;
+    }
     if (it.visual)
       $("#exerciseVisual").innerHTML =
         `<div class="shape-visual">${it.visual}</div>`;
@@ -678,14 +1528,25 @@
     if (it.scenario)
       $("#exerciseVisual").innerHTML +=
         `<div class="scenario-card"><span class="scenario-label">SITUACIÓN</span><p>${escapeHtml(it.scenario)}</p></div>`;
+    if (it.stimulus?.length)
+      $("#exerciseVisual").innerHTML =
+        `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus,{heading:it.topic||it.theme,rubric:it.writingRubric,illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:!window.ContentPolicy.forProfile(profile),senses:it.lexicalSenses})}</div>`;
+    if(['reading','middleReading','literacy'].includes(subject)&&window.ReaderAssist)stopReaderAssist=window.ReaderAssist.mount($('#exerciseVisual'));
     $("#exercisePrompt").textContent = it.q || "Actividad";
+    if(it.roomSpeedTask){renderRoomSpeed(it);return;}
+    if(it.interactionTask){renderInteractiveExercise(it);return;}
+    if(it.speedTask){renderSpeedExercise(it);return;}
+    if(['multiSelect','documentReview','photoDifference'].includes(it.type)){renderMultiSelect(it);return;}
     if (it.type === "memoryReveal" || it.type === "memoryMulti") {
       renderMemoryExercise(it);
       return;
     }
     if (it.type === "self" || (!it.opts && !it.a && it.sample)) {
       $("#textAnswerArea").classList.remove("hidden");
+      let criteria=$('#writingCriteria');if(!criteria){criteria=document.createElement('div');criteria.id='writingCriteria';$('#textAnswerInput').after(criteria);}
+      criteria.innerHTML=it.writingRubric?.length?`<p>Comprueba tu texto:</p><ul>${it.writingRubric.map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul>`:'';
       $("#textAnswerInput").value = "";
+      fitTextAnswer();
       return;
     }
     if (it.type === "order") {
@@ -699,19 +1560,21 @@
     renderOptions(it);
   }
   function renderOptions(it) {
+    $('#exerciseOptions').classList.remove('structured-options');
     const opts = shuffle(it.opts || []);
+    const illustrated=Boolean(window.ContentPolicy.forProfile(profile)) && opts.every(o=>window.StimulusArt.forLabel(o,it.lexicalSenses)||/^[●○□△☆\s·]+$/.test(o));
     $("#exerciseOptions").innerHTML = opts
-      .map((o) => `<button class="option-btn">${escapeHtml(o)}</button>`)
+      .map((o) => `<button class="option-btn" data-answer="${escapeHtml(o)}" aria-label="${escapeHtml(o)}">${illustrated?window.ActivityModel.visualLabel(o,{...it.lexicalSenses,memory:subject==='memory'}):escapeHtml(o)}</button>`)
       .join("");
     $$("#exerciseOptions .option-btn").forEach(
-      (b) => (b.onclick = () => checkOption(b, b.textContent)),
+      (b) => (b.onclick = () => checkOption(b, b.dataset.answer)),
     );
   }
   function checkOption(btn, value) {
     const correct = value === String(currentItem.a);
     $$("#exerciseOptions .option-btn").forEach((b) => {
       b.disabled = true;
-      if (b.textContent === String(currentItem.a)) b.classList.add("correct");
+      if (b.dataset.answer === String(currentItem.a)) b.classList.add("correct");
     });
     if (!correct) btn.classList.add("wrong");
     const pts = saveResult(
@@ -721,6 +1584,12 @@
       currentItem.type || "standard",
     );
     showFeedback(correct, pts, currentItem.why);
+    if(currentItem.speedTask){
+      const row=state.history.at(-1),summary=window.Curriculum.speedSummary(state.history.filter(x=>x.level===row.level&&x.speedFamily===row.speedFamily&&(x.speedRevision||2)===(row.speedRevision||2)).slice(-20));
+      const measurement=row.timingValid?`Tiempo: ${(row.responseMs/1000).toFixed(2)} s.`:row.responseMs===null?'Práctica sin medir.':'Tiempo excluido porque saliste de la ventana.';
+      const stats=summary.attempts?` En las últimas ${summary.attempts} respuestas de esta tarea y nivel: ${summary.accuracy}% de aciertos.${summary.medianMs===null?'':` Mediana de respuestas correctas: ${(summary.medianMs/1000).toFixed(2)} s.`}`:'';
+      const note=document.createElement('p');note.className='speed-result';note.textContent=measurement+stats;$('#exerciseFeedback').append(note);
+    }
   }
   function renderOrderExercise(it) {
     const tokens = [...(it.tokens || [])],
@@ -729,20 +1598,21 @@
         : [String(it.answer || "")];
     const picked = [];
     const area = $("#exerciseOptions");
+    area.classList.add('structured-options');
     const render = () => {
       const slots = expected
         .map(
           (_, i) =>
-            `<button class="sequence-slot ${picked[i] ? "filled" : ""}" data-slot="${i}"><span>${i + 1}</span>${picked[i] ? escapeHtml(picked[i]) : "Selecciona un paso"}</button>`,
+            `<button class="sequence-slot ${picked[i] ? "filled" : ""}" data-slot="${i}"><span>${i + 1}</span>${picked[i] ? escapeHtml(it.memoryResponse==='order'?window.ActivityModel.memoryLabel(picked[i]):picked[i]) : it.memoryResponse==='order'?"Elige un elemento":"Selecciona un paso"}</button>`,
         )
         .join("");
       const tray = tokens
         .map(
           (tok, i) =>
-            `<button class="word-token ${picked.includes(tok) ? "used" : ""}" data-token-index="${i}" ${picked.includes(tok) ? "disabled" : ""}>${escapeHtml(tok)}</button>`,
+            `<button class="word-token ${picked.includes(tok) ? "used" : ""}" data-token-index="${i}" aria-label="${escapeHtml(tok)}" ${picked.includes(tok) ? "disabled" : ""}>${it.memoryResponse==='order'?escapeHtml(window.ActivityModel.memoryLabel(tok)):escapeHtml(tok)}</button>`,
         )
         .join("");
-      area.innerHTML = `<div class="sequence-workspace"><div class="sequence-slots">${slots}</div><div class="token-bank"><p class="eyebrow">PASOS DISPONIBLES</p><div class="token-tray">${tray}</div></div></div><div class="sequence-actions"><button id="orderUndo" class="secondary-btn" ${picked.length ? "" : "disabled"}>Deshacer</button><button id="orderReset" class="ghost-light-btn" ${picked.length ? "" : "disabled"}>Reiniciar</button><button id="orderCheck" class="primary-btn">Comprobar</button></div>`;
+      area.innerHTML = `<div class="sequence-workspace ${it.memoryResponse==='order'?'memory-order-workspace':''}"><div class="sequence-slots">${slots}</div><div class="token-bank"><p class="eyebrow">${it.memoryResponse==='order'?'ELEMENTOS DISPONIBLES':'PASOS DISPONIBLES'}</p><div class="token-tray">${tray}</div></div></div><div class="sequence-actions"><button id="orderUndo" class="secondary-btn" ${picked.length ? "" : "disabled"}>Deshacer</button><button id="orderReset" class="ghost-light-btn" ${picked.length ? "" : "disabled"}>Reiniciar</button><button id="orderCheck" class="primary-btn">Comprobar</button></div>`;
       $$("#exerciseOptions .word-token").forEach(
         (b) =>
           (b.onclick = () => {
@@ -775,10 +1645,10 @@
           picked.every((x, i) => x === expected[i]);
         showFeedback(
           ok,
-          saveResult(subject, ok, it.id, "planning"),
+          saveResult(subject, ok, it.id, it.memoryResponse==='order'?'memory_sequence':'planning'),
           ok
             ? "Secuencia correcta."
-            : `Orden esperado: ${expected.join(" → ")}`,
+            : it.memoryResponse==='order' ? `La secuencia correcta era: ${expected.map(x=>window.ActivityModel.memoryLabel(x)).join(" → " )}` : `Orden esperado: ${expected.join(" → ")}`,
         );
       };
     };
@@ -786,6 +1656,7 @@
   }
   function renderCognitiveExercise(it) {
     const area = $("#exerciseOptions");
+    area.classList.add('structured-options');
     if (it.type === "sequence") {
       area.innerHTML = `<button class="primary-btn" id="showSeq">Mostrar secuencia</button><div id="seqButtons" class="game-quick-grid"></div>`;
       $("#showSeq").onclick = () => {
@@ -839,6 +1710,7 @@
     }
   }
   function showFeedback(correct, pts, why = "") {
+    // Preserve the trial layout while showing feedback; reset on the next item.
     const f = $("#exerciseFeedback");
     f.textContent =
       why ||
@@ -846,37 +1718,71 @@
         ? `Correcto · +${pts} puntos`
         : `No esta vez. Respuesta: ${currentItem.a || "revisa el modelo"}`);
     f.className = "feedback " + (correct ? "ok" : "bad");
+    if(subject==='memory'&&currentItem?.type!=='executed'&&(Array.isArray(currentItem?.answer)||Array.isArray(currentItem?.sequence))){
+      const expected=currentItem.answer||currentItem.sequence,solution=document.createElement('div');solution.className='memory-solution';
+      solution.innerHTML='<h4>Secuencia correcta</h4>'+window.ActivityModel.interactiveStimulus([{type:'list',presentation:'sequence',items:expected.map(String)}],{senses:{...currentItem.lexicalSenses,iconProfile:profile}});f.append(solution);
+    }
     $("#exerciseNext").classList.remove("hidden");
+    $$('#exerciseOptions button').forEach(b=>b.disabled=true);
+    if(window.ContentPolicy.forProfile(profile)||window.AgeStages.forProfile(profile)){
+      $('#exerciseNext').textContent=guidedSession?.mission && guidedSession.index===guidedSession.plan.length-1?'Terminar misión →':'Siguiente →';
+      renderEarlyTaskGuide(true);
+    }
   }
   $("#exerciseNext").onclick = () => {
     if (guidedSession) {
       advanceGuidedSession();
     } else newExercise();
   };
-  $$(".language-mode-btn").forEach(
+  $("#retryProgressSave").onclick=()=>{persist(true);};
+  $('#retryResultSave').onclick=()=>{if(profile&&!profile._sessionOnly)recoverPendingResults(profile.id,{includeFailed:true,exerciseNotice:true});};
+  $('#retryPendingResultsHome').onclick=()=>{if(profile&&!profile._sessionOnly)recoverPendingResults(profile.id,{includeFailed:true});};
+  $("#retryContentLoad").onclick=()=>newExercise();
+  $$(".language-mode-btn[data-mode]").forEach(
     (b) =>
       (b.onclick = () => {
-        mode = b.dataset.mode;
-        $$(".language-mode-btn").forEach((x) =>
-          x.classList.toggle("active", x === b),
-        );
+        mode = b.dataset.mode;cognitiveOnly=false;executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;
+        syncLanguageModeButtons();
+        $('#cognitiveFamilyModes').classList.add('hidden');$('#cognitiveMode').setAttribute('aria-pressed','false');
+        syncActivitySettings();
         newExercise();
       }),
   );
+  function fitTextAnswer(){
+    const input=$('#textAnswerInput');
+    if(!input.offsetParent)return;
+    input.style.height='auto';
+    input.style.height=(input.scrollHeight+2)+'px';
+  }
+  $('#textAnswerInput').addEventListener('input',fitTextAnswer);
+  window.addEventListener('resize',fitTextAnswer);
   $("#textAnswerCheck").onclick = () => {
+    if(!$('#textAnswerInput').value.trim()){$('#exerciseFeedback').textContent='Escribe tu respuesta antes de compararla con el modelo.';$('#textAnswerInput').focus();return;}
+    $('#exerciseFeedback').textContent='';
     $("#modelAnswer").textContent =
       currentItem.sample ||
       currentItem.a ||
       "Revisa si tu respuesta responde con claridad.";
     $("#selfAssessment").classList.remove("hidden");
+    if(currentItem._selfAssessed){$("#exerciseFeedback").textContent="Compara tu versión revisada con el modelo. Puedes seguir revisándola o continuar con Siguiente.";}
   };
   $$(".self-buttons button").forEach(
     (b) =>
       (b.onclick = () => {
         const ok = b.dataset.self === "true";
-        showFeedback(ok, saveResult(subject, ok, currentItem.id, "self"));
+        if(currentItem._selfAssessed)return;
+        currentItem._selfAssessed=true;
+        showFeedback(ok, saveResult(subject, ok, currentItem.id, "self"),ok?'Has indicado que lo has conseguido.':'Has indicado que necesitas practicar. Revisa tu texto con el modelo y la lista de comprobación.');
+        $$('.self-buttons button').forEach(button=>button.disabled=true);
+        $('#reviseWritingAnswer').classList.toggle('hidden',ok);
+        if(!ok)$('#exerciseFeedback').className='feedback practice';
       }),
   );
+  $('#reviseWritingAnswer').onclick=()=>{
+    $('#textAnswerInput').focus();
+    $('#textAnswerInput').scrollIntoView({block:'center',behavior:'smooth'});
+    $('#exerciseFeedback').textContent='Puedes corregir tu texto y volver a compararlo con el modelo. Después continúa cuando quieras.';
+  };
   function updateGlobalUI() {
     if (!profile) return;
     const total = Object.values(state.scores).reduce(
@@ -888,10 +1794,10 @@
     if ($("#subjectScore") && subject)
       $("#subjectScore").textContent = state.scores[subject] || 0;
     $("#globalScore").textContent = total;
-    $("#homePoints").textContent = total;
-    $("#homeCorrect").textContent = state.totalCorrect;
-    $("#homeAttempts").textContent = state.totalAttempts;
-    $("#homeAccuracy").textContent =
+    if($("#homePoints"))$("#homePoints").textContent = total;
+    if($("#homeCorrect"))$("#homeCorrect").textContent = state.totalCorrect;
+    if($("#homeAttempts"))$("#homeAttempts").textContent = state.totalAttempts;
+    if($("#homeAccuracy"))$("#homeAccuracy").textContent =
       (state.totalAttempts
         ? Math.round((state.totalCorrect / state.totalAttempts) * 100)
         : 0) + "%";
@@ -899,16 +1805,120 @@
     $("#sessionAttempts").textContent = state.session.attempts;
     $("#activeProfileLabel").textContent = profile.name;
     $("#ageEyebrow").textContent =
-      `${AGE[profile.age_band].label} · Español internacional`;
+      `${ageLabel(profile)} · ${window.LocaleContent.labels[API.effectiveLocale(profile)]}`;
+    $('#welcomeTitle').textContent='¿Qué quieres preparar hoy?';
+    const summary=$('#homeProgressSummary');
+    const lastOpened=(()=>{try{const last=localStorage.getItem(`lh_v16_last_subject_${profile.id}`);return ageData().subjects.includes(last)?last:null;}catch{return null;}})();
+    const lastAnswered=[...state.history].reverse().find(row=>ageData().subjects.includes(row.subject))?.subject||null;
+    const lastArea=lastOpened||lastAnswered;
+    if(summary){
+      const accuracy=state.totalAttempts?Math.round(state.totalCorrect/state.totalAttempts*100):0;
+      const areaLabel=lastOpened?'Última área abierta':lastAnswered?'Última área respondida':'Última área';
+      summary.innerHTML=`<div><span>Actividades</span><strong>${state.totalAttempts}</strong></div><div><span>Precisión</span><strong>${accuracy}%</strong></div><div><span>${areaLabel}</span><strong>${escapeHtml(lastArea?subjectLabel(lastArea):'Sin actividad reciente')}</strong></div>`;
+    }
+    $('#homeSessionNotice').textContent=profile._sessionOnly?'Sesión independiente: esta práctica no se añade al historial.':'Con seguimiento: los resultados se guardan en este perfil.';
+    $('#homeSessionNotice').classList.toggle('independent',Boolean(profile._sessionOnly));
     renderHomeLevels();
+    renderHomeAreaLanding();
+    renderEarlyHub();
+    renderEarlyTaskGuide();
+    renderSchoolHub();
+    renderSchoolTaskGuide();
   }
+  function missionDefinition(){return (guidedSession?.school?window.SchoolJourney:window.EarlyJourney).definition(guidedSession?.mission,profile);}
+  function startSchoolMission(id){
+    if(!window.SchoolJourney.forProfile(profile))return;
+    const saved=window.SchoolJourney.start(profile.progress?._schoolJourney,id);
+    profile.progress={...profile.progress,_schoolJourney:saved};
+    const mission=window.SchoolJourney.definition(saved.active.id,profile);
+    guidedSession={school:true,mission:mission.id,plan:mission.plan,index:saved.active.index,answered:false};
+    subject=mission.plan[saved.active.index];persist();switchSection('exercise');updateGuidedBar();setupExercise();
+  }
+  function renderSchoolHub(){
+    const hub=$('#schoolHub');hub.classList.add('hidden');hub.replaceChildren();
+  }
+  function renderSchoolTaskGuide(){
+    let guide=$('#schoolTaskGuide');
+    if(!guide){guide=document.createElement('div');guide.id='schoolTaskGuide';guide.className='school-task-guide';$('.exercise-card').prepend(guide);}
+    const stage=window.SchoolJourney.forProfile(profile);guide.classList.toggle('hidden',!stage);if(!stage)return;
+    guide.innerHTML=`<button id="schoolHomeBtn" class="secondary-btn">← Mis áreas</button><span>${window.SchoolJourney.all[subject]?.title||'Actividad'} · ${state.history.filter(x=>x.subject===subject).length} actividades realizadas</span>`;
+    $('#schoolHomeBtn').onclick=()=>{guidedSession=null;hideGuidedBar();switchSection('home');};
+  }
+  function journeyState(){return window.EarlyJourney.normalize(profile?.progress?._earlyJourney);}
+  function openEarlyArea(domain){
+    if(!window.ContentPolicy.forProfile(profile)||!ageData().subjects.includes(domain))return;
+    guidedSession=null;hideGuidedBar();subject=domain;switchSection('exercise');setupExercise();
+  }
+  function startEarlyMission(id){
+    if(!window.ContentPolicy.forProfile(profile))return;
+    profile.progress={...profile.progress,_earlyJourney:window.EarlyJourney.start(profile.progress?._earlyJourney,id)};
+    const active=journeyState().active,mission=window.EarlyJourney.definition(active.id);
+    guidedSession={mission:active.id,plan:mission.plan,index:active.index,answered:false};
+    subject=mission.plan[active.index];persist();switchSection('exercise');updateGuidedBar();setupExercise();
+  }
+  function renderEarlyHub(){
+    const hub=$('#earlyHub');hub.classList.add('hidden');hub.replaceChildren();
+  }
+  function renderEarlyTaskGuide(answered=false){
+    let guide=$('#earlyTaskGuide');
+    if(!guide){guide=document.createElement('div');guide.id='earlyTaskGuide';guide.className='early-task-guide';$('.exercise-card').prepend(guide);}
+    const early=Boolean(window.ContentPolicy.forProfile(profile));guide.classList.toggle('hidden',!early);if(!early)return;
+    const attempts=window.EarlyJourney.stats(state.history)[subject]?.attempts||0;
+    guide.innerHTML=`<button class="mini-btn" id="earlyHomeBtn">← Mis áreas</button><span class="task-steps" aria-label="Mira, responde y sigue"><span class="${answered?'':'current'}" ${answered?'':'aria-current="step"'}>1 · Mira</span><span>2 · Responde</span><span class="${answered?'ready':''}">3 · Sigue</span></span><small>${attempts} actividades en esta área</small>`;
+    $('#earlyHomeBtn').onclick=()=>{guidedSession=null;hideGuidedBar();switchSection('home');};
+  }
+  function renderHomeAreaLanding(){
+    const landing=$('#homeAreaLanding');
+    const route=window.AgeStages.route(profile);
+    landing.classList.remove('hidden');
+    const subjects=ageData().subjects;
+    const sorted=orderedAreas(subjects);
+    let remembered=null;
+    try{const saved=localStorage.getItem(`lh_v16_last_subject_${profile.id}`);if(subjects.includes(saved))remembered=saved;}catch{}
+    const lastAnswered=[...state.history].reverse().find(row=>subjects.includes(row.subject))?.subject||null;
+    const recommended=subjects.includes($('#recommendedBtn').dataset.subject)?$('#recommendedBtn').dataset.subject:sorted[0];
+    const suggested=remembered||lastAnswered||recommended;
+    const suggestionKind=remembered?'open':lastAnswered?'answered':'new';
+    const descriptions={attention:'Concentración y selección',memory:'Recuerdo y aprendizaje',executive:'Planificación y organización',social:'Perspectivas y convivencia',speedReasoning:'Velocidad y razonamiento',applied:'Situaciones cotidianas',english:'Comunicación en inglés'};
+    const groupFor=areaGroupFor;
+    const groupLabels={cognitive:'Áreas cognitivas',language:'Lenguaje y comunicación',math:'Matemáticas'};
+    const cardsFor=domains=>domains.map(domain=>{
+      const meta=SUBJECT_META[domain],name=subjectLabel(domain),short=descriptions[domain]||meta.desc;
+      const languageArea=['language','middleLanguage','teenLanguage'].includes(domain);
+      const journeyAttribute=window.ContentPolicy.forProfile(profile)?`data-early-area="${escapeHtml(domain)}"`:window.SchoolJourney.forProfile(profile)?`data-school-area="${escapeHtml(domain)}"`:'';
+      return `<button class="redesign-area-card${domain==='geometry'?' geometry-subarea':''}" type="button" data-area="${escapeHtml(domain)}" data-redesign-area="${escapeHtml(domain)}" ${journeyAttribute}><span class="redesign-area-icon" aria-hidden="true">${areaIcon(domain,'professional')}</span><strong>${escapeHtml(name)}</strong><span class="redesign-area-desc">${escapeHtml(short)}</span><small>Nivel ${state.levels[domain]||1} <span aria-hidden="true">→</span></small></button>`;
+    }).join('');
+    const groups=['cognitive','language','math'].filter(group=>sorted.some(domain=>groupFor(domain)===group));
+    const areaSections=groups.map(group=>`<section class="professional-area-group ${group==='math'?'mathematics-area-group':''}" aria-labelledby="areaGroup-${group}"><h3 id="areaGroup-${group}">${groupLabels[group]}</h3><div class="redesign-area-grid">${cardsFor(sorted.filter(domain=>groupFor(domain)===group))}</div></section>`).join('');
+    const journeyMarkup=renderOptionalMissions(route);
+    const suggestionCopy={open:['ÚLTIMA ÁREA ABIERTA','Abre el área de nuevo; el ejercicio comienza desde el inicio.','Volver a '],answered:['ÚLTIMA ÁREA RESPONDIDA','Continúa en el área de tu respuesta más reciente.','Continuar en '],new:['ENTRENAMIENTO','Empieza por un área o prepara una sesión supervisada.','Empezar por ']}[suggestionKind];
+    landing.innerHTML=`<div class="redesign-continue"><div><span class="redesign-kicker">${suggestionCopy[0]}</span><strong>${escapeHtml(subjectLabel(suggested))}</strong><span>${suggestionCopy[1]}</span></div><button type="button" class="primary-btn" data-redesign-area="${escapeHtml(suggested)}">${suggestionCopy[2]}${escapeHtml(subjectLabel(suggested))} →</button></div><div class="redesign-heading"><h3>Áreas disponibles</h3><span>${sorted.length} áreas para este perfil</span></div>${areaSections}${journeyMarkup}`;
+    landing.querySelectorAll('[data-redesign-area]').forEach(button=>button.addEventListener('click',()=>{
+      guidedSession=null;hideGuidedBar();subject=button.dataset.redesignArea;switchSection('exercise');setupExercise();
+    }));
+    landing.querySelectorAll('[data-unified-mission]').forEach(button=>button.addEventListener('click',()=>{
+      const {kind,id}=button.dataset.unifiedMission==='early'?{kind:'early',id:button.dataset.missionId}:{kind:'school',id:button.dataset.missionId};
+      if(kind==='early')startEarlyMission(id);else startSchoolMission(id);
+    }));
+  }
+  function renderOptionalMissions(route){
+    if(window.ContentPolicy.forProfile(profile)){
+      const saved=journeyState(),active=saved.active,journey=window.EarlyJourney;
+      const stats=journey.stats(state.history),discovery=journey.overview(state.history,ageData().subjects,saved.completed),explored=ageData().subjects.filter(d=>stats[d]?.attempts>=3).length;
+      return `<details class="professional-missions"><summary>Misiones opcionales · ${journey.missions.length}</summary>${active?`<p role="status">${journey.definition(active.id).title}: ${active.index} de ${journey.definition(active.id).plan.length} actividades realizadas.</p>`:''}<section class="professional-discovery" aria-label="Progreso de descubrimientos"><strong>Recorrido de descubrimientos</strong><p>${discovery.discoveries} de ${discovery.goal} pasos · ${explored} de ${ageData().subjects.length} áreas iniciadas</p><progress value="${discovery.discoveries}" max="${discovery.goal}" aria-label="Actividades para explorar todas las áreas"></progress><ol>${discovery.milestones.map(m=>`<li>${m.done?'✓':'○'} ${escapeHtml(m.title)}</li>`).join('')}</ol></section><div class="professional-mission-list">${journey.missions.map(m=>`<article class="professional-mission"><div><strong>${escapeHtml(m.title)}</strong><p>${escapeHtml(m.description)}</p></div><button type="button" class="secondary-btn" data-unified-mission="early" data-mission-id="${escapeHtml(m.id)}" ${active&&active.id!==m.id?'disabled':''}>${active?.id===m.id?'Continuar':'Empezar'}</button></article>`).join('')}</div></details>`;
+    }
+    const stage=window.SchoolJourney.forProfile(profile);if(!stage)return '';
+    const journey=window.SchoolJourney,saved=journey.normalize(profile.progress?._schoolJourney),active=saved.active,missions=journey.forMissions(profile);
+    return `<details class="professional-missions"><summary>Misiones opcionales · ${missions.length} · ${saved.completed.length} completadas</summary>${active?`<p role="status">${escapeHtml(journey.definition(active.id,profile).title)}: ${active.index} actividades realizadas.</p>`:''}<div class="professional-mission-list">${missions.map(m=>`<article class="professional-mission"><div><strong>${escapeHtml(m.title)}</strong><p>${m.plan.length} actividades · ${escapeHtml([...new Set(m.plan)].map(d=>journey.all[d]?.title||SUBJECT_META[d]?.name||d).join(', '))}</p></div><button type="button" class="secondary-btn" data-unified-mission="school" data-mission-id="${escapeHtml(m.id)}" ${active&&active.id!==m.id?'disabled':''}>${active?.id===m.id?'Continuar':'Empezar'}</button></article>`).join('')}</div></details>`;
+  }
+  function areaGroupFor(domain){return ['geometry','division','middleMath','teenMath'].includes(domain)?'math':
+    ['language','middleLanguage','teenLanguage','reading','middleReading','literacy','english','communication'].includes(domain)?'language':'cognitive';}
+  function orderedAreas(subjects){return ['cognitive','language','math'].flatMap(group=>subjects.filter(domain=>areaGroupFor(domain)===group));}
   function renderHomeLevels() {
-    $("#homeLevels").innerHTML = ageData()
-      .subjects.map(
-        (s) =>
-          `<div class="level-row"><strong>${SUBJECT_META[s].name}</strong><div class="level-track"><span style="width:${((state.levels[s] || 1) / 3) * 100}%"></span></div><span class="level-tag">NIVEL ${state.levels[s] || 1}</span></div>`,
-      )
-      .join("");
+    const subjects=ageData().subjects,labels={cognitive:'Áreas cognitivas',language:'Lenguaje y comunicación',math:'Matemáticas'};
+    const groups=['cognitive','language','math'].filter(group=>subjects.some(s=>areaGroupFor(s)===group));
+    $("#homeLevels").innerHTML=groups.map(group=>`<section class="training-area-group"><h3>${labels[group]}</h3><div class="training-group-grid">${subjects.filter(s=>areaGroupFor(s)===group).map(s=>{const level=state.levels[s]||1;return `<button type="button" class="level-row" data-home-area="${s}" data-area="${s}"><span class="area-illustration" aria-hidden="true">${areaIcon(s,'professional')}</span><strong>${SUBJECT_META[s].name}</strong><div class="level-track" role="meter" aria-label="Nivel actual" aria-valuemin="1" aria-valuemax="3" aria-valuenow="${level}">${[1,2,3].map(n=>`<span class="${n<=level?'is-active':''}" aria-hidden="true"></span>`).join('')}</div><span class="level-tag">NIVEL ${level}</span></button>`;}).join('')}</div></section>`).join('');
+    $$('[data-home-area]').forEach(button=>button.onclick=()=>{guidedSession=null;hideGuidedBar();subject=button.dataset.homeArea;switchSection('exercise');setupExercise();});
     const stats = ageData()
       .subjects.map((s) => {
         const r = recent(s, 10);
@@ -940,29 +1950,77 @@
   $("#heroStartBtn").onclick = () => {
     $("#recommendedBtn").click();
   };
+  function renderSpeedProgress() {
+    const container = $('#speedProgressChart');
+    const history = state.history.filter(x => x.subject === 'speedReasoning');
+    container.classList.toggle('hidden', !history.length);
+    if (!history.length) { container.innerHTML = ''; return; }
+    const names = {figures:'Figuras',objects:'Objetos',arrows:'Flechas',orientation:'Orientación',pictograms:'Pictogramas',characters:'Letras y números',mixed:'Series mixtas',category:'Categorías',key:'Clave de códigos',match:'Coincidencias',search:'Búsqueda visual',pairs:'Revisar parejas',flanker:'Ignorar distractores',translation:'Traducción de claves',crossedKeys:'Cruzar dos claves',rapidAgenda:'Agenda rápida',ruleChoice:'Cambiar de criterio'};
+    const groups = new Map();
+    for (const row of history) {
+      if (!row.speedFamily) continue;
+      const key = JSON.stringify([row.speedFamily, row.level, row.speedRevision || 2]);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(row);
+    }
+    const rows = [...groups.values()].map(group => {
+      const sample = group.at(-1);
+      // Compare the same family, level and format. Invalid/background times
+      // and unmeasured practice do not contribute to either plotted metric.
+      const measured = group.slice(-20).filter(x => x.timingValid && Number.isFinite(x.responseMs) && x.responseMs >= 0);
+      const stats = window.Curriculum.speedSummary(measured);
+      return {...stats, family:sample.speedFamily, level:sample.level, revision:sample.speedRevision || 2, lastIndex:history.lastIndexOf(sample)};
+    }).filter(row => row.attempts).sort((a,b)=>b.lastIndex-a.lastIndex);
+    const seconds = ms => (ms / 1000).toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2});
+    const label = row => `${names[row.family] || row.family} · nivel ${row.level}${row.revision !== 4 ? ' · formato anterior' : ''}`;
+    const maximum = Math.max(1, ...rows.map(row => (row.medianMs || 0) / 1000));
+    const timingRow = row => `<li class="speed-timing-row" data-family="${escapeHtml(row.family)}" data-level="${escapeHtml(row.level)}" data-revision="${row.revision}" data-median-ms="${row.medianMs === null ? '' : row.medianMs}"><div class="speed-timing-heading"><strong>${escapeHtml(label(row))}</strong><span class="speed-timing-value">${row.medianMs === null ? 'Sin aciertos medidos' : seconds(row.medianMs) + ' s'}</span></div><svg viewBox="0 0 600 24" preserveAspectRatio="none" aria-hidden="true"><rect width="600" height="24" rx="12" fill="#e9eee5"/>${row.medianMs === null ? '' : `<rect width="${600 * row.medianMs / 1000 / maximum}" height="24" rx="12" fill="${['#548c76','#5c80ae','#b27855','#946cac','#b5667a'][Object.keys(names).indexOf(row.family)%5]||'#548c76'}"/>`}</svg><p><strong>${row.accuracy}% de aciertos</strong><span>${row.attempts} ${row.attempts === 1 ? 'respuesta medida' : 'respuestas medidas'}</span></p></li>`;
+    container.innerHTML = `<p class="eyebrow">VELOCIDAD DE PROCESAMIENTO</p><h3>Tiempo y precisión por reto</h3><p class="speed-timing-intro">Tiempo al acertar y precisión. Compara el mismo reto, nivel y formato.</p>${rows.length ? `<div class="speed-timing-scale"><span>0 s</span><span>${seconds(maximum * 1000)} s</span></div><ul class="speed-timing-list">${rows.slice(0,6).map(timingRow).join('')}</ul>${rows.length>6?`<details class="speed-timing-history"><summary>Ver otros retos (${rows.length-6})</summary><ul class="speed-timing-list">${rows.slice(6).map(timingRow).join('')}</ul></details>`:''}<p class="muted speed-timing-note">Hasta 20 intentos por reto. Se excluyen tiempos interrumpidos y práctica sin cronómetro.</p><details class="progress-chart-data"><summary>Ver los datos de tiempos</summary><div class="speed-timing-table"><table><thead><tr><th>Reto y nivel</th><th>Mediana al acertar</th><th>Aciertos</th><th>Respuestas medidas</th></tr></thead><tbody>${rows.map(row => `<tr><th scope="row">${escapeHtml(label(row))}</th><td>${row.medianMs === null ? 'Sin aciertos medidos' : seconds(row.medianMs) + ' s'}</td><td>${row.accuracy}%</td><td>${row.attempts}</td></tr>`).join('')}</tbody></table></div></details>` : '<p class="muted">Todavía no hay respuestas con tiempos válidos. Completa un reto con cronómetro para ver la gráfica.</p>'}`;
+  }
+  function sessionDateLabel(value){
+    const date=new Date(value);if(!value||!Number.isFinite(date.getTime()))return 'Fecha no disponible';
+    return new Intl.DateTimeFormat('es-ES',/^\d{4}-\d{2}-\d{2}$/.test(value)?{dateStyle:'medium'}:{dateStyle:'medium',timeStyle:'short'}).format(date);
+  }
   function renderProgress() {
+    let environment=$('#environmentSpeedProgress');if(!environment){environment=document.createElement('details');environment.id='environmentSpeedProgress';environment.className='card';$('#speedProgressChart').after(environment);}
+    const environmentEntries=profile.progress.environmentSpeedObservations||[];environment.classList.toggle('hidden',!environmentEntries.length);
+    environment.innerHTML='<summary>Velocidad · búsquedas en el entorno</summary><p>Observaciones declaradas, separadas de aciertos y tiempos en pantalla. Los tiempos incluyen lectura y respuesta con el botón.</p><ul>'+environmentEntries.slice(-8).reverse().map(x=>`<li>Nivel ${Number(x.level)||1} · ${x.report==='found'?'Objeto localizado según la valoración':x.report==='not_met'?'No cumplía las condiciones':x.report==='not_found'?'No se encontró un objeto adecuado':'Práctica detenida'} · ${x.timingValid&&x.report==='found'?(Number(x.elapsedMs)/1000).toFixed(1).replace('.',',')+' s':'sin tiempo comparable'} · Utilidad: ${x.explanation==='explained'?'explicada':x.explanation==='with_help'?'con ayuda':x.explanation==='skipped'?'omitida':'sin registro'}</li>`).join('')+'</ul>';
+    let observations=$('#interactiveObservations');
+    if(!observations){observations=document.createElement('details');observations.id='interactiveObservations';observations.className='card interactive-observations';$('#speedProgressChart').after(observations);}
+    const entries=profile.progress?.interactiveObservations||[];
+    const observationText=entry=>{
+      if(entry.report==='described')return 'Objeto descrito y revisado durante la actividad. La descripción no se conserva.';
+      if(entry.report?.completion){const labels={completed:'Práctica realizada según la valoración final.',difficult:'Se han indicado dificultades en la valoración final.',skipped:'Práctica no realizada según la valoración final.'};return (labels[entry.report.completion]||'Práctica finalizada.')+' Los gestos no se han comprobado automáticamente. Adelantos o confusiones marcados: '+(entry.report.trials||[]).filter(x=>x.report==='early').length+'.';}
+      if(entry.report==='not_found')return 'No se ha encontrado un objeto adecuado.';
+      const trials=entry.report?.trials;
+      if(Array.isArray(trials))return `Según la observación: espera respetada en ${trials.filter(x=>x.report==='waited').length} de ${trials.length} tarjetas; adelantos: ${trials.filter(x=>x.report==='early').length}; sin práctica: ${trials.filter(x=>x.report==='skipped').length}; sin audio: ${trials.filter(x=>x.report==='audio_unavailable').length}.`;
+      return 'Práctica de espera registrada.';
+    };
+    observations.classList.toggle('hidden',!entries.length);
+    observations.innerHTML=`<summary>Práctica con movimientos y objetos · ${entries.length} registros</summary><p>Observaciones personales o acompañadas, separadas de los aciertos de las actividades en pantalla.</p><ul>${entries.slice(-8).reverse().map(entry=>`<li><strong>${entry.kind==='movement'?'Mira/escucha y actúa · pantalla':entry.kind==='auditory'?'Mira/escucha y actúa · audio':'Busca a tu alrededor'} · nivel ${Number(entry.level)||1}</strong> · ${escapeHtml(observationText(entry))}</li>`).join('')}</ul>`;
     $("#progressProfileTitle").textContent = `Evolución de ${profile.name}`;
     $("#progressCards").innerHTML = ageData()
       .subjects.map((s) => {
         const r = state.history.filter((x) => x.subject === s),
           c = r.filter((x) => x.correct).length,
           acc = r.length ? Math.round((c / r.length) * 100) : 0;
-        return `<div class="progress-subject card"><small>${SUBJECT_META[s].name}</small><strong>${acc}%</strong><div class="bar"><span style="width:${acc}%"></span></div><small>${r.length} ejercicios · nivel ${state.levels[s] || 1}</small></div>`;
+        const palette={language:['#4C5BDD','#EAF0FF'],middleLanguage:['#4C5BDD','#EAF0FF'],teenLanguage:['#4C5BDD','#EAF0FF'],division:['#A7463D','#FFF0EE'],geometry:['#3645B9','#EAF0FF'],middleMath:['#A7463D','#FFF0EE'],teenMath:['#A7463D','#FFF0EE'],literacy:['#3645B9','#EEE9FA'],reading:['#3645B9','#EEE9FA'],english:['#4C5BDD','#EAF0FF'],social:['#A7463D','#FFF0EE'],attention:['#4C5BDD','#EEE9FA'],applied:['#A7463D','#FFF0EE'],executive:['#A7463D','#FFF0EE'],memory:['#A7463D','#F8E8EC'],speedReasoning:['#4C5BDD','#EAF0FF']};
+        const [color,tint]=palette[s]||['#087D71','#E1F8F4'];
+        return `<div class="progress-subject card" style="--progress-color:${color};--progress-tint:${tint}"><small>${SUBJECT_META[s].name}</small><div class="accuracy-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="ring-track" cx="60" cy="60" r="49"/><circle class="ring-value" cx="60" cy="60" r="49" pathLength="100" stroke-opacity="${acc?1:0}" stroke-dasharray="${acc} 100"/></svg><div><strong>${r.length?acc+'%':'—'}</strong><span>${r.length?'aciertos':'sin práctica'}</span></div></div><small>${r.length} ${r.length===1?'ejercicio':'ejercicios'} · nivel ${state.levels[s] || 1}</small></div>`;
       })
       .join("");
-    $("#recentResults").innerHTML =
-      state.history
-        .slice(-12)
-        .reverse()
-        .map(
-          (x) =>
-            `<div class="recent-row"><span>${SUBJECT_META[x.subject]?.name || x.subject}</span><span>${x.correct ? "✓ Correcto" : "× A revisar"}</span><strong>${x.points || 0}</strong></div>`,
-        )
-        .join("") || '<p class="muted">Aún no hay resultados.</p>';
-    $("#bankCoverage").innerHTML =
-      '<p class="muted">El catálogo se entrega desde el servidor y se amplía progresivamente. El banco completo no se descarga al dispositivo.</p>';
-    $("#sessionEvolution").innerHTML =
-      '<p class="muted">La evolución detallada se irá completando con nuevas sesiones.</p>';
+    renderSpeedProgress();
+    const sessions=new Map();
+    for(const row of state.history){
+      const key=row.sessionId||row.ts?.slice(0,10)||'anterior';
+      if(!sessions.has(key))sessions.set(key,{attempts:0,correct:0,date:row.sessionStartedAt||row.ts});
+      const session=sessions.get(key);session.attempts++;if(row.correct)session.correct++;
+    }
+    const recent=[...sessions.values()].slice(-12);
+    if(!recent.length){$('#sessionEvolution').innerHTML='<p class="muted">Completa algunos ejercicios para ver aquí tu evolución.</p>';return;}
+    const points=recent.map((row,i)=>({x:recent.length===1?350:60+i*580/(recent.length-1),y:200-160*row.correct/row.attempts,accuracy:Math.round(100*row.correct/row.attempts),...row}));
+    const path=points.map((p,i)=>`${i?'L':'M'}${p.x},${p.y}`).join(' ');
+    $('#sessionEvolution').innerHTML=`<div class="progress-chart-summary"><strong>${recent.reduce((n,r)=>n+r.attempts,0)} ejercicios</strong><span>en ${recent.length} ${recent.length===1?'sesión reciente':'sesiones recientes'}</span></div><svg class="evolution-chart" viewBox="0 0 700 250" role="img" aria-label="Porcentaje de aciertos por sesión; cada punto representa una sesión. La tabla accesible conserva las fechas, el número de respuestas, los aciertos y la precisión."><defs><linearGradient id="progressFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4C5BDD" stop-opacity=".18"/><stop offset="100%" stop-color="#4C5BDD" stop-opacity=".015"/></linearGradient></defs>${[0,50,100].map(n=>`<g><path class="chart-grid" d="M60 ${200-n*1.6}H650"/><text class="chart-axis-label" x="46" y="${205-n*1.6}" text-anchor="end">${n}%</text></g>`).join('')}<path d="${path}L${points.at(-1).x},200L${points[0].x},200Z" fill="url(#progressFill)"/><path class="chart-line" d="${path}"/>${points.map((p,i)=>`<g><circle class="chart-point" cx="${p.x}" cy="${p.y}" r="7"><title>Sesión ${i+1} · ${escapeHtml(sessionDateLabel(p.date))}: ${p.accuracy}% de aciertos, ${p.correct} de ${p.attempts} ejercicios</title></circle><circle class="chart-point-core" cx="${p.x}" cy="${p.y}" r="2.5"/><text class="chart-session-label" x="${p.x}" y="230" text-anchor="middle">${i+1}</text></g>`).join('')}</svg><p class="session-evolution-note">La precisión puede variar entre sesiones según la dificultad y las actividades realizadas.</p><details class="progress-chart-data"><summary>Ver los datos exactos por sesión</summary><table><thead><tr><th scope="col">Sesión</th><th scope="col">Fecha y hora</th><th scope="col">Ejercicios</th><th scope="col">Aciertos</th><th scope="col">Precisión</th></tr></thead><tbody>${points.map((p,i)=>`<tr><th scope="row">${i+1}</th><td>${escapeHtml(sessionDateLabel(p.date))}</td><td>${p.attempts}</td><td>${p.correct}</td><td>${p.accuracy}%</td></tr>`).join('')}</tbody></table></details>`;
   }
   function csvEscape(v) {
     const s = String(v ?? "");
@@ -988,7 +2046,7 @@
         "nivel",
         "resultado",
         "puntos",
-        "id",
+        "id", "area_original", "tiempo_ms", "tiempo_valido", "tarea_velocidad", "version_velocidad",
       ],
     ];
     state.history.forEach((x) =>
@@ -1000,7 +2058,7 @@
         x.level,
         x.correct ? "correcto" : "revisar",
         x.points,
-        x.itemId,
+        x.itemId, x.originalSubject||"", x.responseMs??"", x.timingValid??"", x.speedFamily||"", x.speedFamily?(x.speedRevision||2):"",
       ]),
     );
     downloadText(
@@ -1022,7 +2080,7 @@
       `LearningLab_${profile.name}_resumen.csv`,
     );
   function buildHomework() {
-    const options = ageData().subjects;
+    const options = ageData().subjects.filter(domain=>domain!=='communication');
     $("#homeworkOptions").innerHTML = options
       .map(
         (s, i) =>
@@ -1035,6 +2093,11 @@
       $$("#homeworkOptions input").forEach((x) => (x.checked = false));
   }
   $("#generateWorksheetsBtn").onclick = async () => {
+    const generateButton=$('#generateWorksheetsBtn');
+    if(generateButton.disabled)return;
+    const worksheetProfile = profile;
+    const worksheetExportProfile = {...profile, contentLocale:API.effectiveLocale(profile)};
+    const worksheetLocaleRevision = API.localeRevision;
     const selected = $$("#homeworkOptions input:checked").map((x) => x.value);
     if (!selected.length)
       return ($("#docxStatus").textContent =
@@ -1042,25 +2105,42 @@
     const count = Number($("#worksheetCount").value),
       questions = Number($("#worksheetQuestions").value);
     $("#docxStatus").textContent = "Preparando fichas desde el banco seguro…";
+    generateButton.disabled=true;
     try {
       const all = [];
       for (let i = 0; i < count; i++) {
-        const res = await API.requestContent({
-          profile_id: profile.id,
+        if (worksheetLocaleRevision !== API.localeRevision) throw new Error('La variante de español ha cambiado. Solicita una ficha nueva.');
+        const payload={
           kind: "worksheet",
           domains: selected,
           questions,
           level: Math.max(...selected.map((s) => state.levels[s] || 1)),
-        });
-        all.push(res.items || []);
+        };
+        const request=async()=>{
+          if(worksheetLocaleRevision!==API.localeRevision || worksheetProfile!==profile)throw new Error('El perfil o la variante de español ha cambiado. Solicita una ficha nueva.');
+          return requestForProfile(payload,worksheetProfile);
+        };
+        const res=await request();
+        const valid=await window.WorksheetSelection.collect({initial:res,profile:worksheetProfile,
+          country:worksheetExportProfile.contentLocale,domains:selected,count:questions,
+          fetchMore:async()=>{
+            $('#docxStatus').textContent=`Completando la ficha ${i+1}: buscamos actividades compatibles…`;
+            return request();
+          }});
+        all.push(valid.items);
       }
-      await window.WorksheetGenerator.generate(all, profile);
+      if (worksheetLocaleRevision !== API.localeRevision || worksheetProfile!==profile) throw new Error('El perfil o la variante de español ha cambiado. Solicita una ficha nueva.');
+      await window.WorksheetGenerator.generate(all, worksheetExportProfile, {domains:selected,fetchMore:async()=>{
+        if(worksheetLocaleRevision!==API.localeRevision||worksheetProfile!==profile)throw new Error('El perfil o la variante de español ha cambiado. Solicita una ficha nueva.');
+        $('#docxStatus').textContent='Comprobando el paquete: sustituimos actividades incompatibles…';
+        return requestForProfile({kind:'worksheet',domains:selected,questions,level:Math.max(...selected.map(s=>state.levels[s]||1))},worksheetProfile);
+      }});
       $("#docxStatus").textContent =
         `${count} ficha${count > 1 ? "s" : ""} creada${count > 1 ? "s" : ""}.`;
     } catch (e) {
       $("#docxStatus").textContent =
         e?.message || "No se pudieron generar las fichas.";
-    }
+    } finally {generateButton.disabled=false;}
   };
   function hideGuidedBar() {
     if ($("#guidedSessionBar")) $("#guidedSessionBar").classList.add("hidden");
@@ -1073,23 +2153,19 @@
     const bar = $("#guidedSessionBar");
     bar.classList.remove("hidden");
     $("#guidedSessionTitle").textContent = "Sesión guiada";
+    if(guidedSession.mission)$('#guidedSessionTitle').textContent=missionDefinition().title;
+    $('#cancelGuidedSession').textContent=guidedSession.mission?'Guardar y volver al inicio':'Salir de la sesión';
     $("#guidedSessionProgress").textContent =
-      `Actividad ${guidedSession.index + 1} de ${guidedSession.plan.length} · ${SUBJECT_META[guidedSession.plan[guidedSession.index]].name}`;
+      `Actividad ${guidedSession.index + 1} de ${guidedSession.plan.length} · ${subjectLabel(guidedSession.plan[guidedSession.index])}`;
   }
   function buildSessionBuilder() {
-    const domains = [
-      "attention",
-      "memory",
-      "executive",
-      "speedReasoning",
-      "applied",
-    ];
+    const domains = orderedAreas(ageData().subjects);
     const holder = $("#sessionDomainOptions");
     if (!holder) return;
     holder.innerHTML = domains
       .map(
         (s) =>
-          `<label class="session-domain"><input type="checkbox" value="${s}" ${["attention", "memory", "executive"].includes(s) ? "checked" : ""}><span><b>${SUBJECT_META[s].icon}</b><strong>${SUBJECT_META[s].name}</strong><small>${SUBJECT_META[s].desc}</small></span></label>`,
+          `<label class="session-domain"><input type="checkbox" value="${s}" ${["attention", "memory", "executive"].includes(s) ? "checked" : ""}><span><b aria-hidden="true">${areaIcon(s,'professional')}</b><strong>${subjectLabel(s)}</strong><small>${SUBJECT_META[s].desc}</small></span></label>`,
       )
       .join("");
     const update = () => {
@@ -1101,7 +2177,7 @@
       for (let i = 0; i < n; i++)
         if (selected.length) plan.push(selected[i % selected.length]);
       $("#sessionPlanPreview").innerHTML = plan.length
-        ? `<p class="eyebrow">VISTA PREVIA</p><div class="session-plan-chips">${plan.map((d, i) => `<span>${i + 1}. ${SUBJECT_META[d].name}</span>`).join("")}</div>`
+        ? `<p class="eyebrow">VISTA PREVIA</p><div class="session-plan-chips">${plan.map((d, i) => `<span>${i + 1}. ${subjectLabel(d)}</span>`).join("")}</div>`
         : '<p class="muted">Selecciona al menos un área.</p>';
       $("#sessionEstimate").textContent =
         n <= 6 ? "≈ 15–20 min" : n <= 8 ? "≈ 20–30 min" : "≈ 30–40 min";
@@ -1126,17 +2202,21 @@
   }
   function advanceGuidedSession() {
     if (!guidedSession) return newExercise();
+    if(guidedSession.mission && !guidedSession.answered)return;
+    const mission=guidedSession.mission;
     guidedSession.index++;
     if (guidedSession.index >= guidedSession.plan.length) {
       const completed = guidedSession.plan.length;
       guidedSession = null;
       hideGuidedBar();
+      if(mission){switchSection('home');renderEarlyHub();return;}
       switchSection("sessionBuilder");
       $("#sessionPlanPreview").innerHTML =
-        `<div class="session-complete"><strong>Sesión completada</strong><span>${completed} actividades realizadas. Los resultados ya están guardados en Progreso.</span></div>`;
+        `<div class="session-complete"><strong>Sesión completada</strong><span>${completed} actividades realizadas.</span></div>`;
       return;
     }
     subject = guidedSession.plan[guidedSession.index];
+    guidedSession.answered=false;
     updateGuidedBar();
     setupExercise();
   }
@@ -1144,35 +2224,110 @@
     $("#startGuidedSession").onclick = startGuidedSession;
   if ($("#cancelGuidedSession"))
     $("#cancelGuidedSession").onclick = () => {
+      const mission=guidedSession?.mission;
       guidedSession = null;
       hideGuidedBar();
-      switchSection("sessionBuilder");
+      switchSection(mission?'home':'sessionBuilder');
     };
+  $('#independentSessionBtn').onclick=()=>{
+    if(!profile)return;
+    const active=profile._sessionOnly===true;
+    if(active&&!confirm('Terminar y descartar los resultados de esta sesión independiente?'))return;
+    activateProfile(profile.id,!active);
+  };
+  let privacyTarget=null,privacyBusy=false;
+  const privacyMessage=text=>{$('#privacyStatus').textContent=text;};
+  const privacyAction=async(action,settings={})=>{
+    if(privacyBusy||!privacyTarget)return;privacyBusy=true;
+    $$('#privacyDialog button').forEach(b=>b.disabled=true);
+    try{const target=privacyTarget,owner=API.user?.id;const result=await API.privacy(action,target,settings);if(privacyTarget!==target||API.user?.id!==owner||!$('#privacyDialog').open)throw new Error('La sesión ha cambiado. Vuelve a abrir la gestión de privacidad.');return result;}
+    catch(error){privacyMessage(error.message);throw error;}
+    finally{privacyBusy=false;$$('#privacyDialog button').forEach(b=>b.disabled=false);}
+  };
+  $('#profilePrivacyBtn').onclick=async()=>{
+    if(!profile||profile._sessionOnly)return;
+    privacyTarget=profile.id;$('#privacyAlias').value=profile.name;$('#privacyReviewDate').value='';$('#privacyExactAge').value=profile.progress?.ageYears?String(profile.progress.ageYears):'';
+    $('#privacyDialog').showModal();privacyMessage('Cargando los ajustes del perfil…');
+    try{const status=await privacyAction('open');$('#privacyReviewDate').value=status.review_at||'';privacyMessage(status.review_at&&status.review_at<=new Date().toISOString().slice(0,10)?'Ha llegado la fecha de revisar la conservación de este perfil.':'La exportación y el borrado incluyen los resultados asociados al perfil.');}catch(_){}
+  };
+  $('#closeProfilePrivacy').onclick=()=>{if(!privacyBusy)$('#privacyDialog').close();};
+  $('#privacyDialog').addEventListener('cancel',e=>{if(privacyBusy)e.preventDefault();});
+  $('#saveProfilePrivacy').onclick=async()=>{
+    try{const updated=await privacyAction('settings',{alias:$('#privacyAlias').value.trim(),reviewAt:$('#privacyReviewDate').value||null});
+      const exactAge=$('#privacyExactAge').value;const found=profiles.find(p=>p.id===privacyTarget);if(found){Object.assign(found,updated);found.progress={...(found.progress||{}),...(exactAge?{ageYears:Number(exactAge)}:{ageYears:undefined})};if(!exactAge)delete found.progress.ageYears;}if(profile?.id===privacyTarget){profile.name=updated.name;profile.progress={...(profile.progress||{}),...(exactAge?{ageYears:Number(exactAge)}:{})};if(!exactAge)delete profile.progress.ageYears;persist();renderProfiles();updateGlobalUI();}privacyMessage('Código, edad y fecha de revisión guardados.');
+    }catch(_){}
+  };
+  $('#exportProfilePrivacy').onclick=async()=>{
+    try{const data=await privacyAction('export'),url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+      const a=document.createElement('a');a.href=url;a.download='perfil-'+privacyTarget+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);privacyMessage('Exportación preparada. Guarda el archivo en un lugar seguro.');
+    }catch(_){}
+  };
+  $('#eraseProfilePrivacy').onclick=async()=>{
+    if(!confirm('Eliminar definitivamente este perfil, su historial y sus resultados? Los archivos ya descargados se gestionan por separado.'))return;
+    try{await privacyAction('delete');const id=privacyTarget;$('#privacyDialog').close();localStorage.removeItem('lh_v16_last_subject_'+id);profiles=profiles.filter(p=>p.id!==id);profile=null;state=null;currentItem=null;stopMemoryCountdown();requestGeneration++;
+      if(profiles.length)activateProfile(profiles[0].id);else{API.setIndependent(null);$('#navMenu').innerHTML='';renderProfiles();openProfileGate();}
+    }catch(_){}
+  };
+
   $("#createProfileBtn").onclick = createProfile;
   $("#newProfileBtn").onclick = openProfileGate;
-  $("#profileSelect").onchange = (e) => activateProfile(e.target.value);
+  $("#profileSelect").onchange = (e) => {if(profile?._sessionOnly&&!confirm('Cambiar de perfil y descartar los resultados de la sesión independiente?')){e.target.value=profile.id;return;}activateProfile(e.target.value);};
   $("#deleteProfileBtn").onclick = async () => {
     if (!profile || !confirm(`¿Eliminar el perfil de ${profile.name}?`)) return;
-    await API.deleteProfile(profile.id);
-    profiles = profiles.filter((p) => p.id !== profile.id);
-    profile = null;
-    if (profiles.length) activateProfile(profiles[0].id);
-    else {
-      renderProfiles();
-      openProfileGate();
-    }
+    const target=profile.id,owner=API.user?.id;
+    try{await API.deleteProfile(target);}catch(error){alert(error.message);return;}
+    if(API.user?.id!==owner)return;
+    localStorage.removeItem('lh_v16_last_subject_'+target);
+    profiles=profiles.filter(p=>p.id!==target);
+    if(profile?.id!==target){renderProfiles();return;}
+    profile=null;state=null;currentItem=null;requestGeneration++;stopMemoryCountdown();API.setIndependent(null);
+    if(profiles.length)activateProfile(profiles[0].id);
+    else{$('#navMenu').innerHTML='';renderProfiles();openProfileGate();}
   };
   $("#resetProgressBtn").onclick = () => {
     if (confirm("¿Reiniciar el progreso de este perfil?")) {
       state = blankState();
+      if(profile.progress)delete profile.progress._earlyJourney;
+      if(profile.progress){delete profile.progress._schoolJourney;delete profile.progress._levelCheckpoints;}
+      guidedSession=null;hideGuidedBar();
       persist();
       updateGlobalUI();
     }
   };
-  if ($("#subscribeBtn"))
-    $("#subscribeBtn").onclick = () => API.openStripeCheckout();
-  if ($("#billingPortalBtn"))
-    $("#billingPortalBtn").onclick = () => API.openBillingPortal();
+  let billingReturnStarted=false;
+  function checkBillingReturn(){
+    const url=new URL(location.href),result=url.searchParams.get('pago');
+    if(billingReturnStarted||!['pendiente','cancelado'].includes(result))return;
+    billingReturnStarted=true;url.searchParams.delete('pago');history.replaceState(null,'',url.pathname+url.search+url.hash);
+    if(result==='cancelado'){billingMessage('Has vuelto sin completar el pago.');return;}
+    const userId=API.user?.id;
+    billingMessage('Estamos comprobando tu suscripción…');
+    let remaining=6;
+    const refresh=async()=>{
+      if(API.user?.id!==userId)return;
+      try{
+        const updated=await API.getAccount();if(API.user?.id!==userId)return;
+        account=updated;renderAccountStatus();
+        if(account.subscription_status==='active'){billingMessage('Suscripción activa. Ya puedes continuar.');return;}
+      }catch{/* Do not infer payment success from a redirect or a failed refresh. */}
+      if(--remaining>0)setTimeout(refresh,5000);
+      else billingMessage('El pago aún no se ha confirmado en Learning Hub. Puedes volver a entrar más tarde; si ya pagaste, evita repetir el pago mientras lo comprobamos.');
+    };
+    refresh();
+  }
+  function billingMessage(text){
+    let message=$('#billingMessage');
+    if(!message){message=document.createElement('p');message.id='billingMessage';message.setAttribute('role','status');message.setAttribute('aria-live','polite');$('.main-content').prepend(message);}
+    message.textContent=text;
+  }
+  async function openBilling(button,action){
+    if(button.disabled)return;button.disabled=true;
+    billingMessage('Abriendo Stripe…');
+    try{await action();}catch(error){billingMessage(error.message||'No se ha podido abrir Stripe. Inténtalo de nuevo.');}
+    finally{button.disabled=false;}
+  }
+  if ($('#subscribeBtn'))$('#subscribeBtn').onclick=()=>openBilling($('#subscribeBtn'),()=>API.openStripeCheckout());
+  if ($('#billingPortalBtn'))$('#billingPortalBtn').onclick=()=>openBilling($('#billingPortalBtn'),()=>API.openBillingPortal());
   $("#authSignIn").onclick = async () => {
     try {
       await API.signIn($("#authEmail").value.trim(), $("#authPassword").value);
@@ -1182,17 +2337,20 @@
     }
   };
   $("#authSignUp").onclick = async () => {
+    const button=$("#authSignUp"),email=$("#authEmail").value.trim(),password=$("#authPassword").value;
+    if(!email||!password){$("#authMessage").textContent="Escribe tu correo electrónico y una contraseña para crear la cuenta.";return;}
+    if(password.length<8){$("#authMessage").textContent="La contraseña debe tener al menos 8 caracteres.";return;}
+    button.disabled=true;button.textContent="Creando cuenta…";$("#authMessage").textContent="Conectando con el servicio de cuentas…";
     try {
-      const d = await API.signUp(
-        $("#authEmail").value.trim(),
-        $("#authPassword").value,
-      );
+      const d = await API.signUp(email,password);
       if (d.session) await loadWorkspace();
       else
         $("#authMessage").textContent =
-          "Cuenta creada. Revisa tu correo para confirmar el registro.";
+          `Cuenta creada. Revisa ${email} y pulsa el enlace de confirmación. Después, vuelve aquí e inicia sesión.`;
     } catch (e) {
-      $("#authMessage").textContent = e.message;
+      $("#authMessage").textContent = e.message||"No se pudo crear la cuenta. Comprueba la conexión e inténtalo de nuevo.";
+    } finally {
+      button.disabled=false;button.textContent="Crear cuenta";
     }
   };
   $("#signOutBtn").onclick = async () => {
@@ -1209,7 +2367,9 @@
     }),
   );
   $("#exerciseLevelSelect").onchange = async (e) => {
+    if(guidedSession?.mission){guidedSession=null;hideGuidedBar();}
     state.levels[subject] = Number(e.target.value);
+    if(window.AgeStages.forProfile(profile))profile.progress={...profile.progress,_levelCheckpoints:{...profile.progress?._levelCheckpoints,[subject]:{attempt:state.totalAttempts}}};
     await persist();
     counter = 0;
     newExercise();
@@ -1217,5 +2377,18 @@
   window.addEventListener("beforeunload", () => {
     persist();
   });
+  window.addEventListener('lh:locale-change', () => {
+    if (!profile) return;
+    if(guidedSession?.mission){guidedSession=null;hideGuidedBar();}
+    ++requestGeneration;
+    currentItem = null;
+    for (const id of ['exerciseVisual','exerciseOptions','exerciseTopic','exerciseExplanation','exerciseFeedback','modelAnswer']) $("#"+id).textContent = '';
+    $("#textAnswerArea").classList.add('hidden');
+    $("#selfAssessment").classList.add('hidden');
+    $("#exercisePrompt").textContent = 'La variante de español ha cambiado. Pulsa Siguiente para continuar.';
+    $("#exerciseNext").classList.remove('hidden');
+    setLoading(false);
+  });
+  window.addEventListener('lh:account-access-ready',()=>boot());
   boot();
 })();

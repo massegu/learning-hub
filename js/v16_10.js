@@ -38,8 +38,9 @@
 
   function patchNavigation(){
     $$("#navMenu .nav-item").forEach(btn=>{
-      const next=replaceAgeText(btn.textContent);
-      if(next!==btn.textContent) btn.textContent=next;
+      const caption=btn.querySelector('.nav-area-label')||btn;
+      const next=replaceAgeText(caption.textContent);
+      if(next!==caption.textContent) caption.textContent=next;
     });
   }
 

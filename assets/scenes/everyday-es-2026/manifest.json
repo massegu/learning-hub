@@ -1,0 +1,54 @@
+{
+  "units": [
+    {
+      "id": "library-scene",
+      "path": "assets/scenes/everyday-es-2026/library-scene.png",
+      "title": "Biblioteca de barrio",
+      "generatedWithAI": true,
+      "transcript": "Biblioteca con estanterías, mesas de madera, una persona junto a los libros de la izquierda y dos personas conversando a la derecha. Sobre la mesa hay libros, una planta, una botella azul y un cuaderno. Una mochila verde cuelga de la silla del primer plano.",
+      "questions": [
+        {
+          "question": "¿De qué color es la botella que está sobre la mesa?",
+          "answer": "Azul"
+        },
+        {
+          "question": "¿Dónde está la mochila verde?",
+          "answer": "Colgada en una silla del primer plano"
+        },
+        {
+          "question": "¿Cuántas personas conversan a la derecha?",
+          "answer": "Dos"
+        },
+        {
+          "question": "¿Qué hay debajo del bolígrafo, sobre la mesa?",
+          "answer": "Un cuaderno abierto"
+        }
+      ]
+    },
+    {
+      "id": "park-scene",
+      "path": "assets/scenes/everyday-es-2026/park-scene.png",
+      "title": "Una tarde en el parque",
+      "generatedWithAI": true,
+      "transcript": "Parque de otoño con camino, ciclista de chaqueta roja, una persona paseando a un perro marrón y una persona leyendo en un banco. Una papelera verde está junto al banco. En la hierba hay una pelota amarilla. Tres conos naranjas rodean un árbol joven a la derecha. Al fondo hay una fuente.",
+      "questions": [
+        {
+          "question": "¿Qué hace la persona que está sentada en el banco?",
+          "answer": "Lee"
+        },
+        {
+          "question": "¿De qué color es la chaqueta del ciclista?",
+          "answer": "Roja"
+        },
+        {
+          "question": "¿Cuántos conos hay junto al árbol joven?",
+          "answer": "Tres"
+        },
+        {
+          "question": "¿Qué hay en la hierba del primer plano?",
+          "answer": "Una pelota amarilla"
+        }
+      ]
+    }
+  ]
+}

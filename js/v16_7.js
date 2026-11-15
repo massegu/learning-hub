@@ -9,16 +9,10 @@
   const routeMap=new Map();
   const $=s=>document.querySelector(s);
   const $$=s=>[...document.querySelectorAll(s)];
-  let apiPatched=false, worksheetPatched=false;
+  let apiPatched=false;
 
   function routeOfProfileId(id){ return routeMap.get(String(id))||null; }
   function currentRoute(){ return routeOfProfileId($('#profileSelect')?.value); }
-  function stamp(){ const d=new Date(),pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`; }
-  function ageSlug(profile){
-    const route=routeOfProfileId(profile?.id)||profile?.progress?.ageRoute||profile?.age_band;
-    const label=AGE_ROUTES[route]?.label||AGE_ROUTES[profile?.age_band]?.label||'perfil';
-    return label.replace(/\s*años/i,'').trim().replace(/\s+/g,'-');
-  }
 
   function installAgeOptions(){
     const sel=$('#newProfileAge'); if(!sel) return;
@@ -26,6 +20,10 @@
     sel.innerHTML=[['early','6-7 años'],['junior','8-10 años'],['primary','10-12 años'],['middle','13-15 años'],['teen','16-18 años']]
       .map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
     sel.value=AGE_ROUTES[current]?current:'junior';
+    const exact=$('#newProfileExactAge'),field=$('#exactAgeField');
+    const refreshExact=()=>{if(!exact)return;const route=sel.value,range=route==='early'?[6,7]:route==='junior'?[8,9,10]:[];field?.classList.toggle('hidden',!range.length);exact.innerHTML='<option value="">Selecciona la edad</option>'+range.map(age=>`<option value="${age}">${age} años</option>`).join('');if(range.length)exact.value=String(range[0]);};
+    sel.addEventListener('change',refreshExact);refreshExact();
+    const privacyAge=$('#privacyExactAge');if(privacyAge)privacyAge.innerHTML='<option value="">Sin indicar</option>'+Array.from({length:13},(_,i)=>6+i).map(age=>`<option value="${age}">${age} años</option>`).join('');
   }
 
   async function captureProfiles(){
@@ -46,15 +44,15 @@
       (rows||[]).forEach(p=>routeMap.set(String(p.id),p?.progress?.ageRoute||p.age_band));
       return rows;
     };
-    API.createProfile=async(name,age_band,initial_level=1,locale='es_intl')=>{
+    API.createProfile=async(name,age_band,initial_level=1,locale='es_intl',ageYears=null)=>{
       const requested=AGE_ROUTES[age_band]?age_band:'junior';
       const dbAge=AGE_ROUTES[requested].dbAge||requested;
       const p=await origCreate(name,dbAge,initial_level,locale);
       routeMap.set(String(p.id),requested);
       if(requested==='early'||requested==='junior'){
-        p.progress={...(p.progress||{}),ageRoute:requested};
+        p.progress={...(p.progress||{}),ageRoute:requested,...(ageYears!==null&&ageYears!==''&&Number.isInteger(Number(ageYears))?{ageYears:Number(ageYears)}:{})};
         await origSave(p.id,p.progress);
-      }
+      }else if(ageYears!==null&&ageYears!==''&&Number.isInteger(Number(ageYears))){p.progress={...(p.progress||{}),ageYears:Number(ageYears)};await origSave(p.id,p.progress);}
       setTimeout(patchUI,80); return p;
     };
     API.saveProgress=async(id,progress)=>{
@@ -85,11 +83,13 @@
 
   function patchNavigation(route){
     if(!['early','junior'].includes(route)) return;
-    const allowed=new Set(AGE_ROUTES[route].allowed);
+    const allowed=new Set(window.ContentPolicy?.early?.subjects||AGE_ROUTES[route].allowed);
     $$('#navMenu .nav-item[data-subject]').forEach(b=>{
       const s=b.dataset.subject, hide=!allowed.has(s); b.hidden=hide; if(hide) return;
-      const labelMap={language:`Lenguaje ${AGE_ROUTES[route].label.replace(' años','')}`,division:`Matemáticas ${AGE_ROUTES[route].label.replace(' años','')}`,reading:`Lectura ${AGE_ROUTES[route].label.replace(' años','')}`};
+      const labelMap={language:`Lenguaje ${AGE_ROUTES[route].label.replace(' años','')}`,division:`Matemáticas ${AGE_ROUTES[route].label.replace(' años','')}`,reading:`Lectura + Escritura ${AGE_ROUTES[route].label.replace(' años','')}`};
       if(labelMap[s]){
+        const caption=b.querySelector('.nav-area-label');
+        if(caption){if(caption.textContent!==labelMap[s])caption.textContent=labelMap[s];return;}
         const icon=(b.textContent||'').trim().split(/\s+/)[0],desired=`${icon} ${labelMap[s]}`;
         if(b.textContent.trim()!==desired) b.textContent=desired;
       }
@@ -104,29 +104,16 @@
     if(!['early','junior'].includes(route)) return;
     const s=$('#navMenu .nav-item.active[data-subject]')?.dataset.subject;
     const short=AGE_ROUTES[route].label.replace(' años','');
-    const label={language:`Lenguaje ${short}`,division:`Matemáticas ${short}`,reading:`Lectura ${short}`}[s];
+    const label={language:`Lenguaje ${short}`,division:`Matemáticas ${short}`,reading:`Lectura + Escritura ${short}`}[s];
     if(label){ if($('#exerciseHeading')) $('#exerciseHeading').textContent=label; if($('#exercisePill')) $('#exercisePill').textContent=label.toUpperCase(); }
   }
 
   function patchUI(){ installAgeOptions(); renameProfileOptions(); const route=currentRoute(); if(route){patchAgeEyebrow(route);patchNavigation(route);patchExerciseHeading(route);} }
 
-  function patchWorksheetNames(){
-    if(worksheetPatched||!window.WorksheetGenerator?.generate||!window.JSZip) return;
-    const orig=window.WorksheetGenerator.generate.bind(window.WorksheetGenerator);
-    window.WorksheetGenerator.generate=async(itemsByVersion,profile)=>{
-      const prefix=`LearningLab_${ageSlug(profile)}_${stamp()}`;
-      const oldClick=HTMLAnchorElement.prototype.click, oldFile=window.JSZip.prototype.file;
-      HTMLAnchorElement.prototype.click=function(){ const d=String(this.download||''); if(/_fichas\.zip$/i.test(d)) this.download=`${prefix}_fichas.zip`; else if(/\.docx$/i.test(d)) this.download=`${prefix}_ficha_01.docx`; return oldClick.call(this); };
-      window.JSZip.prototype.file=function(name,...rest){ let next=name; const m=String(name).match(/^LearningLab_ficha_version_(\d+)\.docx$/i); if(m) next=`${prefix}_ficha_${String(m[1]).padStart(2,'0')}.docx`; return oldFile.call(this,next,...rest); };
-      try{return await orig(itemsByVersion,profile);} finally{HTMLAnchorElement.prototype.click=oldClick;window.JSZip.prototype.file=oldFile;}
-    };
-    worksheetPatched=true;
-  }
-
   function start(){
     installAgeOptions();
-    let ticks=0;
-    const timer=setInterval(()=>{ticks++;patchAPI();patchWorksheetNames();patchUI();if(ticks>160)clearInterval(timer);},100);
+    patchAPI();
+    patchUI();
     document.addEventListener('change',e=>{if(e.target?.id==='profileSelect'||e.target?.id==='newProfileAge')setTimeout(patchUI,30);},true);
     document.addEventListener('click',e=>{if(e.target?.closest?.('.nav-item,#newProfileBtn,#createProfileBtn'))setTimeout(patchUI,80);},true);
   }

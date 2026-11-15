@@ -1,14 +1,11 @@
 (function(){
-  const LOCALES={
-    es_intl:'Español internacional',es_es:'España',es_mx:'México',es_co:'Colombia',
-    es_ar:'Argentina',es_cl:'Chile',es_pa:'Panamá',es_cr:'Costa Rica'
-  };
+  const LOCALES=window.LocaleContent.labels;
   const SUBJECT_LABELS={
-    geometry:'Geometría',language:'Lenguaje',division:'Divisiones',reading:'Lectura',
-    middleLanguage:'Lenguaje 12-13',middleMath:'Matemáticas 12-13',middleReading:'Lectura 12-13',
-    teenLanguage:'Lenguaje 14-17',teenMath:'Matemáticas 14-17',social:'Social Lab',english:'English Lab',
+    geometry:'Geometría',language:'Lenguaje',division:'Divisiones',reading:'Lectura + Escritura',
+    middleLanguage:'Lenguaje 13-15',middleMath:'Matemáticas 13-15',middleReading:'Lectura 13-15',
+    teenLanguage:'Lenguaje 16-18',teenMath:'Matemáticas 16-18',social:'Social Lab',english:'English Lab',
     literacy:'Lectura + Escritura',attention:'Atención',executive:'Funciones ejecutivas',memory:'Memoria',
-    speedReasoning:'Velocidad y razonamiento',applied:'Cognición aplicada'
+    speedReasoning:'Velocidad de procesamiento',applied:'Cognición aplicada'
   };
   let currentLocale='es_intl';
   const $=s=>document.querySelector(s);
@@ -70,22 +67,27 @@
       btn.dataset.v16Bound='1'; btn.textContent='Continuar entrenamiento →';
       btn.onclick=()=>{
         const wanted=localStorage.getItem(profileKey());
-        const target=wanted ? document.querySelector(`#navMenu .nav-item[data-subject="${CSS.escape(wanted)}"]`) : null;
-        if(target) target.click(); else $('#recommendedBtn')?.click();
+          const activeHub=document.querySelector('#earlyHub:not(.hidden),#schoolHub:not(.hidden)');
+          const candidates=[...(activeHub?.querySelectorAll('[data-home-area],[data-school-area],[data-early-area]')||[]),...document.querySelectorAll('#homeAreaLanding [data-redesign-area],#homeLevels [data-home-area]')];
+          const target=wanted?candidates.find(button=>button.dataset.homeArea===wanted||button.dataset.schoolArea===wanted||button.dataset.earlyArea===wanted||button.dataset.redesignArea===wanted):null;
+          if(target)target.click();else $('#recommendedBtn')?.click();
       };
     }
   }
 
   function rememberNavigation(){
-    const nav=$('#navMenu'); if(!nav||nav.dataset.v16Bound) return;
-    nav.dataset.v16Bound='1';
-    nav.addEventListener('click',e=>{
-      const b=e.target.closest('.nav-item[data-subject]');
-      if(b?.dataset.subject) localStorage.setItem(profileKey(),b.dataset.subject);
+    if(document.documentElement.dataset.v16RememberBound)return;
+    document.documentElement.dataset.v16RememberBound='1';
+    document.addEventListener('click',e=>{
+      const b=e.target.closest('[data-home-area],[data-school-area],[data-early-area],[data-redesign-area],#recommendedBtn');
+      const area=b?.dataset.homeArea||b?.dataset.schoolArea||b?.dataset.earlyArea||b?.dataset.redesignArea||b?.dataset.subject;
+      if(area){try{localStorage.setItem(profileKey(),area);}catch{}}
     },true);
   }
 
   function setEyebrow(){
+    currentLocale=window.LearningAPI?.effectiveLocale() || 'es_intl';
+    const selector=$('#v16ContentLocale'); if(selector && !selector.disabled)selector.value=currentLocale;
     const e=$('#ageEyebrow'); if(!e) return;
     const age=$('#profileSelect')?.selectedOptions?.[0]?.textContent?.split('·').slice(1).join('·').trim()||'';
     setText(e,`${age}${age?' · ':''}${LOCALES[currentLocale]||LOCALES.es_intl}`);
@@ -94,8 +96,8 @@
   async function loadLocale(){
     try{
       const api=window.LearningAPI; if(!api?.client||!api.user) return;
-      const {data,error}=await api.client.from('accounts').select('content_locale').single(); if(error) throw error;
-      currentLocale=data?.content_locale||'es_intl';
+      await api.loadContentLocale();
+      currentLocale=api.effectiveLocale();
       const sel=$('#v16ContentLocale'); if(sel && sel.value!==currentLocale) sel.value=currentLocale;
       setEyebrow();
     }catch(e){console.warn('V16 locale load',e);}
@@ -105,17 +107,16 @@
     const sel=$('#v16ContentLocale'); if(sel) sel.disabled=true;
     try{
       const api=window.LearningAPI; if(!api?.client||!api.user) throw new Error('Sesión no disponible');
-      const {error}=await api.client.from('accounts').update({content_locale:locale}).eq('user_id',api.user.id); if(error) throw error;
-      currentLocale=locale; setEyebrow(); toast(`Contenido adaptado a: ${LOCALES[locale]}`);
+      currentLocale=await api.saveContentLocale(locale); setEyebrow(); toast(`Contenido adaptado a: ${LOCALES[currentLocale]}`);
     }catch(e){console.warn('V16 locale save',e);toast('No se pudo guardar la preferencia regional.');await loadLocale();}
     finally{if(sel) sel.disabled=false;}
   }
 
   function addLocaleControl(){
-    const panel=$('.profile-panel'); if(!panel||$('#v16LocalePanel')) return;
+    const panel=$('#sidebarLocalePlaceholder'); if(!panel||$('#v16LocalePanel')) return;
     const wrap=document.createElement('div'); wrap.id='v16LocalePanel'; wrap.className='v16-locale-panel';
     wrap.innerHTML=`<label for="v16ContentLocale">VARIANTE DE ESPAÑOL</label><select id="v16ContentLocale">${Object.entries(LOCALES).map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select><span class="v16-locale-note">Se aplica a los ejemplos y al vocabulario de todos los perfiles de esta cuenta.</span>`;
-    panel.insertAdjacentElement('afterend',wrap);
+    panel.appendChild(wrap);
     $('#v16ContentLocale').addEventListener('change',e=>saveLocale(e.target.value)); loadLocale();
   }
 
@@ -239,7 +240,7 @@
       metrics.forEach((m,i)=>{const row=6+i;sum.getCell(`A${row}`).value=m[0];sum.getCell(`B${row}`).value=m[1];sum.getCell(`A${row}`).font={bold:true,color:{argb:dark}};sum.getCell(`B${row}`).font={bold:true,size:14,color:{argb:green}};});
       sum.getCell('B8').numFmt='0%';sum.getColumn('A').width=27;sum.getColumn('B').width=18;for(let i=3;i<=8;i++)sum.getColumn(i).width=15;
       sum.getCell('D5').value='NIVELES ACTUALES';sum.mergeCells('D5:F5');sum.getCell('D5').font={bold:true,color:{argb:white}};sum.getCell('D5').fill={type:'pattern',pattern:'solid',fgColor:{argb:dark}};
-      const levels=prof.progress?.levels||{};let rr=6;Object.entries(levels).forEach(([k,v])=>{sum.getCell(`D${rr}`).value=SUBJECT_LABELS[k]||k;sum.getCell(`E${rr}`).value=`Nivel ${v}`;rr++;});
+      const levels=prof.progress?.levels||{};let rr=6;Object.entries(levels).filter(([k])=>window.Curriculum.visible([k],window.AgeStages.route(prof)).length).forEach(([k,v])=>{sum.getCell(`D${rr}`).value=SUBJECT_LABELS[k]||k;sum.getCell(`E${rr}`).value=`Nivel ${v}`;rr++;});
       const chart=chartDataUrl(sess.map(s=>`S${s.num}`),sess.map(s=>s.acc));const img=wb.addImage({base64:chart,extension:'png'});sum.addImage(img,{tl:{col:0,row:12},ext:{width:780,height:278}});
       sum.getRow(12).height=20;
       [sum,evo,detail].forEach(ws=>{ws.properties.defaultRowHeight=20;ws.eachRow(row=>row.eachCell(cell=>{cell.border={bottom:{style:'hair',color:{argb:'D9E1D9'}}};}));});

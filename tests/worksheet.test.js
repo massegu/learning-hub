@@ -1,0 +1,301 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const docx = require('docx');
+const JSZip = require('jszip');
+const policy = require('../js/content-policy');
+const early = require('../js/early-content');
+const model = require('../js/activity-model');
+const locale = require('../js/locale-content');
+const art = require('../js/stimulus-art');
+const selection = require('../js/worksheet-selection');
+const child = {id:'child',name:'Sol',age_band:'primary',progress:{ageRoute:'early'}};
+function harness() {
+  // JSZip uses FileReader for browser Blobs. Node has Blob but no FileReader;
+  // normalize that boundary while retaining the real ZIP implementation.
+  class NodeZip extends JSZip {
+    file(name,data,...rest) {
+      return super.file(name,data instanceof Blob ? data.arrayBuffer().then(b=>new Uint8Array(b)) : data,...rest);
+    }
+  }
+  const blobs=new Map(), downloads=[];
+  const document={body:{appendChild(){}},createElement:()=>({remove(){},click(){downloads.push({name:this.download,blob:blobs.get(this.href)});}})};
+  const context={window:{docx,JSZip:NodeZip,ContentPolicy:policy,ActivityModel:model,LocaleContent:locale,StimulusArt:art},document,URL:{createObjectURL:b=>{const id=String(blobs.size);blobs.set(id,b);return id;},revokeObjectURL(){}},setTimeout(){},Date,console,Uint8Array,Blob};
+  vm.runInNewContext(fs.readFileSync(require.resolve('../js/docx.js'),'utf8'),context);
+  return {generator:context.window.WorksheetGenerator,downloads,context};
+}
+async function xml(blob) {
+  const zip=await JSZip.loadAsync(await blob.arrayBuffer());
+  return zip.file('word/document.xml').async('string');
+}
+function textNodes(xml) {
+  return [...xml.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map(m=>m[1].replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&apos;/g,"'"));
+}
+function assertAnswerable(nodes, items, profile) {
+  for (let i=0;i<items.length;i++) {
+    const begin=nodes.indexOf(`ACTIVIDAD ${i+1}`), end=i+1<items.length?nodes.indexOf(`ACTIVIDAD ${i+2}`):nodes.length;
+    const block=nodes.slice(begin,end);
+    const projection=model.printable(locale.localizeItem(items[i],locale.effective(profile)),profile);
+    const q=block.indexOf(projection.question);
+    assert.ok(q>0,'question must follow stimulus');
+    for(const stimulus of projection.stimulus) {
+      const values=stimulus.type==='text'?[stimulus.text]:stimulus.type==='list'?stimulus.items:stimulus.rows.flat();
+      for(const value of values) {
+        const visible=items[i].type==='memoryReveal'&&art.forLabel(value,items[i].lexicalSenses)?model.memoryLabel(value):value;
+        assert.ok(block.slice(0,q).some(s=>s===visible||/^\d+\. /.test(s)&&s.endsWith(visible)),`missing stimulus: ${value}`);
+      }
+    }
+    for(const option of projection.options) assert.ok(block.some(s=>s.endsWith(`. ${option}`)),`missing option: ${option}`);
+    for(const token of projection.tokens) assert.ok(block.some(s=>/^\d+\. /.test(s)&&s.endsWith(token)),`missing order token: ${token}`);
+  }
+}
+
+test('real DOCX export includes every 6-7 stimulus before its question and all response choices', async () => {
+  const {generator,downloads}=harness();
+  const items=policy.early.subjects.flatMap(domain=>{
+    const bank=early.pool(domain,2), mechanics=[...new Set(bank.map(it=>it.ageProfile.mechanic))];
+    return mechanics.map(mechanic=>bank.find(it=>it.ageProfile.mechanic===mechanic));
+  });
+  await generator.generate([items],child);
+  assert.equal(downloads.length,1);assert.match(downloads[0].name,/LearningLab_6-7_.*_ficha_01\.docx$/);
+  const document=await xml(downloads[0].blob);
+  assertAnswerable(textNodes(document),items,child);
+  assert.ok(document.includes('<w:tbl>'), 'tables must remain tables');
+  assert.ok(document.includes('w:val="28"'), '6-7 needs larger readable text');
+});
+
+test('counting DOCX has exactly the required points without numbering, bullets or duplicate pictures',async()=>{
+  for(const level of [1,2,3]){
+    const {generator,downloads}=harness();const it=early.pool('division',level).find(it=>it.ageProfile.family==='division-0');
+    await generator.generate([[it]],child);
+    const document=await xml(downloads[0].blob),nodes=textNodes(document),before=nodes.slice(0,nodes.indexOf(it.q));
+    assert.equal(before.filter(x=>x==='●').length,Number(it.a));
+    assert.ok(!document.includes('w:numPr'));
+    assert.ok(!before.some(x=>/^\d+\.\s*●/.test(x)));
+    assert.ok(document.includes('w:val="40"'));
+  }
+});
+
+test('local pictorial stimuli embed matching PNGs and retain every label before the question',async()=>{
+  const {generator,downloads}=harness();
+  const it=early.pool('memory',1).find(it=>it.ageProfile.mechanic==='rememberObjects');
+  await generator.generate([[it]],child);
+  const zip=await JSZip.loadAsync(await downloads[0].blob.arrayBuffer());
+  const media=Object.values(zip.files).filter(f=>f.name.startsWith('word/media/')&&!f.dir);
+  assert.ok(media.length>=1);
+  const bytes=await Promise.all(media.map(f=>f.async('uint8array')));
+  for(const value of it.stimulus[0].items){const key=art.forLabel(value);assert.ok(bytes.some(data=>Buffer.from(data).equals(Buffer.from(art.png(key)))));}
+  assertAnswerable(textNodes(await zip.file('word/document.xml').async('string')),[it],child);
+});
+
+test('legacy memory associations and reading passages remain answerable in real DOCX XML', async () => {
+  const {generator,downloads}=harness();
+  const items=[
+    {type:'memoryReveal',memoryContent:[{person:'Mar',detail:'azul'},{person:'Sol',detail:'verde'}],memoryQuestion:'¿Qué color tenía Mar?',opts:['azul','verde'],a:'azul'},
+    {type:'standard',title:'La cesta',text:'La cesta está en la cocina.',q:'¿Dónde está la cesta?',opts:['cocina','patio'],a:'cocina'},
+    {type:'standard',model:'círculo · estrella',rows:[['círculo','estrella'],['estrella','círculo']],q:'¿Qué fila es igual?',opts:['1','2'],a:'1'},
+  ];
+  const profile={name:'Older',age_band:'teen'};
+  await generator.generate([items],profile);
+  assertAnswerable(textNodes(await xml(downloads[0].blob)),items,profile);
+});
+
+test('direct local and remote DOCX exports inherit all seven account locales despite a stale profile locale', async () => {
+  for(const key of ['es_es','es_mx','es_co','es_ar','es_cl','es_pa','es_cr'])for(const band of ['early','teen']) {
+    const {generator,downloads,context}=harness();
+    context.window.LearningAPI={contentLocale:key};
+    const profile={...child,locale:'es_es',...(band==='teen'?{age_band:'teen',progress:{}}:{})};
+    const items=band==='early'?policy.early.subjects.flatMap(domain=>{
+      const bank=early.pool(domain);
+      return [...new Set(bank.map(it=>it.ageProfile.family))].map(f=>bank.find(it=>it.ageProfile.family===f));
+    }):require('./locale-fixtures')();
+    await generator.generate([items],profile);
+    const nodes=textNodes(await xml(downloads[0].blob));
+    assertAnswerable(nodes,items,{...profile,contentLocale:key});
+    if(key!=='es_es')assert.ok(!/\b(?:coge|grifo|bañador|ordenador|zumo|estáis)\b/iu.test(nodes.join(' ')),key);
+  }
+});
+
+test('exporter rejects a missing locale gate or a batch from a different country before downloading',async()=>{
+  const {generator,downloads,context}=harness();
+  const item=locale.localizeItem(early.pool('reading')[0],'es_mx');
+  await assert.rejects(generator.generate([[item]],{...child,contentLocale:'es_ar'}),/otra variante/);
+  delete context.window.LocaleContent;
+  await assert.rejects(generator.generate([[early.pool('reading')[0]]],child),/adaptador regional/);
+  assert.equal(downloads.length,0);
+});
+
+test('foreign-currency lessons preserve amounts and explicit context through real DOCX projection',async()=>{
+  const {generator,downloads}=harness();
+  const raw={domain:'applied',currencyContext:'foreign',scenario:'En un viaje a España, el pan cuesta 2 euros.',q:'¿Cuánto cuesta el pan?',opts:['2 euros','3 euros'],a:'2 euros'};
+  const profile={name:'Viaje',age_band:'teen',locale:'es_mx'};
+  await generator.generate([[raw]],profile);
+  const nodes=textNodes(await xml(downloads[0].blob));
+  assertAnswerable(nodes,[raw],profile);
+  assert.ok(nodes.some(s=>s.includes('2 euros')));
+});
+
+test('ZIP versions contain complete documents with distinct names and complete stimuli', async () => {
+  const {generator,downloads}=harness();
+  const p=structuredClone(child);
+  const versions=[early.select(p,['reading','memory','executive'],12,1),early.select(p,['attention','applied'],12,2)];
+  await generator.generate(versions,p);
+  assert.equal(downloads.length,1);assert.match(downloads[0].name,/_fichas.zip$/);
+  const zip=await JSZip.loadAsync(await downloads[0].blob.arrayBuffer());
+  const names=Object.keys(zip.files);assert.equal(names.length,2);
+  assert.match(names[0],/_ficha_01.docx$/);assert.match(names[1],/_ficha_02.docx$/);
+  for(let i=0;i<2;i++) {
+    const nested=await JSZip.loadAsync(await zip.file(names[i]).async('uint8array'));
+    assertAnswerable(textNodes(await nested.file('word/document.xml').async('string')),versions[i],p);
+  }
+});
+
+test('replaced mixed-domain candidates export complete single DOCX and ZIP versions in every country',async()=>{
+  for(const country of ['es_es','es_mx','es_co','es_ar','es_cl','es_pa','es_cr']){
+    const p={...structuredClone(child),contentLocale:country},versions=[];
+    for(let v=0;v<2;v++){
+      const bank=early.select(p,['reading','memory','executive','attention','applied'],10,2);
+      const invalid={...bank[0],stimulus:[]};
+      const result=await selection.collect({initial:{items:[invalid,...bank.slice(1)]},profile:p,country,domains:['reading','memory','executive','attention','applied'],count:10,
+        fetchMore:async()=>({items:[bank[0],bank[1]]})});
+      assert.equal(result.rejected,1);assert.equal(new Set(result.items.map(it=>it.semanticKey)).size,10);
+      versions.push(result.items);
+    }
+    const single=harness();await single.generator.generate([versions[0]],p);
+    assertAnswerable(textNodes(await xml(single.downloads[0].blob)),versions[0],p);
+    const batch=harness();await batch.generator.generate(versions,p);
+    const zip=await JSZip.loadAsync(await batch.downloads[0].blob.arrayBuffer());
+    const names=Object.keys(zip.files);assert.equal(names.length,2);
+    for(let v=0;v<2;v++){
+      const document=await JSZip.loadAsync(await zip.file(names[v]).async('uint8array'));
+      assertAnswerable(textNodes(await document.file('word/document.xml').async('string')),versions[v],p);
+    }
+  }
+});
+
+test('an invalid later version prevents every download and never fabricates a memory stimulus', async () => {
+  const {generator,downloads}=harness();
+  const invalid={type:'memoryReveal',memoryContent:[],memoryQuestion:'¿Qué había en la mochila?',opts:['el libro','la pelota'],a:'el libro'};
+  await assert.rejects(generator.generate([[early.pool('reading')[0]],[invalid]],child));
+  assert.equal(downloads.length,0);assert.deepEqual(invalid.memoryContent,[]);
+});
+
+test('old renderer upgrades cannot replace the canonical integrity renderer', () => {
+  const {generator,context}=harness();
+  context.window.addEventListener=()=>{};
+  for (const file of ['v16_3.js','v16_4.js']) {
+    let source=fs.readFileSync(require.resolve(`../js/${file}`),'utf8');
+    const functionName=file==='v16_3.js'?'worksheetGeneratorV163':'installWorksheetGenerator';
+    source=source.replace(/\}\)\(\);\s*$/,`window.tryLegacy=${functionName};})();`);
+    vm.runInNewContext(source,context);
+    context.window.tryLegacy();
+    assert.equal(context.window.WorksheetGenerator,generator);
+  }
+  assert.ok(!fs.readFileSync(require.resolve('../js/config.js'),'utf8').includes('v16_17.js'));
+});
+
+test('document worksheets embed each original PNG once without duplicating its transcript as visible text',async()=>{
+ const documents=require('../js/document-library');
+ const {generator,downloads,context}=harness();context.window.DocumentLibrary=documents;
+ context.fetch=async path=>({ok:true,arrayBuffer:async()=>{const b=fs.readFileSync(require('node:path').join(__dirname,'..',path));return b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength);}});
+ const items=documents.pool('teen','attention',1);
+ await generator.generate([items],{name:'Reviewer',age_band:'teen'});
+ assert.equal(downloads.length,1);
+ const zip=await JSZip.loadAsync(await downloads[0].blob.arrayBuffer());
+ const media=await Promise.all(Object.values(zip.files).filter(f=>f.name.startsWith('word/media/')&&!f.dir).map(f=>f.async('nodebuffer')));
+ const xml=await zip.file('word/document.xml').async('string');
+ for(const doc of Object.values(documents.documents)){
+  const original=fs.readFileSync(require('node:path').join(__dirname,'..',doc.path));assert.ok(media.some(bytes=>bytes.equals(original)),doc.title);
+  assert.ok(xml.includes(doc.title));
+  const nodes=textNodes(xml);for(const block of doc.transcript)for(const text of block.type==='text'?[block.text]:block.rows.flat())assert.ok(!nodes.includes(text),'document transcript should not be printed again: '+text);
+ }
+ assert.ok(!xml.includes('Contenido del documento visual:'));
+ assert.ok(!textNodes(xml).includes('Ver versión en texto'));
+ const failing=harness();failing.context.window.DocumentLibrary=documents;failing.context.fetch=async()=>({ok:false});
+ await assert.rejects(()=>failing.generator.generate([items],{name:'Reviewer',age_band:'teen'}),/cargar el documento/);assert.equal(failing.downloads.length,0);
+});
+
+test('worksheet headers and stimulus panels use the selected age-band palette',async()=>{
+ const cases=[['early','B7453E','FFF0E8'],['junior','536C3A','EEF3E7'],['primary','405481','EAF0F8'],['middle','4B538A','F0F1FA'],['teen','4E45AC','EEEBFC']];
+ for(const [band,accent,soft] of cases){
+  const {generator,downloads}=harness(),profile={name:'Perfil',age_band:band,...(band==='early'?{progress:{ageRoute:'early'}}:{})};
+  const item=band==='early'?early.pool('reading',1)[0]:{q:'¿Qué opción corresponde?',opts:['A','B'],a:'A',stimulus:[{type:'text',text:'Lee la pista.'}]};
+  await generator.generate([[item]],profile);
+  const document=await xml(downloads[0].blob);
+  assert.ok(document.includes(`w:fill="${accent}"`),`${band} needs its age-band heading color`);
+  assert.ok(document.includes(`w:fill="${soft}"`),`${band} needs its age-band panel color`);
+ }
+});
+
+test('late-invalid candidates are replaced at the real exporter boundary for single and ZIP in all countries',async()=>{
+ for(const country of ['es_es','es_mx','es_co','es_ar','es_cl','es_pa','es_cr'])for(const versions of [1,2]){
+  const {generator,downloads,context}=harness();context.window.WorksheetSelection=selection;
+  const valid=n=>({id:'v'+n,domain:n%2?'attention':'memory',type:'standard',requiresStimulus:true,q:'¿Qué número aparece en la tarjeta?',stimulus:[{type:'text',text:'Tarjeta '+n}],a:String(n),opts:[String(n),String(n+1)]});
+  const profile={name:'Revisión',age_band:'teen',contentLocale:country};
+  const initial=Array.from({length:versions},(_,v)=>[{...valid(v*10),stimulus:[]},valid(v*10+1)]);let calls=0;
+  await generator.generate(initial,profile,{domains:['attention','memory'],fetchMore:async({version})=>{calls++;return {items:[valid(version*10+2)]};}});
+  assert.equal(calls,versions);assert.equal(downloads.length,1);
+  const documents=versions===1?[downloads[0].blob]:await (async()=>{const zip=await JSZip.loadAsync(await downloads[0].blob.arrayBuffer());return Promise.all(Object.values(zip.files).filter(f=>!f.dir).map(async f=>new Blob([await f.async('uint8array')])));})();
+  for(let v=0;v<versions;v++){
+   const nodes=textNodes(await xml(documents[v]));assert.ok(nodes.includes('Tarjeta '+(v*10+1)));assert.ok(nodes.includes('Tarjeta '+(v*10+2)));
+   assert.equal(nodes.filter(x=>/^ACTIVIDAD \d+$/.test(x)).length,2);
+  }
+ }
+});
+test('export replacement preserves exhaustion and service errors, without partial downloads',async()=>{
+ for(const error of [null,new Error('Daily content limit reached')]){
+  const {generator,downloads,context}=harness();context.window.WorksheetSelection=selection;
+  const invalid={domain:'attention',q:'¿Qué aparece?',stimulus:[],opts:['A','B'],a:'A'};
+  await assert.rejects(()=>generator.generate([[invalid],[invalid]],{name:'R',age_band:'teen'},{domains:['attention'],fetchMore:async()=>{if(error)throw error;return {items:[invalid],exhausted:true};}}),error?/Daily content limit/:/suficientes actividades/);
+  assert.equal(downloads.length,0);
+ }
+});
+
+// Word is stricter than ZIP readers about required drawing properties. Inspect
+// real generated packages, including each document nested in a downloaded ZIP.
+test('single and ZIP DOCX drawings have unique ids, required names and internal image relationships',async()=>{
+ const {generator,downloads}=harness();
+ const bank=early.pool('memory',2).filter(it=>it.ageProfile.mechanic==='rememberObjects').slice(0,2);
+ for(const versions of [[bank],[bank,bank]]){
+  downloads.length=0;await generator.generate(versions,child);
+  const outer=await JSZip.loadAsync(await downloads[0].blob.arrayBuffer());
+  const packages=versions.length===1?[outer]:await Promise.all(Object.values(outer.files).filter(f=>!f.dir).map(async f=>JSZip.loadAsync(await f.async('uint8array'))));
+  for(const pkg of packages){
+   const xml=await pkg.file('word/document.xml').async('string');
+   const props=[...xml.matchAll(/<wp:docPr\b([^>]*)>/g)].map(m=>m[1]);assert.ok(props.length>1);
+   const ids=props.map(p=>p.match(/\bid="(\d+)"/)[1]);assert.equal(new Set(ids).size,ids.length);
+   for(const p of props)assert.match(p,/\bname="[^"]+"/);
+   const rels=await pkg.file('word/_rels/document.xml.rels').async('string');
+   for(const embed of xml.matchAll(/r:embed="([^"]+)"/g)){
+    const rel=[...rels.matchAll(/<Relationship\b([^>]+)>/g)].find(m=>m[1].includes(`Id="${embed[1]}"`));assert.ok(rel);
+    const target=rel[1].match(/Target="([^"]+)"/)[1];assert.ok(pkg.file('word/'+target));
+   }
+  }
+ }
+});
+
+test('mixed worksheets flow as ordinary body blocks without exercise-count page breaks or enclosing activity rows',async()=>{
+ const {generator,downloads}=harness();
+ const items=Array.from({length:12},(_,i)=>({id:'flow-'+i,domain:'attention',type:'standard',q:'¿Qué número aparece?',requiresStimulus:true,stimulus:[{type:'text',text:'Tarjeta '+i}],a:String(i),opts:[String(i),String(i+1)]}));
+ await generator.generate([items],{name:'Revisión',age_band:'teen'});
+ const document=await xml(downloads[0].blob);
+ assert.doesNotMatch(document,/<w:br[^>]*w:type="page"|<w:pageBreakBefore/);
+ const topLevelTitles=document.match(/<w:p><w:pPr><w:keepNext\/>[\s\S]*?<w:t[^>]*>ACTIVIDAD \d+<\/w:t>/g)||[];
+ assert.equal(topLevelTitles.length,items.length);
+ assertAnswerable(textNodes(document),items,{age_band:'teen'});
+});
+
+
+test('memory DOCX labels omit articles while image metadata retains canonical evidence',async()=>{
+ const {generator,downloads}=harness();
+ const item=require('../js/curriculum').pool('teen','memory',1).find(it=>it.mechanic==='memory_sequence');
+ const before=structuredClone(item);
+ await generator.generate([[item]],{age_band:'teen',progress:{ageRoute:'teen'}});
+ const source=await xml(downloads[0].blob),nodes=textNodes(source);
+ for(const value of item.stimulus.flatMap(b=>b.type==='list'?b.items:[])){
+  assert.ok(nodes.includes(model.memoryLabel(value)));
+  assert.ok(source.includes('description="'+value+'"')||source.includes('descr="'+value+'"'));
+ }
+ assert.deepEqual(item,before);
+});

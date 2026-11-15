@@ -1,9 +1,9 @@
 window.LH_CONFIG = {
   supabaseUrl: "https://duvdwsbzrivtxgeqvsln.supabase.co",
   supabaseKey: "sb_publishable_j-4ruiZ3xma1nNJHPoROHA_-iTvSLpZ",
-  stripePaymentLink: "https://buy.stripe.com/test_28E00lebW0T49RYb6R1ZS01",
-  stripePortalLink: "https://billing.stripe.com/p/login/test_7sYfZj7NyeJUc064It1ZS00",
   stripeMode: "test",
+  // Set only after the owner creates and verifies the support mailbox.
+  supportEmail: "learninghub2026@proton.me",
 };
 
 (function loadV16(){
@@ -16,8 +16,7 @@ window.LH_CONFIG = {
     ["js/v16_7.js","16.7.2"],
     ["js/v16_8.js","16.8.1"],
     ["js/v16_15.js","16.15.0"],
-    ["js/v16_16.js","16.16.0"],
-    ["js/v16_17.js","16.17.0"]
+    ["js/v16_16.js","16.16.0"]
   ];
   let i=0;
   const next=()=>{
