@@ -165,3 +165,27 @@
 #authGate .landing-account-note strong{color:#24314a}
 #authGate .landing-product-tag{border-color:#eadce8;color:#9a5382}
 @media(max-width:480px){#authGate.auth-gate{background:#f7f5f0}}
+
+
+/* GLIAX auth actions: ensure legacy global button rules never repaint them. */
+#authGate .auth-card .auth-actions #authSignIn.primary-btn{
+  background:#19243a!important;
+  border:1px solid #19243a!important;
+  color:#fff!important;
+  box-shadow:0 4px 0 #111929!important;
+}
+#authGate .auth-card .auth-actions #authSignIn.primary-btn:hover{
+  background:#303a57!important;border-color:#303a57!important;
+}
+#authGate .auth-card .auth-actions #authSignUp.secondary-btn{
+  background:#fff0f5!important;
+  border:1px solid #e9b7d0!important;
+  color:#a91f65!important;
+  box-shadow:none!important;
+}
+#authGate .auth-card .auth-actions #authSignUp.secondary-btn:hover{
+  background:#ffe1ed!important;
+}
+#authGate .auth-card .auth-actions button:focus-visible{
+  outline:3px solid #e6338b!important;outline-offset:3px;
+}
