@@ -1,0 +1,65 @@
+/* Public landing & sign-in gate: 2026 proposal. No application or auth logic changes. */
+#authGate.auth-gate{
+  display:flex;align-items:center;justify-content:center;overflow:auto;
+  background:radial-gradient(circle at 2% 100%,#d8e9e8 0,transparent 38%),
+    radial-gradient(circle at 90% 5%,#ebe8fb 0,transparent 35%),#f7f8fa;
+  padding:clamp(16px,3vw,48px);min-height:100dvh;
+}
+#authGate.auth-gate.hidden{display:none!important}
+#authGate .landing-wrap{width:min(1260px,100%);min-height:min(740px,calc(100dvh - 70px));display:grid;grid-template-columns:minmax(0,1.13fr) minmax(365px,.87fr);border:1px solid #dbe2e7;background:#fff;border-radius:28px;overflow:hidden;box-shadow:0 32px 100px rgba(32,55,70,.11)}
+#authGate .landing-story{position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:clamp(28px,4.1vw,62px);background:linear-gradient(152deg,#17394b 0%,#244e56 55%,#224c55 100%);color:#fff;isolation:isolate}
+#authGate .landing-story:before{content:"";position:absolute;z-index:-1;width:640px;height:640px;border:1px solid #ffffff2d;border-radius:50%;right:-340px;bottom:-330px;box-shadow:0 0 0 55px #ffffff0a,0 0 0 110px #ffffff07}
+#authGate .landing-brand{display:inline-flex;align-items:center;gap:13px;font-size:.86rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+#authGate .landing-mark{display:grid;place-items:center;width:42px;height:42px;background:#c9ede0;color:#1a4645;border-radius:13px;font-size:1.35rem;font-weight:900;letter-spacing:-.12em;padding-right:3px}
+#authGate .landing-story-main{margin:60px 0 50px}
+#authGate .landing-eyebrow{display:inline-flex;align-items:center;gap:8px;color:#c7e7e2;font-size:.78rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
+#authGate .landing-eyebrow:before{content:"";width:24px;height:2px;background:#a9d7cd}
+#authGate .landing-story h1{font-size:clamp(2.35rem,4.4vw,4.55rem);line-height:1.06;letter-spacing:-.052em;max-width:12ch;margin:25px 0 21px;font-weight:800;color:#fff}
+#authGate .landing-intro{font-size:1.03rem;line-height:1.7;color:#e0eeee;max-width:47ch;margin:0}
+#authGate .landing-preview{background:#ffffff14;border:1px solid #ffffff35;border-radius:22px;padding:21px;max-width:490px;backdrop-filter:blur(5px);box-shadow:0 14px 45px #0e2c3428}
+#authGate .landing-preview-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:17px;font-size:.81rem;color:#f2ffff;font-weight:750}
+#authGate .landing-preview-top span:last-child{font-size:.72rem;color:#d1e7e6;font-weight:600}
+#authGate .landing-preview-bars{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));align-items:end;gap:10px;height:90px}
+#authGate .landing-preview-bars span{height:var(--h);background:linear-gradient(0deg,#70b9bb,#d0f0dc);border-radius:8px 8px 4px 4px;opacity:.92}
+#authGate .landing-preview-footer{border-top:1px solid #ffffff2c;margin-top:15px;padding-top:14px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:.73rem;color:#e1eff0}
+#authGate .landing-features{display:flex;gap:13px 22px;flex-wrap:wrap;margin-top:24px;color:#deeeee;font-size:.77rem;font-weight:600}
+#authGate .landing-features span::before{content:"✓";display:inline-grid;place-items:center;margin-right:7px;width:19px;height:19px;border-radius:50%;background:#ffffff29;color:#d0f0dc;font-weight:900}
+#authGate .landing-signin{display:flex;flex-direction:column;justify-content:center;padding:clamp(28px,4vw,68px);min-width:0;background:linear-gradient(145deg,#fff,#fcfdfb)}
+#authGate .auth-card{width:100%;max-width:450px;padding:0;margin:auto;box-shadow:none;border:0;background:transparent}
+#authGate .landing-signin-eyebrow{color:#426a64;font-size:.75rem;font-weight:850;letter-spacing:.12em;text-transform:uppercase;margin:0 0 15px}
+#authGate .auth-card h2{font-size:clamp(1.8rem,2.4vw,2.4rem);letter-spacing:-.045em;line-height:1.16;color:#173b46;margin:0 0 14px}
+#authGate .landing-signin-intro{font-size:.94rem;color:#60717b;line-height:1.6;margin:0 0 27px}
+#authGate .auth-card label{display:block;margin:17px 0 7px;color:#23434c;font-size:.85rem;font-weight:760}
+#authGate .auth-card input{margin-top:7px;min-height:52px;background:#fff;border:1px solid #cad7d9;border-radius:12px;color:#173b46;font-size:.96rem}
+#authGate .auth-card input:focus-visible{outline:3px solid #87c4b750;outline-offset:1px;border-color:#398d84}
+#authGate .auth-actions{gap:11px;margin-top:23px;display:grid;grid-template-columns:1fr 1fr}
+#authGate .auth-actions button{min-height:51px;border-radius:12px;font-size:.91rem;font-weight:800;cursor:pointer}
+#authGate #authSignIn{background:#216c66;color:#fff;border:1px solid #216c66;box-shadow:none}
+#authGate #authSignIn:hover{background:#185952}
+#authGate #authSignUp{background:#f5faf7;color:#205f5b;border:1px solid #bbd9d0;box-shadow:none}
+#authGate #authSignUp:hover{background:#e8f3ed}
+#authGate #authForgotPassword{display:block;width:fit-content;margin:18px auto 0;background:none;border:none;color:#286d67;text-decoration:underline;text-underline-offset:3px;font-size:.81rem}
+#authGate #authMessage{font-size:.84rem;line-height:1.5;min-height:1.2em;margin:20px 0 0}
+#authGate .support-contact{font-size:.83rem;text-align:center}
+#authGate .landing-account-note{border-top:1px solid #e4ebea;margin-top:26px;padding-top:19px;font-size:.79rem;color:#64747c;line-height:1.58}
+#authGate .landing-account-note strong{color:#2c5960}
+@media(max-width:940px){
+ #authGate .landing-wrap{grid-template-columns:1fr;max-width:650px;min-height:auto}
+ #authGate .landing-story{padding:30px 34px}
+ #authGate .landing-story-main{margin:32px 0 25px}
+ #authGate .landing-story h1{font-size:clamp(2.1rem,6vw,3.4rem);max-width:15ch;margin:15px 0}
+ #authGate .landing-preview{display:none}
+ #authGate .landing-signin{padding:36px 34px}
+}
+@media(max-width:480px){
+ #authGate.auth-gate{padding:0;align-items:stretch}
+ #authGate .landing-wrap{border:0;border-radius:0;min-height:100dvh}
+ #authGate .landing-story{padding:24px 22px 25px}
+ #authGate .landing-story-main{margin:24px 0 12px}
+ #authGate .landing-story h1{font-size:2.15rem}
+ #authGate .landing-intro{font-size:.88rem;line-height:1.55}
+ #authGate .landing-features{margin-top:17px;gap:10px;font-size:.72rem}
+ #authGate .landing-signin{padding:28px 22px 38px}
+ #authGate .auth-actions{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){#authGate *{scroll-behavior:auto;transition:none!important}}
