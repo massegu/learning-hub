@@ -1,0 +1,54 @@
+/* GLIAX identity — scoped to app, preview branch only. The subject colors remain meaningful inside exercises. */
+#appShell[data-design]{
+  --bg:#f7f8fc;
+  --card:#fff;
+  --ink:#19243a;
+  --muted:#667084;
+  --line:#e5e7ef;
+  --nav:#19243a;
+  --accent:#d72c7c;
+  --accent-dark:#a91f65;
+  --accent-soft:#fff0f5;
+  --design-hero:linear-gradient(125deg,#19243a 0%,#28314c 68%,#493656 100%);
+  --design-hero-ink:#fff;
+}
+#appShell[data-design] .sidebar{
+  background:#19243a!important;
+  border-right:1px solid #343f58!important;
+}
+#appShell[data-design] .brand-badge{
+  background:#e6338b!important;
+  color:#fff!important;
+  border-radius:12px;
+}
+#appShell[data-design] .brand h1{color:#fff;letter-spacing:.12em}
+#appShell[data-design] .brand p{color:#dadce7}
+#appShell[data-design] .nav-item.active{
+  background:#e6338b25!important;
+  border-left-color:#ffd44f!important;
+}
+#appShell[data-design] .main-content{
+  background:#f7f8fc!important;
+}
+#appShell[data-design] .home-welcome .eyebrow{color:#b82770!important}
+#appShell[data-design] .topbar{border-bottom-color:#e4e7ef}
+#appShell[data-design] .primary-btn:not(.exercise-option):not(.task-answer):not(.answer-btn){
+  background:#19243a!important;
+  border-color:#19243a!important;
+  color:#fff!important;
+  box-shadow:0 3px 0 #10182a!important;
+}
+#appShell[data-design] .primary-btn:not(.exercise-option):not(.task-answer):not(.answer-btn):hover{
+  background:#303a57!important;
+  border-color:#303a57!important;
+}
+#appShell[data-design] :is(button,select,input,textarea):focus-visible{
+  outline:3px solid #e6338b80;
+  outline-offset:2px;
+}
+#appShell[data-design] .redesign-continue{border-color:#e2e4f0}
+#appShell[data-design] .score-chip{border-color:#ffffff28}
+#appShell[data-design] .home-welcome h3{color:#19243a}
+#appShell[data-design] .redesign-continue .primary-btn{background:#e6338b!important;border-color:#e6338b!important;box-shadow:0 3px 0 #a91f65!important}
+#appShell[data-design] .redesign-continue .primary-btn:hover{background:#be2570!important;border-color:#be2570!important}
+@media(prefers-reduced-motion:reduce){#appShell[data-design] *{transition-duration:0s!important}}
