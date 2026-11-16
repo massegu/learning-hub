@@ -1,0 +1,202 @@
+/* GLIAX identity — scoped to app, preview branch only. The subject colors remain meaningful inside exercises. */
+#appShell[data-design]{
+  --bg:#f7f8fc;
+  --card:#fff;
+  --ink:#19243a;
+  --muted:#667084;
+  --line:#e5e7ef;
+  --nav:#19243a;
+  --accent:#d72c7c;
+  --accent-dark:#a91f65;
+  --accent-soft:#fff0f5;
+  --design-hero:linear-gradient(125deg,#19243a 0%,#28314c 68%,#493656 100%);
+  --design-hero-ink:#fff;
+}
+#appShell[data-design] .sidebar{
+  background:#19243a!important;
+  border-right:1px solid #343f58!important;
+}
+#appShell[data-design] .brand-badge{
+  background:#e6338b!important;
+  color:#fff!important;
+  border-radius:12px;
+}
+#appShell[data-design] .brand h1{color:#fff;letter-spacing:.12em}
+#appShell[data-design] .brand p{color:#dadce7}
+#appShell[data-design] .nav-item.active{
+  background:#e6338b25!important;
+  border-left-color:#ffd44f!important;
+}
+#appShell[data-design] .main-content{
+  background:#f7f8fc!important;
+}
+#appShell[data-design] .home-welcome .eyebrow{color:#b82770!important}
+#appShell[data-design] .topbar{border-bottom-color:#e4e7ef}
+#appShell[data-design] .primary-btn:not(.exercise-option):not(.task-answer):not(.answer-btn){
+  background:#19243a!important;
+  border-color:#19243a!important;
+  color:#fff!important;
+  box-shadow:0 3px 0 #10182a!important;
+}
+#appShell[data-design] .primary-btn:not(.exercise-option):not(.task-answer):not(.answer-btn):hover{
+  background:#303a57!important;
+  border-color:#303a57!important;
+}
+#appShell[data-design] :is(button,select,input,textarea):focus-visible{
+  outline:3px solid #e6338b80;
+  outline-offset:2px;
+}
+#appShell[data-design] .redesign-continue{border-color:#e2e4f0}
+#appShell[data-design] .score-chip{border-color:#ffffff28}
+#appShell[data-design] .home-welcome h3{color:#19243a}
+#appShell[data-design] .redesign-continue .primary-btn{background:#e6338b!important;border-color:#e6338b!important;box-shadow:0 3px 0 #a91f65!important}
+#appShell[data-design] .redesign-continue .primary-btn:hover{background:#be2570!important;border-color:#be2570!important}
+@media(prefers-reduced-motion:reduce){#appShell[data-design] *{transition-duration:0s!important}}
+
+
+/* Brand surface tokens — GLIAX palette; retained as the last stylesheet. */
+:root{
+  --gliax-navy:#19243a;
+  --gliax-fuchsia:#e6338b;
+  --gliax-yellow:#ffd44f;
+  --gliax-coral:#f16b58;
+  --gliax-lavender:#aea7db;
+  --gliax-ivory:#f7f5f0;
+}
+
+/* PUBLIC LANDING — preserve the two-column structure and functional login. */
+#authGate.auth-gate{
+  background:radial-gradient(circle at 0% 100%,#efe9f7 0,transparent 42%),
+    radial-gradient(circle at 100% 0%,#fff0f5 0,transparent 40%),#f7f5f0!important;
+}
+#authGate .landing-wrap{
+  border-color:#dddde8;
+  box-shadow:0 28px 85px #19243a17;
+}
+#authGate .landing-story{
+  background:linear-gradient(145deg,#19243a 0%,#252d4a 64%,#453456 100%)!important;
+}
+#authGate .landing-mark{
+  background:#e6338b!important;
+  color:#fff!important;
+  letter-spacing:0!important;
+  padding-right:0!important;
+}
+#authGate .landing-eyebrow{color:#ffe1ee!important}
+#authGate .landing-eyebrow:before{background:#ffd44f!important}
+#authGate .landing-intro{color:#e7e4ef!important}
+#authGate .landing-signin{background:#fff!important}
+#authGate .landing-signin-eyebrow{color:#b3276c!important}
+#authGate .landing-signin h2{color:#19243a!important}
+#authGate .landing-signin-intro{color:#626b7f!important}
+#authGate .landing-product{box-shadow:0 18px 50px #10182a35}
+#authGate .landing-product-tag{color:#7a3771!important}
+#authGate .landing-activity-icon{
+  background:#fff0f5!important;
+  color:#be2774!important;
+}
+#authGate .landing-memory-card .landing-activity-icon{
+  background:#f0edff!important;
+  color:#6753a8!important;
+}
+#authGate .auth-card :is(input,select):focus-visible,
+#authGate .auth-card button:focus-visible{
+  outline:3px solid #e6338b66;
+  outline-offset:2px;
+}
+#authGate .auth-card .auth-actions #authSignIn.primary-btn{
+  background:#19243a!important;
+  color:#fff!important;
+  border-color:#19243a!important;
+}
+#authGate .auth-card .auth-actions #authSignIn.primary-btn:hover{
+  background:#303a57!important;
+}
+#authGate .auth-card .auth-actions #authSignUp.secondary-btn{
+  background:#fff0f5!important;
+  border-color:#f0b4ce!important;
+  color:#b3276c!important;
+}
+#authGate .auth-card .auth-actions #authSignUp.secondary-btn:hover{
+  background:#ffe1ee!important;
+}
+#authGate #authForgotPassword{color:#a92268!important}
+
+/* APPLICATION CHROME — consistent brand, retain age/domain exercise semantics. */
+#appShell[data-design] .sidebar{
+  box-shadow:8px 0 28px #19243a0d;
+}
+#appShell[data-design] .nav-item{
+  color:#e1e4ef;
+}
+#appShell[data-design] .nav-item:hover{
+  color:#fff;
+  background:#ffffff18;
+}
+#appShell[data-design] .nav-item.active{
+  color:#fff;
+  background:#e6338b30!important;
+  border-left-color:#ffd44f!important;
+}
+#appShell[data-design] .sidebar-profile{
+  background:#ffffff0e;
+  border-color:#ffffff30;
+}
+#appShell[data-design] .sidebar-profile label{
+  color:#dce0ec;
+}
+#appShell[data-design] .sidebar-profile select{
+  background:#fff;
+  color:#19243a;
+  border-color:#dfe3ed;
+}
+#appShell[data-design] .account-tools>summary{
+  color:#e6e8f2;
+}
+#appShell[data-design] .topbar h2{
+  color:#19243a;
+}
+#appShell[data-design] .topbar .eyebrow{
+  color:#9b2a69;
+}
+#appShell[data-design] .main-content .section-intro.card{
+  background:#fff;
+  border-color:#e3e5ef;
+}
+#appShell[data-design] .main-content .section-intro .pill{
+  background:#fff0f5;
+  color:#aa2365;
+  border-color:#f5d7e5;
+}
+#appShell[data-design] :is(#training,#progress,#sessionBuilder,#homework) .section-intro h3{
+  color:#19243a;
+}
+#appShell[data-design] .home-welcome p:not(.eyebrow){
+  color:#667084;
+}
+#appShell[data-design] .redesign-continue{
+  box-shadow:0 10px 27px #19243a0c;
+}
+#appShell[data-design] .activity-settings{
+  border-color:#e1e5ef;
+  background:#fff;
+}
+#appShell[data-design] .exercise-navigation{
+  color:#657088;
+}
+#appShell[data-design] .mode-switch button:focus-visible,
+#appShell[data-design] .secondary-btn:focus-visible{
+  outline:3px solid #e6338b80;
+  outline-offset:2px;
+}
+#appShell[data-design] .exercise-card.card{
+  box-shadow:0 8px 32px #19243a08;
+}
+#appShell[data-design] #progress .session-panel{
+  border-color:#e2e5ef;
+}
+@media(max-width:760px){
+  #appShell[data-design] .main-content{background:#f7f8fc!important}
+  #appShell[data-design] .sidebar{box-shadow:none}
+  #authGate .landing-story h1{letter-spacing:-.045em}
+}
