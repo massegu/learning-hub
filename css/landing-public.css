@@ -127,3 +127,41 @@
  #authGate .landing-progress-strip strong{font-size:.66rem}
  #authGate .landing-product-tag{font-size:.55rem}
 }
+
+
+/* GLIAX brand exploration: ink, ivory and disciplined energetic accents. */
+#authGate.auth-gate{background:radial-gradient(circle at 12% 18%,#fbe7ee 0,transparent 31%),radial-gradient(circle at 92% 82%,#eeeafd 0,transparent 36%),#f7f5f0}
+#authGate .landing-wrap{box-shadow:0 38px 110px #19243a20;border:1px solid #e9e5ea}
+#authGate .landing-story{background:#19243a;isolation:isolate}
+#authGate .landing-story::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 85% 12%,#e6338b17,transparent 28%),radial-gradient(circle at 0% 100%,#ffd44f12,transparent 33%);z-index:-1}
+#authGate .landing-mark{background:#e6338b!important;color:#fff!important;border-color:#e6338b!important;box-shadow:0 6px 18px #e6338b36}
+#authGate .landing-story h1{color:#fff}
+#authGate .landing-story h1::after{content:"";display:block;margin-top:18px;width:62px;height:6px;background:#ffd44f;border-radius:12px}
+#authGate .landing-intro{color:#d3d7e2}
+#authGate .landing-features span{color:#f6f4fa;border-color:#ffffff2f}
+#authGate .landing-features span::before{background:#ffd44f}
+#authGate .landing-product{background:#f7f5f0;border-color:#ffffffa8;box-shadow:0 30px 80px #080e2659}
+#authGate .landing-product-chrome{border-bottom-color:#ede9ee}
+#authGate .landing-product-overline{color:#8b6188}
+#authGate .landing-activity-icon{background:#ffe3ef;color:#d02c7b}
+#authGate .landing-memory-card .landing-activity-icon{background:#eeeafb;color:#7362b8}
+#authGate .landing-activity-visual span{background:#fff0f5;color:#d02c7b}
+#authGate .landing-activity-visual span:nth-child(3n){background:#fff3c8;color:#8e6414}
+#authGate .landing-memory-visual span{background:#f0edfb;color:#6a5bab}
+#authGate .landing-memory-visual span:last-child{background:#ffe1ec;color:#c32671}
+#authGate .landing-spark svg path:first-child{stroke:#e6338b}
+#authGate .landing-spark svg path:last-child{fill:#e6338b}
+#authGate .landing-signin{background:#fffefa}
+#authGate .landing-signin-eyebrow{color:#bd2d70}
+#authGate .auth-card h2{color:#19243a}
+#authGate .auth-card label{color:#263049}
+#authGate .auth-card input{border-color:#dddde7}
+#authGate .auth-card input:focus-visible{border-color:#b72a70;outline-color:#e6338b40}
+#authGate #authSignIn{background:#19243a;border-color:#19243a}
+#authGate #authSignIn:hover{background:#303a57;border-color:#303a57}
+#authGate #authSignUp{background:#fff0f5;border-color:#e9b7d0;color:#a91f65}
+#authGate #authSignUp:hover{background:#ffe1ed}
+#authGate #authForgotPassword{color:#a92668}
+#authGate .landing-account-note strong{color:#24314a}
+#authGate .landing-product-tag{border-color:#eadce8;color:#9a5382}
+@media(max-width:480px){#authGate.auth-gate{background:#f7f5f0}}
