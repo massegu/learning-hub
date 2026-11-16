@@ -9,20 +9,43 @@
   <link rel="stylesheet" href="css/age-designs.css" />
   <link rel="stylesheet" href="css/ui-refresh.css" />
   <link rel="stylesheet" href="css/redesign-2026.css" />
+  <link rel="stylesheet" href="css/landing-public.css" />
 </head>
 <body>
   <div id="authGate" class="auth-gate hidden">
-    <div class="auth-card card">
-      <span class="pill">LEARNING HUB</span>
-      <h2>Accede a tu espacio de entrenamiento</h2>
-      <p>Si es tu primera vez, escribe tu email y elige una contraseña de al menos 8 caracteres. Después, pulsa <strong>Crear cuenta</strong> y confirma el enlace que te enviaremos por correo.</p>
-      <p>Si ya tienes cuenta, introduce esos datos y pulsa <strong>Entrar</strong>.</p>
-      <label>Email<input id="authEmail" type="email" autocomplete="email" placeholder="tu@email.com" /></label>
-      <label>Contraseña<input id="authPassword" type="password" autocomplete="current-password" placeholder="Tu contraseña" /></label>
-      <div class="auth-actions"><button id="authSignIn" type="button" class="primary-btn">Entrar</button><button id="authSignUp" type="button" class="secondary-btn">Crear cuenta</button></div>
-      <button id="authForgotPassword" class="auth-link" type="button">He olvidado mi contraseña</button>
-      <p id="authMessage" class="muted" role="status" aria-live="polite"></p>
-      <p class="support-contact hidden"><a data-support-link>Ayuda y contacto</a></p>
+    <div class="landing-wrap">
+      <section class="landing-story" aria-labelledby="landingTitle">
+        <div class="landing-brand"><span class="landing-mark" aria-hidden="true">L</span> LEARNING HUB</div>
+        <div class="landing-story-main">
+          <span class="landing-eyebrow">Plataforma de entrenamiento</span>
+          <h1 id="landingTitle">Aprender es avanzar, a tu ritmo.</h1>
+          <p class="landing-intro">Entrenamiento cognitivo y aprendizaje en un mismo espacio. Elige las habilidades que quieres trabajar, ajusta las actividades y sigue la evolución de cada perfil.</p>
+          <div class="landing-features" aria-label="Funciones de la plataforma">
+            <span>Actividades por edades</span>
+            <span>Opciones para profesionales</span>
+            <span>Seguimiento del progreso</span>
+          </div>
+        </div>
+        <div class="landing-preview" aria-hidden="true">
+          <div class="landing-preview-top"><strong>Tu progreso, de un vistazo</strong><span>Vista ilustrativa</span></div>
+          <div class="landing-preview-bars"><span style="--h:40%"></span><span style="--h:67%"></span><span style="--h:53%"></span><span style="--h:80%"></span><span style="--h:65%"></span><span style="--h:94%"></span></div>
+          <div class="landing-preview-footer"><span>Actividades · Entrenamiento · Evolución</span><span>Avanza a tu ritmo</span></div>
+        </div>
+      </section>
+      <section class="landing-signin" aria-labelledby="loginTitle">
+        <div class="auth-card card">
+          <p class="landing-signin-eyebrow">Tu espacio personal</p>
+          <h2 id="loginTitle">Bienvenido de nuevo.</h2>
+          <p class="landing-signin-intro">Inicia sesión para continuar con tus actividades o crea una cuenta para empezar.</p>
+          <label>Email<input id="authEmail" type="email" autocomplete="email" placeholder="tu@email.com" /></label>
+          <label>Contraseña<input id="authPassword" type="password" autocomplete="current-password" placeholder="Tu contraseña" /></label>
+          <div class="auth-actions"><button id="authSignIn" type="button" class="primary-btn">Entrar</button><button id="authSignUp" type="button" class="secondary-btn">Crear cuenta</button></div>
+          <button id="authForgotPassword" class="auth-link" type="button">He olvidado mi contraseña</button>
+          <p id="authMessage" class="muted" role="status" aria-live="polite"></p>
+          <p class="support-contact hidden"><a data-support-link>Ayuda y contacto</a></p>
+          <p class="landing-account-note"><strong>¿Es tu primera vez?</strong> Introduce tu correo y una contraseña de al menos 8 caracteres, pulsa «Crear cuenta» y confirma el enlace que recibirás por email.</p>
+        </div>
+      </section>
     </div>
   </div>
   <dialog id="passwordDialog" class="password-dialog" aria-labelledby="passwordTitle">
