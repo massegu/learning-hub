@@ -6,12 +6,19 @@ test('independent profile starts fresh and does not mutate the tracked learner',
  s.progress.history=[{correct:false}];assert.equal(p.progress.history[0].correct,true);
  const minimized=privacy.minimize(p.progress);assert.equal(minimized.interactiveObservations[0].description,undefined);assert.equal(p.progress.interactiveObservations[0].description,'private text');
 });
+test('new profile codes use the generated non-name format at the privacy and API boundaries',async()=>{
+ assert.match(privacy.newCode(),/^P-[A-F0-9]{8}$/);assert.equal(privacy.isCode('P-ABCDEF09'),true);assert.equal(privacy.isCode('P-ZZZZ0001'),true);assert.equal(privacy.isCode('María'),false);assert.equal(privacy.isCode('P-024'),false);
+ let inserted=null;const client={auth:{},from(){const q={insert(value){inserted=value;return q},select(){return q},single(){return Promise.resolve({data:{...inserted,id:'created'}})}};return q;}};
+ const ctx={structuredClone,PrivacyControls:privacy,LH_CONFIG:{},supabase:{createClient:()=>client}};ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync('js/api.js','utf8'),ctx);const api=ctx.LearningAPI;api.user={id:'owner'};
+ await assert.rejects(api.createProfile('María','primary'),/código generado/);assert.equal(inserted,null);
+ const created=await api.createProfile('p-abcdef09','junior');assert.equal(created.name,'P-ABCDEF09');assert.equal(inserted.account_id,'owner');
+});
 test('API suppresses independent writes and retains ambiguous result attempts for safe retries',async()=>{
  const writes=[],values=new Map(),localStorage={get length(){return values.size},key:i=>[...values.keys()][i]??null,getItem:k=>values.get(k)||null,setItem:(k,v)=>values.set(k,String(v)),removeItem:k=>values.delete(k)},client={auth:{},from(table){const q={select(){return q},eq(){return q},single(){return Promise.resolve({data:{progress:{}}})},update(value){writes.push({table,value});return q},upsert(value){writes.push({table,value});return q},then(resolve){return Promise.resolve({data:null}).then(resolve)}};return q;}};
  const ctx={structuredClone,PrivacyControls:privacy,LH_CONFIG:{},localStorage,crypto:{randomUUID:()=> 'aaaaaaaa-1111-4111-8111-111111111111'},supabase:{createClient:()=>client}};ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync('js/api.js','utf8'),ctx);const api=ctx.LearningAPI;api.user={id:'owner'};
  api.setIndependent('learner');await api.saveProgress('learner',{history:[]});await api.saveResult('learner',{correct:true});assert.equal(writes.length,0);
  api.setIndependent(null);await api.saveProgress('learner',{_sessionOnly:true,history:[]});await api.saveResult('learner',{sessionOnly:true,correct:true});assert.equal(writes.length,0);
- await api.saveProgress('learner',{interactiveObservations:[{description:'private text',report:'described'}]});assert.equal(writes.length,1);assert.equal(writes[0].value.progress.interactiveObservations[0].description,undefined);
+ await api.saveProgress('learner',{interactiveObservations:[{description:'private text',report:'described'}]});assert.equal(writes.length,1);assert.equal(writes[0].value.progress.interactiveObservations[0].description,undefined);await api.saveResult('learner',{correct:null,ts:'2026-11-06T00:00:00Z',sessionId:'session-a',detail:'{\"schema\":\"gliax.exercise-metrics.v1\"}'});assert.equal(writes[1].value.correct,null,'unscored guided-wait intervals must stay null in the persisted result');
  let attempts=0;client.from=table=>{const q={upsert(){return q},then(resolve){attempts++;return Promise.resolve(attempts===1?{error:new Error('ambiguous network response')}:{data:null,error:null}).then(resolve)}};return q;};
  await assert.rejects(api.saveResult('learner',{correct:true,ts:'2026-11-06T00:00:00Z'}),/ambiguous network response/);assert.equal(attempts,1,'the client performs one initial attempt and keeps its ID for a safe retry');
  assert.equal(api.pendingResults('learner').length,1);assert.equal((await api.retryPendingResults('learner')).confirmed,1);assert.equal(attempts,2);

@@ -113,7 +113,7 @@
   API.isIndependent=id=>API.independentProfile===id;
   API.signOut=async()=>{API.setIndependent(null);await client.auth.signOut();API.session=null;API.user=null;API.profileLocale=null;API.setContentLocale(null)};
   API.listProfiles=async()=>{const {data,error}=await client.from('learner_profiles').select('id,name,age_band,locale,progress,created_at').order('created_at');if(error)throw error;return (data||[]).map(p=>{p.progress=window.PrivacyControls.minimize(p.progress);return p;})};
-  API.createProfile=async(name,age_band,initial_level=1,locale='es_intl')=>{const younger=['early','junior'].includes(age_band);const storedBand=younger?'primary':age_band;const progress={initialLevel:Number(initial_level)||1,...(younger?{ageRoute:age_band}:{})};const {data,error}=await client.from('learner_profiles').insert({account_id:API.user.id,name,age_band:storedBand,locale,progress}).select('id,name,age_band,locale,progress,created_at').single();if(error)throw error;return data};
+  API.createProfile=async(name,age_band,initial_level=1,locale='es_intl')=>{name=String(name||'').trim().toUpperCase();if(!window.PrivacyControls.isCode(name))throw new Error('Usa el código generado: P- seguido de 8 letras o números.');const younger=['early','junior'].includes(age_band);const storedBand=younger?'primary':age_band;const progress={initialLevel:Number(initial_level)||1,...(younger?{ageRoute:age_band}:{})};const {data,error}=await client.from('learner_profiles').insert({account_id:API.user.id,name,age_band:storedBand,locale,progress}).select('id,name,age_band,locale,progress,created_at').single();if(error)throw error;return data};
   API.updateProfileLocale=async(id,locale)=>{const {data,error}=await client.from('learner_profiles').update({locale}).eq('id',id).select('id,name,age_band,locale,progress,created_at').single();if(error)throw error;return data};
   API.deleteProfile=async(id)=>{const result=await API.privacy('delete',id);API.clearPendingResults(id);return result;};
   API.saveProgress=(id,progress)=>{
@@ -140,7 +140,7 @@
     if(API.isIndependent(profile_id)||row?.sessionOnly)return false;
     const clientAttemptId=row?.clientAttemptId||row?.client_attempt_id||newAttemptId();
     if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clientAttemptId))throw new Error('El identificador del intento no es válido.');
-    const record={profile_id,client_attempt_id:clientAttemptId,occurred_at:row.ts,session_id:row.sessionId||null,session_started_at:row.sessionStartedAt||null,subject:row.subject,level:row.level,correct:Boolean(row.correct),points:Number(row.points)||0,item_id:row.itemId||null,detail:row.detail||null,state:'pending',created_at:new Date().toISOString(),updated_at:new Date().toISOString()};
+    const record={profile_id,client_attempt_id:clientAttemptId,occurred_at:row.ts,session_id:row.sessionId||null,session_started_at:row.sessionStartedAt||null,subject:row.subject,level:row.level,correct:row.correct===null?null:Boolean(row.correct),points:Number(row.points)||0,item_id:row.itemId||null,detail:row.detail||null,state:'pending',created_at:new Date().toISOString(),updated_at:new Date().toISOString()};
     try{
       const key=resultOutboxKey(profile_id,clientAttemptId);
       const existing=readOutboxRecord(key);

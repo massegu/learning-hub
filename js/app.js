@@ -720,13 +720,15 @@
     return {...data,subjects:window.Curriculum.visible(data.subjects,route)};
   }
   function recent(s, n = 10) {
-    return state.history.filter((x) => x.subject === s).slice(-n);
+    return state.history.filter((x) => x.subject === s&&!isGuidedWaitResult(x)).slice(-n);
   }
+  function exerciseMetrics(row){try{const metrics=JSON.parse(row?.detail||'null');return metrics?.schema==='gliax.exercise-metrics.v1'?metrics:null;}catch{return null;}}
+  function isGuidedWaitResult(row){return exerciseMetrics(row)?.modality==='guided_wait';}
   function recalcLevel(s) {
     if(window.AgeStages.forProfile(profile)||['executive','speedReasoning'].includes(s)){
       const checkpoints=profile.progress?._levelCheckpoints || {};
       const checkpoint=checkpoints[s] || {attempt:state.totalAttempts-1};
-      const results=state.history.filter(x=>x.subject===s && x.attemptNumber>checkpoint.attempt);
+      const results=state.history.filter(x=>x.subject===s && x.attemptNumber>checkpoint.attempt&&!isGuidedWaitResult(x));
       const level=state.levels[s]||1,stage=window.AgeStages.forProfile(profile);
       let next=window.AgeStages.next(level,results,profile);
       if(!stage){
@@ -847,8 +849,9 @@
     latestProgressSave=save;
     return save;
   }
-  function saveResult(s, correct, itemId, detail = "standard") {
-    const earlyAnswer=currentItem?.id===itemId && s===subject;
+  function saveResult(s, correct, itemId, detail = "standard", options = {}) {
+    const excludeFromPerformance=options.excludeFromPerformance===true;
+    const earlyAnswer=!excludeFromPerformance&&currentItem?.id===itemId && s===subject;
     if(earlyAnswer && currentItem._earlyAnswered)return 0;
     if(earlyAnswer){
       currentItem._earlyAnswered=true;
@@ -858,17 +861,11 @@
         guidedSession.answered=true;
       }
     }
-    state.totalAttempts++;
-    state.session.attempts++;
-    if (correct) {
-      state.totalCorrect++;
-      state.session.correct++;
-      state.streak++;
-    } else state.streak = 0;
-    const pts = correct
+    if(!excludeFromPerformance){state.totalAttempts++;state.session.attempts++;if(correct){state.totalCorrect++;state.session.correct++;state.streak++;}else state.streak=0;}
+    const pts = !excludeFromPerformance&&correct
       ? 10 + (state.streak > 0 && state.streak % 3 === 0 ? 5 : 0)
       : 0;
-    state.scores[s] = (state.scores[s] || 0) + pts;
+    if(!excludeFromPerformance)state.scores[s] = (state.scores[s] || 0) + pts;
     const row = {
       attemptNumber:state.totalAttempts,
       clientAttemptId:API.createAttemptId(),
@@ -879,7 +876,7 @@
       subject: s,
       correct,
       points: pts,
-      level: state.levels[s] || 1,
+      level: Number(options.level)||Number(currentItem?.level)||state.levels[s]||1,
       itemId,
       detail,
       ...(currentItem?._interactionSummary?{interactionSummary:currentItem._interactionSummary}:{}),
@@ -887,7 +884,7 @@
     };
     state.history.push(row);
     state.history = state.history.slice(-5000);
-    recalcLevel(s);
+    if(!excludeFromPerformance)recalcLevel(s);
     const resultProfileId=profile.id;
     const tracked=profile._sessionOnly!==true&&!API.isIndependent?.(resultProfileId);
     // Record the attempt in the durable outbox before starting the progress
@@ -1017,8 +1014,9 @@
     $("#profileGate").classList.add("hidden");
   }
   async function createProfile() {
-    const name = $("#newProfileName").value.trim();
+    const name = $("#newProfileName").value.trim().toUpperCase();
     if (!name) return;
+    const codeInput=$("#newProfileName");if(!window.PrivacyControls.isCode(name)){codeInput.setCustomValidity('Usa el código generado: P- seguido de 8 letras o números.');codeInput.reportValidity();return;}codeInput.setCustomValidity('');
     const exactAge=$("#newProfileExactAge").value,route=$("#newProfileAge").value;
     if(['early','junior'].includes(route)&&!exactAge){$('#exactAgeField').classList.add('invalid');$('#newProfileExactAge').focus();return;}
     try {
@@ -1258,7 +1256,7 @@
     $('#wordFitMode').setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily==='words'));
     if(!cognitiveBank.length)cognitiveOnly=false;
     $('#cognitiveMode').classList.add('hidden');
-    const families=[...new Set(cognitiveBank.map(it=>it.cognitiveTask.kind))];
+    const families=[...new Set(cognitiveBank.map(it=>it.cognitiveTask.kind==='guidedWait'?'wait':it.cognitiveTask.kind))];
     if(subject==='attention'&&families.includes('contradiction'))cognitiveFamily='contradiction';
     else if(!families.includes(cognitiveFamily))cognitiveFamily='';
     const familyModes=$('#cognitiveFamilyModes');
@@ -1483,7 +1481,7 @@
       !$("#exerciseTopic").textContent,
     );
     if(it.type==='cognitiveTask'){
-      $('#exercisePrompt').textContent=it.q;stopExecuted=window.CognitiveRenderer.mount(it,{visual:$('#exerciseVisual'),area:$('#exerciseOptions'),onFinish:(ok,why)=>{if(currentItem!==it)return;showFeedback(ok,saveResult(subject,ok,it.id,it.mechanic||it.semanticFamily),why);}});
+      $('#exercisePrompt').textContent=it.q;stopExecuted=window.CognitiveRenderer.mount(it,{visual:$('#exerciseVisual'),area:$('#exerciseOptions'),onFinish:(ok,why,metrics)=>{if(currentItem!==it)return;const detail=metrics?JSON.stringify(metrics):it.mechanic||it.semanticFamily;const waitPractice=metrics?.modality==='guided_wait';const pts=saveResult(subject,waitPractice?null:ok,it.id,detail,{excludeFromPerformance:waitPractice,level:it.level});showFeedback(ok,pts,why);}});
       if(it.printable!=='interactive-only'){
         const exportButton=document.createElement('button');exportButton.id='printCognitive';exportButton.className='secondary-btn';exportButton.textContent='Descargar esta actividad en Word';
         exportButton.onclick=async()=>{exportButton.disabled=true;const exportProfile=profile;try{
@@ -1717,7 +1715,7 @@
       (correct
         ? `Correcto · +${pts} puntos`
         : `No esta vez. Respuesta: ${currentItem.a || "revisa el modelo"}`);
-    f.className = "feedback " + (correct ? "ok" : "bad");
+    f.className = "feedback " + (currentItem?.cognitiveTask?.kind==='guidedWait'?'practice':correct ? "ok" : "bad");
     if(subject==='memory'&&currentItem?.type!=='executed'&&(Array.isArray(currentItem?.answer)||Array.isArray(currentItem?.sequence))){
       const expected=currentItem.answer||currentItem.sequence,solution=document.createElement('div');solution.className='memory-solution';
       solution.innerHTML='<h4>Secuencia correcta</h4>'+window.ActivityModel.interactiveStimulus([{type:'list',presentation:'sequence',items:expected.map(String)}],{senses:{...currentItem.lexicalSenses,iconProfile:profile}});f.append(solution);
@@ -1904,7 +1902,7 @@
   function renderOptionalMissions(route){
     if(window.ContentPolicy.forProfile(profile)){
       const saved=journeyState(),active=saved.active,journey=window.EarlyJourney;
-      const stats=journey.stats(state.history),discovery=journey.overview(state.history,ageData().subjects,saved.completed),explored=ageData().subjects.filter(d=>stats[d]?.attempts>=3).length;
+      const performanceHistory=state.history.filter(row=>!isGuidedWaitResult(row)),stats=journey.stats(performanceHistory),discovery=journey.overview(performanceHistory,ageData().subjects,saved.completed),explored=ageData().subjects.filter(d=>stats[d]?.attempts>=3).length;
       return `<details class="professional-missions"><summary>Misiones opcionales · ${journey.missions.length}</summary>${active?`<p role="status">${journey.definition(active.id).title}: ${active.index} de ${journey.definition(active.id).plan.length} actividades realizadas.</p>`:''}<section class="professional-discovery" aria-label="Progreso de descubrimientos"><strong>Recorrido de descubrimientos</strong><p>${discovery.discoveries} de ${discovery.goal} pasos · ${explored} de ${ageData().subjects.length} áreas iniciadas</p><progress value="${discovery.discoveries}" max="${discovery.goal}" aria-label="Actividades para explorar todas las áreas"></progress><ol>${discovery.milestones.map(m=>`<li>${m.done?'✓':'○'} ${escapeHtml(m.title)}</li>`).join('')}</ol></section><div class="professional-mission-list">${journey.missions.map(m=>`<article class="professional-mission"><div><strong>${escapeHtml(m.title)}</strong><p>${escapeHtml(m.description)}</p></div><button type="button" class="secondary-btn" data-unified-mission="early" data-mission-id="${escapeHtml(m.id)}" ${active&&active.id!==m.id?'disabled':''}>${active?.id===m.id?'Continuar':'Empezar'}</button></article>`).join('')}</div></details>`;
     }
     const stage=window.SchoolJourney.forProfile(profile);if(!stage)return '';
@@ -1982,6 +1980,14 @@
     return new Intl.DateTimeFormat('es-ES',/^\d{4}-\d{2}-\d{2}$/.test(value)?{dateStyle:'medium'}:{dateStyle:'medium',timeStyle:'short'}).format(date);
   }
   function renderProgress() {
+    let guidedWaitProgress=$('#guidedWaitProgress');if(!guidedWaitProgress){guidedWaitProgress=document.createElement('details');guidedWaitProgress.id='guidedWaitProgress';guidedWaitProgress.className='card panel-card guided-wait-history';$('#sessionEvolution').parentElement.before(guidedWaitProgress);}
+    const guidedWaitRows=state.history.filter(isGuidedWaitResult),waitSessions=new Set(guidedWaitRows.map(row=>row.sessionId).filter(Boolean)).size;
+    guidedWaitProgress.classList.toggle('hidden',!guidedWaitRows.length);
+    guidedWaitProgress.innerHTML=`<summary>Espera guiada · ${guidedWaitRows.length} intervalos finalizados</summary><p>Registro de intervalos finalizados, separado de los aciertos, puntos y evolución de nivel. No indica si la persona esperó ni es una medida clínica.</p><ul>${guidedWaitRows.slice(-12).reverse().map(row=>{let m={};try{m=JSON.parse(row.detail||'{}');}catch{}return `<li><strong>Nivel ${Number(m.level)||Number(row.level)||1}</strong> · ${escapeHtml(sessionDateLabel(row.ts))} · intervalo ${Math.round(Number(m.interval_ms)||0)/1000} s · duración activa ${(Math.max(0,Number(m.duration_ms)||0)/1000).toFixed(1).replace('.',',')} s · reinicios ${Number(m.restarts)||0} · interrupciones ${Number(m.interruptions)||0}</li>`;}).join('')}</ul><small>${guidedWaitRows.length} intervalos finalizados en ${waitSessions} sesiones registradas.</small>`;
+    let ruleApplicationProgress=$('#ruleApplicationProgress');if(!ruleApplicationProgress){ruleApplicationProgress=document.createElement('details');ruleApplicationProgress.id='ruleApplicationProgress';ruleApplicationProgress.className='card panel-card rule-application-history';$('#sessionEvolution').parentElement.before(ruleApplicationProgress);}
+    const ruleRows=state.history.filter(row=>exerciseMetrics(row)?.modality==='rule_application');ruleApplicationProgress.classList.toggle('hidden',!ruleRows.length);
+    const median=values=>{const sorted=values.filter(Number.isFinite).sort((a,b)=>a-b),middle=Math.floor(sorted.length/2);return sorted.length?(sorted.length%2?sorted[middle]:(sorted[middle-1]+sorted[middle])/2):null;};
+    ruleApplicationProgress.innerHTML=`<summary>Actúa con reglas · ${ruleRows.length} actividades</summary><p>Resultados de aplicar o cambiar reglas; se registran por separado de la práctica de espera guiada.</p><ul>${ruleRows.slice(-12).reverse().map(row=>{const m=exerciseMetrics(row),responseMedian=median(m?.response_times_ms||[]);return `<li><strong>Nivel ${Number(m?.level)||Number(row.level)||1}</strong> · ${escapeHtml(sessionDateLabel(row.ts))} · ${Number(m?.correct)||0}/${Number(m?.trials)||0} aciertos por ensayo · errores ${Number(m?.errors)||0} · omisiones ${Number(m?.omissions)||0} · cambios ${Number(m?.switches)||0} · ${responseMedian===null?'sin tiempo medido':`mediana de respuesta ${Math.round(responseMedian)} ms`}</li>`;}).join('')}</ul>`;
     let environment=$('#environmentSpeedProgress');if(!environment){environment=document.createElement('details');environment.id='environmentSpeedProgress';environment.className='card';$('#speedProgressChart').after(environment);}
     const environmentEntries=profile.progress.environmentSpeedObservations||[];environment.classList.toggle('hidden',!environmentEntries.length);
     environment.innerHTML='<summary>Velocidad · búsquedas en el entorno</summary><p>Observaciones declaradas, separadas de aciertos y tiempos en pantalla. Los tiempos incluyen lectura y respuesta con el botón.</p><ul>'+environmentEntries.slice(-8).reverse().map(x=>`<li>Nivel ${Number(x.level)||1} · ${x.report==='found'?'Objeto localizado según la valoración':x.report==='not_met'?'No cumplía las condiciones':x.report==='not_found'?'No se encontró un objeto adecuado':'Práctica detenida'} · ${x.timingValid&&x.report==='found'?(Number(x.elapsedMs)/1000).toFixed(1).replace('.',',')+' s':'sin tiempo comparable'} · Utilidad: ${x.explanation==='explained'?'explicada':x.explanation==='with_help'?'con ayuda':x.explanation==='skipped'?'omitida':'sin registro'}</li>`).join('')+'</ul>';
@@ -2001,7 +2007,7 @@
     $("#progressProfileTitle").textContent = `Evolución de ${profile.name}`;
     $("#progressCards").innerHTML = ageData()
       .subjects.map((s) => {
-        const r = state.history.filter((x) => x.subject === s),
+        const r = state.history.filter((x) => x.subject === s&&!isGuidedWaitResult(x)),
           c = r.filter((x) => x.correct).length,
           acc = r.length ? Math.round((c / r.length) * 100) : 0;
         const palette={language:['#4C5BDD','#EAF0FF'],middleLanguage:['#4C5BDD','#EAF0FF'],teenLanguage:['#4C5BDD','#EAF0FF'],division:['#A7463D','#FFF0EE'],geometry:['#3645B9','#EAF0FF'],middleMath:['#A7463D','#FFF0EE'],teenMath:['#A7463D','#FFF0EE'],literacy:['#3645B9','#EEE9FA'],reading:['#3645B9','#EEE9FA'],english:['#4C5BDD','#EAF0FF'],social:['#A7463D','#FFF0EE'],attention:['#4C5BDD','#EEE9FA'],applied:['#A7463D','#FFF0EE'],executive:['#A7463D','#FFF0EE'],memory:['#A7463D','#F8E8EC'],speedReasoning:['#4C5BDD','#EAF0FF']};
@@ -2011,7 +2017,7 @@
       .join("");
     renderSpeedProgress();
     const sessions=new Map();
-    for(const row of state.history){
+    for(const row of state.history.filter(row=>!isGuidedWaitResult(row))){
       const key=row.sessionId||row.ts?.slice(0,10)||'anterior';
       if(!sessions.has(key))sessions.set(key,{attempts:0,correct:0,date:row.sessionStartedAt||row.ts});
       const session=sessions.get(key);session.attempts++;if(row.correct)session.correct++;
@@ -2046,7 +2052,7 @@
         "nivel",
         "resultado",
         "puntos",
-        "id", "area_original", "tiempo_ms", "tiempo_valido", "tarea_velocidad", "version_velocidad",
+        "id", "area_original", "tiempo_ms", "tiempo_valido", "tarea_velocidad", "version_velocidad", "metricas_modalidad",
       ],
     ];
     state.history.forEach((x) =>
@@ -2056,9 +2062,9 @@
         x.ts,
         x.subject,
         x.level,
-        x.correct ? "correcto" : "revisar",
+        isGuidedWaitResult(x)?"intervalo finalizado":x.correct ? "correcto" : "revisar",
         x.points,
-        x.itemId, x.originalSubject||"", x.responseMs??"", x.timingValid??"", x.speedFamily||"", x.speedFamily?(x.speedRevision||2):"",
+        x.itemId, x.originalSubject||"", x.responseMs??"", x.timingValid??"", x.speedFamily||"", x.speedFamily?(x.speedRevision||2):"", exerciseMetrics(x)?x.detail:"",
       ]),
     );
     downloadText(
@@ -2253,7 +2259,7 @@
   $('#closeProfilePrivacy').onclick=()=>{if(!privacyBusy)$('#privacyDialog').close();};
   $('#privacyDialog').addEventListener('cancel',e=>{if(privacyBusy)e.preventDefault();});
   $('#saveProfilePrivacy').onclick=async()=>{
-    try{const updated=await privacyAction('settings',{alias:$('#privacyAlias').value.trim(),reviewAt:$('#privacyReviewDate').value||null});
+    try{const original=profiles.find(p=>p.id===privacyTarget)?.name||'',entered=$('#privacyAlias').value.trim(),alias=entered===original?original:entered.toUpperCase();if(alias!==original&&!window.PrivacyControls.isCode(alias)){privacyMessage('Para cambiar el código, usa P- seguido de 8 letras o números. El código actual se conserva si no lo modificas.');return;}const updated=await privacyAction('settings',{alias,reviewAt:$('#privacyReviewDate').value||null});
       const exactAge=$('#privacyExactAge').value;const found=profiles.find(p=>p.id===privacyTarget);if(found){Object.assign(found,updated);found.progress={...(found.progress||{}),...(exactAge?{ageYears:Number(exactAge)}:{ageYears:undefined})};if(!exactAge)delete found.progress.ageYears;}if(profile?.id===privacyTarget){profile.name=updated.name;profile.progress={...(profile.progress||{}),...(exactAge?{ageYears:Number(exactAge)}:{})};if(!exactAge)delete profile.progress.ageYears;persist();renderProfiles();updateGlobalUI();}privacyMessage('Código, edad y fecha de revisión guardados.');
     }catch(_){}
   };
