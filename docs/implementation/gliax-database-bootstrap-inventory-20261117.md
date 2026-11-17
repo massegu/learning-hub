@@ -2,6 +2,8 @@
 
 Fecha: 17/11/2026. Rama: `integration/gliax-pr50-pr51-20261117`. Base auditada: `dcca944bf4007296bb753451e1567f774f48fa1f`, con Git limpio al inicio. Se conservan sin cambios las pruebas, la fixture y el informe de las **51 comprobaciones locales**. Esta auditoría usa exclusivamente archivos del repositorio; no consulta el Supabase actual.
 
+**Actualización tras la captura aportada en `a3a75de`:** las listas siguientes conservan el inventario histórico anterior a esa evidencia. Ya se han recuperado estructura de 12 tablas (incluidas `private.content_items` y `private.plan_limits`), tres funciones base, triggers, constraints, índices, políticas y parte de los permisos. Consultar la [revisión actual y sus bloqueos de fidelidad](gliax-observed-reconstruction-review-20261117.md) y la [propuesta separada de seguridad](gliax-accounts-security-proposal-20261117.md). No tratar los antiguos «sin definición recuperable» como el estado actual: los huecos restantes están enumerados en esa revisión.
+
 **La reconstrucción completa sigue bloqueada por definiciones que faltan.** La fixture anterior permite probar parte del sistema, pero no es el esquema inicial recuperado. No se crea en esta entrega una migración de producción a partir de supuestos.
 
 ## Evidencia y cobertura de las seis migraciones
