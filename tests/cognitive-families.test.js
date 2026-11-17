@@ -16,18 +16,25 @@ test('cognitive families keep canonical age/level metadata and localized deliver
   for(const field of ['q','sample','cognitiveTask','ageRoute'])assert.throws(()=>families.validate({...it,[field]:'tampered'},age));
   assert.throws(()=>families.validate(it,age==='teen'?'early':'teen'));
  }
- assert.equal(variants,330);assert.equal(scenarios.size,4);assert.ok([...scenarios.values()].every(s=>s.size>=4));
+ assert.equal(variants,390);assert.equal(scenarios.size,5);assert.ok([...scenarios.values()].every(s=>s.size>=4));
  const teenRules=families.pool('teen','executive',1,'rules').map(it=>JSON.stringify(it.cognitiveTask));for(const label of ['cámara','teléfono','auriculares','calculadora','brújula','regla'])assert.ok(teenRules.some(task=>task.includes(label)),label);
  for(const label of ['Cámara','Teléfono','Auriculares','Calculadora','Brújula','Regla'])assert.match(model.visualLabel(label,{iconProfile:profile('teen')}),/class="picture-icon"/);
  for(const age of ages)for(const level of [1,2,3])assert.equal(families.pool(age,'executive',level).some(it=>it.cognitiveTask.kind==='words'),false);
  for(const age of ages)for(const level of [1,2,3]){assert.equal(families.pool(age,'executive',level).some(it=>it.cognitiveTask.kind==='contradiction'),false);assert.equal(families.pool(age,'attention',level).some(it=>it.cognitiveTask.kind==='information'),false);assert.ok(families.pool(age,'attention',level).every(it=>it.cognitiveTask.kind==='contradiction'));}
  for(const age of ages)for(const level of [1,2,3])assert.ok(families.pool(age,'language',level,'words').length>0);
 });
+test('guided waiting is a separate, non-motor practice with levelled visible intervals and no response grading',()=>{
+ const rows=ages.flatMap(age=>[1,2,3].map(level=>families.pool(age,'executive',level,'wait')[0]));
+ for(const it of rows){const t=it.cognitiveTask;assert.equal(t.kind,'guidedWait');assert.equal(t.answer[0],'complete');assert.equal(it.printable,'interactive-only');assert.equal(it.motorDemand,'none');assert.equal(it.mechanic,'guided_wait_v1');assert.ok(t.intervalMs>0);assert.equal(families.grade(it,['complete']),true);assert.equal(families.grade(it,['act']),false);}
+ assert.deepEqual([1,2,3].map(level=>families.pool('early','executive',level,'wait')[0].cognitiveTask.intervalMs),[4000,6000,8000]);
+ assert.equal(families.pool('early','executive',1,'rules')[0].cognitiveTask.kind,'rules');
+});
 test('solutions derive independently from clues, facts, constraints, dependencies and rule history',()=>{
  for(const age of ages)for(const level of [1,2,3])for(const it of [...families.pool(age,'executive',level),...families.pool(age,'attention',level),...families.pool(age,'language',level,'words')]){
   const t=it.cognitiveTask;let answer;
   if(t.kind==='information')assert.match(it.q,new RegExp(`Situación: .+marca exactamente ${t.answer.length} datos que necesitas`,'i'));
   if(t.kind==='rules'){let inverted=false;answer=t.trials.map(trial=>{if(trial.switchBefore)inverted=!inverted;assert.equal(trial.inverted,inverted);return trial.target!==inverted?'act':'wait';});assert.equal(t.trials.filter(x=>x.switchBefore).length,level-1);}
+  if(t.kind==='guidedWait')answer=t.answer;
   if(t.kind==='words'){
    const valid=t.options.filter(word=>families.wordFits(word,t));assert.equal(valid.length,1);answer=[valid[0]];
    assert.equal(families.productionStatus(it,'palabra inventada xyz'),'unreviewed');assert.equal(families.productionStatus(it,valid[0].toUpperCase()),'correct');
@@ -59,6 +66,10 @@ test('difficulty changes actual loads while elementary recognition, distinct pic
  for(const age of ages){const it=executed.pool(age,'memory',1).find(x=>x.execution.kind==='spatial');assert.ok(it.execution.occupied.length>=2);assert.ok(it.execution.cells.some(x=>x!==it.execution.target));assert.ok(it.execution.cells.filter(x=>x===it.execution.target).length===it.execution.answer.length);}
  for(const age of ['junior','primary','middle','teen']){const it=c.pool(age,'memory',1).find(x=>x.recallEvidence?.kind==='spatial');assert.equal(it.gridSize,3);assert.ok(it.memoryContent.length>=3);}
  const complementary=require('../js/complementary-art');for(const key of complementary.keys){assert.match(complementary.svg(key),/data-icon-library="(?:lucide|iconoir|tabler)"/);assert.deepEqual([...complementary.png(key).slice(0,8)],[137,80,78,71,13,10,26,10]);assert.equal(model.artFor(key,profile('teen')),complementary);assert.notEqual(model.artFor(key,profile('junior')),complementary);}
+ const materialRows=c.processingChallenges('middle',2).filter(item=>item.speedFamily==='crossedKeys');
+ assert.equal(new Set(materialRows.map(item=>item.speedEvidence.materialType)).size,8);
+ for(const item of materialRows){c.validateSpeed(item);const block=item.stimulus[0];assert.equal(block.presentation,'everydayMaterial');assert.match(model.interactiveStimulus([block]),/class="everyday-material material-/);}
+ const unsupported={...materialRows[0].stimulus[0],materialType:'storybook'};assert.throws(()=>model.interactiveStimulus([unsupported]),/material cotidiano/);
 });
 function requests(age,rows){return execFileSync(process.execPath,['tests/edge-worker.js',age],{input:rows.map(JSON.stringify).join('\n')+'\n',encoding:'utf8',timeout:60000}).trim().split('\n').map(JSON.parse);}
 test('authenticated delivery persists usage/history, gates cached clients and rotates semantic/scenario families',()=>{

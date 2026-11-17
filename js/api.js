@@ -3,6 +3,12 @@
   if(!window.supabase||!cfg) throw new Error('Supabase config missing');
   const client=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseKey);
   const API={client,session:null,user:null,contentLocale:null,localeRevision:0};
+  const profileCodeIndex='learner_profiles_account_code_normalized_key';
+  const duplicateProfileCodeMessage='Este código ya está asignado a otro perfil. Genera uno nuevo para continuar';
+  function isDuplicateProfileCode(error){
+    if(String(error?.code)!=='23505')return false;
+    return [error?.message,error?.details,error?.constraint].some(value=>String(value||'').includes(profileCodeIndex));
+  }
   const progressWriteQueues=new Map();
   const resultWriteQueues=new Map();
   const resultOutboxPrefix='lh:result-outbox:v1:';
@@ -113,7 +119,17 @@
   API.isIndependent=id=>API.independentProfile===id;
   API.signOut=async()=>{API.setIndependent(null);await client.auth.signOut();API.session=null;API.user=null;API.profileLocale=null;API.setContentLocale(null)};
   API.listProfiles=async()=>{const {data,error}=await client.from('learner_profiles').select('id,name,age_band,locale,progress,created_at').order('created_at');if(error)throw error;return (data||[]).map(p=>{p.progress=window.PrivacyControls.minimize(p.progress);return p;})};
-  API.createProfile=async(name,age_band,initial_level=1,locale='es_intl')=>{const younger=['early','junior'].includes(age_band);const storedBand=younger?'primary':age_band;const progress={initialLevel:Number(initial_level)||1,...(younger?{ageRoute:age_band}:{})};const {data,error}=await client.from('learner_profiles').insert({account_id:API.user.id,name,age_band:storedBand,locale,progress}).select('id,name,age_band,locale,progress,created_at').single();if(error)throw error;return data};
+  API.listResults=async profileId=>{
+    if(API.isIndependent(profileId))return [];
+    const rows=[];let offset=0,batch=[];
+    do{
+      const {data,error}=await client.from('exercise_results').select('client_attempt_id,occurred_at,session_id,session_started_at,subject,level,correct,points,item_id,detail').eq('profile_id',profileId).order('occurred_at',{ascending:true}).range(offset,offset+999);
+      if(error)throw error;
+      batch=data||[];rows.push(...batch);offset+=batch.length;
+    }while(batch.length===1000);
+    return rows.map(row=>({clientAttemptId:row.client_attempt_id||null,ts:row.occurred_at,sessionId:row.session_id||null,sessionStartedAt:row.session_started_at||null,subject:row.subject,level:row.level,correct:row.correct,points:Number(row.points)||0,itemId:row.item_id||null,detail:row.detail??null}));
+  };
+  API.createProfile=async(name,age_band,initial_level=1,locale='es_intl')=>{name=String(name||'').trim().toUpperCase();if(!window.PrivacyControls.isCode(name))throw new Error('Usa el código generado: P- seguido de 8 caracteres hexadecimales.');const younger=['early','junior'].includes(age_band);const storedBand=younger?'primary':age_band;const progress={initialLevel:Number(initial_level)||1,...(younger?{ageRoute:age_band}:{})};const {data,error}=await client.from('learner_profiles').insert({account_id:API.user.id,name,age_band:storedBand,locale,progress}).select('id,name,age_band,locale,progress,created_at').single();if(error){if(isDuplicateProfileCode(error))throw new Error(duplicateProfileCodeMessage);throw error;}return data};
   API.updateProfileLocale=async(id,locale)=>{const {data,error}=await client.from('learner_profiles').update({locale}).eq('id',id).select('id,name,age_band,locale,progress,created_at').single();if(error)throw error;return data};
   API.deleteProfile=async(id)=>{const result=await API.privacy('delete',id);API.clearPendingResults(id);return result;};
   API.saveProgress=(id,progress)=>{
@@ -140,7 +156,7 @@
     if(API.isIndependent(profile_id)||row?.sessionOnly)return false;
     const clientAttemptId=row?.clientAttemptId||row?.client_attempt_id||newAttemptId();
     if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clientAttemptId))throw new Error('El identificador del intento no es válido.');
-    const record={profile_id,client_attempt_id:clientAttemptId,occurred_at:row.ts,session_id:row.sessionId||null,session_started_at:row.sessionStartedAt||null,subject:row.subject,level:row.level,correct:Boolean(row.correct),points:Number(row.points)||0,item_id:row.itemId||null,detail:row.detail||null,state:'pending',created_at:new Date().toISOString(),updated_at:new Date().toISOString()};
+    const record={profile_id,client_attempt_id:clientAttemptId,occurred_at:row.ts,session_id:row.sessionId||null,session_started_at:row.sessionStartedAt||null,subject:row.subject,level:row.level,correct:row.correct===null?null:Boolean(row.correct),points:Number(row.points)||0,item_id:row.itemId||null,detail:row.detail||null,state:'pending',created_at:new Date().toISOString(),updated_at:new Date().toISOString()};
     try{
       const key=resultOutboxKey(profile_id,clientAttemptId);
       const existing=readOutboxRecord(key);
@@ -152,7 +168,7 @@
     }
     return queueRecord(record);
   };
-  API.privacy=async(action,id,settings={})=>{if(API.isIndependent(id))throw new Error('Termina la sesión independiente para gestionar el perfil.');const {data,error}=await client.rpc('manage_learner_privacy',{p_action:action,p_profile:id,p_alias:settings.alias??null,p_review_at:settings.reviewAt??null});if(error)throw new Error('No se ha podido completar la gestión de privacidad. Inténtalo de nuevo o contacta con soporte.');return data;};
+  API.privacy=async(action,id,settings={})=>{if(API.isIndependent(id))throw new Error('Termina la sesión independiente para gestionar el perfil.');const {data,error}=await client.rpc('manage_learner_privacy',{p_action:action,p_profile:id,p_alias:settings.alias??null,p_review_at:settings.reviewAt??null});if(error){if(isDuplicateProfileCode(error))throw new Error(duplicateProfileCodeMessage);throw new Error('No se ha podido completar la gestión de privacidad. Inténtalo de nuevo o contacta con soporte.');}return data;};
   API.recordAccess=id=>typeof client.rpc==='function'?API.privacy('open',id).catch(()=>null):Promise.resolve(null);
   API.getAccount=async()=>{const {data,error}=await client.from('accounts').select('subscription_status,trial_started_at,trial_ends_at,current_period_end,content_locale').single();if(error)throw error;API.setContentLocale(data?.content_locale);return data};
   async function openBilling(action){

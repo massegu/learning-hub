@@ -10,6 +10,6 @@
  function independent(profile){
   return {...structuredClone(profile),name:'Sesión independiente',_sessionOnly:true,progress:{ageRoute:profile.progress?.ageRoute,initialLevel:profile.progress?.initialLevel||1,_sessionOnly:true}};
  }
- const api={minimize,independent,newCode:()=> 'P-'+crypto.randomUUID().slice(0,8).toUpperCase()};
+ const api={minimize,independent,isCode:value=>/^P-[A-F0-9]{8}$/i.test(String(value||'').trim()),newCode:()=> 'P-'+crypto.randomUUID().slice(0,8).toUpperCase()};
  root.PrivacyControls=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);
