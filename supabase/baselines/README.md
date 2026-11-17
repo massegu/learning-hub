@@ -32,6 +32,11 @@ the dedicated container/project and its internal Docker network before writes.
 | Historical fixture regression | `--legacy-fixture` preserves the previous 51-check preparation and applies the six original migrations to that representative fixture; it is not evidence of baseline equivalence |
 | Future staging | Requires a separately approved configuration and rollout plan after reviewing the local verification report; no staging or remote change is performed here |
 
+The [staging checklist](../../docs/implementation/gliax-staging-checklist-20261117.md)
+documents that future approval, isolated tooling, Auth/URL configuration and
+end-to-end acceptance. The current local runner/SQL guards must not be bypassed
+to turn them into remote deployment tools.
+
 ## Definition provenance
 
 The three `docs/implementation/gliax-observed-*-20261117.md` documents supply
