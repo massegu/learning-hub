@@ -957,6 +957,7 @@
     stopMemoryCountdown();
     $('#privacyDialog').close();privacyTarget=null;API.setIndependent(null);
     $("#authGate").classList.remove("hidden");
+    $("#authGate").scrollTop=0;window.scrollTo(0,0);
     $("#appShell").classList.add("hidden");
     $("#authMessage").textContent = msg;
   }

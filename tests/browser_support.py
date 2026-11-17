@@ -47,7 +47,7 @@ window.supabase={createClient(){
    return {error:{message:'Unknown privacy action'}};
  },from(table){
    let filter,operation,values,upsertOptions,rangeStart=0,rangeEnd=999999;
-   const q={select(){operation='select';return q},order(){return q},range(start,end){rangeStart=start;rangeEnd=end;return q},eq(k,v){filter={key:k,value:v};return q},insert(v){operation='insert';values=v;return q},upsert(v,options){operation='upsert';values=v;upsertOptions=options;return q},update(v){operation='update';values=v;return q},delete(){return q},single(){return Promise.resolve(result(true))},then(a,b){return Promise.resolve(result(false)).then(a,b)}};
+   const q={select(){if(operation!=='insert')operation='select';return q},order(){return q},range(start,end){rangeStart=start;rangeEnd=end;return q},eq(k,v){filter={key:k,value:v};return q},insert(v){operation='insert';values=v;return q},upsert(v,options){operation='upsert';values=v;upsertOptions=options;return q},update(v){operation='update';values=v;return q},delete(){return q},single(){return Promise.resolve(result(true))},then(a,b){return Promise.resolve(result(false)).then(a,b)}};
    function result(single){
      if(table==='accounts'){
        if(operation==='update'){if(window.__saveLocaleFail)return {error:{message:'Mock save rejected'}};localStorage.setItem('__mock_account_locale',values.content_locale);operation=null;}

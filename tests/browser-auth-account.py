@@ -1,5 +1,5 @@
 """Password/account UI against real frontend code; Auth calls are mocked, no emails sent."""
-import importlib.util,http.server,threading,tempfile,os
+import importlib.util,http.server,threading,tempfile,os,re
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 from browser_support import workspace, ROOT,SDK, area, training_areas, wait_for_area
@@ -61,7 +61,22 @@ try:
    area(page, domain).click();page.wait_for_selector('#exerciseOptions .option-btn')
    assert 'Cannot read' not in page.locator('#exercisePrompt').inner_text()
    assert page.evaluate('__requests.at(-1).profile_id')=='another-teen'
-  workspace(page).locator('#signOutBtn').click();page.wait_for_selector('#authForgotPassword')
+  workspace(page).locator('#signOutBtn').click();page.wait_for_selector('#authGate:not(.hidden)')
+  assert page.locator('#landingTitle').inner_text() and page.locator('#authSignIn').is_visible()
+  for width,height in [(1440,1000),(1024,900),(768,900),(390,844),(320,720)]:
+   page.set_viewport_size({'width':width,'height':height})
+   page.evaluate('window.scrollTo(0,0)')
+   layout=page.evaluate("""()=>({viewport:innerWidth,scroll:document.documentElement.scrollWidth,
+    bounds:[...document.querySelectorAll('#authGate .landing-wrap,#authGate .landing-story,#authGate .landing-signin,#authGate .auth-card,#authGate input,#authGate .auth-actions button')]
+     .filter(e=>getComputedStyle(e).display!=='none').map(e=>{const r=e.getBoundingClientRect();return [r.left,r.right]})})""")
+   assert layout['scroll']<=layout['viewport']+1,(width,layout)
+   assert all(left>=-1 and right<=width+1 for left,right in layout['bounds']),(width,layout)
+   wrap=page.locator('.landing-wrap').bounding_box()
+   assert wrap and wrap['y']>=-1,(width,wrap)
+   story=page.locator('.landing-story').bounding_box();main=page.locator('.landing-story-main').bounding_box();title=page.locator('#landingTitle').bounding_box()
+   assert story and main and title and story['y']<=main['y']<main['y']+main['height']<=story['y']+story['height']+1,(width,story,main,title)
+   if width in (1440,390):page.screenshot(path=f'/tmp/gliax-landing-{width}.png',full_page=True)
+  page.set_viewport_size({'width':1280,'height':900})
   page.locator('#authEmail').fill('')
   page.locator('#authForgotPassword').click();assert page.evaluate('__resets.length')==0
   page.locator('#authEmail').fill('review@example.invalid');page.locator('#authForgotPassword').click();page.wait_for_function('__resets.length===1')
@@ -102,10 +117,19 @@ try:
   page.wait_for_selector('#profileGate:not(.hidden)')
   assert page.locator('#profileSelect option').count()==0
   assert page.evaluate("localStorage.getItem('lh_current_profile')") is None
-  page.locator('#newProfileName').fill('Nuevo perfil');page.locator('#newProfileAge').select_option('teen');page.locator('#createProfileBtn').click()
+  generated_code=page.locator('#newProfileName').input_value();assert re.fullmatch(r'P-[0-9A-F]{8}',generated_code),generated_code
+  page.locator('#newProfileAge').select_option('teen');page.locator('#createProfileBtn').click()
   page.wait_for_selector('#profileGate.hidden',state='hidden')
   area(page, 'teenLanguage').click();page.wait_for_selector('#exerciseOptions .option-btn')
   assert page.evaluate('__requests.at(-1).profile_id')=='created'
+  first_visit=browser.new_page(viewport={'width':1440,'height':1000});first_visit.add_init_script('window.__signedIn=false');first_visit.on('pageerror',lambda e:errors.append(str(e)))
+  first_visit.goto(origin,wait_until='networkidle');first_visit.wait_for_selector('#authGate:not(.hidden)')
+  for width,height in [(1440,1000),(390,844)]:
+   first_visit.set_viewport_size({'width':width,'height':height});first_visit.evaluate('window.scrollTo(0,0)')
+   wrap=first_visit.locator('.landing-wrap').bounding_box();story=first_visit.locator('.landing-story').bounding_box();main=first_visit.locator('.landing-story-main').bounding_box()
+   assert wrap and wrap['y']>=-1 and story and main and main['y']>=story['y'] and main['y']+main['height']<=story['y']+story['height']+1,(width,wrap,story,main)
+   assert first_visit.locator('#landingTitle').is_visible() and first_visit.locator('#authSignIn').is_visible()
+   if width==390:first_visit.locator('#authSignIn').scroll_into_view_if_needed();assert first_visit.locator('#authSignIn').is_visible()
   assert not errors,errors
   print('PASS: unavailable remembered profile, account switch with four working areas, owned request IDs, password mismatch, error/retry, update, recovery and mobile; no real emails sent')
   browser.close()

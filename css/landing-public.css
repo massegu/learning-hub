@@ -1,6 +1,6 @@
 /* Public landing & sign-in gate: 2026 proposal. No application or auth logic changes. */
 #authGate.auth-gate{
-  display:flex;align-items:center;justify-content:center;overflow:auto;
+  display:flex;align-items:safe center;justify-content:center;overflow:auto;
   background:radial-gradient(circle at 2% 100%,#d8e9e8 0,transparent 38%),
     radial-gradient(circle at 90% 5%,#ebe8fb 0,transparent 35%),#f7f8fa;
   padding:clamp(16px,3vw,48px);min-height:100dvh;
@@ -111,7 +111,7 @@
 #authGate #authSignIn:hover{background:#174750}
 #authGate #authSignUp{background:#f4f6fa;border-color:#d9dfeb;color:#254353}
 @media(max-width:940px){
- #authGate .landing-wrap{grid-template-columns:1fr}
+ #authGate .landing-wrap{grid-template-columns:1fr;grid-auto-rows:max-content}
  #authGate .landing-story h1{max-width:18ch}
  #authGate .landing-product{transform:none;max-width:100%}
  #authGate .landing-story-main{margin:25px 0 24px}

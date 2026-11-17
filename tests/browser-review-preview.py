@@ -33,7 +33,10 @@ try:
   def open_domain(domain,level):
    page.evaluate('window.__current=null');area(page, domain).click();it=wait_item()
    if it['level']!=level:
-    page.evaluate('window.__current=null');page.locator('#exerciseLevelSelect').select_option(str(level));it=wait_item()
+    page.evaluate('window.__current=null')
+    options=page.locator('#activityOptions')
+    if not options.evaluate('(element)=>element.open'):options.locator('summary').click()
+    page.locator('#exerciseLevelSelect').select_option(str(level));it=wait_item()
    return it
   def answer(it):
    if it.get('recallSequence'):
@@ -105,7 +108,7 @@ try:
      assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),(band,domain,width)
      page.locator('#exercise').screenshot(path=f'/tmp/review-{band}-{domain}-{width}.png')
     page.set_viewport_size({'width':1280,'height':900})
-   page.locator('#navMenu [data-section="homework"]').click()
+   workspace(page).locator('#navMenu [data-section="homework"]').click()
    assert page.locator('#homework').is_visible(), (band,errors,page.locator('.active-section').evaluate_all('(els)=>els.map(e=>e.id)'))
    page.locator('#worksheetAll').click()
    page.locator('#worksheetQuestions').select_option('20');page.locator('#worksheetCount').select_option('1')
