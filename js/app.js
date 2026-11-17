@@ -731,8 +731,15 @@
     return `legacy:${JSON.stringify([row?.sessionId||row?.session_id||'',row?.ts||row?.occurred_at||'',row?.subject||'',row?.level??'',row?.correct??null,row?.points??0,row?.itemId||row?.item_id||'',row?.detail??null])}`;
   }
   function mergeConfirmedResultHistory(history,confirmed){
-    const merged=[...(Array.isArray(history)?history:[])],keys=new Set(merged.map(resultHistoryKey));let added=0;
-    for(const row of confirmed||[]){const key=resultHistoryKey(row);if(keys.has(key))continue;keys.add(key);merged.push(row);added++;}
+    const merged=[...(Array.isArray(history)?history:[])],attemptIds=new Set(),legacyCounts=new Map();let added=0;
+    for(const row of merged){const attemptId=row?.clientAttemptId||row?.client_attempt_id;if(attemptId)attemptIds.add(String(attemptId));const key=resultHistoryKey(row);legacyCounts.set(key,(legacyCounts.get(key)||0)+1);}
+    for(const row of confirmed||[]){
+      const attemptId=row?.clientAttemptId||row?.client_attempt_id;
+      if(attemptId){const id=String(attemptId);if(attemptIds.has(id))continue;attemptIds.add(id);merged.push(row);added++;continue;}
+      const key=resultHistoryKey(row),overlap=legacyCounts.get(key)||0;
+      if(overlap){legacyCounts.set(key,overlap-1);continue;}
+      legacyCounts.set(key,0);merged.push(row);added++;
+    }
     if(added)merged.sort((a,b)=>String(a.ts||'').localeCompare(String(b.ts||'')));
     return {history:merged,added};
   }
@@ -740,6 +747,11 @@
     if(!profileId||!API.listResults||profile?._sessionOnly||API.isIndependent?.(profileId))return false;
     const userId=API.user?.id;
     try{
+      // Resolve the durable outbox before reading confirmed rows. Otherwise a
+      // just-confirmed retry can race with this query and be missed until the
+      // next profile open.
+      await recoverPendingResults(profileId);
+      if(profile?.id!==profileId||profile._sessionOnly||API.isIndependent?.(profileId)||API.user?.id!==userId)return false;
       const rows=await API.listResults(profileId);
       if(profile?.id!==profileId||profile._sessionOnly||API.isIndependent?.(profileId)||API.user?.id!==userId)return false;
       if($('#pendingResultStatus')?.textContent.startsWith('No se pudieron consultar los resultados guardados'))setPendingResultHomeStatus();
@@ -1104,7 +1116,7 @@
     buildSessionBuilder();
     switchSection("home");
     updateGlobalUI();
-    if(!independent){recoverPendingResults(id);recoverConfirmedResults(id);}
+    if(!independent)recoverConfirmedResults(id);
   }
   $('#workspaceMenu').onclick=()=>{const open=$('#appShell').classList.toggle('mobile-nav-open');$('#workspaceMenu').setAttribute('aria-expanded',String(open));};
   $('#prepareSessionBtn').onclick=()=>switchSection('sessionBuilder');
