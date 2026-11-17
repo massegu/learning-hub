@@ -36,6 +36,7 @@ window.supabase={createClient(){
    return {data:{items,usage:{used:__requests.length,limit:50}},error:null};
  }},rpc:async(name,args)=>{
    if(window.__privacyFail)return {error:{message:'offline privacy failure'}};
+   if(args.p_action==='settings'&&window.__duplicateProfileCode)return {error:{code:'23505',message:'duplicate key violates unique constraint "learner_profiles_account_code_normalized_key"'}};
    const profile=__profiles.find(p=>p.id===args.p_profile);
    if(!profile)return {error:{message:'Profile not found'}};
    window.__privacyEvents=window.__privacyEvents||[];__privacyEvents.push({action:args.p_action,id:profile.id});

@@ -1016,7 +1016,7 @@
   async function createProfile() {
     const name = $("#newProfileName").value.trim().toUpperCase();
     if (!name) return;
-    const codeInput=$("#newProfileName");if(!window.PrivacyControls.isCode(name)){codeInput.setCustomValidity('Usa el código generado: P- seguido de 8 letras o números.');codeInput.reportValidity();return;}codeInput.setCustomValidity('');
+    const codeInput=$("#newProfileName");if(!window.PrivacyControls.isCode(name)){codeInput.setCustomValidity('Usa el código generado: P- seguido de 8 caracteres hexadecimales.');codeInput.reportValidity();return;}codeInput.setCustomValidity('');
     const exactAge=$("#newProfileExactAge").value,route=$("#newProfileAge").value;
     if(['early','junior'].includes(route)&&!exactAge){$('#exactAgeField').classList.add('invalid');$('#newProfileExactAge').focus();return;}
     try {
@@ -2259,7 +2259,7 @@
   $('#closeProfilePrivacy').onclick=()=>{if(!privacyBusy)$('#privacyDialog').close();};
   $('#privacyDialog').addEventListener('cancel',e=>{if(privacyBusy)e.preventDefault();});
   $('#saveProfilePrivacy').onclick=async()=>{
-    try{const original=profiles.find(p=>p.id===privacyTarget)?.name||'',entered=$('#privacyAlias').value.trim(),alias=entered===original?original:entered.toUpperCase();if(alias!==original&&!window.PrivacyControls.isCode(alias)){privacyMessage('Para cambiar el código, usa P- seguido de 8 letras o números. El código actual se conserva si no lo modificas.');return;}const updated=await privacyAction('settings',{alias,reviewAt:$('#privacyReviewDate').value||null});
+    try{const original=profiles.find(p=>p.id===privacyTarget)?.name||'',entered=$('#privacyAlias').value.trim(),alias=entered===original?original:entered.toUpperCase();if(alias!==original&&!window.PrivacyControls.isCode(alias)){privacyMessage('Para cambiar el código, usa P- seguido de 8 caracteres hexadecimales. El código actual se conserva si no lo modificas.');return;}const updated=await privacyAction('settings',{alias,reviewAt:$('#privacyReviewDate').value||null});
       const exactAge=$('#privacyExactAge').value;const found=profiles.find(p=>p.id===privacyTarget);if(found){Object.assign(found,updated);found.progress={...(found.progress||{}),...(exactAge?{ageYears:Number(exactAge)}:{ageYears:undefined})};if(!exactAge)delete found.progress.ageYears;}if(profile?.id===privacyTarget){profile.name=updated.name;profile.progress={...(profile.progress||{}),...(exactAge?{ageYears:Number(exactAge)}:{})};if(!exactAge)delete profile.progress.ageYears;persist();renderProfiles();updateGlobalUI();}privacyMessage('Código, edad y fecha de revisión guardados.');
     }catch(_){}
   };

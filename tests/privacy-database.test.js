@@ -11,7 +11,7 @@ before(async()=>{db=new PGlite();await db.exec(`create role anon;create role aut
  create table content_seen(id uuid primary key default gen_random_uuid(),profile_id uuid,user_id uuid,item_signature text);
  insert into learner_profiles values('${P}','${A}','P-1','primary','es_es','{"interactiveObservations":[{"kind":"room","description":"private free text","report":"described"}]}'),('${Q}','${B}','P-2','teen','es_es','{}');
  grant all on private.content_delivery_log to anon,authenticated;grant select(kind) on private.content_delivery_log to anon;insert into exercise_results(profile_id,correct) values('${P}',true),('${Q}',false);insert into private.content_delivery_log(user_id,profile_id,content_id,kind) values('${A}','${P}','${P}','exercise'),('${B}','${Q}','${Q}','worksheet');
- insert into content_seen(profile_id,user_id,item_signature) values('${P}','${A}','source-a'),('${Q}','${B}','source-b');grant truncate,trigger,references on learner_profiles,exercise_results to anon,authenticated;grant update(correct) on exercise_results to authenticated;`);await db.exec(fs.readFileSync('supabase/migrations/202610230001_learner_privacy.sql','utf8'));const idempotencyMigration=fs.readFileSync('supabase/migrations/'+resultMigration,'utf8');await db.exec(idempotencyMigration);await db.exec(idempotencyMigration);await db.exec(fs.readFileSync('supabase/migrations/20261116170000_validate_new_profile_codes.sql','utf8'));await db.exec(fs.readFileSync('supabase/migrations/20261116171000_allow_unscored_exercise_results.sql','utf8'));});
+ insert into content_seen(profile_id,user_id,item_signature) values('${P}','${A}','source-a'),('${Q}','${B}','source-b');grant truncate,trigger,references on learner_profiles,exercise_results to anon,authenticated;grant update(correct) on exercise_results to authenticated;`);await db.exec(fs.readFileSync('supabase/migrations/202610230001_learner_privacy.sql','utf8'));const idempotencyMigration=fs.readFileSync('supabase/migrations/'+resultMigration,'utf8');await db.exec(idempotencyMigration);await db.exec(idempotencyMigration);await db.exec(fs.readFileSync('supabase/migrations/20261116170000_validate_new_profile_codes.sql','utf8'));await db.exec(fs.readFileSync('supabase/migrations/20261116171000_allow_unscored_exercise_results.sql','utf8'));await db.exec(fs.readFileSync('supabase/migrations/20261117100000_unique_learner_profile_codes.sql','utf8'));});
  after(async()=>db.close());
 const as=async(id)=>db.exec(`reset role;select set_config('request.jwt.claim.sub','${id}',false);set role authenticated;`);
 test('migration strips legacy notes and cannot store temporary session progress',async()=>{
@@ -23,6 +23,39 @@ test('migration strips legacy notes and cannot store temporary session progress'
  await assert.rejects(db.query("insert into learner_profiles(id,account_id,name,age_band) values(gen_random_uuid(),$1,'María','primary')",[A]),/Profile code/);
  await db.query("insert into learner_profiles(id,account_id,name,age_band) values(gen_random_uuid(),$1,'P-ABCDEF01','primary')",[A]);
  await assert.rejects(db.query("update learner_profiles set name='María' where id=$1",[P]),/Profile code/);
+});
+test('profile codes are unique per account across creation, edits and simultaneous inserts without changing historical aliases',async()=>{
+ const ids=['d1111111-1111-4111-8111-111111111111','d2222222-2222-4222-8222-222222222222','d3333333-3333-4333-8333-333333333333','d4444444-4444-4444-8444-444444444444'];
+ const codes=['P-F00DBAAD','P-F00DBABE','P-1234ABCD'];
+ try{
+  await as(A);
+  await db.query('insert into learner_profiles(id,account_id,name,age_band) values($1,$2,$3,$4)',[ids[0],A,codes[0],'primary']);
+  await assert.rejects(db.query('insert into learner_profiles(id,account_id,name,age_band) values($1,$2,$3,$4)',[ids[1],A,'p-f00dbaad','primary']),e=>e.code==='23505'&&String(e.message).includes('learner_profiles_account_code_normalized_key'));
+  await db.query('insert into learner_profiles(id,account_id,name,age_band) values($1,$2,$3,$4)',[ids[2],A,codes[1],'primary']);
+  await assert.rejects(db.query('update learner_profiles set name=$1 where id=$2',[codes[0],ids[2]]),e=>e.code==='23505'&&String(e.message).includes('learner_profiles_account_code_normalized_key'));
+  await db.query('update learner_profiles set name=$1 where id=$2',['p-f00dbaac',ids[2]]);
+  assert.equal((await db.query('select name from learner_profiles where id=$1',[ids[2]])).rows[0].name,'P-F00DBAAC','edited codes are stored normalized in uppercase');
+  await db.exec('reset role');await as(B);
+  await db.query('insert into learner_profiles(id,account_id,name,age_band) values($1,$2,$3,$4)',[ids[1],B,codes[0],'primary']);
+  await db.exec('reset role');await as(A);
+  const concurrent=await Promise.allSettled(ids.slice(2,4).map(id=>db.query('insert into learner_profiles(id,account_id,name,age_band) values($1,$2,$3,$4)',[id,A,codes[2],'primary'])));
+  assert.equal(concurrent.filter(x=>x.status==='fulfilled').length,1,'one concurrent insert wins');
+  assert.equal(concurrent.filter(x=>x.status==='rejected').length,1,'the unique index rejects the competing concurrent insert');
+  assert.ok(concurrent.find(x=>x.status==='rejected').reason.code==='23505');
+  assert.equal((await db.query('select count(*)::int as n from learner_profiles where account_id=$1 and upper(btrim(name))=$2',[A,codes[2]])).rows[0].n,1);
+  await db.exec('reset role');
+  assert.deepEqual((await db.query('select id,name from learner_profiles where id in ($1,$2) order by id',[P,Q])).rows,[{id:P,name:'P-1'},{id:Q,name:'P-2'}],'historical aliases remain byte-for-byte unchanged');
+ }finally{await db.exec('reset role');await db.query('delete from learner_profiles where id=any($1::uuid[])',[ids]);}
+});
+test('duplicate normalized historical codes abort the migration without changing rows',async()=>{
+ const preflight=new PGlite();
+ try{
+  await preflight.exec("create table learner_profiles(account_id uuid,name text);insert into learner_profiles values('11111111-1111-4111-8111-111111111111','P-abcdef01'),('11111111-1111-4111-8111-111111111111','P-ABCDEF01'),('22222222-2222-4222-8222-222222222222','P-ABCDEF01')");
+  await assert.rejects(preflight.exec(fs.readFileSync('supabase/migrations/20261117100000_unique_learner_profile_codes.sql','utf8')),/Duplicate normalized profile codes/);
+  await preflight.exec('rollback');
+  assert.equal((await preflight.query('select count(*)::int as n from learner_profiles')).rows[0].n,3,'the failed preflight preserves every historical row');
+  assert.equal((await preflight.query("select to_regclass('public.learner_profiles_account_code_normalized_key') as index_name")).rows[0].index_name,null,'the failed migration creates no partial index');
+ }finally{await preflight.close();}
 });
 test('real RLS blocks other accounts and RPCs reject forged profile IDs',async()=>{
  await as(A);assert.equal((await db.query('select * from exercise_results')).rows.length,1);assert.equal((await db.query('select * from content_seen')).rows.length,1);
@@ -43,7 +76,7 @@ test('export is complete for the owned learner, settings are audited, deletion c
  assert.equal(data.profile.id,P);assert.equal(data.results.length,1);assert.equal(data.content_history.length,1);assert.equal(data.delivery_log.length,1);assert.equal(data.delivery_log[0].user_id,A);assert.ok(!JSON.stringify(data).includes(Q));
  await assert.rejects(db.query("select manage_learner_privacy('settings',$1,'P-024','2027-01-01')",[P]),/Profile code/);
  await db.query("select manage_learner_privacy('settings',$1,'P-ABCDEF02','2027-01-01')",[P]);assert.equal((await db.query('select privacy_review_at::text from learner_profiles where id=$1',[P])).rows[0].privacy_review_at,'2027-01-01');
- const audit=(await db.query('select * from learner_privacy_audit')).rows;assert.deepEqual(audit.map(x=>x.action),['export','settings']);assert.ok(!JSON.stringify(audit).includes('P-ABCDEF02'));
+ const audit=(await db.query('select action from learner_privacy_audit where profile_id=$1',[P])).rows;assert.deepEqual(audit.map(x=>x.action),['export','settings']);assert.ok(!JSON.stringify(audit).includes('P-ABCDEF02'));
  await db.query("select manage_learner_privacy('delete',$1)",[P]);assert.equal((await db.query('select * from learner_profiles where id=$1',[P])).rows.length,0);
  await db.exec('reset role');assert.equal((await db.query('select * from exercise_results where profile_id=$1',[P])).rows.length,0);assert.equal((await db.query('select * from content_seen where profile_id=$1',[P])).rows.length,0);assert.equal((await db.query('select * from private.content_delivery_log where profile_id=$1',[P])).rows.length,0);
  assert.equal((await db.query('select * from learner_profiles where id=$1',[Q])).rows.length,1);
