@@ -1,5 +1,5 @@
--- Enforce account-scoped uniqueness for generated profile codes.
--- Historical non-code aliases are not changed; collisions abort before index creation.
+-- Enforce account-scoped uniqueness for every profile code/name after trimming
+-- surrounding whitespace and normalizing case. Historical values are preserved.
 begin;
 
 do $$
@@ -7,11 +7,10 @@ begin
   if exists (
     select 1
     from public.learner_profiles
-    where btrim(name) ~* '^P-[0-9A-F]{8}$'
     group by account_id, upper(btrim(name))
     having count(*) > 1
   ) then
-    raise exception 'Duplicate normalized profile codes exist; review them manually before applying this migration';
+    raise exception 'Duplicate normalized profile names or codes exist; review them manually before applying this migration';
   end if;
 end;
 $$;
@@ -29,10 +28,11 @@ begin
 end
 $$;
 
--- The index is account-scoped, case-normalized, and enforced atomically by PostgreSQL.
--- It also catches races between simultaneous profile creation requests.
+-- Cover historical aliases and generated codes alike. PostgreSQL enforces this
+-- atomically, including when simultaneous inserts race. NULL account/name values
+-- retain standard unique-index semantics; account_id is non-null in production.
 create unique index learner_profiles_account_code_normalized_key
   on public.learner_profiles (account_id, upper(btrim(name)))
-  where btrim(name) ~* '^P-[0-9A-F]{8}$';
+;
 
 commit;

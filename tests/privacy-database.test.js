@@ -50,12 +50,26 @@ test('profile codes are unique per account across creation, edits and simultaneo
 test('duplicate normalized historical codes abort the migration without changing rows',async()=>{
  const preflight=new PGlite();
  try{
-  await preflight.exec("create table learner_profiles(account_id uuid,name text);insert into learner_profiles values('11111111-1111-4111-8111-111111111111','P-abcdef01'),('11111111-1111-4111-8111-111111111111','P-ABCDEF01'),('22222222-2222-4222-8222-222222222222','P-ABCDEF01')");
-  await assert.rejects(preflight.exec(fs.readFileSync('supabase/migrations/20261117100000_unique_learner_profile_codes.sql','utf8')),/Duplicate normalized profile codes/);
+  await preflight.exec("create table learner_profiles(account_id uuid,name text);insert into learner_profiles values('11111111-1111-4111-8111-111111111111','P-Legacy-A'),('11111111-1111-4111-8111-111111111111','  p-lEGACY-a  '),('22222222-2222-4222-8222-222222222222','P-Legacy-A')");
+  await assert.rejects(preflight.exec(fs.readFileSync('supabase/migrations/20261117100000_unique_learner_profile_codes.sql','utf8')),/Duplicate normalized profile names or codes/);
   await preflight.exec('rollback');
   assert.equal((await preflight.query('select count(*)::int as n from learner_profiles')).rows[0].n,3,'the failed preflight preserves every historical row');
   assert.equal((await preflight.query("select to_regclass('public.learner_profiles_account_code_normalized_key') as index_name")).rows[0].index_name,null,'the failed migration creates no partial index');
  }finally{await preflight.close();}
+});
+test('the index covers historical aliases after case/space normalization but remains account-scoped',async()=>{
+ const historical=new PGlite();
+ try{
+  await historical.exec(`create table learner_profiles(id uuid primary key,account_id uuid not null,name text not null);
+   insert into learner_profiles values
+   ('aaaaaaaa-1111-4111-8111-111111111111','${A}','  P-Old-Alias  '),
+   ('bbbbbbbb-2222-4222-8222-222222222222','${B}','P-Old-Alias');`);
+  await historical.exec(fs.readFileSync('supabase/migrations/20261117100000_unique_learner_profile_codes.sql','utf8'));
+  await assert.rejects(historical.exec(`insert into learner_profiles values('cccccccc-3333-4333-8333-333333333333','${A}','p-old-alias')`),e=>e.code==='23505'&&String(e.message).includes('learner_profiles_account_code_normalized_key'),'legacy aliases differing by case and surrounding spaces collide within an account');
+  await assert.rejects(historical.exec(`insert into learner_profiles values('dddddddd-4444-4444-8444-444444444444','${A}','  P-Old-Alias')`),e=>e.code==='23505','legacy aliases differing only by surrounding spaces collide within an account');
+  await historical.exec(`insert into learner_profiles values('eeeeeeee-5555-4555-8555-555555555555','33333333-3333-4333-8333-333333333333','p-old-alias')`);
+  assert.deepEqual((await historical.query('select account_id,name from learner_profiles order by account_id')).rows,[{account_id:A,name:'  P-Old-Alias  '},{account_id:B,name:'P-Old-Alias'},{account_id:'33333333-3333-4333-8333-333333333333',name:'p-old-alias'}],'existing aliases are not rewritten and a separate account may use the same normalized value');
+ }finally{await historical.close();}
 });
 test('real RLS blocks other accounts and RPCs reject forged profile IDs',async()=>{
  await as(A);assert.equal((await db.query('select * from exercise_results')).rows.length,1);assert.equal((await db.query('select * from content_seen')).rows.length,1);
