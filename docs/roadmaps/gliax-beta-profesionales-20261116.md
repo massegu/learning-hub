@@ -77,3 +77,8 @@ C. Prototipo version A «Espera guiada» sin pulsacion obligatoria, con finaliza
 D. Auditoria cuantitativa de familias y seleccion por edad; priorizar velocidad ecologica.
 E. Terminar y verificar identidad GLIAX en PR #50.
 Cada lote en PR revisable con tests, capturas movil/escritorio, notas de migracion y sin merge/despliegue automatico.
+
+
+## Preparación conjunta PR #50 + PR #51 (17 de noviembre de 2026)
+Rama temporal de revisión: `integration/gliax-pr50-pr51-20261117`.
+La rama integra la landing y los estilos de marca de PR #50 con las mejoras de privacidad, métricas y ejercicios de PR #51. No se han aplicado las migraciones ni desplegado las funciones Edge o el frontend. Las PR originales y las ramas `main` y `desarrollo` permanecen intactas. Verificar pruebas conjuntas, interfaz responsive y contratos de Supabase antes de cualquier despliegue.
