@@ -2,6 +2,8 @@
 
 Fecha: 17/11/2026. **Estado: BLOQUEADO antes de generar o ejecutar una baseline completa. No es una reconstrucción terminada.**
 
+**Nota de alcance posterior:** este documento conserva la revisión histórica bajo el requisito de fidelidad estricta. El usuario autorizó después una baseline de equivalencia funcional con roles/defaults oficiales locales y diferencias documentadas. Ese trabajo se recoge en [el nuevo informe de validación](gliax-functional-baseline-validation-20261117.md); su resultado sustituye este bloqueo para ese alcance, sin afirmar una réplica exacta de plataforma.
+
 ## Checkout y alcance
 
 Se comprobó Git limpio en `7a76e5039623a29495083782bfb262b5758cbdbf`, rama `integration/gliax-pr50-pr51-20261117`. Se actualizó por **avance directo**, sin commit de merge, a `a3a75de412e29be39d91f0afd86c3592dcee233b`. Se conservan los commits `9ee39c4`, `dcca944` y `7a76e50`; las seis migraciones y todos los tests de `dcca944` permanecen sin cambios.

@@ -141,3 +141,11 @@ Se actualizó la rama de integración por avance directo conservando las seis mi
 **Punto de parada alcanzado: no puede afirmarse aún una reconstrucción fiel de seguridad/contexto.** Faltan ACL/owners completos, defaults de privilegios, roles/membresías y opciones de secuencias, entre otros metadatos enumerados. Se documentó la [propuesta de seguridad independiente](gliax-accounts-security-proposal-20261117.md) para TRUNCATE/TRIGGER de cuentas y revisión de SECURITY DEFINER, sin aplicarla.
 
 Resultado de este trabajo: revisión estática y documentación; **no se generó ni ejecutó una baseline, no se repitieron las 51 comprobaciones y no se ejecutó `npm test`**, puesto que no se modificaron código ni pruebas. Las 51 superadas siguen siendo evidencia exclusivamente de la fase local anterior con fixture. No hubo conexión a Supabase remoto, alteración de permisos ni datos, despliegue o fusión. El objetivo de reconstrucción permanece bloqueado, no completado.
+
+## Baseline de equivalencia funcional autorizada — 17/11/2026
+
+El encargo posterior permite usar roles/defaults de la plataforma local oficial y documentar diferencias de metadatos internos. Se creó una baseline consolidada separada de las migraciones históricas, con definiciones verificadas, permisos explícitos y una corrección SQL local acotada. No se necesitó recuperar datos ni conectarse al proyecto remoto.
+
+**Resultados nuevos:** 88/88 comprobaciones sobre la baseline sin fixture simplificada, 51/51 en una ejecución independiente del modo histórico con fixture y 270/270 de `npm test`; advisors locales sin advertencias/errores. Las seis migraciones originales siguen intactas y no se ejecutan encima de la baseline. El contraste y los límites del adaptador Node de contenido, las diferencias de plataforma y los requisitos de staging están en [el informe de equivalencia funcional](gliax-functional-baseline-validation-20261117.md). La [guía de instalación local nueva](../../supabase/baselines/README.md) especifica los tres archivos y su orden; no son una actualización para la beta existente.
+
+El bloqueo de la revisión estricta anterior queda resuelto para este nuevo alcance funcional. Continúan declaradas las diferencias con los metadatos internos gestionados y el trabajo pendiente de staging. No se aplicó nada remotamente, no se desplegó ni se fusionaron ramas.

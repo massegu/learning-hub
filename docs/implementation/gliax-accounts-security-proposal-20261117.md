@@ -2,6 +2,8 @@
 
 Fecha: 17/11/2026. **Propuesta no aplicada ni validada dinámicamente. No es una migración remota autorizada.** Basada en [permisos efectivos aportados](gliax-observed-permissions-20261117.md). La reconstrucción permanece [bloqueada](gliax-observed-reconstruction-review-20261117.md); no se han concedido permisos excesivos en una base nueva para reproducirlos innecesariamente.
 
+**Actualización posterior, exclusivamente local:** el [perfil de permisos de la baseline funcional](../../supabase/baselines/local-privileges.sql) establece las capacidades de aplicación explícitamente y sus pruebas confirman las denegaciones de DDL de cliente. No se reprodujeron los grants excesivos ni se aplicó esta propuesta al origen. Ver [resultados y diferencias](gliax-functional-baseline-validation-20261117.md). El texto siguiente conserva la propuesta original para revisión separada de cualquier instalación existente.
+
 ## Hallazgo y alcance mínimo
 
 `anon` y `authenticated` tienen TRUNCATE y TRIGGER efectivos sobre `public.accounts`. RLS no restringe TRUNCATE. TRIGGER es una capacidad DDL innecesaria para el frontend; su explotación concreta depende también de otros permisos y de las funciones disponibles. No se afirma haber intentado explotación remota ni local.
