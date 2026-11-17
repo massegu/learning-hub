@@ -722,8 +722,39 @@
   function recent(s, n = 10) {
     return state.history.filter((x) => x.subject === s&&!isGuidedWaitResult(x)).slice(-n);
   }
-  function exerciseMetrics(row){try{const metrics=JSON.parse(row?.detail||'null');return metrics?.schema==='gliax.exercise-metrics.v1'?metrics:null;}catch{return null;}}
+  function exerciseMetrics(row){try{const metrics=typeof row?.detail==='string'?JSON.parse(row.detail||'null'):row?.detail;return metrics?.schema==='gliax.exercise-metrics.v1'?metrics:null;}catch{return null;}}
   function isGuidedWaitResult(row){return exerciseMetrics(row)?.modality==='guided_wait';}
+  function resultHistoryKey(row){
+    if(row?.clientAttemptId||row?.client_attempt_id)return `attempt:${row.clientAttemptId||row.client_attempt_id}`;
+    // Older rows predate attempt UUIDs. A field fingerprint avoids duplicating
+    // those rows while retaining genuinely separate attempts with distinct times.
+    return `legacy:${JSON.stringify([row?.sessionId||row?.session_id||'',row?.ts||row?.occurred_at||'',row?.subject||'',row?.level??'',row?.correct??null,row?.points??0,row?.itemId||row?.item_id||'',row?.detail??null])}`;
+  }
+  function mergeConfirmedResultHistory(history,confirmed){
+    const merged=[...(Array.isArray(history)?history:[])],keys=new Set(merged.map(resultHistoryKey));let added=0;
+    for(const row of confirmed||[]){const key=resultHistoryKey(row);if(keys.has(key))continue;keys.add(key);merged.push(row);added++;}
+    if(added)merged.sort((a,b)=>String(a.ts||'').localeCompare(String(b.ts||'')));
+    return {history:merged,added};
+  }
+  async function recoverConfirmedResults(profileId){
+    if(!profileId||!API.listResults||profile?._sessionOnly||API.isIndependent?.(profileId))return false;
+    const userId=API.user?.id;
+    try{
+      const rows=await API.listResults(profileId);
+      if(profile?.id!==profileId||profile._sessionOnly||API.isIndependent?.(profileId)||API.user?.id!==userId)return false;
+      if($('#pendingResultStatus')?.textContent.startsWith('No se pudieron consultar los resultados guardados'))setPendingResultHomeStatus();
+      const merged=mergeConfirmedResultHistory(state.history,rows);
+      if(!merged.added)return true;
+      // exercise_results is the durable record of confirmed attempts. Reconcile
+      // only the history cache; aggregate points, streaks, totals and levels are
+      // intentionally left as saved and are never recalculated on recovery.
+      state.history=merged.history.slice(-5000);
+      profile.progress={...profile.progress,history:state.history};
+      await persist(false);
+      if(profile?.id===profileId&&$('#progress')?.classList.contains('active-section'))renderProgress();
+      return true;
+    }catch(error){console.warn('Could not reconcile confirmed exercise results',error);if(profile?.id===profileId&&!profile._sessionOnly&&!API.isIndependent?.(profileId))setPendingResultHomeStatus('No se pudieron consultar los resultados guardados. Abre Progreso de nuevo para volver a intentarlo.','error');return false;}
+  }
   function recalcLevel(s) {
     if(window.AgeStages.forProfile(profile)||['executive','speedReasoning'].includes(s)){
       const checkpoints=profile.progress?._levelCheckpoints || {};
@@ -1073,7 +1104,7 @@
     buildSessionBuilder();
     switchSection("home");
     updateGlobalUI();
-    if(!independent)recoverPendingResults(id);
+    if(!independent){recoverPendingResults(id);recoverConfirmedResults(id);}
   }
   $('#workspaceMenu').onclick=()=>{const open=$('#appShell').classList.toggle('mobile-nav-open');$('#workspaceMenu').setAttribute('aria-expanded',String(open));};
   $('#prepareSessionBtn').onclick=()=>switchSection('sessionBuilder');
@@ -1155,7 +1186,7 @@
     );
     $("#sectionTitle").textContent =
       id === "exercise" ? SUBJECT_META[subject].name : titles[id];
-    if (id === "progress") renderProgress();
+    if (id === "progress") {renderProgress();if(profile&&!profile._sessionOnly)recoverConfirmedResults(profile.id);}
     if(id==='home')renderHomeAreaLanding();
     if(id==='exercise'){window.scrollTo(0,0);$('#exerciseHeading').focus({preventScroll:true});}
   }
@@ -2042,7 +2073,11 @@
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 1500);
   }
-  $("#exportDetailCsv").onclick = () => {
+  $("#exportDetailCsv").onclick = async () => {
+    const exportProfile=profile;
+    if(!exportProfile)return;
+    if(!exportProfile._sessionOnly&&!(await recoverConfirmedResults(exportProfile.id)))return;
+    if(profile!==exportProfile)return;
     const rows = [
       [
         "usuario",
@@ -2052,7 +2087,7 @@
         "nivel",
         "resultado",
         "puntos",
-        "id", "area_original", "tiempo_ms", "tiempo_valido", "tarea_velocidad", "version_velocidad", "metricas_modalidad",
+        "id", "area_original", "tiempo_ms", "tiempo_valido", "tarea_velocidad", "version_velocidad", "metricas_modalidad", "client_attempt_id", "modalidad_metricas", "version_esquema_metricas",
       ],
     ];
     state.history.forEach((x) =>
@@ -2064,7 +2099,7 @@
         x.level,
         isGuidedWaitResult(x)?"intervalo finalizado":x.correct ? "correcto" : "revisar",
         x.points,
-        x.itemId, x.originalSubject||"", x.responseMs??"", x.timingValid??"", x.speedFamily||"", x.speedFamily?(x.speedRevision||2):"", exerciseMetrics(x)?x.detail:"",
+        x.itemId, x.originalSubject||"", x.responseMs??"", x.timingValid??"", x.speedFamily||"", x.speedFamily?(x.speedRevision||2):"", exerciseMetrics(x)?(typeof x.detail==='string'?x.detail:JSON.stringify(x.detail)):"", x.clientAttemptId||"", exerciseMetrics(x)?.modality||"", exerciseMetrics(x)?.schema||"",
       ]),
     );
     downloadText(

@@ -119,6 +119,16 @@
   API.isIndependent=id=>API.independentProfile===id;
   API.signOut=async()=>{API.setIndependent(null);await client.auth.signOut();API.session=null;API.user=null;API.profileLocale=null;API.setContentLocale(null)};
   API.listProfiles=async()=>{const {data,error}=await client.from('learner_profiles').select('id,name,age_band,locale,progress,created_at').order('created_at');if(error)throw error;return (data||[]).map(p=>{p.progress=window.PrivacyControls.minimize(p.progress);return p;})};
+  API.listResults=async profileId=>{
+    if(API.isIndependent(profileId))return [];
+    const rows=[];let offset=0,batch=[];
+    do{
+      const {data,error}=await client.from('exercise_results').select('client_attempt_id,occurred_at,session_id,session_started_at,subject,level,correct,points,item_id,detail').eq('profile_id',profileId).order('occurred_at',{ascending:true}).range(offset,offset+999);
+      if(error)throw error;
+      batch=data||[];rows.push(...batch);offset+=batch.length;
+    }while(batch.length===1000);
+    return rows.map(row=>({clientAttemptId:row.client_attempt_id||null,ts:row.occurred_at,sessionId:row.session_id||null,sessionStartedAt:row.session_started_at||null,subject:row.subject,level:row.level,correct:row.correct,points:Number(row.points)||0,itemId:row.item_id||null,detail:row.detail??null}));
+  };
   API.createProfile=async(name,age_band,initial_level=1,locale='es_intl')=>{name=String(name||'').trim().toUpperCase();if(!window.PrivacyControls.isCode(name))throw new Error('Usa el código generado: P- seguido de 8 caracteres hexadecimales.');const younger=['early','junior'].includes(age_band);const storedBand=younger?'primary':age_band;const progress={initialLevel:Number(initial_level)||1,...(younger?{ageRoute:age_band}:{})};const {data,error}=await client.from('learner_profiles').insert({account_id:API.user.id,name,age_band:storedBand,locale,progress}).select('id,name,age_band,locale,progress,created_at').single();if(error){if(isDuplicateProfileCode(error))throw new Error(duplicateProfileCodeMessage);throw error;}return data};
   API.updateProfileLocale=async(id,locale)=>{const {data,error}=await client.from('learner_profiles').update({locale}).eq('id',id).select('id,name,age_band,locale,progress,created_at').single();if(error)throw error;return data};
   API.deleteProfile=async(id)=>{const result=await API.privacy('delete',id);API.clearPendingResults(id);return result;};

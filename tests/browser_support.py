@@ -47,7 +47,7 @@ window.supabase={createClient(){
    return {error:{message:'Unknown privacy action'}};
  },from(table){
    let filter,operation,values,upsertOptions;
-   const q={select(){return q},order(){return q},eq(k,v){filter=v;return q},insert(v){operation='insert';values=v;return q},upsert(v,options){operation='upsert';values=v;upsertOptions=options;return q},update(v){operation='update';values=v;return q},delete(){return q},single(){return Promise.resolve(result(true))},then(a,b){return Promise.resolve(result(false)).then(a,b)}};
+   const q={select(){operation='select';return q},order(){return q},range(){return q},eq(k,v){filter={key:k,value:v};return q},insert(v){operation='insert';values=v;return q},upsert(v,options){operation='upsert';values=v;upsertOptions=options;return q},update(v){operation='update';values=v;return q},delete(){return q},single(){return Promise.resolve(result(true))},then(a,b){return Promise.resolve(result(false)).then(a,b)}};
    function result(single){
      if(table==='accounts'){
        if(operation==='update'){if(window.__saveLocaleFail)return {error:{message:'Mock save rejected'}};localStorage.setItem('__mock_account_locale',values.content_locale);operation=null;}
@@ -57,9 +57,14 @@ window.supabase={createClient(){
        if(operation==='insert'){
          const p={...values,id:'created'};__profiles.push(p);operation=null;return {data:p,error:null};
        }
-       const p=__profiles.find(p=>p.id===filter);
+       const p=__profiles.find(p=>p.id===filter?.value);
        if(operation==='update'&&p){Object.assign(p,values);__saved.push(JSON.parse(JSON.stringify(p)));localStorage.setItem('__mock_profiles',JSON.stringify(__profiles));operation=null;}
        return {data:single?p:__profiles,error:null};
+     }
+     if(table==='exercise_results'&&operation==='select'){
+       const rows=JSON.parse(localStorage.getItem('__mock_exercise_results')||'{}');
+       const data=Object.values(rows).filter(row=>row.profile_id===filter?.value).sort((a,b)=>String(a.occurred_at||'').localeCompare(String(b.occurred_at||'')));
+       operation=null;return {data,error:null};
      }
      if(table==='exercise_results'&&operation==='upsert'){
        const rows=JSON.parse(localStorage.getItem('__mock_exercise_results')||'{}');

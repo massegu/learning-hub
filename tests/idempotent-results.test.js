@@ -9,9 +9,13 @@ function makeStorage(){
 function makeClient(shared={rows:new Map(),calls:[],nextError:null}){
  const client={auth:{},shared,from(table){
   if(table!=='exercise_results')throw new Error(`Unexpected table ${table}`);
-  let payload,options;
-  const query={upsert(value,opts){payload=value;options=opts;return query},then(resolve,reject){
+  let payload,options,operation='upsert',profileFilter=null,rangeStart=0,rangeEnd=999999;
+  const query={select(){operation='select';return query},eq(key,value){if(key==='profile_id')profileFilter=value;return query},order(){return query},range(start,end){rangeStart=start;rangeEnd=end;return query},upsert(value,opts){operation='upsert';payload=value;options=opts;return query},then(resolve,reject){
    const run=async()=>{
+    if(operation==='select'){
+     const data=[...shared.rows.values()].filter(row=>profileFilter===null||row.profile_id===profileFilter).sort((a,b)=>String(a.occurred_at||'').localeCompare(String(b.occurred_at||''))).slice(rangeStart,rangeEnd+1);
+     shared.calls.push({operation,profileFilter,rangeStart,rangeEnd});return {data,error:null};
+    }
     shared.calls.push({payload:{...payload},options:{...options}});
     const failure=shared.nextError;shared.nextError=null;
     if(failure==='after-insert'){
@@ -94,4 +98,15 @@ test('definitive database errors remain failed for manual retry; network errors 
  assert.equal((await env.api.retryPendingResults('profile-1')).attempted,0,'definitive failures are not retried automatically');
  env.shared.nextError=null;
  assert.deepEqual(JSON.parse(JSON.stringify(await env.api.retryPendingResults('profile-1',{includeFailed:true}))),{attempted:1,confirmed:1,failed:0,uncertain:0,remaining:0});
+});
+
+test('confirmed result reads are profile-scoped, paginated and disabled for independent sessions',async()=>{
+ const shared={rows:new Map(),calls:[],nextError:null};
+ for(let index=0;index<1001;index++){
+  const id=`attempt-${index}`;shared.rows.set(`profile-1:${id}`,{profile_id:'profile-1',client_attempt_id:id,occurred_at:new Date(1700000000000+index).toISOString(),session_id:'s1',subject:'executive',level:1,correct:null,points:0,item_id:`item-${index}`,detail:'{"schema":"gliax.exercise-metrics.v1","modality":"guided_wait"}'});
+ }
+ shared.rows.set('profile-2:other',{profile_id:'profile-2',client_attempt_id:'other',occurred_at:'2026-11-01T00:00:00.000Z'});
+ const env=loadApi({shared});const rows=await env.api.listResults('profile-1');
+ assert.equal(rows.length,1001);assert.equal(rows[0].clientAttemptId,'attempt-0');assert.equal(rows.at(-1).clientAttemptId,'attempt-1000');assert.ok(rows.every(row=>row.subject==='executive'));assert.deepEqual(shared.calls.filter(call=>call.operation==='select').map(call=>[call.profileFilter,call.rangeStart,call.rangeEnd]),[['profile-1',0,999],['profile-1',1000,1999]]);
+ env.api.setIndependent('profile-1');assert.deepEqual(JSON.parse(JSON.stringify(await env.api.listResults('profile-1'))),[],'independent sessions do not read a tracked profile history');assert.equal(shared.calls.filter(call=>call.operation==='select').length,2);
 });
