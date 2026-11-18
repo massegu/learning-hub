@@ -1060,7 +1060,7 @@
   async function createProfile() {
     const name = $("#newProfileName").value.trim().toUpperCase();
     if (!name) return;
-    const codeInput=$("#newProfileName");if(!window.PrivacyControls.isCode(name)){codeInput.setCustomValidity('Usa el código generado: P- seguido de 8 caracteres hexadecimales.');codeInput.reportValidity();return;}codeInput.setCustomValidity('');
+    const codeInput=$("#newProfileName");if(!window.PrivacyControls.isCode(name)){codeInput.setCustomValidity('Utiliza un código de 2 a 24 caracteres: letras, números, guion o guion bajo; evita nombres reales.');codeInput.reportValidity();return;}codeInput.setCustomValidity('');
     const exactAge=$("#newProfileExactAge").value,route=$("#newProfileAge").value;
     if(['early','junior'].includes(route)&&!exactAge){$('#exactAgeField').classList.add('invalid');$('#newProfileExactAge').focus();return;}
     try {
