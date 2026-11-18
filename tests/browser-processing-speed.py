@@ -30,12 +30,12 @@ try:
    area(page, 'speedReasoning').click();page.wait_for_function('()=>__current?.speedFamily==="'+family+'"');page.wait_for_selector('#startSpeedTrial');page.locator('#startSpeedTrial').click()
    assert page.locator('#exerciseVisual .processing-sources').count()==(0 if family=='crossedKeys' else 1)
    if family=='crossedKeys':
-    assert page.locator('#exerciseVisual table.structured-stimulus-table th').all_text_contents()==['Código','Zona','Mesa']
+    assert page.locator('#exerciseVisual .everyday-material-table thead th').all_text_contents()==['Código','Zona','Mesa']
     assert 'Primera clave' not in page.locator('#exerciseVisual').inner_text() and 'Segunda clave' not in page.locator('#exerciseVisual').inner_text()
    if family=='ruleChoice':
     assert page.locator('.speed-choice').evaluate_all('(els)=>els.map(e=>e.dataset.answer)')==['Izquierda','Derecha'];assert 'ignora' in page.locator('#exercisePrompt').inner_text()
    for width in [1360,390]:
-    page.set_viewport_size({'width':width,'height':1000});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1');assert page.locator('.processing-sources .stimulus-table-scroll').evaluate_all('(els)=>els.every(e=>e.scrollWidth<=e.clientWidth+1)');page.locator('#exercise').screenshot(path=f'/tmp/speed-{family}-{width}.png')
+    page.set_viewport_size({'width':width,'height':1000});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1');assert page.locator('.processing-sources .stimulus-table-scroll,.processing-sources .everyday-material-table').evaluate_all('(els)=>els.every(e=>e.scrollWidth<=e.clientWidth+1)'),(family,width);page.locator('#exercise').screenshot(path=f'/tmp/speed-{family}-{width}.png')
    answer=page.evaluate('__current.a');page.clock.run_for(600);page.locator('#exerciseOptions .speed-choice').evaluate_all('(els,a)=>els.find(e=>e.dataset.answer===a).click()',answer);assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
   assert '500' not in page.locator('#usageHint').inner_text();assert '800' in page.locator('.bank-size-hint').inner_text()
   with page.expect_download() as download:

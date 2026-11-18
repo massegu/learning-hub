@@ -36,6 +36,7 @@ window.supabase={createClient(){
    return {data:{items,usage:{used:__requests.length,limit:50}},error:null};
  }},rpc:async(name,args)=>{
    if(window.__privacyFail)return {error:{message:'offline privacy failure'}};
+   if(args.p_action==='settings'&&window.__duplicateProfileCode)return {error:{code:'23505',message:'duplicate key violates unique constraint "learner_profiles_account_code_normalized_key"'}};
    const profile=__profiles.find(p=>p.id===args.p_profile);
    if(!profile)return {error:{message:'Profile not found'}};
    window.__privacyEvents=window.__privacyEvents||[];__privacyEvents.push({action:args.p_action,id:profile.id});
@@ -45,8 +46,8 @@ window.supabase={createClient(){
    if(args.p_action==='delete'){__profiles=__profiles.filter(p=>p.id!==profile.id);localStorage.setItem('__mock_profiles',JSON.stringify(__profiles));return {data:{deleted:true}}};
    return {error:{message:'Unknown privacy action'}};
  },from(table){
-   let filter,operation,values,upsertOptions;
-   const q={select(){return q},order(){return q},eq(k,v){filter=v;return q},insert(v){operation='insert';values=v;return q},upsert(v,options){operation='upsert';values=v;upsertOptions=options;return q},update(v){operation='update';values=v;return q},delete(){return q},single(){return Promise.resolve(result(true))},then(a,b){return Promise.resolve(result(false)).then(a,b)}};
+   let filter,operation,values,upsertOptions,rangeStart=0,rangeEnd=999999;
+   const q={select(){if(operation!=='insert')operation='select';return q},order(){return q},range(start,end){rangeStart=start;rangeEnd=end;return q},eq(k,v){filter={key:k,value:v};return q},insert(v){operation='insert';values=v;return q},upsert(v,options){operation='upsert';values=v;upsertOptions=options;return q},update(v){operation='update';values=v;return q},delete(){return q},single(){return Promise.resolve(result(true))},then(a,b){return Promise.resolve(result(false)).then(a,b)}};
    function result(single){
      if(table==='accounts'){
        if(operation==='update'){if(window.__saveLocaleFail)return {error:{message:'Mock save rejected'}};localStorage.setItem('__mock_account_locale',values.content_locale);operation=null;}
@@ -56,15 +57,22 @@ window.supabase={createClient(){
        if(operation==='insert'){
          const p={...values,id:'created'};__profiles.push(p);operation=null;return {data:p,error:null};
        }
-       const p=__profiles.find(p=>p.id===filter);
+       const p=__profiles.find(p=>p.id===filter?.value);
        if(operation==='update'&&p){Object.assign(p,values);__saved.push(JSON.parse(JSON.stringify(p)));localStorage.setItem('__mock_profiles',JSON.stringify(__profiles));operation=null;}
        return {data:single?p:__profiles,error:null};
+     }
+     if(table==='exercise_results'&&operation==='select'){
+       const rows=JSON.parse(localStorage.getItem('__mock_exercise_results')||'{}');
+       const data=Object.values(rows).filter(row=>row.profile_id===filter?.value).sort((a,b)=>String(a.occurred_at||'').localeCompare(String(b.occurred_at||''))).slice(rangeStart,rangeEnd+1);
+       const operations=JSON.parse(localStorage.getItem('__mock_result_operations')||'[]');operations.push({type:'select',profile_id:filter?.value,rangeStart,rangeEnd});localStorage.setItem('__mock_result_operations',JSON.stringify(operations));
+       operation=null;return {data,error:null};
      }
      if(table==='exercise_results'&&operation==='upsert'){
        const rows=JSON.parse(localStorage.getItem('__mock_exercise_results')||'{}');
        const key=values.profile_id+':'+values.client_attempt_id;
        if(!rows[key])rows[key]=values;
        localStorage.setItem('__mock_exercise_results',JSON.stringify(rows));
+       const operations=JSON.parse(localStorage.getItem('__mock_result_operations')||'[]');operations.push({type:'upsert',profile_id:values.profile_id,client_attempt_id:values.client_attempt_id});localStorage.setItem('__mock_result_operations',JSON.stringify(operations));
        const calls=Number(localStorage.getItem('__mock_exercise_result_calls')||0)+1;
        localStorage.setItem('__mock_exercise_result_calls',String(calls));
        operation=null;

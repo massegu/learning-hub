@@ -3,6 +3,7 @@
 const library=root.ReadingLibrary||(typeof require==='function'&&require('./reading-library'));
 const docs=root.DocumentLibrary||(typeof require==='function'&&require('./document-library'));
 const ages=['early','junior','primary','middle','teen'];
+const speedMaterialTypes=['phoneScreen','streetBoard','catalog','receipt','poster','whiteboard','tabletScreen','desktopScreen'];
 const T=text=>({type:'text',text}), L=items=>({type:'list',items,presentation:'sequence'}), R=rows=>({type:'table',rows});
 function rotate(a,n){return a.slice(n%a.length).concat(a.slice(0,n%a.length));}
 function shuffled(a,seed){const b=[...a];for(let i=b.length-1;i>0;i--){seed=(Math.imul(seed+1,1664525)+1013904223)>>>0;const j=seed%(i+1);[b[i],b[j]]=[b[j],b[i]];}return b;}
@@ -544,7 +545,8 @@ function processingChallenges(age,level){
  for(let v=0;v<36;v++){
   const codes=rotate(['K','M','R','T','V','Z'],v).slice(0,n),zones=rotate(['A','B','C','D','E','F'],v+level).slice(0,n),targets=rotate(['Mesa azul','Mesa roja','Mesa verde','Mesa amarilla','Mesa blanca','Mesa negra'],v+3).slice(0,n);
   const at=v%n,target=codes[at],answer=targets[at];
-  out.push(finish(choice(`¿A qué mesa lleva el código ${target}?`,[{type:'table',header:true,rows:[['Código','Zona','Mesa'],...codes.map((code,i)=>[code,zones[i],targets[i]])]}],answer,targets.filter(x=>x!==answer).slice(0,3),{speedTask:true,speedFamily:'crossedKeys',speedEvidence:{kind:'crossedKeys',target,block:0},topic:'Velocidad · código, zona y mesa',why:`${target} corresponde a la zona ${zones[at]} y a la ${answer.toLowerCase()}.`}),age,'speedReasoning',level,'crossed-keys-'+v,'speed_crossed_keys'));
+  const materialType=speedMaterialTypes[v%speedMaterialTypes.length],materialTitles={phoneScreen:'Turnos del centro',streetBoard:'Panel de acceso',catalog:'Catálogo de espacios',receipt:'Registro de mesas',poster:'Mesas del encuentro',whiteboard:'Asignación de mesas',tabletScreen:'Lista de salas',desktopScreen:'Directorio de espacios'};
+  out.push(finish(choice(`¿A qué mesa lleva el código ${target}?`,[{type:'table',header:true,presentation:'everydayMaterial',materialType,title:materialTitles[materialType],rows:[['Código','Zona','Mesa'],...codes.map((code,i)=>[code,zones[i],targets[i]])]}],answer,targets.filter(x=>x!==answer).slice(0,3),{speedTask:true,speedFamily:'crossedKeys',speedEvidence:{kind:'crossedKeys',target,block:0,materialType},topic:'Velocidad · código, zona y mesa',why:`${target} corresponde a la zona ${zones[at]} y a la ${answer.toLowerCase()}.`}),age,'speedReasoning',level,'crossed-keys-'+v,'speed_crossed_keys'));
   const day=v%2?'Hoy':'Mañana',state=v%3?'Pendiente':'Hecho',priority=level===3?'Alta':null;
   const rows=Array.from({length:n+level},(_,i)=>['Tarea '+(i+1),i===at?day:i%2?'Mañana':'Hoy',i===at?state:(i%2?'Hecho':'Pendiente'),i===at?'Alta':i%2?'Alta':'Normal']);
   // Exactly one row satisfies all requested conditions. Distractors each miss
@@ -624,6 +626,7 @@ function validateSpeed(item){
  const b=item.stimulus?.[e.block];let answer;
  if(e.kind==='crossedKeys'){
   if(item.q!==`¿A qué mesa lleva el código ${e.target}?`)throw new Error('La pregunta no coincide con el código.');
+  if(!speedMaterialTypes.includes(e.materialType)||b?.presentation!=='everydayMaterial'||b.materialType!==e.materialType||!b.title)throw new Error('El material cotidiano del ejercicio no coincide con su registro.');
   if(JSON.stringify(b?.rows?.[0])!==JSON.stringify(['Código','Zona','Mesa'])||b.rows.slice(1).some(r=>r.length!==3))throw new Error('La tabla debe reunir código, zona y mesa.');
   const dataRows=b.rows.slice(1),rows=dataRows.filter(r=>r[0]===e.target);if(rows.length!==1||!rows[0][1]||!rows[0][2]||dataRows.filter(r=>r[1]===rows[0][1]).length!==1)throw new Error('El código debe llevar a una zona y mesa únicas.');answer=rows[0][2];
  }else if(e.kind==='rapidAgenda'){

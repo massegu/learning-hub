@@ -3,26 +3,56 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#254556" />
-  <title>LEVEL UP · Learning Lab</title>
+  <meta name="theme-color" content="#19243A" />
+  <title>GLIAX · Entrenamiento cognitivo y aprendizaje</title>
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/age-designs.css" />
   <link rel="stylesheet" href="css/ui-refresh.css" />
   <link rel="stylesheet" href="css/redesign-2026.css" />
+  <link rel="stylesheet" href="css/landing-public.css" />
+  <link rel="stylesheet" href="css/gliax-theme.css" />
 </head>
 <body>
   <div id="authGate" class="auth-gate hidden">
-    <div class="auth-card card">
-      <span class="pill">LEARNING HUB</span>
-      <h2>Accede a tu espacio de entrenamiento</h2>
-      <p>Si es tu primera vez, escribe tu email y elige una contraseña de al menos 8 caracteres. Después, pulsa <strong>Crear cuenta</strong> y confirma el enlace que te enviaremos por correo.</p>
-      <p>Si ya tienes cuenta, introduce esos datos y pulsa <strong>Entrar</strong>.</p>
-      <label>Email<input id="authEmail" type="email" autocomplete="email" placeholder="tu@email.com" /></label>
-      <label>Contraseña<input id="authPassword" type="password" autocomplete="current-password" placeholder="Tu contraseña" /></label>
-      <div class="auth-actions"><button id="authSignIn" type="button" class="primary-btn">Entrar</button><button id="authSignUp" type="button" class="secondary-btn">Crear cuenta</button></div>
-      <button id="authForgotPassword" class="auth-link" type="button">He olvidado mi contraseña</button>
-      <p id="authMessage" class="muted" role="status" aria-live="polite"></p>
-      <p class="support-contact hidden"><a data-support-link>Ayuda y contacto</a></p>
+    <div class="landing-wrap">
+      <section class="landing-story" aria-labelledby="landingTitle">
+        <div class="landing-brand"><span class="landing-mark" aria-hidden="true">G</span> GLIAX</div>
+        <div class="landing-story-main">
+          <span class="landing-eyebrow">Entrenamiento cognitivo y aprendizaje</span>
+          <h1 id="landingTitle">Una plataforma para entrenar habilidades y acompañar el progreso</h1>
+          <p class="landing-intro">Explora actividades de entrenamiento cognitivo y aprendizaje organizadas por edades y áreas, con tres niveles de dificultad predefinidos y seguimiento del progreso por sesiones.</p>
+          <div class="landing-features" aria-label="Funciones de la plataforma">
+            <span>Actividades por edades</span>
+            <span>Tres niveles predefinidos</span>
+            <span>Seguimiento por sesiones</span>
+          </div>
+        </div>
+        <div class="landing-product" aria-label="Vista ilustrativa de la plataforma; no muestra resultados reales">
+          <div class="landing-product-chrome" aria-hidden="true"><span class="landing-dot"></span><span class="landing-dot"></span><span class="landing-dot"></span><span class="landing-product-address">gliax / espacio de práctica</span></div>
+          <div class="landing-product-body">
+            <div class="landing-product-top"><div><span class="landing-product-overline">ENTRENAMIENTO</span><strong>Un espacio para practicar</strong></div><span class="landing-product-tag">Vista ilustrativa</span></div>
+            <div class="landing-product-grid">
+              <div class="landing-activity-card"><div class="landing-activity-heading"><span class="landing-activity-icon" aria-hidden="true">◎</span><span>Atención</span></div><div class="landing-activity-visual" aria-hidden="true"><span>▲</span><span>●</span><span>■</span><span>▲</span><span>◆</span><span>●</span><span>■</span><span>◆</span><span>▲</span></div><small>Observa · Compara · Responde</small></div>
+              <div class="landing-activity-card landing-memory-card"><div class="landing-activity-heading"><span class="landing-activity-icon" aria-hidden="true">◇</span><span>Memoria</span></div><div class="landing-memory-visual" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>?</span></div><small>Recuerda · Ordena · Practica</small></div>
+            </div>
+            <div class="landing-progress-strip"><div><span class="landing-product-overline">EVOLUCIÓN</span><strong>Tu actividad, sesión a sesión</strong></div><div class="landing-spark" aria-hidden="true"><svg viewBox="0 0 164 46" preserveAspectRatio="none"><path d="M2 38 L32 25 L62 31 L92 14 L122 20 L162 5" fill="none" stroke="#5F5ADD" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 38 L32 25 L62 31 L92 14 L122 20 L162 5 L162 46 L2 46Z" fill="#5F5ADD" opacity=".09"/></svg></div></div>
+          </div>
+        </div>
+      </section>
+      <section class="landing-signin" aria-labelledby="loginTitle">
+        <div class="auth-card card">
+          <p class="landing-signin-eyebrow">Tu espacio personal</p>
+          <h2 id="loginTitle">Accede a tu espacio.</h2>
+          <p class="landing-signin-intro">Continúa donde lo dejaste o crea una cuenta para empezar a explorar las actividades.</p>
+          <label>Email<input id="authEmail" type="email" autocomplete="email" placeholder="tu@email.com" /></label>
+          <label>Contraseña<input id="authPassword" type="password" autocomplete="current-password" placeholder="Tu contraseña" /></label>
+          <div class="auth-actions"><button id="authSignIn" type="button" class="primary-btn">Entrar</button><button id="authSignUp" type="button" class="secondary-btn">Crear cuenta</button></div>
+          <button id="authForgotPassword" class="auth-link" type="button">He olvidado mi contraseña</button>
+          <p id="authMessage" class="muted" role="status" aria-live="polite"></p>
+          <p class="support-contact hidden"><a data-support-link>Ayuda y contacto</a></p>
+          <p class="landing-account-note"><strong>¿Es tu primera vez?</strong> Escribe tu email y una contraseña de al menos 8 caracteres, pulsa Crear cuenta y confirma el enlace que recibirás por correo.</p>
+        </div>
+      </section>
     </div>
   </div>
   <dialog id="passwordDialog" class="password-dialog" aria-labelledby="passwordTitle">
@@ -40,7 +70,7 @@
       <span class="pill">PERFIL</span>
       <h2>Crea un perfil para empezar</h2>
       <p>Utiliza un código distinto por persona, sin nombres, fecha de nacimiento ni diagnósticos. Guarda la correspondencia con la persona en tu propio sistema. Cada código conserva su seguimiento.</p>
-      <label>Código del perfil<input id="newProfileName" maxlength="24" placeholder="Ej. P-024" /></label>
+      <label>Código del perfil<input id="newProfileName" maxlength="24" placeholder="Ej. P-4A82C19F" /><small>Puedes conservar el código sugerido o sustituirlo por el identificador de tu sistema (2–24 caracteres: letras, números, guion o guion bajo). No utilices nombres ni datos personales.</small></label>
       <label>Grupo de edad<select id="newProfileAge"><option value="early">6–7 años</option><option value="junior">8–10 años</option><option value="primary">10–12 años</option><option value="middle">13–15 años</option><option value="teen">16–18 años</option></select></label>
       <label id="exactAgeField">Edad en años<select id="newProfileExactAge"><option value="">Selecciona la edad</option></select><small>Se guarda en el perfil para ajustar algunas actividades. No se solicita fecha de nacimiento.</small></label>
       <label>Nivel inicial<select id="newProfileLevel"><option value="1">Nivel 1 · Inicio</option><option value="2">Nivel 2 · Intermedio</option><option value="3">Nivel 3 · Avanzado</option></select></label>
@@ -48,11 +78,11 @@
     </div>
   </div>
 
-  <dialog id="privacyDialog" class="password-dialog" aria-labelledby="privacyTitle"><h2 id="privacyTitle">Privacidad del perfil</h2><p>El código permite el seguimiento, pero no garantiza anonimato. Evita nombres y datos clínicos.</p><p id="privacyStatus" role="status"></p><label>Código del perfil<input id="privacyAlias" maxlength="24" /></label><label>Edad en años (opcional)<select id="privacyExactAge"><option value="">Sin indicar</option></select></label><p>La edad se usa para ajustar algunas actividades. No guardamos fecha de nacimiento.</p><label>Revisar la conservación el<input id="privacyReviewDate" type="date" /></label><p>Esta fecha es un recordatorio. No elimina datos automáticamente. Revisa qué necesitas conservar y borra lo que ya no sea necesario.</p><div class="auth-actions"><button id="saveProfilePrivacy" class="primary-btn">Guardar ajustes</button><button id="exportProfilePrivacy" class="secondary-btn">Exportar datos del perfil (JSON)</button><button id="eraseProfilePrivacy" class="secondary-btn">Eliminar perfil y resultados</button><button id="closeProfilePrivacy" class="secondary-btn">Cerrar</button></div><p>Los resultados pueden estar en las copias de seguridad del proveedor hasta su rotación. Los archivos descargados y las copias del profesional se gestionan por separado.</p></dialog>
+  <dialog id="privacyDialog" class="password-dialog" aria-labelledby="privacyTitle"><h2 id="privacyTitle">Privacidad del perfil</h2><p>El código permite el seguimiento, pero no garantiza anonimato. Evita nombres y datos clínicos.</p><p id="privacyStatus" role="status"></p><label>Código del perfil<input id="privacyAlias" maxlength="24" /></label><small>Puedes cambiarlo por un identificador propio de 2–24 caracteres (letras, números, guion o guion bajo). Evita nombres o datos personales.</small><label>Edad en años (opcional)<select id="privacyExactAge"><option value="">Sin indicar</option></select></label><p>La edad se usa para ajustar algunas actividades. No guardamos fecha de nacimiento.</p><label>Revisar la conservación el<input id="privacyReviewDate" type="date" /></label><p>Esta fecha es un recordatorio. No elimina datos automáticamente. Revisa qué necesitas conservar y borra lo que ya no sea necesario.</p><div class="auth-actions"><button id="saveProfilePrivacy" class="primary-btn">Guardar ajustes</button><button id="exportProfilePrivacy" class="secondary-btn">Exportar datos del perfil (JSON)</button><button id="eraseProfilePrivacy" class="secondary-btn">Eliminar perfil y resultados</button><button id="closeProfilePrivacy" class="secondary-btn">Cerrar</button></div><p>Los resultados pueden estar en las copias de seguridad del proveedor hasta su rotación. Los archivos descargados y las copias del profesional se gestionan por separado.</p></dialog>
   <div id="appShell" class="app-shell hidden">
     <aside class="sidebar">
       <button id="workspaceMenu" class="workspace-menu" aria-expanded="false" aria-controls="navMenu">Menú</button>
-      <div class="brand"><div class="brand-badge"><span>LU</span></div><div><h1>LEVEL UP</h1><p>Learning Lab</p></div></div>
+      <div class="brand"><div class="brand-badge"><span>G</span></div><div><h1>GLIAX</h1><p>Entrenamiento cognitivo</p></div></div>
       <div class="profile-panel sidebar-profile">
         <label for="profileSelect">PERFIL ACTIVO</label>
         <select id="profileSelect" aria-label="Perfil activo"></select>
@@ -73,7 +103,7 @@
 
     <main class="main-content">
       <header class="topbar">
-        <div><p class="eyebrow" id="ageEyebrow">ENTRENAMIENTO PERSONALIZADO</p><h2 id="sectionTitle">Panel</h2></div>
+        <div><p class="eyebrow" id="ageEyebrow">ENTRENAMIENTO Y APRENDIZAJE</p><h2 id="sectionTitle">Panel</h2></div>
         <div class="topbar-actions"><div class="session-chip"><span id="activeProfileLabel">—</span></div><div class="session-chip">Sesión <strong id="sessionAttempts">0</strong></div><div class="streak-card">Racha <strong id="streakCount">0</strong> 🔥</div></div>
       </header>
 
@@ -83,7 +113,7 @@
         <p id="pendingResultStatus" class="pending-result-status hidden" role="status" aria-live="polite"></p>
         <button id="retryPendingResultsHome" class="secondary-btn hidden" type="button">Reintentar resultados pendientes</button>
         <div id="earlyHub" class="early-hub hidden"></div><div id="schoolHub" class="school-hub hidden"></div><div id="homeAreaLanding" class="home-area-landing hidden" aria-label="Áreas de entrenamiento"></div>
-        <div class="hero card"><div class="hero-copy"><span class="pill">LEARNING LAB</span><h3>Entrena habilidades. Sube de nivel.</h3><p id="heroText">Elige un área y completa retos adaptados a tu nivel.</p><button class="primary-btn jump-btn" id="heroStartBtn">Empezar →</button></div><div class="hero-visual" aria-hidden="true"><div class="pixel-world"><span class="pixel-block grass b1"></span><span class="pixel-block grass b2"></span><span class="pixel-block dirt b3"></span><span class="pixel-block stone b4"></span><span class="pixel-block grass b5"></span><span class="pixel-block dirt b6"></span></div><div class="hero-level">UP</div><span>TRAIN</span><span>LEVEL UP</span></div></div>
+        <div class="hero card"><div class="hero-copy"><span class="pill">GLIAX</span><h3>Entrena habilidades. Sube de nivel.</h3><p id="heroText">Elige un área y practica con el nivel de dificultad seleccionado.</p><button class="primary-btn jump-btn" id="heroStartBtn">Empezar →</button></div><div class="hero-visual" aria-hidden="true"><div class="pixel-world"><span class="pixel-block grass b1"></span><span class="pixel-block grass b2"></span><span class="pixel-block dirt b3"></span><span class="pixel-block stone b4"></span><span class="pixel-block grass b5"></span><span class="pixel-block dirt b6"></span></div><div class="hero-level">G</div><span>TRAIN</span><span>GLIAX</span></div></div>
         <div id="homeProgressSummary" class="home-progress-summary" aria-label="Resumen de progreso"></div>
         <details class="home-progress">
           <summary>Entrenamiento recomendado</summary>
@@ -98,7 +128,7 @@
 
       <section id="exercise" class="section">
         <div class="exercise-navigation"><button id="exerciseReturnHome" type="button" class="secondary-btn">← Volver al panel</button><span>Actividad supervisada</span></div>
-        <div class="section-intro card block-banner"><div><span class="pill" id="exercisePill">ÁREA</span><h3 id="exerciseHeading" tabindex="-1">Entrenamiento</h3><p id="exerciseDescription">Retos adaptativos.</p></div></div>
+        <div class="section-intro card block-banner"><div><span class="pill" id="exercisePill">ÁREA</span><h3 id="exerciseHeading" tabindex="-1">Entrenamiento</h3><p id="exerciseDescription">Actividades con tres niveles de dificultad predefinidos.</p></div></div>
         <div id="guidedSessionBar" class="guided-session-bar card hidden"><div class="guided-progress-copy"><strong id="guidedSessionTitle">Sesión guiada</strong><span id="guidedSessionProgress" role="status" aria-live="polite"></span></div><button id="cancelGuidedSession" class="mini-btn">Salir de la sesión</button></div>
         <section id="exerciseModalities" class="exercise-modalities" aria-labelledby="exerciseModalitiesTitle">
           <h4 id="exerciseModalitiesTitle">Elige tipo de ejercicio</h4>

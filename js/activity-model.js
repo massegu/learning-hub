@@ -6,6 +6,7 @@
   const photos=root.PhotoLibrary || (typeof require==='function'&&require('./photo-library.js'));
   const icons = { book:'libro', pencil:'lápiz', backpack:'mochila', bottle:'botella', notebook:'cuaderno', apple:'manzana', banana:'plátano', bread:'pan', cookie:'galleta', ball:'pelota', doll:'muñeca', bear:'oso de peluche', car:'coche de juguete', cap:'gorra', gift:'regalo' };
   const hasText = value => typeof value === 'string' && value.trim().length > 0;
+  const everydayMaterials={phoneScreen:'Pantalla de móvil',streetBoard:'Panel urbano',catalog:'Catálogo',receipt:'Recibo',poster:'Póster',whiteboard:'Pizarra',tabletScreen:'Pantalla de tablet',desktopScreen:'Pantalla de ordenador'};
   const choiceKey = value => String(value).normalize('NFKC').trim().toLocaleLowerCase('es').replace(/\s+/g,' ').replace(/[.!?]+$/,'').replace(/^(?:el|la|los|las|un|una|unos|unas)\s+/,'');
   const fail = message => { throw new Error(`Actividad no imprimible: ${message}`); };
   function blockValid(block) {
@@ -15,6 +16,7 @@
       if (!Array.isArray(block.items) || !block.items.length || !block.items.every(hasText)) fail('la lista está incompleta.');
     } else if (block.type === 'table') {
       if (!Array.isArray(block.rows) || !block.rows.length || !block.rows.every(r => Array.isArray(r) && r.length && r.every(hasText)) || !block.rows.every(r => r.length === block.rows[0].length)) fail('la tabla está incompleta.');
+      if(block.presentation==='everydayMaterial'&&(!everydayMaterials[block.materialType]||!hasText(block.title)||block.rows.length<2))fail('el material cotidiano no está reconocido o está incompleto.');
     } else if(block.type==='document'){if(!documents?.get(block.documentId))fail('documento visual desconocido.');}
     else if(block.type==='photo'){if(!photos?.scenes[block.photoId])fail('fotografía desconocida.');}
     else if(block.type==='photoPair'){if(!photos?.pairs[block.pairId])fail('pareja de fotografías desconocida.');}
@@ -357,6 +359,10 @@
       if(block.type==='table'&&block.presentation==='homeworkBoard'){
         const icons=root.BioArtIcons;
         return `<section class="homework-board" aria-label="${escape(block.label||'Pizarra de deberes')}"><div class="homework-board-heading"><span aria-hidden="true">✎</span><strong>${escape(block.label||'Pizarra de deberes')}</strong></div><div class="homework-board-scroll" role="region" tabindex="0" aria-label="Tareas anotadas en la pizarra"><table><caption class="sr-only">Área y tarea anotada</caption><thead><tr><th scope="col">Área</th><th scope="col">Tarea</th></tr></thead><tbody>${block.rows.map(([area,task])=>`<tr><th scope="row"><span class="homework-area-icon">${icons?.svgForArea(area)||''}</span><span>${escape(area)}</span></th><td>${escape(task)}</td></tr>`).join('')}</tbody></table></div></section>`;
+      }
+      if(block.type==='table'&&block.presentation==='everydayMaterial'){
+        const heading=everydayMaterials[block.materialType],rows=block.rows,head=rows[0],body=rows.slice(1);
+        return `<section class="everyday-material material-${escape(block.materialType)}" aria-label="${escape(heading)}: ${escape(block.title)}"><header><span>${escape(heading)} · EJEMPLO</span><h3>${escape(block.title)}</h3></header><div class="everyday-material-table" role="region" tabindex="0" aria-label="${escape(block.title)}"><table><thead><tr>${head.map(value=>`<th scope="col">${escape(value)}</th>`).join('')}</tr></thead><tbody>${body.map(row=>`<tr>${row.map((value,index)=>index===0?`<th scope="row">${escape(value)}</th>`:`<td>${escape(value)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></section>`;
       }
       if(block.type==='text'&&block.presentation==='poster')return `<article class="reading-poster"><span>AVISO · LECTURA</span><h3>${escape(block.headline||'Información')}</h3><p>${escape(block.text)}</p><small>Cartel de ejemplo</small></article>`;
       if(block.type==='text'&&block.presentation==='marquee')return `<article class="reading-marquee"><span>MARQUESINA</span><p>${escape(block.text)}</p></article>`;
