@@ -200,3 +200,31 @@
   #appShell[data-design] .sidebar{box-shadow:none}
   #authGate .landing-story h1{letter-spacing:-.045em}
 }
+
+/* Keep the profile dialog accessible at short viewport heights and browser zoom. */
+#profileGate.profile-gate{
+  box-sizing:border-box;
+  place-items:safe center;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  padding:clamp(10px,2.5vh,20px);
+}
+#profileGate .profile-modal{
+  box-sizing:border-box;
+  width:min(640px,100%);
+  max-height:calc(100vh - 20px);
+  max-height:calc(100dvh - 2 * clamp(10px,2.5vh,20px));
+  min-height:0;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  padding:clamp(18px,3vw,30px);
+}
+#profileGate .profile-modal :is(input,select,button){
+  box-sizing:border-box;
+  max-width:100%;
+}
+#profileGate #createProfileBtn{
+  min-height:48px;
+  margin-top:12px;
+}
