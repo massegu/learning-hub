@@ -121,9 +121,15 @@ def build():
             '<meta http-equiv="Content-Security-Policy" content="' + html.escape(csp, quote=True) + '">'
             '<script src="/js/staging-guard.js"></script>'
         )
-        check(re.search(r"<head(?:\s[^>]*)?>", text, flags=re.I) is not None,
-              "HTML document without head; refusing to publish")
-        text = re.sub(r"<head(?:\s[^>]*)?>", lambda m: m.group() + injection, text, count=1, flags=re.I)
+        if re.search(r"<head(?:\s[^>]*)?>", text, flags=re.I):
+            text = re.sub(r"<head(?:\s[^>]*)?>", lambda m: m.group() + injection, text, count=1, flags=re.I)
+        else:
+            # HTML permits an omitted <head>; insert an explicit one immediately after <html>.
+            check(re.search(r"<html(?:\s[^>]*)?>", text, flags=re.I) is not None,
+                  "HTML document without html element; refusing to publish")
+            text = re.sub(r"<html(?:\s[^>]*)?>",
+                          lambda m: m.group() + "<head>" + injection,
+                          text, count=1, flags=re.I)
         text = re.sub(r"<title>", "<title>GLIAX STAGING / TEST - ", text, count=1, flags=re.I)
         page.write_text(text, encoding="utf-8")
 
