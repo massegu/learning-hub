@@ -2,10 +2,11 @@
 
 Required Cloudflare build environment:
  GLIAX_STAGING_REF, GLIAX_STAGING_PUBLISHABLE_KEY, GLIAX_STAGING_ORIGIN.
-Build: python3 tools/staging/build_cloudflare.py
+Build: npm ci --ignore-scripts --include=dev && python3 tools/staging/build_cloudflare.py
 Output: dist-gliax-staging
 Never use this builder for production.
 """
+import hashlib
 import html
 import json
 import os
@@ -19,6 +20,12 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "dist-gliax-staging"
 EXPECTED_REF = "wejcfaralctolzxjbcil"
 OUTPUT_DIRS = ("js", "css", "assets")
+DOCX_SOURCE_URL = "https://unpkg.com/docx@8.5.0/build/index.umd.js"
+DOCX_PUBLIC_DIR = "js/vendor/docx-8.5.0"
+DOCX_FILES = {
+    "build/index.umd.js": "02d568d203c0180af37609bcf5ff6c0919d220f933a88ca896eba0556a08faad",
+    "LICENSE": "b5b2364c0c95a26b2a2399d7e706a61acac680be1d5b180b00592ee85830bffb",
+}
 
 
 def check(condition, message):
@@ -37,6 +44,25 @@ def origin(value):
         "Invalid canonical HTTPS staging origin",
     )
     return value
+
+
+def install_docx():
+    loader = OUT / "js/docx.js"
+    source = loader.read_text(encoding="utf-8")
+    check(source.count(DOCX_SOURCE_URL) == 1, "Unexpected DOCX loader URL")
+    package = ROOT / "node_modules/docx"
+    public_dir = OUT / DOCX_PUBLIC_DIR
+    public_dir.mkdir(parents=True)
+    for name, expected in DOCX_FILES.items():
+        path = package / name
+        check(path.is_file(), "DOCX 8.5.0 missing; run npm ci --ignore-scripts --include=dev")
+        data = path.read_bytes()
+        check(hashlib.sha256(data).hexdigest() == expected, f"DOCX 8.5.0 integrity mismatch: {name}")
+        (public_dir / path.name).write_bytes(data)
+    loader.write_text(
+        source.replace(DOCX_SOURCE_URL, f"/{DOCX_PUBLIC_DIR}/index.umd.js"),
+        encoding="utf-8",
+    )
 
 
 def build():
@@ -72,6 +98,7 @@ def build():
             check(not item.is_symlink(), "Symlink found in web source")
         shutil.copytree(source, OUT / directory)
     shutil.copy2(ROOT / "index.html", OUT / "index.html")
+    install_docx()
 
     staged_config = {
         "supabaseUrl": api_origin,
