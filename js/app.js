@@ -373,8 +373,8 @@
   }
   document.addEventListener('visibilitychange',()=>{if(document.hidden&&currentItem?.roomSpeedTask&&!currentItem._earlyAnswered){currentItem._roomTiming&&(currentItem._roomTiming.valid=false);interruptPractice(currentItem);$('#restartInteraction').onclick=()=>renderRoomSpeed(currentItem);}});
   window.addEventListener('blur',()=>{if(currentItem?._roomTiming)currentItem._roomTiming.valid=false;});
-  $('#speedModeSwitch').onclick=event=>{const button=event.target.closest('[data-speed-mode]');if(!button)return;roomSpeedOnly=button.dataset.speedMode==='room';speedUnpairedOnly=false;counter=0;setupExercise();};
-  $('#speedUnpairedMode').onclick=()=>{speedUnpairedOnly=!speedUnpairedOnly;roomSpeedOnly=false;counter=0;setupExercise();};
+  $('#speedModeSwitch').onclick=event=>{const button=event.target.closest('[data-speed-mode]');if(!button)return;cognitiveOnly=false;cognitiveFamily='';roomSpeedOnly=button.dataset.speedMode==='room';speedUnpairedOnly=false;counter=0;setupExercise();};
+  $('#speedUnpairedMode').onclick=()=>{cognitiveOnly=false;cognitiveFamily='';speedUnpairedOnly=!speedUnpairedOnly;roomSpeedOnly=false;counter=0;setupExercise();};
   $('#memoryAudioModeButton').onclick=()=>{memoryAudioOnly=!memoryAudioOnly;photoOnly=false;executedOnly=false;cognitiveOnly=false;interactionOnly=false;documentOnly=false;counter=0;setupExercise();};
   function renderSpeedExercise(it){
     $('#exerciseVisual').innerHTML=window.ContentPolicy.forProfile(profile)?'<p>Mira y responde. El reloj empieza al mostrar las figuras. También puedes practicar sin medir.</p>':'<p>Responde con precisión y agilidad. El tiempo empieza al mostrar el estímulo. Puedes usar los botones o las teclas numéricas.</p>';
@@ -408,6 +408,11 @@
   });
   function renderMultiSelect(it) {
     $('#exercise').classList.toggle('visual-only-differences',it.type==='photoDifference'&&it.level>=3);
+    if(it.type==='photoDifference'){
+      const count=it.answers.length;
+      const target=it.level===1&&count===1?' en '+it.answers[0].toLocaleLowerCase('es'):'';
+      $('#exercisePrompt').textContent='Compara A y B. Marca '+count+(count===1?' diferencia':' diferencias')+target+'.';
+    }
     const single=subject==='attention'&&it.level===1&&it.answers?.length===1;
     $('#exerciseOptions').classList.add('structured-options');
     const selected = new Set();
@@ -539,26 +544,18 @@
       if(!live())return;
       const activeRules=t.secondRules&&trial>=t.rules.length?t.secondRules:t.rules,rule=activeRules[t.trials[trial]];
       let answered=false;
-      const close=(ok,report)=>{
+      const close=ok=>{
         if(!live()||answered)return;answered=true;clearTimeout(interactionTimer);interactionTimer=null;
         if(ok)correctTrials++;if(rule.target<0&&!ok)noGoErrors++;
         trial++;$$('#exerciseOptions button').forEach(b=>b.disabled=true);
         $('#interactiveTrialFeedback').textContent=ok?'Bien. Has seguido la regla.':rule.target<0?'En esta tarjeta había que esperar sin pulsar.':'La regla indicaba: '+local(t.actions[rule.target])+'.';
         interactionTimer=setTimeout(next,650);
       };
-      visual.innerHTML=`<div class="interactive-trial"><div class="interactive-card" aria-label="${escapeHtml(rule.label)}">${t.kind==='symbols'?`<strong aria-hidden="true">${rule.symbol}</strong><span>${escapeHtml(local(rule.label))}</span>`:`<strong class="word-cue">${escapeHtml(rule.label)}</strong>`}</div><p id="interactiveTrialFeedback" role="status"></p><div id="interactiveWait" class="interactive-wait hidden"><p id="interactiveSeconds" role="timer" aria-live="off"></p><progress id="interactiveWaitBar" max="${t.waitMs}" value="0"></progress></div><details class="interactive-rule-help"><summary>Consultar las reglas</summary>${rulesTable(activeRules)}</details></div>`;
+      visual.innerHTML=`<div class="interactive-trial"><div class="interactive-card" aria-label="${escapeHtml(rule.label)}">${t.kind==='symbols'?`<strong aria-hidden="true">${rule.symbol}</strong><span>${escapeHtml(local(rule.label))}</span>`:`<strong class="word-cue">${escapeHtml(rule.label)}</strong>`}</div><p id="interactiveTrialFeedback" role="status"></p><details class="interactive-rule-help"><summary>Consultar las reglas</summary>${rulesTable(activeRules)}</details></div>`;
       area.innerHTML=t.actions.map((label,i)=>`<button class="option-btn interaction-action" data-action="${i}">${escapeHtml(local(label))}</button>`).join('');
       $$('.interaction-action').forEach(b=>b.onclick=()=>close(Number(b.dataset.action)===rule.target));
       if(rule.target>=0)return;
-      const started=Date.now(),deadline=started+t.waitMs;
-      const tick=()=>{
-        if(!live()||answered)return;
-        const remaining=Math.max(0,deadline-Date.now());$('#interactiveWaitBar').value=t.waitMs-remaining;
-        $('#interactiveSeconds').textContent=remaining?`Espera: ${Math.ceil(remaining/1000)} ${remaining<=1000?'segundo':'segundos'}.`:'La espera ha terminado.';
-        if(remaining){interactionTimer=setTimeout(tick,Math.min(100,remaining));return;}
-        interactionTimer=null;
-        close(true);
-      };tick();
+      interactionTimer=setTimeout(()=>close(true),t.waitMs);
     };
     $('#startInteractive').onclick=next;
   }
@@ -581,12 +578,15 @@
       if(!live())return;if(trial>=t.trials.length){finishObservedPractice(it,reports,recordObservation);return;}
       const rule=t.rules[t.trials[trial]],entry={trial:trial+1,report:'unverified'};reports.push(entry);
       const deadline=Date.now()+(rule.target<0?t.waitMs:1000),finishAt=deadline+4000;
-      visual.innerHTML=`<div class="interactive-trial"><div class="interactive-card"><strong class="word-cue">${escapeHtml(rule.label)}</strong></div><p id="movementAction"></p><p id="interactiveSeconds" role="timer" aria-live="off"></p></div>`;
+      visual.innerHTML=`<div class="interactive-trial"><div class="interactive-card"><strong class="word-cue">${escapeHtml(rule.label)}</strong></div><p id="movementAction"></p><p id="interactiveSeconds" role="timer" aria-live="off"></p>${rule.target<0?'<progress class="guided-wait-progress" id="movementWait" aria-label="Avance de la espera" value="0"></progress>':''}</div>`;
       area.innerHTML='<button id="movementEarly" class="secondary-btn">Marcar un adelanto o una confusión</button><button id="stopPractice" class="secondary-btn">Detener práctica</button>';
       $('#movementEarly').onclick=()=>{entry.report='early';$('#movementEarly').disabled=true;};$('#stopPractice').onclick=()=>interruptPractice(it);
       const tick=()=>{
         if(!live())return;const now=Date.now(),remaining=Math.max(0,deadline-now);
-        if(rule.target<0)$('#interactiveSeconds').textContent=remaining?`Espera ${Math.ceil(remaining/1000)} segundos.`:'';
+        if(rule.target<0){
+          $('#interactiveSeconds').textContent=remaining?`Espera ${Math.ceil(remaining/1000)} segundos.`:'Espera completada.';
+          const bar=$('#movementWait');bar.max=t.waitMs;bar.value=t.waitMs-remaining;
+        }
         if(!remaining&&rule.target>=0)$('#movementAction').textContent='Ahora: '+local(t.actions[rule.target])+'.';
         if(now>=finishAt){trial++;next();return;}interactionTimer=setTimeout(tick,100);
       };tick();
@@ -594,7 +594,7 @@
   }
   function renderListeningExercise(it,{live,local,recordObservation}){
     const t=it.interactionTask,visual=$('#exerciseVisual'),area=$('#exerciseOptions');
-    let trial=0,busy=false,ready=false,playVersion=0;const reports=[];
+    let trial=0,busy=false,ready=false,playVersion=0,volume=.82;const reports=[];
     const supported=t.audioMode==='words'?Boolean(window.speechSynthesis&&window.SpeechSynthesisUtterance):Boolean(window.AudioContext||window.webkitAudioContext);
     const message=text=>{const el=$('#listeningStatus');if(el)el.textContent=text;};
     const play=(index,done)=>{
@@ -604,7 +604,7 @@
       interactionTimer=setTimeout(fail,10000);
       if(t.audioMode==='words'){
         try{
-          const voice=new SpeechSynthesisUtterance(t.rules[index].label);voice.lang='es-ES';voice.rate=.85;voice.volume=.55;
+          const voice=new SpeechSynthesisUtterance(t.rules[index].label);voice.lang='es-ES';voice.rate=.85;voice.volume=volume;
           const spanish=window.speechSynthesis.getVoices().find(v=>v.lang==='es-ES')||window.speechSynthesis.getVoices().find(v=>v.lang.startsWith('es'));if(spanish)voice.voice=spanish;
           interactionVoice=voice;voice.onend=end;voice.onerror=fail;window.speechSynthesis.speak(voice);
         }catch(_){fail();}return;
@@ -616,7 +616,7 @@
           if(!live())return;
           for(let i=0;i<signal.beeps;i++){
             const osc=ctx.createOscillator(),gain=ctx.createGain(),start=ctx.currentTime+i*.4;
-            osc.type='sine';osc.frequency.value=signal.frequency;gain.gain.setValueAtTime(0,start);gain.gain.linearRampToValueAtTime(.08,start+.015);gain.gain.setValueAtTime(.08,start+.18);gain.gain.linearRampToValueAtTime(0,start+.22);
+            osc.type='sine';osc.frequency.value=signal.frequency;gain.gain.setValueAtTime(0,start);gain.gain.linearRampToValueAtTime(.1*volume,start+.025);gain.gain.setValueAtTime(.1*volume,start+.18);gain.gain.linearRampToValueAtTime(0,start+.22);
             osc.connect(gain);gain.connect(ctx.destination);osc.start(start);osc.stop(start+.23);
           }
           clearTimeout(interactionTimer);interactionTimer=setTimeout(end,signal.beeps*400+100);
@@ -627,8 +627,9 @@
       if(t.audioMode==='tones'&&!interactionAudio){const Audio=window.AudioContext||window.webkitAudioContext;interactionAudio=new Audio();}return interactionAudio?.resume().catch(()=>{});
     };
     const intro=()=>{
-      visual.innerHTML=`<div class="interactive-rules listening-rules"><p>${escapeHtml(it.stimulus[0].text)}</p><p><strong>${t.audioMode==='words'?'Señales habladas':'Señales de sonido'}</strong>. Prueba el audio con los botones. Al empezar, las señales avanzarán solas. Usa un volumen cómodo.</p>${window.ActivityModel.interactiveStimulus([it.stimulus[1]],{structured:true})}<div class="listening-samples">${t.rules.map((r,i)=>`<button class="secondary-btn sample-cue" data-cue="${i}">Escuchar: ${escapeHtml(r.label)}</button>`).join('')}</div><p id="listeningStatus" role="status">${supported?'Prueba al menos una señal antes de empezar.':'Este navegador no dispone del audio necesario. Elige otra actividad o un navegador con sonido.'}</p></div>`;
+      visual.innerHTML=`<div class="interactive-rules listening-rules"><p>${escapeHtml(it.stimulus[0].text)}</p><p><strong>${t.audioMode==='words'?'Señales habladas':'Señales de sonido'}</strong>. Prueba el audio con los botones. Al empezar, las señales avanzarán solas. Usa un volumen cómodo.</p>${window.ActivityModel.interactiveStimulus([it.stimulus[1]],{structured:true})}<label class="listening-volume">Volumen de las señales <input id="listeningVolume" type="range" min="0.15" max="1" step="0.01" value="${volume}"></label><div class="listening-samples">${t.rules.map((r,i)=>`<button class="secondary-btn sample-cue" data-cue="${i}">Escuchar: ${escapeHtml(r.label)}</button>`).join('')}</div><p id="listeningStatus" role="status">${supported?'Prueba al menos una señal antes de empezar.':'Este navegador no dispone del audio necesario. Elige otra actividad o un navegador con sonido.'}</p></div>`;
       area.innerHTML='<button id="startListening" class="primary-btn" disabled>He oído las señales. Empezar</button>';
+      $('#listeningVolume').oninput=event=>{volume=Number(event.target.value);};
       $$('.sample-cue').forEach(button=>{button.disabled=!supported;button.onclick=()=>{if(busy)return;try{unlock();play(Number(button.dataset.cue),()=>{message('Señal reproducida. Repasa las demás antes de empezar si lo necesitas.');$('#startListening').disabled=false;});}catch(_){message('No se ha podido iniciar el sonido. Prueba otra actividad.');}};});
       $('#startListening').onclick=()=>{if(!busy)next();};
     };
@@ -720,10 +721,11 @@
     return {...data,subjects:window.Curriculum.visible(data.subjects,route)};
   }
   function recent(s, n = 10) {
-    return state.history.filter((x) => x.subject === s&&!isGuidedWaitResult(x)).slice(-n);
+    return state.history.filter((x) => x.subject === s&&!isPracticeResult(x)).slice(-n);
   }
   function exerciseMetrics(row){try{const metrics=typeof row?.detail==='string'?JSON.parse(row.detail||'null'):row?.detail;return metrics?.schema==='gliax.exercise-metrics.v1'?metrics:null;}catch{return null;}}
   function isGuidedWaitResult(row){return exerciseMetrics(row)?.modality==='guided_wait';}
+  function isPracticeResult(row){return ['guided_wait','falling_words'].includes(exerciseMetrics(row)?.modality);}
   function resultHistoryKey(row){
     if(row?.clientAttemptId||row?.client_attempt_id)return `attempt:${row.clientAttemptId||row.client_attempt_id}`;
     // Older rows predate attempt UUIDs. A field fingerprint avoids duplicating
@@ -771,7 +773,7 @@
     if(window.AgeStages.forProfile(profile)||['executive','speedReasoning'].includes(s)){
       const checkpoints=profile.progress?._levelCheckpoints || {};
       const checkpoint=checkpoints[s] || {attempt:state.totalAttempts-1};
-      const results=state.history.filter(x=>x.subject===s && x.attemptNumber>checkpoint.attempt&&!isGuidedWaitResult(x));
+      const results=state.history.filter(x=>x.subject===s && x.attemptNumber>checkpoint.attempt&&!isPracticeResult(x));
       const level=state.levels[s]||1,stage=window.AgeStages.forProfile(profile);
       let next=window.AgeStages.next(level,results,profile);
       if(!stage){
@@ -1219,6 +1221,10 @@
     if(profile?.id&&!profile._sessionOnly){try{localStorage.setItem(`lh_v16_last_subject_${profile.id}`,subject);}catch{}}
     if(configuredSubject!==null&&configuredSubject!==subject){documentOnly=false;photoOnly=false;memoryAudioOnly=false;interactionOnly=false;interactionKind=subject==='attention'?'room':'symbols';roomSpeedOnly=false;speedUnpairedOnly=false;cognitiveOnly=false;cognitiveFamily='';executedOnly=false;}
     configuredSubject=subject;
+    if(guidedSession?.randomFamilies){
+      cognitiveOnly=true;
+      cognitiveFamily=guidedSession.randomFamilies[guidedSession.index];
+    }
     $("#exercise").dataset.subject=subject;
     $('#appShell').dataset.subject=subject;
     const m = SUBJECT_META[subject];
@@ -1244,7 +1250,6 @@
     const isLang = ["language","middleLanguage","teenLanguage"].includes(subject);
     const isReading=['reading','middleReading','literacy'].includes(subject);
     if(isReading){cognitiveOnly=false;cognitiveFamily='';}
-    if(isReading){cognitiveOnly=false;cognitiveFamily='';}
     if(isLang&&mode==='writing'||isReading&&['spelling','vocabulary'].includes(mode))mode='grammar';
     $$('.language-mode-btn[data-mode]').forEach(b=>{
       b.classList.toggle('hidden',isLang&&b.dataset.mode==='writing'||isReading&&['spelling','vocabulary'].includes(b.dataset.mode));
@@ -1260,8 +1265,11 @@
     $('#speedModeSwitch').classList.toggle('hidden',subject!=='speedReasoning'||!capability.speed.screen&&!capability.speed.unpaired&&!capability.speed.room);
     $('#speedModeSwitch [data-speed-mode="screen"]').classList.toggle('hidden',!capability.speed.screen);
     $('#speedModeSwitch [data-speed-mode="room"]').classList.toggle('hidden',!roomSpeedSupport);
+    const speedWords=$('#speedWordFit');
+    speedWords.classList.toggle('hidden',!capability.speed.words);
+    speedWords.setAttribute('aria-pressed',String(subject==='speedReasoning'&&cognitiveOnly&&cognitiveFamily==='words'));
     $('#speedUnpairedMode').classList.toggle('hidden',!capability.speed.unpaired);
-    $$('#speedModeSwitch [data-speed-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.speedMode==='room'?roomSpeedOnly:!roomSpeedOnly&&!speedUnpairedOnly)));
+    $$('#speedModeSwitch [data-speed-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.speedMode==='room'?roomSpeedOnly:!roomSpeedOnly&&!speedUnpairedOnly&&!cognitiveOnly)));
     $('#speedUnpairedMode').setAttribute('aria-pressed',String(speedUnpairedOnly));
     const documentSupport=capability.documents;
     if(!documentSupport||isReading)documentOnly=false;
@@ -1298,18 +1306,21 @@
     $('#wordFitMode').classList.toggle('hidden',!wordFitAvailable);
     $('#wordFitMode').classList.toggle('active',cognitiveOnly&&cognitiveFamily==='words');
     $('#wordFitMode').setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily==='words'));
-    if(!cognitiveBank.length)cognitiveOnly=false;
+    const fallingButton=$('#fallingWordsMode');
+    fallingButton.classList.toggle('hidden',!capability.fallingWords);
+    fallingButton.setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily==='falling'));
+    if(!cognitiveBank.length&&!capability.speed.words)cognitiveOnly=false;
     $('#cognitiveMode').classList.add('hidden');
     const families=[...new Set(cognitiveBank.map(it=>it.cognitiveTask.kind==='guidedWait'?'wait':it.cognitiveTask.kind))];
     if(subject==='attention'&&families.includes('contradiction'))cognitiveFamily='contradiction';
-    else if(!families.includes(cognitiveFamily))cognitiveFamily='';
+    else if(!families.includes(cognitiveFamily)&&!(capability.fallingWords&&cognitiveFamily==='falling')&&!(capability.speed.words&&cognitiveFamily==='words'))cognitiveFamily='';
     const familyModes=$('#cognitiveFamilyModes');
     familyModes.replaceChildren();
     if(cognitiveBank.length&&!isLang&&!isReading){
-      const choices=subject==='attention'?families.map(key=>({key,label:window.CognitiveFamilies.definitions[key].title})):[{key:'',label:'Situaciones variadas'},...families.map(key=>({key,label:window.CognitiveFamilies.definitions[key].title}))];
+      const choices=subject==='attention'?families.map(key=>({key,label:window.CognitiveFamilies.definitions[key].title})):[{key:'',label:'Sesión aleatoria'},...families.map(key=>({key,label:window.CognitiveFamilies.definitions[key].title}))];
       for(const choice of choices){
         const button=document.createElement('button');button.type='button';button.className='modality-button';button.dataset.cognitiveFamily=choice.key;button.textContent=choice.label;
-        button.setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily===choice.key));familyModes.append(button);
+        button.setAttribute('aria-pressed',String(choice.key?cognitiveOnly&&cognitiveFamily===choice.key:Boolean(guidedSession?.randomFamilies)));familyModes.append(button);
       }
     }
     familyModes.classList.toggle('hidden',!familyModes.children.length);
@@ -1332,7 +1343,7 @@
       const hiddenAncestor=button.closest('.hidden');
       return !hiddenAncestor||hiddenAncestor.id==='exerciseModalities';
     });
-    $('#exerciseModalities').classList.toggle('hidden',!hasAvailableModality);
+    $('#exerciseModalities').classList.toggle('hidden',!hasAvailableModality||Boolean(guidedSession?.randomFamilies));
     syncActivitySettings();
     counter = 0;
     renderEarlyTaskGuide();
@@ -1359,8 +1370,33 @@
     cognitiveOnly=false;executedOnly=false;interactionOnly=false;memoryAudioOnly=false;photoOnly=button.dataset.photos==='true';documentOnly=false;setupExercise();
   });
   $('#cognitiveMode').onclick=()=>{cognitiveOnly=true;cognitiveFamily='';executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;setupExercise();};
+  $('#fallingWordsMode').onclick=()=>{
+    mode='vocabulary';cognitiveOnly=true;cognitiveFamily='falling';
+    executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;
+    setupExercise();
+  };
+  $('#speedWordFit').onclick=()=>{
+    cognitiveOnly=true;cognitiveFamily='words';roomSpeedOnly=false;speedUnpairedOnly=false;
+    setupExercise();
+  };
   $('#wordFitMode').onclick=()=>{mode='vocabulary';cognitiveOnly=true;cognitiveFamily='words';executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;setupExercise();};
-  $('#cognitiveFamilyModes').addEventListener('click',event=>{const button=event.target.closest('[data-cognitive-family]');if(!button)return;cognitiveFamily=button.dataset.cognitiveFamily;cognitiveOnly=true;executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;setupExercise();});
+  function startRandomSession(){
+    const age=window.AgeStages.route(profile);
+    const domains=ageData().subjects.filter(key=>!['reading','middleReading','literacy'].includes(key));
+    const options=domains.flatMap(domain=>{
+      const level=state.levels[domain]||1;
+      const items=window.CognitiveFamilies.pool(age,domain,level);
+      return [...new Set(items.map(item=>item.cognitiveTask.kind))]
+        .filter(kind=>kind!=='guidedWait'&&kind!=='rules')
+        .map(family=>({domain,family}));
+    });
+    const sequence=[...new Map(shuffle(options).map(option=>[option.family,option])).values()];
+    guidedSession={plan:sequence.map(x=>x.domain),randomFamilies:sequence.map(x=>x.family),index:0};
+    subject=sequence[0].domain;
+    updateGuidedBar();
+    setupExercise();
+  }
+  $('#cognitiveFamilyModes').addEventListener('click',event=>{const button=event.target.closest('[data-cognitive-family]');if(!button)return;if(!button.dataset.cognitiveFamily){startRandomSession();return;}if(guidedSession?.randomFamilies){guidedSession=null;hideGuidedBar();}cognitiveFamily=button.dataset.cognitiveFamily;cognitiveOnly=true;executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;setupExercise();});
   $('#executedMode').onclick=()=>{cognitiveOnly=false;executedOnly=true;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;setupExercise();};
   async function requestForProfile(payload, targetProfile = profile) {
     if (!targetProfile?.id) throw new Error('Selecciona o crea un perfil para empezar.');
@@ -1368,7 +1404,7 @@
     const localeRevision = API.localeRevision;
     const res = await API.requestContent({
       ...payload,
-      client_revision:13,
+      client_revision:(payload.cognitive_family==='falling'||payload.domain==='speedReasoning'&&payload.cognitive_family==='words')?14:13,
       ...(targetProfile._sessionOnly?{session_only:true}:{}),
       profile_id: targetProfile.id,
       locale,
@@ -1525,7 +1561,11 @@
       !$("#exerciseTopic").textContent,
     );
     if(it.type==='cognitiveTask'){
-      $('#exercisePrompt').textContent=it.q;stopExecuted=window.CognitiveRenderer.mount(it,{visual:$('#exerciseVisual'),area:$('#exerciseOptions'),onFinish:(ok,why,metrics)=>{if(currentItem!==it)return;const detail=metrics?JSON.stringify(metrics):it.mechanic||it.semanticFamily;const waitPractice=metrics?.modality==='guided_wait';const pts=saveResult(subject,waitPractice?null:ok,it.id,detail,{excludeFromPerformance:waitPractice,level:it.level});showFeedback(ok,pts,why);}});
+      const isWordFit=it.cognitiveTask.kind==='words';
+      $('#exercisePrompt').textContent=isWordFit
+        ?window.CognitiveFamilies.wordResponseMode(it)==='selection'?'Selecciona las palabras que cumplen todas las condiciones.':'Escribe una palabra que cumpla todas las condiciones.'
+        :it.q;
+      stopExecuted=window.CognitiveRenderer.mount(it,{visual:$('#exerciseVisual'),area:$('#exerciseOptions'),onFinish:(ok,why,metrics)=>{if(currentItem!==it)return;const detail=metrics?JSON.stringify(metrics):it.mechanic||it.semanticFamily;const practice=['guided_wait','falling_words'].includes(metrics?.modality);const pts=saveResult(subject,practice?null:ok,it.id,detail,{excludeFromPerformance:practice,level:it.level});showFeedback(ok,pts,why);}});
       if(it.printable!=='interactive-only'){
         const exportButton=document.createElement('button');exportButton.id='printCognitive';exportButton.className='secondary-btn';exportButton.textContent='Descargar esta actividad en Word';
         exportButton.onclick=async()=>{exportButton.disabled=true;const exportProfile=profile;try{
@@ -1537,7 +1577,7 @@
       }return;
     }
     if(it.type==='executed'){
-      $('#exercisePrompt').textContent=it.q;stopExecuted=window.ExecutedRenderer.mount(it,{visual:$('#exerciseVisual'),area:$('#exerciseOptions'),iconProfile:profile,onFinish:(ok,why)=>{if(currentItem!==it)return;const pts=saveResult(subject,ok,it.id,it.mechanic);showFeedback(ok,pts,(ok?'Actividad completada correctamente. ':'Revisa el resultado. ')+why);}});return;
+      $('#exercisePrompt').textContent=it.q;stopExecuted=window.ExecutedRenderer.mount(it,{visual:$('#exerciseVisual'),area:$('#exerciseOptions'),iconProfile:profile,onFinish:(ok,why,metrics)=>{if(currentItem!==it)return;const pts=saveResult(subject,ok,it.id,metrics?JSON.stringify(metrics):it.mechanic);showFeedback(ok,pts,(ok?'Actividad completada correctamente. ':'Revisa el resultado. ')+why);}});return;
     }
     if (it.visual)
       $("#exerciseVisual").innerHTML =
@@ -1567,13 +1607,15 @@
     if (Array.isArray(it.visualItems))
       $("#exerciseVisual").innerHTML +=
         `<div class="v13-visual-items">${it.visualItems.map((x) => `<span>${escapeHtml(x)}</span>`).join("")}</div>`;
-    if (it.scenario)
-      $("#exerciseVisual").innerHTML +=
-        `<div class="scenario-card"><span class="scenario-label">SITUACIÓN</span><p>${escapeHtml(it.scenario)}</p></div>`;
+    const scenario=typeof it.scenario==='string'?it.scenario.trim():'';
+    const scenarioShown=it.stimulus?.some(block=>block.type==='text'&&block.text?.trim()===scenario);
     if (it.stimulus?.length)
       $("#exerciseVisual").innerHTML =
         `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus,{heading:it.topic||it.theme,rubric:it.writingRubric,illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:!window.ContentPolicy.forProfile(profile),senses:it.lexicalSenses})}</div>`;
-    if(['reading','middleReading','literacy'].includes(subject)&&window.ReaderAssist)stopReaderAssist=window.ReaderAssist.mount($('#exerciseVisual'));
+    if (scenario&&!scenarioShown)
+      $("#exerciseVisual").insertAdjacentHTML(it.stimulus?.length?'afterbegin':'beforeend',
+        `<div class="scenario-card"><span class="scenario-label">Situación</span><p>${escapeHtml(scenario)}</p></div>`);
+    if(['reading','middleReading','literacy'].includes(subject)&&mode!=='writing'&&$('#exerciseVisual').querySelector('.reading-passage')&&window.ReaderAssist)stopReaderAssist=window.ReaderAssist.mount($('#exerciseVisual'));
     $("#exercisePrompt").textContent = it.q || "Actividad";
     if(it.roomSpeedTask){renderRoomSpeed(it);return;}
     if(it.interactionTask){renderInteractiveExercise(it);return;}
@@ -1623,7 +1665,10 @@
       subject,
       correct,
       currentItem.id,
-      currentItem.type || "standard",
+      currentItem.memoryAssociationRevision ? JSON.stringify({
+        schema:'gliax.exercise-metrics.v1',modality:'memory_association',definition_version:currentItem.memoryAssociationRevision,
+        associations:currentItem.memoryContent.length,exposure_ms:currentItem.revealMs
+      }) : currentItem.type || "standard",
     );
     showFeedback(correct, pts, currentItem.why);
     if(currentItem.speedTask){
@@ -1687,7 +1732,9 @@
           picked.every((x, i) => x === expected[i]);
         showFeedback(
           ok,
-          saveResult(subject, ok, it.id, it.memoryResponse==='order'?'memory_sequence':'planning'),
+          saveResult(subject, ok, it.id, it.memoryResponse==='order'?'memory_sequence':it.activityRevision===2
+            ?JSON.stringify({schema:'gliax.exercise-metrics.v1',modality:'planning_constraints',definition_version:2,content_key:it.contentKey})
+            :'planning'),
           ok
             ? "Secuencia correcta."
             : it.memoryResponse==='order' ? `La secuencia correcta era: ${expected.map(x=>window.ActivityModel.memoryLabel(x)).join(" → " )}` : `Orden esperado: ${expected.join(" → ")}`,
@@ -1751,7 +1798,37 @@
       render();
     }
   }
+  const correctSound=$('#correctSound');
+  const soundPreference='gliax.correct-sound';
+  try{correctSound.checked=localStorage.getItem(soundPreference)==='on';}catch{}
+  correctSound.onchange=()=>{try{localStorage.setItem(soundPreference,correctSound.checked?'on':'off');}catch{}};
+
+  function playCorrectSound(){
+    const item=currentItem;
+    if(!correctSound.checked||document.hidden||window.speechSynthesis?.speaking||!['executive','reading','middleReading','literacy','language','middleLanguage','teenLanguage','applied'].includes(subject))return;
+    if(item?.interactionTask||item?.speedTask||
+      item?.execution&&item.execution.kind!=='plan'||
+      item?.cognitiveTask&&!['deduction','change','information'].includes(item.cognitiveTask.kind))return;
+    const Audio=window.AudioContext||window.webkitAudioContext;
+    if(!Audio)return;
+    try{
+      const context=new Audio();
+      const play=()=>{
+        const note=context.createOscillator(),volume=context.createGain(),start=context.currentTime;
+        note.frequency.setValueAtTime(550,start);
+        volume.gain.setValueAtTime(0,start);
+        volume.gain.linearRampToValueAtTime(.035,start+.035);
+        volume.gain.linearRampToValueAtTime(0,start+.15);
+        note.connect(volume);volume.connect(context.destination);
+        note.onended=()=>context.close().catch(()=>{});
+        note.start(start);note.stop(start+.16);
+      };
+      context.resume().then(play).catch(()=>context.close().catch(()=>{}));
+    }catch{}
+  }
+
   function showFeedback(correct, pts, why = "") {
+    if(correct)playCorrectSound();
     // Preserve the trial layout while showing feedback; reset on the next item.
     const f = $("#exerciseFeedback");
     f.textContent =
@@ -1759,7 +1836,7 @@
       (correct
         ? `Correcto · +${pts} puntos`
         : `No esta vez. Respuesta: ${currentItem.a || "revisa el modelo"}`);
-    f.className = "feedback " + (currentItem?.cognitiveTask?.kind==='guidedWait'?'practice':correct ? "ok" : "bad");
+    f.className = "feedback " + (['guidedWait','falling'].includes(currentItem?.cognitiveTask?.kind)?'practice':correct ? "ok" : "bad");
     if(subject==='memory'&&currentItem?.type!=='executed'&&(Array.isArray(currentItem?.answer)||Array.isArray(currentItem?.sequence))){
       const expected=currentItem.answer||currentItem.sequence,solution=document.createElement('div');solution.className='memory-solution';
       solution.innerHTML='<h4>Secuencia correcta</h4>'+window.ActivityModel.interactiveStimulus([{type:'list',presentation:'sequence',items:expected.map(String)}],{senses:{...currentItem.lexicalSenses,iconProfile:profile}});f.append(solution);
@@ -1946,7 +2023,7 @@
   function renderOptionalMissions(route){
     if(window.ContentPolicy.forProfile(profile)){
       const saved=journeyState(),active=saved.active,journey=window.EarlyJourney;
-      const performanceHistory=state.history.filter(row=>!isGuidedWaitResult(row)),stats=journey.stats(performanceHistory),discovery=journey.overview(performanceHistory,ageData().subjects,saved.completed),explored=ageData().subjects.filter(d=>stats[d]?.attempts>=3).length;
+      const performanceHistory=state.history.filter(row=>!isPracticeResult(row)),stats=journey.stats(performanceHistory),discovery=journey.overview(performanceHistory,ageData().subjects,saved.completed),explored=ageData().subjects.filter(d=>stats[d]?.attempts>=3).length;
       return `<details class="professional-missions"><summary>Misiones opcionales · ${journey.missions.length}</summary>${active?`<p role="status">${journey.definition(active.id).title}: ${active.index} de ${journey.definition(active.id).plan.length} actividades realizadas.</p>`:''}<section class="professional-discovery" aria-label="Progreso de descubrimientos"><strong>Recorrido de descubrimientos</strong><p>${discovery.discoveries} de ${discovery.goal} pasos · ${explored} de ${ageData().subjects.length} áreas iniciadas</p><progress value="${discovery.discoveries}" max="${discovery.goal}" aria-label="Actividades para explorar todas las áreas"></progress><ol>${discovery.milestones.map(m=>`<li>${m.done?'✓':'○'} ${escapeHtml(m.title)}</li>`).join('')}</ol></section><div class="professional-mission-list">${journey.missions.map(m=>`<article class="professional-mission"><div><strong>${escapeHtml(m.title)}</strong><p>${escapeHtml(m.description)}</p></div><button type="button" class="secondary-btn" data-unified-mission="early" data-mission-id="${escapeHtml(m.id)}" ${active&&active.id!==m.id?'disabled':''}>${active?.id===m.id?'Continuar':'Empezar'}</button></article>`).join('')}</div></details>`;
     }
     const stage=window.SchoolJourney.forProfile(profile);if(!stage)return '';
@@ -2051,7 +2128,7 @@
     $("#progressProfileTitle").textContent = `Evolución de ${profile.name}`;
     $("#progressCards").innerHTML = ageData()
       .subjects.map((s) => {
-        const r = state.history.filter((x) => x.subject === s&&!isGuidedWaitResult(x)),
+        const r = state.history.filter((x) => x.subject === s&&!isPracticeResult(x)),
           c = r.filter((x) => x.correct).length,
           acc = r.length ? Math.round((c / r.length) * 100) : 0;
         const palette={language:['#4C5BDD','#EAF0FF'],middleLanguage:['#4C5BDD','#EAF0FF'],teenLanguage:['#4C5BDD','#EAF0FF'],division:['#A7463D','#FFF0EE'],geometry:['#3645B9','#EAF0FF'],middleMath:['#A7463D','#FFF0EE'],teenMath:['#A7463D','#FFF0EE'],literacy:['#3645B9','#EEE9FA'],reading:['#3645B9','#EEE9FA'],english:['#4C5BDD','#EAF0FF'],social:['#A7463D','#FFF0EE'],attention:['#4C5BDD','#EEE9FA'],applied:['#A7463D','#FFF0EE'],executive:['#A7463D','#FFF0EE'],memory:['#A7463D','#F8E8EC'],speedReasoning:['#4C5BDD','#EAF0FF']};
@@ -2061,7 +2138,7 @@
       .join("");
     renderSpeedProgress();
     const sessions=new Map();
-    for(const row of state.history.filter(row=>!isGuidedWaitResult(row))){
+    for(const row of state.history.filter(row=>!isPracticeResult(row))){
       const key=row.sessionId||row.ts?.slice(0,10)||'anterior';
       if(!sessions.has(key))sessions.set(key,{attempts:0,correct:0,date:row.sessionStartedAt||row.ts});
       const session=sessions.get(key);session.attempts++;if(row.correct)session.correct++;
@@ -2110,7 +2187,7 @@
         x.ts,
         x.subject,
         x.level,
-        isGuidedWaitResult(x)?"intervalo finalizado":x.correct ? "correcto" : "revisar",
+        isGuidedWaitResult(x)?"intervalo finalizado":isPracticeResult(x)?"práctica de transcripción":x.correct ? "correcto" : "revisar",
         x.points,
         x.itemId, x.originalSubject||"", x.responseMs??"", x.timingValid??"", x.speedFamily||"", x.speedFamily?(x.speedRevision||2):"", exerciseMetrics(x)?(typeof x.detail==='string'?x.detail:JSON.stringify(x.detail)):"", x.clientAttemptId||"", exerciseMetrics(x)?.modality||"", exerciseMetrics(x)?.schema||"",
       ]),
@@ -2206,7 +2283,7 @@
     }
     const bar = $("#guidedSessionBar");
     bar.classList.remove("hidden");
-    $("#guidedSessionTitle").textContent = "Sesión guiada";
+    $("#guidedSessionTitle").textContent = guidedSession.randomFamilies?"Sesión aleatoria":"Sesión guiada";
     if(guidedSession.mission)$('#guidedSessionTitle').textContent=missionDefinition().title;
     $('#cancelGuidedSession').textContent=guidedSession.mission?'Guardar y volver al inicio':'Salir de la sesión';
     $("#guidedSessionProgress").textContent =
@@ -2260,10 +2337,10 @@
     const mission=guidedSession.mission;
     guidedSession.index++;
     if (guidedSession.index >= guidedSession.plan.length) {
-      const completed = guidedSession.plan.length;
+      const completed = guidedSession.plan.length,random=guidedSession.randomFamilies;
       guidedSession = null;
       hideGuidedBar();
-      if(mission){switchSection('home');renderEarlyHub();return;}
+      if(mission||random){switchSection('home');renderEarlyHub();return;}
       switchSection("sessionBuilder");
       $("#sessionPlanPreview").innerHTML =
         `<div class="session-complete"><strong>Sesión completada</strong><span>${completed} actividades realizadas.</span></div>`;

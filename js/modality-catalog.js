@@ -21,9 +21,11 @@
       memoryAudio:domain==='memory'&&memory.some(item=>item.audioMemory===true),
       executed:['attention','memory','executive'].includes(domain)&&(root.ExecutedTasks?.pool(age,domain,level)||[]).length>0,
       cognitiveKinds,
+      fallingWords:root.CognitiveFamilies?.pool(age,domain,level,'falling').length>0,
       wordFit:['language','middleLanguage','teenLanguage'].includes(domain)&&cognitiveKinds.includes('words'),
       speed:{
         screen:domain==='speedReasoning'&&speed.length>0,
+        words:domain==='speedReasoning'&&root.CognitiveFamilies?.pool(age,domain,level,'words').length>0,
         room:domain==='speedReasoning'&&interactionAges.has(age)&&(root.Curriculum?.roomSpeedPool(age,level)||[]).length>0,
         unpaired:domain==='speedReasoning'&&speed.some(item=>item.mechanic==='speed_unpaired'),
       },

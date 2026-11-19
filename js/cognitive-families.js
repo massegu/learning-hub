@@ -4,6 +4,7 @@ const ages=['early','junior','primary','middle','teen'];
 const definitions={
  rules:{title:'Actúa con reglas 2.0',primaryConstruct:'responseInhibition',secondaryLoads:['workingMemory','cognitiveFlexibility'],functionalPurpose:'Detener una respuesta automática y adaptarse cuando cambian las instrucciones',printable:'interactive-only'},
  wait:{title:'Espera guiada',primaryConstruct:'guidedWaitPractice',secondaryLoads:['externalTimeCue'],functionalPurpose:'Practicar la espera con una señal temporal visible y acompañamiento profesional',printable:'interactive-only'},
+ falling:{title:'Palabras que caen',primaryConstruct:'writtenTranscription',secondaryLoads:['visualTracking','typing'],functionalPurpose:'Practicar la transcripción escrita con palabras presentadas en pantalla',printable:'interactive-only'},
  words:{title:'La palabra que encaja',primaryConstruct:'lexicalSearch',secondaryLoads:['ruleMaintenance','inhibition'],functionalPurpose:'Buscar palabras precisas que cumplan las condiciones de un mensaje',printable:'fully-printable'},
  deduction:{title:'Descubre quién',primaryConstruct:'deductiveReasoning',secondaryLoads:['selectiveAttention','hypothesisUpdating'],functionalPurpose:'Descartar alternativas con pistas antes de tomar una decisión',printable:'fully-printable'},
  change:{title:'Cambio de plan',primaryConstruct:'planning',secondaryLoads:['updating','cognitiveFlexibility'],functionalPurpose:'Reorganizar acciones ante un imprevisto conservando el objetivo',printable:'fully-printable'},
@@ -12,6 +13,8 @@ const definitions={
 };
 const quality=root.ContentQuality||(typeof require==='function'&&require('./content-quality'));
 for(const [key,d] of Object.entries(definitions))quality.register('cognitive.'+key,d.functionalPurpose,'constraints');
+const speedWordPurpose='Practicar la selección léxica por reglas como preparación sin cronómetro';
+quality.register('cognitive.words_selection',speedWordPurpose,'constraints');
 const T=text=>({type:'text',text}),L=(label,items)=>({type:'list',label,items});
 const norm=s=>String(s).trim().toLocaleLowerCase('es').normalize('NFC').replace(/[áéíóúü]/g,c=>({'á':'a','é':'e','í':'i','ó':'o','ú':'u','ü':'u'}[c])); // Preserve ñ: it is a different letter.
 const lexicon={
@@ -150,21 +153,62 @@ const ruleSets=[
 ];
 function rules(age,level,index){const rank=ages.indexOf(age),s=ruleSets[index],length=rank===0?4+level*2:6+level*2,switches=level===1?[]:level===2?[Math.floor(length/2)]:[Math.floor(length/3),Math.floor(length*2/3)];let inverted=false,seed=(rank+1)*103+level*29+index*61;const order=Array.from({length},(_,i)=>i);for(let k=length-1;k>0;k--){seed=(Math.imul(seed,1664525)+1013904223)>>>0;const j=seed%(k+1);[order[k],order[j]]=[order[j],order[k]];}const trials=Array.from({length},(_,i)=>{if(switches.includes(i))inverted=!inverted;const target=order[i]%2===0,symbol=(target?s.yes:s.no)[Math.floor(order[i]/2)%3];return {symbol,target,inverted,switchBefore:switches.includes(i)};});const answer=trials.map(t=>t.target!==t.inverted?'act':'wait'),initialRule=rank===0&&index<4?['Pulsa con los animales. Con los objetos, espera.','Pulsa con martillo, pala o llave inglesa. Con los instrumentos musicales, espera.','Pulsa con brújula, mapa o maleta. Con los alimentos, espera.','Pulsa con guitarra, tambor o piano. Con los otros objetos, espera.'][index]:s.rule;return {task:{kind:'rules',initialRule,trials,answer,ordered:true,trialMs:rank===0?3600:2800,gapMs:650,switchMs:2100},scenario:'rules.'+s.id,q:level===1?(rank===0?'Mira los ejemplos y sigue la regla.':'Adivina la regla: decide qué estímulos van con cada respuesta.'):'Recuerda la regla. Cuando veas ↔, inviértela para las siguientes tarjetas.',stimulus:[T(rank===0&&index<4?['Pulsa con los animales. Con los objetos, espera.','Pulsa con martillo, pala o llave inglesa. Con los instrumentos musicales, espera.','Pulsa con brújula, mapa o maleta. Con los alimentos, espera.','Pulsa con guitarra, tambor o piano. Con los otros objetos, espera.'][index]:s.rule),...(level>1?[T('↔ significa: invierte la regla que recuerdas. No indica qué debes responder a la siguiente tarjeta.')]:[])],sample:'Actividad temporal: no se adapta a papel.',why:level===1?'Comprueba la categoría antes de responder.':'Tras cada ↔, la regla había cambiado: lo que antes pedía pulsar pedía esperar, y al revés.',difficulty:{trials:length,switches:switches.length,dimensions:1}};}
 function waitPractice(age,level,index){const early=age==='early',intervalMs=early?[4000,6000,8000][level-1]:[5000,8000,12000][level-1],contexts=['La pantalla se está cargando.','La barra avanza mientras se guarda un archivo.','La aplicación está preparando una lista.','La pantalla muestra el tiempo que falta.'];return {task:{kind:'guidedWait',intervalMs,answer:['complete'],ordered:true,measurementVersion:1},scenario:'guided-wait.screen-load-'+(index%contexts.length),q:'Mira la barra y espera hasta que llegue al final.',stimulus:[T(contexts[index%contexts.length])],sample:'La espera terminó.',why:'La barra llega al final. Esta es una práctica guiada con apoyo visual.',difficulty:{intervalMs,level}};}
-const builders={rules,wait:waitPractice,words,deduction,change,information,contradiction},cache=new Map();
+const transcriptionWords=[
+ ['sol','luna','pala','rana','mesa','nube','pato','limón','ratón','árbol'],
+ ['brisa','reloj','planta','ventana','camino','pincel','música','brújula','trébol','glaciar'],
+ ['parque','cuaderno','chispa','sendero','cantera','archivo','biblioteca','lámpara','océano','catálogo'],
+ ['bitácora','proyecto','contraste','biografía','precisión','calendario','diagnóstico','hipótesis','síntesis','técnica'],
+ ['prototipo','contexto','acústica','itinerario','cronología','autonomía','verificación','logística','metáfora','térmico']
+];
+function falling(age,level,index){
+ const source=transcriptionWords[ages.indexOf(age)],count=[4,6,8][level-1];
+ const prompts=Array.from({length:count},(_,i)=>source[(i+index*2)%source.length]);
+ const windowMs=[10500,9000,7800][level-1];
+ return {
+  task:{kind:'falling',prompts,windowMs,measurementVersion:1},
+  scenario:'transcription.round-'+index,
+  q:'Escribe cada palabra tal como aparece y confírmala.',
+  stimulus:[T('Puedes pausar y practicar con palabras quietas.')],
+  sample:'Actividad con presentación en pantalla.',
+  why:'La transcripción comprueba si el texto coincide con la palabra que se mostró.',
+  difficulty:{count,windowMs}
+ };
+}
+const builders={rules,wait:waitPractice,words,deduction,change,information,contradiction,falling},cache=new Map();
 function pool(age,domain,level=1,family=null){
- if(!ages.includes(age)||![1,2,3].includes(level)||!['executive','language','middleLanguage','teenLanguage','attention','literacy','reading','middleReading'].includes(domain))return [];
- const allowed=domain==='executive'?Object.keys(definitions).filter(kind=>!['words','contradiction'].includes(kind)):domain.includes('Language')||domain==='language'?['words']:domain==='attention'?['contradiction']:['contradiction'];
+ if(!ages.includes(age)||![1,2,3].includes(level)||!['executive','language','middleLanguage','teenLanguage','attention','literacy','reading','middleReading','speedReasoning'].includes(domain))return [];
+ const allowed=domain==='executive'?Object.keys(definitions).filter(kind=>!['words','contradiction','falling'].includes(kind)):domain.includes('Language')||domain==='language'?(family==='falling'?['falling']:['words']):domain==='speedReasoning'?(family==='words'?['words']:[]):['contradiction'];
  if(family&&!allowed.includes(family))return [];
  const key=[age,domain,level,family||'all'].join(':');if(cache.has(key))return structuredClone(cache.get(key));const out=[];
  for(const kind of family?[family]:allowed)for(let i=0;i<(kind==='rules'?6:kind==='wait'?4:kind==='information'?8:4);i++){
   const d=definitions[kind],b=builders[kind](age,level,i),id=['cognitive-v1',age,domain,level,kind,i].join(':');
-  out.push({id,contentKey:id,type:'cognitiveTask',mechanic:kind==='wait'?'guided_wait_v1':kind==='rules'?'rule_application_v1':'cognitive_'+kind,domain,level,q:b.q,topic:d.title,stimulus:b.stimulus,sample:b.sample,why:b.why,cognitiveTask:b.task,primaryConstruct:d.primaryConstruct,secondaryLoads:d.secondaryLoads,functionalPurpose:d.functionalPurpose,semanticFamily:'cognitive.'+kind,scenarioFamily:b.scenario,qualityDescriptor:{semanticFamily:'cognitive.'+kind,scenarioFamily:b.scenario},readingDemand:age==='early'?'low':kind==='rules'?'minimal':'medium',visualDemand:kind==='deduction'?'medium':'low',motorDemand:kind==='wait'?'none':kind==='rules'?'timedSelection':'selection',printable:d.printable,ageRoute:age,difficultyProfile:{level,...b.difficulty},responseType:'cognitive'});
+  const speedWords=domain==='speedReasoning',semanticFamily=speedWords?'cognitive.words_selection':'cognitive.'+kind;
+  out.push({id,contentKey:id,type:'cognitiveTask',mechanic:kind==='wait'?'guided_wait_v1':kind==='rules'?'rule_application_v1':'cognitive_'+kind,domain,level,q:b.q,topic:d.title,stimulus:b.stimulus,sample:b.sample,why:b.why,cognitiveTask:b.task,primaryConstruct:speedWords?'lexicalSelection':d.primaryConstruct,secondaryLoads:d.secondaryLoads,functionalPurpose:speedWords?speedWordPurpose:d.functionalPurpose,semanticFamily,scenarioFamily:b.scenario,qualityDescriptor:{semanticFamily,scenarioFamily:b.scenario},readingDemand:age==='early'?'low':kind==='rules'?'minimal':'medium',visualDemand:kind==='deduction'?'medium':'low',motorDemand:kind==='wait'?'none':kind==='rules'?'timedSelection':kind==='falling'?'textEntry':'selection',printable:d.printable,ageRoute:age,difficultyProfile:{level,...b.difficulty},responseType:'cognitive'});
  }
  cache.set(key,out);return structuredClone(out);
 }
 function validate(item,age=item?.ageRoute){const parts=String(item?.contentKey||'').split(':'),canonical=pool(age,item?.domain,item?.level,parts[4]).find(x=>x.contentKey===item.contentKey);if(!canonical)throw Error('Familia o edad no registrada.');const locale=root.LocaleContent||(typeof require==='function'&&require('./locale-content')),expected=item.localization?locale.localizeItem(canonical,item.localization.locale,item.domain):canonical;for(const field of Object.keys(canonical))if(JSON.stringify(item[field])!==JSON.stringify(expected[field]))throw Error('La actividad o su respuesta han cambiado: '+field);return true;}
-function grade(item,response){validate(item);const t=item.cognitiveTask;if(!Array.isArray(response)||response.some(x=>typeof x!=='string'))return false;if(t.kind==='words')return response.length===1&&wordFits(response[0],t);const answer=t.answer;if(new Set(response).size!==response.length&&!t.ordered)return false;return JSON.stringify(t.ordered?response:[...response].sort())===JSON.stringify(t.ordered?answer:[...answer].sort());}
+function grade(item,response){validate(item);const t=item.cognitiveTask;if(t.kind==='falling')return false;if(!Array.isArray(response)||response.some(x=>typeof x!=='string'))return false;if(t.kind==='words')return response.length===1&&wordFits(response[0],t);const answer=t.answer;if(new Set(response).size!==response.length&&!t.ordered)return false;return JSON.stringify(t.ordered?response:[...response].sort())===JSON.stringify(t.ordered?answer:[...answer].sort());}
 function productionStatus(item,word){validate(item);const w=norm(word);return !Object.values(lexicon).flat().some(x=>norm(x)===w)?'unreviewed':wordFits(word,item.cognitiveTask)?'correct':'incorrect';}
 function printable(item,age){validate(item,age);if(item.printable==='interactive-only')throw Error('Esta actividad requiere presentación temporal en pantalla.');return {question:item.q,stimulus:item.stimulus,options:[],tokens:[],writingRubric:[],responseType:'written'};}
-const api={pool,validate,grade,printable,productionStatus,definitions,lexicon,wordFits};root.CognitiveFamilies=api;if(typeof module!=='undefined')module.exports=api;
+function wordResponseMode(item){
+ validate(item);
+ if(item.cognitiveTask.kind!=='words')throw Error('Se requiere una actividad de vocabulario.');
+ return ['early','junior'].includes(item.ageRoute)&&item.level<=2?'selection':'written';
+}
+function wordChoices(item){
+ if(wordResponseMode(item)!=='selection')return [];
+ const task=item.cognitiveTask;
+ const alternative=lexicon[task.constraints.category].find(w=>w!==task.answer[0]&&wordFits(w,task));
+ return [...new Set([...task.options,...(alternative?[alternative]:[])])].sort((a,b)=>a.localeCompare(b,'es'));
+}
+function gradeWordSelection(item,response){
+ const correct=wordChoices(item).filter(word=>wordFits(word,item.cognitiveTask));
+ return correct.length>0&&Array.isArray(response)&&response.length===correct.length&&new Set(response).size===correct.length&&response.every(word=>correct.includes(word));
+}
+function matchesTranscription(prompt,value){
+ const normalize=word=>String(word).trim().normalize('NFC').toLocaleLowerCase('es');
+ return normalize(prompt)===normalize(value);
+}
+const api={pool,validate,grade,printable,productionStatus,definitions,lexicon,wordFits,wordResponseMode,wordChoices,gradeWordSelection,matchesTranscription};root.CognitiveFamilies=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);

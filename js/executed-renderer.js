@@ -1,14 +1,23 @@
 (function(root){
 'use strict';
 function mount(item,{visual,area,onFinish,iconProfile}){
- const task=item.execution;let stopped=false,finished=false,timer=null,response=[],round=0,trialOpen=false;
+ const task=item.execution;let stopped=false,finished=false,timer=null,response=[],round=0,trialOpen=false,trialStartedAt=0,observations=[],respond=null;
  const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
  const picture=label=>{const n=node('span',undefined,'executed-picture');n.innerHTML=root.ActivityModel.visualLabel(label,{iconProfile});return n;};
  const later=(fn,ms)=>{clearTimeout(timer);timer=setTimeout(()=>{if(!stopped&&!finished)fn();},ms);};
  const button=(label,fn)=>{const b=node('button',label,'secondary-btn');b.type='button';b.onclick=fn;return b;};
  const message=node('p','Cuando estés preparado, empieza.','executed-status');message.setAttribute('role','status');message.setAttribute('aria-live','polite');
+ const stage=node('div',undefined,'executed-rule-stimulus rule-stimulus-stage');
+ const showStage=(...children)=>{stage.replaceChildren(...children);visual.replaceChildren(stage,message);};
+ const keyResponse=event=>{
+  if(!trialOpen||event.repeat||event.ctrlKey||event.metaKey||event.altKey||event.shiftKey||event.isComposing||event.target.closest?.('button,input,select,textarea,a,[contenteditable],[role="button"]'))return;
+  const value=task.kind==='inhibit'&&event.code==='Space'?'act':task.kind==='switch'&&['KeyA','KeyB'].includes(event.code)?event.code.at(-1):null;
+  if(value){event.preventDefault();respond?.(value,true);}
+ };
  visual.replaceChildren(message);area.classList.add('executed-area');
- function complete(value=response){if(stopped||finished)return;finished=true;clearTimeout(timer);area.querySelectorAll('button').forEach(b=>b.disabled=true);onFinish(root.ExecutedTasks.grade(item,value),item.why);
+ function complete(value=response){if(stopped||finished)return;finished=true;clearTimeout(timer);area.querySelectorAll('button').forEach(b=>b.disabled=true);const ruleTask=['switch','inhibit'].includes(task.kind);
+  const metrics=ruleTask?{schema:'gliax.exercise-metrics.v1',modality:'rule_application',definition_version:2,variant:task.kind,level:item.level,trials:observations.length,correct:observations.filter(x=>x.correct).length,errors:observations.filter(x=>!x.correct&&!x.omission).length,omissions:observations.filter(x=>x.omission).length,response_times_ms:observations.flatMap(x=>x.ms===null?[]:[x.ms])}:null;
+  onFinish(root.ExecutedTasks.grade(item,value),item.why,metrics);
   if(['serial','update','spatial'].includes(task.kind)){
    const solution=node('div',undefined,'memory-solution');solution.append(node('h4',task.kind==='spatial'?'Posiciones correctas':'Secuencia correcta'));
    if(task.kind==='spatial')solution.append(grid(task.cells,false));else{const row=node('ol',undefined,'executed-model');task.answer.forEach(label=>{const li=node('li');li.append(picture(label));row.append(li);});solution.append(row);}
@@ -26,22 +35,26 @@ function mount(item,{visual,area,onFinish,iconProfile}){
  }
  function trials(skipSwitch=false){area.replaceChildren();message.classList.remove('executed-next-cue');
   if(!skipSwitch&&task.kind==='switch'&&round>0&&round<task.trials.length&&task.trials[round].reversed!==task.trials[round-1].reversed){
-   const change=node('section',undefined,'executed-rule-change');change.append(node('div','↔','cognitive-switch'),node('h2','CAMBIO DE REGLA'),node('p','Intercambia A y B. La señal no indica qué botón pulsar.'));message.textContent='Cambio de regla.';visual.replaceChildren(message,change);later(()=>trials(true),2100);return;
+   const change=node('section',undefined,'executed-rule-change');change.append(node('div','↔','cognitive-switch'),node('h2','CAMBIO DE REGLA'),node('p','Intercambia A y B. La señal no indica qué botón pulsar.'));message.textContent='Cambio de regla.';showStage(change);later(()=>trials(true),2100);return;
   }if(round===task.trials.length){complete();return;}
-  const trial=task.trials[round];trialOpen=true;message.textContent='';
-  if(task.kind==='switch'||task.kind==='inhibit'){const stimulus=node('div',undefined,'executed-rule-stimulus');stimulus.append(picture(trial.symbol));visual.replaceChildren(message,stimulus);}else visual.replaceChildren(message,picture(trial.symbol));
-  const next=value=>{if(!trialOpen||stopped||finished)return;trialOpen=false;clearTimeout(timer);response.push(value);round++;visual.replaceChildren(message);message.textContent='Siguiente estímulo';message.classList.add('executed-next-cue');area.querySelectorAll('button').forEach(b=>b.disabled=true);later(trials,650);};
-  if(task.kind==='inhibit'){area.append(button('Responder',()=>next('act')));if(trial.symbol!=='libro'){const wait=node('p','','executed-wait-countdown');wait.setAttribute('role','timer');wait.setAttribute('aria-live','off');visual.querySelector('.executed-rule-stimulus').append(wait);const deadline=Date.now()+task.trialMs;const tick=()=>{if(!trialOpen||stopped||finished)return;const remaining=Math.max(0,deadline-Date.now());wait.textContent=remaining?`Espera ${Math.ceil(remaining/1000)} segundos.`:'La espera ha terminado.';if(remaining)timer=setTimeout(tick,Math.min(100,remaining));else next('wait');};tick();}else later(()=>next('wait'),task.trialMs);}
-  else{area.append(button('A',()=>next('A')),button('B',()=>next('B')));}
+  const trial=task.trials[round];trialOpen=true;trialStartedAt=performance.now();message.textContent='';
+  showStage(picture(trial.symbol));
+  respond=(value,observed)=>{if(!trialOpen||stopped||finished)return;trialOpen=false;clearTimeout(timer);observations.push({correct:value===task.answer[round],omission:!observed&&task.answer[round]!=='wait',ms:observed?Math.round(performance.now()-trialStartedAt):null});response.push(value);round++;stage.onclick=null;stage.classList.remove('is-response-surface');showStage();message.textContent='Siguiente estímulo';message.classList.add('executed-next-cue');area.querySelectorAll('button').forEach(b=>b.disabled=true);later(trials,650);};
+  if(task.kind==='inhibit'){
+   const act=()=>respond('act',true);
+   area.append(button('Responder',act));stage.onclick=act;stage.classList.add('is-response-surface');
+   later(()=>respond('wait',false),task.trialMs);
+  }
+  else{area.append(button('A',()=>respond('A',true)),button('B',()=>respond('B',true)));}
   area.append(button('Reiniciar sin registrar',()=>ready('Intento detenido. Puedes volver a empezar.')));
  }
- function start(){clearTimeout(timer);response=[];round=0;area.replaceChildren();visual.replaceChildren(message);message.textContent=({serial:'Observa la secuencia. Después se ocultará.',update:'Memoriza la secuencia. Después aparecerá un cambio.',spatial:'Observa dónde está el modelo; ignora los otros objetos.',follow:'Sigue el modelo visible y pulsa los objetos en ese orden.',cancel:'Compara cada objeto con los modelos.',compare:'Revisa la misma posición en A y en B.',plan:'Completa los requisitos antes de pasar al siguiente paso.'})[task.kind]||(task.kind==='switch'?'Aplica la regla inicial.':'Sigue la regla de la tarjeta.');
+ function start(){clearTimeout(timer);response=[];observations=[];round=0;area.replaceChildren();visual.replaceChildren(message);message.textContent=({serial:'Observa la secuencia. Después se ocultará.',update:'Memoriza la secuencia. Después aparecerá un cambio.',spatial:'Observa dónde está el modelo; ignora los otros objetos.',follow:'Sigue el modelo visible y pulsa los objetos en ese orden.',cancel:'Compara cada objeto con los modelos.',compare:'Revisa la misma posición en A y en B.',plan:'Completa los requisitos antes de pasar al siguiente paso.'})[task.kind]||(task.kind==='switch'?'Aplica la regla inicial.':'Sigue la regla de la tarjeta.');
   if(['switch','inhibit'].includes(task.kind)){trials();return;}
   if(task.kind==='plan'){
-   visual.append(node('p',item.stimulus[1].items.join(' ')));sequence([...task.steps].reverse());return;
+   visual.append(node('p',[...item.stimulus[1].items].reverse().join(' ')));sequence([...task.steps].reverse());return;
   }
   if(task.kind==='cancel'){visual.append(node('p','Modelos'));task.targets.forEach(x=>visual.append(picture(x)));selection(task.cells);return;}
-  if(task.kind==='compare'){visual.append(node('h4','Cuadrícula A'),grid(task.cells,false),node('h4','Marca los cambios en B'));selection(task.after);return;}
+  if(task.kind==='compare'){visual.append(node('h4','Cuadrícula A'),grid(task.cells,false),node('h4','Marca '+task.answer.length+(task.answer.length===1?' diferencia en B':' diferencias en B')));selection(task.after);return;}
   if(task.kind==='follow'){const model=node('div',undefined,'executed-model');task.sequence.forEach(x=>model.append(picture(x)));visual.append(model);sequence([...task.choices].reverse());return;}
   if(task.kind==='spatial'){visual.append(node('p','Modelo que debes recordar'),picture(task.target));}
   const source=task.kind==='spatial'?grid(task.cells,false):node('div',undefined,'executed-model');if(task.kind!=='spatial')task.sequence.forEach(x=>source.append(picture(x)));visual.append(source);area.append(button('Reiniciar sin registrar',()=>ready('Intento detenido. Puedes volver a empezar.')));
@@ -51,8 +64,8 @@ function mount(item,{visual,area,onFinish,iconProfile}){
  }
  function ready(text){clearTimeout(timer);trialOpen=false;message.textContent=text;message.classList.remove('executed-next-cue');visual.replaceChildren(message);if(task.kind==='switch'){const intro=node('section',undefined,'executed-rule-intro'),rows=node('div',undefined,'executed-rule-rows');intro.append(node('h2','Regla inicial'));rows.append(node('p','LIBRO → A'),node('p','PELOTA → B'));intro.append(rows,node('p','Si aparece ↔, intercambia las respuestas.'));visual.append(intro);}area.replaceChildren(button('Empezar',start));}
  const interrupt=()=>{if(document.hidden&&!finished&&!stopped)ready('La actividad se ha interrumpido. Vuelve a empezar cuando estés preparado; este intento no se registra.');};
- document.addEventListener('visibilitychange',interrupt);ready('Pulsa Empezar para comenzar.');
- return ()=>{stopped=true;clearTimeout(timer);document.removeEventListener('visibilitychange',interrupt);area.classList.remove('executed-area');};
+ document.addEventListener('keydown',keyResponse);document.addEventListener('visibilitychange',interrupt);ready('Pulsa Empezar para comenzar.');
+ return ()=>{stopped=true;clearTimeout(timer);document.removeEventListener('keydown',keyResponse);document.removeEventListener('visibilitychange',interrupt);area.classList.remove('executed-area');};
 }
 root.ExecutedRenderer={mount};
 })(window);
