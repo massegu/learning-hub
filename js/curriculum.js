@@ -190,8 +190,14 @@ function memory(age,level){
    items.push(finish({type:'memoryReveal',responseType:'order',memoryResponse:'order',requiresStimulus:true,q:`Mira el mapa. Recuerda el orden de las ${routeCount} visitas.`,memoryQuestion:level===3&&rank>1?'Reconstruye las visitas desde la última hasta la primera.':'Reconstruye las visitas desde la primera hasta la última.',stimulus:[{type:'list',items:route,positions:route.map(place=>places.indexOf(place)),presentation:'routeMap'}],memoryContent:route.map(detail=>({detail})),tokens:shuffled(route,v+71),answer:level===3&&rank>1?[...route].reverse():[...route],revealMs:Math.max(8000,routeCount*2500),recallEvidence:{kind:'sequence',block:0,reverse:level===3&&rank>1},topic:'Memoria · recorrido por el barrio',why:rank===0?'Recuerda el orden de las visitas.':(level===3&&rank>1?[...route].reverse():route).join(' → ')},age,'memory',level,`route-${v}`,'memory_route'));
   }
   // Associations keep memory broader than the two new recall modes.
-  const people=['Ana','Leo','Sol','Dani','Mar','Hugo','Lola','Nora','Eva'].slice(0,count),pairs=people.map((n,i)=>[n,values[i]]),ask=v%count;
-  items.push(finish({type:'memoryReveal',responseType:'choice',requiresStimulus:true,q:'Mira la imagen que acompaña a cada persona. Después la taparemos.',memoryQuestion:`¿Qué imagen acompañaba a ${people[ask]}?`,stimulus:[{...R(pairs),presentation:'associations'}],memoryContent:pairs.map(([person,detail])=>({person,detail})),a:values[ask],opts:rotate(values,ask).slice(0,rank===0?Math.min(3,count):4),revealMs:Math.max(6000,count*1700),answerEvidence:{type:'tableCell',block:0,row:ask,column:1,subjectColumn:0},topic:'Memoria · personas y objetos'},age,'memory',level,`association-${v}`,'memory_association'));
+  const associationCount=[[2,3,4],[3,4,5],[3,4,6],[4,5,7],[4,5,8]][rank][level-1];
+  const pairedObjects=values.slice(0,associationCount), people=['Ana','Leo','Sol','Dani','Mar','Hugo','Lola','Nora','Eva'].slice(0,associationCount);
+  const pairs=people.map((name,index)=>[name,pairedObjects[index]]),ask=v%associationCount;
+  const reviewed=rotate(pairedObjects,ask);
+  const unseenObject=materials.find(label=>!pairedObjects.includes(label));
+  const options=level===1?[...reviewed.slice(0,2),unseenObject]:reviewed.slice(0,rank===0?3:4);
+  const revealMs=Math.max(6000,associationCount*[2600,2200,1700][level-1]);
+  items.push(finish({type:'memoryReveal',responseType:'choice',requiresStimulus:true,q:'Mira la imagen que acompaña a cada persona. Después la taparemos.',memoryQuestion:`¿Qué imagen acompañaba a ${people[ask]}?`,stimulus:[{...R(pairs),presentation:'associations'}],memoryContent:pairs.map(([person,detail])=>({person,detail})),a:pairedObjects[ask],opts:options,revealMs,memoryAssociationRevision:2,answerEvidence:{type:'tableCell',block:0,row:ask,column:1,subjectColumn:0},topic:'Memoria · personas y objetos'},age,'memory',level,`association-v2-${v}`,'memory_association'));
  }
  const audioCases=rank>=3?[
   ['Noticia del barrio','Esta mañana, el centro cultural abrió una exposición de fotografías históricas. La muestra podrá visitarse hasta el viernes y la entrada es gratuita. El sábado, el equipo trasladará las imágenes a la biblioteca.','¿Hasta qué día puede visitarse la exposición?','Hasta el viernes',['Hasta el sábado','Hasta el domingo'],'audio_news'],

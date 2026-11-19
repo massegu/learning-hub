@@ -141,7 +141,19 @@
   }
   function executive(c,i,level,m){
     const steps=c.plan.slice(0,level+1);
-    if(m===0)return {type:'order',q:'Ordena los pasos siguiendo el plan.',tokens:steps.slice().reverse(),answer:steps,stimulus:[list(steps.map((x,j)=>`${j+1}. ${x}`))],requiresStimulus:true,why:'Cada paso sigue al anterior en el plan.'};
+    if(m===0){
+      const resources=[
+        ['En la maceta solo cabe un tipo de semilla. La cantidad de tierra depende del tipo elegido. Pon la tierra antes de enterrar las semillas.','La regadera se usa cuando las semillas ya están enterradas.'],
+        ['El boceto debe representar el tema elegido. Usa los colores dentro de las líneas del boceto.','Pega el dibujo al mural una vez coloreado.'],
+        ['El título no aparece en la portada. Para escribirlo necesitas leer la primera página del libro elegido.','Deja el libro en el estante cuando hayas escrito el título.'],
+        ['El circuito se explica usando los conos como referencia. Solo se puede participar cuando todos conocen el recorrido.','Recoge los conos cuando todos hayan terminado.'],
+        ['Para ensayar las entradas del grupo, todos necesitan conocer la letra. En la actuación no se podrá parar para practicar.','Los instrumentos se guardan cuando el grupo haya acabado de tocar.'],
+        ['La hoja debe pertenecer al árbol elegido. El dibujo debe conservar los detalles que observes en la hoja.','Comparte el dibujo cuando ya tenga todos los detalles.']
+      ][i];
+      return {type:'order',q:'Organiza los pasos necesarios para «'+c.title+'».',tokens:steps.slice().reverse(),answer:steps,
+        stimulus:[text(resources[0]+(level===3?' '+resources[1]:''))],requiresStimulus:true,
+        why:'Coloca cada preparación antes de la acción que depende de ella.',activityRevision:2};
+    }
     if(m===1){
       const preparations=[['Elegir las semillas','Preparar la tierra'],['Elegir el tema','Preparar los colores'],['Elegir el libro','Buscar un lugar para leer'],['Colocar los conos','Explicar el recorrido'],['Leer la letra','Elegir los instrumentos'],['Elegir el árbol','Preparar la lupa']][i];
       const required=level===1?preparations.slice(0,1):level===2?preparations:[...preparations,c.extra];
@@ -188,7 +200,7 @@
         const family=domain==='language'?`${focus}_${m%3}`:mechanics[domain][m];
         const fn={language,reading,division:maths,attention,memory,executive,speedReasoning:reasoning,applied}[domain];
         const item=domain==='language'?fn(c,i,level,focus,m%3):fn(c,i,level,m);
-        out.push(finish(item,domain,level,c,family,0,focus));
+        out.push(finish(item,domain,level,c,family,item.activityRevision||0,focus));
       }
     });
     return out;
