@@ -289,7 +289,7 @@
       for(const block of projection.stimulus){
         const values=block.type==='list'&&(item.type==='executed'||['count','cards','sequence'].includes(block.presentation))?block.items:block.type==='table'?block.rows.flat():[];
         for(const value of values){
-          const key=art?.forLabel(value,{...localized.lexicalSenses,subject:block.label});
+          const key=art?.forLabel?.(value,{...localized.lexicalSenses,subject:block.label});
           if(key&&!/^[●○□△☆]$/.test(value)){
             const bytes=artFor(key,profile).png(key);
             if(bytes.length<24||[137,80,78,71,13,10,26,10].some((b,i)=>bytes[i]!==b))fail('la ilustración no es un PNG imprimible válido.');

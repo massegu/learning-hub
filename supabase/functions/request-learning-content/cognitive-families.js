@@ -97,8 +97,40 @@ const lexicalContexts={
    ['El archivo contiene datos que deben retirarse antes de compartirlo. Necesitas un documento que deje constancia de las modificaciones realizadas.', ['registro de cambios','historial de cambios','bitácora de cambios']]]]
  ]
 };
+const paperLexicalContexts={
+ primary:[
+  ['Material del huerto',[
+   ['La tierra está seca. Buscas un recipiente con un pico perforado para repartir el agua sobre varias plantas.', ['regadera']],
+   ['Hay que aflojar la tierra entre plantas sin cortar sus tallos. Nombra una herramienta de mano para remover la tierra.', ['azada','azadilla']],
+   ['Quieres conservar la humedad del suelo sin volver a regar. Nombra el material que se coloca sobre la tierra para cubrirla.', ['mantillo','acolchado']]]],
+  ['Recorrer el barrio',[
+   ['Quieres orientarte en un barrio nuevo. Nombra el dibujo que muestra calles y plazas vistas desde arriba.', ['plano','mapa']],
+   ['En el plano hay símbolos junto a las calles. Busca el nombre del recuadro que explica el significado de los símbolos.', ['leyenda']],
+   ['Necesitas marcar por dónde caminarás y evitar las calles cortadas. Escribe el nombre del recorrido que has elegido.', ['ruta','itinerario','trayecto']]]]
+ ],
+ middle:[
+  ['Publicar un informe del taller',[
+   ['El equipo recibió tres propuestas. Necesita elegir una y dejar por escrito el motivo de la decisión. Nombra esa explicación.', ['justificación','fundamentación']],
+   ['Antes de publicar, necesitas que alguien compruebe si la conclusión se sostiene con las pruebas. Nombra esa acción.', ['revisar','verificar','comprobar']],
+   ['Dos textos llegan a conclusiones distintas con los mismos datos. Nombra la acción de examinarlos juntos para ver dónde discrepan.', ['contrastar','comparar']]]],
+  ['Un material accesible',[
+   ['Una persona no puede ver la foto del cartel. Nombra el texto que permite conocer lo esencial de la imagen.', ['descripción','texto alternativo']],
+   ['En una hoja hay un concepto técnico que aparece varias veces. Nombra la sección que agrupa términos y los explica.', ['glosario']],
+   ['Hay que explicar un procedimiento complejo en un diagrama que muestre decisiones y consecuencias. Nombra ese tipo de diagrama.', ['diagrama de flujo','flujograma']]]]
+ ],
+ teen:[
+  ['Justificar una decisión de compra',[
+   ['Dos propuestas tienen precios distintos y prestaciones comparables. Nombra el documento que presenta por adelantado cuánto costaría un servicio.', ['presupuesto','cotización']],
+   ['Un proveedor afirma que cumple las condiciones, pero su documento omite la vigencia del precio. Nombra el acto formal de pedir que precise ese dato.', ['solicitud de aclaración','petición de aclaración']],
+   ['La compra ya está aprobada por un máximo. El coste previsto supera ese límite y debes justificar el aumento antes de comprometer el gasto. Nombra la petición presupuestaria.', ['ampliación presupuestaria','solicitud de ampliación presupuestaria']]]],
+  ['Comunicar los límites de un dato',[
+   ['El informe se basa en entrevistas a un grupo pequeño y no permite describir a toda la población. Nombra el grupo que sí participó.', ['muestra']],
+   ['Al contar los resultados, necesitas indicar que la medición puede diferir del valor real. Nombra esa falta de certeza de la medición.', ['incertidumbre']],
+   ['Una conclusión solo es válida bajo las condiciones estudiadas. Escribe el término para extenderla a otros grupos sin haberlos estudiado.', ['generalización','extrapolación']]]]
+ ]
+};
 function situatedWords(age,level,index){
- const [context,levels]=lexicalContexts[age][index];
+ const [context,levels]=index<4?lexicalContexts[age][index]:paperLexicalContexts[age][index-4];
  const [cue,accepted]=levels[level-1];
  const task={kind:'words',constraints:{},context,cue,accepted,productionAllowed:true,answer:[accepted[0]],options:[]};
  return {task,scenario:'lexical.situated.'+index,q:'Escribe la palabra o expresión que encaja.',stimulus:[T(context),T(cue)],
@@ -245,18 +277,18 @@ function pool(age,domain,level=1,family=null,revision=1){
  if(!ages.includes(age)||![1,2,3].includes(level)||!['executive','language','middleLanguage','teenLanguage','attention','literacy','reading','middleReading','speedReasoning'].includes(domain))return [];
  const allowed=domain==='executive'?Object.keys(definitions).filter(kind=>!['words','contradiction','falling'].includes(kind)):domain.includes('Language')||domain==='language'?(family==='falling'?['falling']:['words']):domain==='speedReasoning'?(family==='words'?['words']:[]):['contradiction'];
  if(family&&!allowed.includes(family))return [];
- const advancedWords=revision===2&&Boolean(lexicalContexts[age]);
+ const advancedWords=revision>=2&&Boolean(lexicalContexts[age]);
  const key=[age,domain,level,family||'all',revision].join(':');if(cache.has(key))return structuredClone(cache.get(key));const out=[];
- for(const kind of family?[family]:allowed)for(let i=0;i<(kind==='rules'?6:kind==='wait'?4:kind==='information'?8:4);i++){
-  const d=definitions[kind],advanced=kind==='words'&&advancedWords,b=(advanced?situatedWords:builders[kind])(age,level,i),id=[advanced?'cognitive-v2':'cognitive-v1',age,domain,level,kind,i].join(':');
+ for(const kind of family?[family]:allowed)for(let i=0;i<(kind==='rules'?6:kind==='wait'?4:kind==='information'?8:kind==='words'&&advancedWords&&revision===3?6:4);i++){
+  const d=definitions[kind],advanced=kind==='words'&&advancedWords,b=(advanced?situatedWords:builders[kind])(age,level,i),id=[advanced?(i>=4?'cognitive-v3':'cognitive-v2'):'cognitive-v1',age,domain,level,kind,i].join(':');
   const speedWords=domain==='speedReasoning',semanticFamily=speedWords?'cognitive.words_selection':'cognitive.'+kind;
   out.push({id,contentKey:id,type:'cognitiveTask',mechanic:kind==='wait'?'guided_wait_v1':kind==='rules'?'rule_application_v1':'cognitive_'+kind,domain,level,q:b.q,topic:d.title,stimulus:b.stimulus,sample:b.sample,why:b.why,cognitiveTask:b.task,primaryConstruct:speedWords?'lexicalSelection':d.primaryConstruct,secondaryLoads:d.secondaryLoads,functionalPurpose:speedWords?speedWordPurpose:d.functionalPurpose,semanticFamily,scenarioFamily:b.scenario,qualityDescriptor:{semanticFamily,scenarioFamily:b.scenario},readingDemand:age==='early'?'low':kind==='rules'?'minimal':'medium',visualDemand:kind==='deduction'?'medium':'low',motorDemand:kind==='wait'?'none':kind==='rules'?'timedSelection':kind==='falling'?'textEntry':'selection',printable:d.printable,ageRoute:age,difficultyProfile:{level,...b.difficulty},responseType:'cognitive'});
  }
  cache.set(key,out);return structuredClone(out);
 }
-function validate(item,age=item?.ageRoute){const parts=String(item?.contentKey||'').split(':'),canonical=pool(age,item?.domain,item?.level,parts[4],parts[0]==='cognitive-v2'?2:1).find(x=>x.contentKey===item.contentKey);if(!canonical)throw Error('Familia o edad no registrada.');const locale=root.LocaleContent||(typeof require==='function'&&require('./locale-content')),expected=item.localization?locale.localizeItem(canonical,item.localization.locale,item.domain):canonical;for(const field of Object.keys(canonical))if(JSON.stringify(item[field])!==JSON.stringify(expected[field]))throw Error('La actividad o su respuesta han cambiado: '+field);return true;}
+function validate(item,age=item?.ageRoute){const parts=String(item?.contentKey||'').split(':'),canonical=pool(age,item?.domain,item?.level,parts[4],parts[0]==='cognitive-v3'?3:parts[0]==='cognitive-v2'?2:1).find(x=>x.contentKey===item.contentKey);if(!canonical)throw Error('Familia o edad no registrada.');const locale=root.LocaleContent||(typeof require==='function'&&require('./locale-content')),expected=item.localization?locale.localizeItem(canonical,item.localization.locale,item.domain):canonical;for(const field of Object.keys(canonical))if(JSON.stringify(item[field])!==JSON.stringify(expected[field]))throw Error('La actividad o su respuesta han cambiado: '+field);return true;}
 function grade(item,response){validate(item);const t=item.cognitiveTask;if(t.kind==='falling')return false;if(!Array.isArray(response)||response.some(x=>typeof x!=='string'))return false;if(t.kind==='words')return response.length===1&&wordFits(response[0],t);const answer=t.answer;if(new Set(response).size!==response.length&&!t.ordered)return false;return JSON.stringify(t.ordered?response:[...response].sort())===JSON.stringify(t.ordered?answer:[...answer].sort());}
-function productionStatus(item,word){validate(item);const task=item.cognitiveTask,w=norm(word);if(wordFits(word,task))return 'correct';const vocabulary=task.accepted?Object.values(lexicalContexts).flatMap(entries=>entries.flatMap(([,levels])=>levels.flatMap(([,answers])=>answers))):Object.values(lexicon).flat();return vocabulary.some(x=>norm(x)===w)?'incorrect':'unreviewed';}
+function productionStatus(item,word){validate(item);const task=item.cognitiveTask,w=norm(word);if(wordFits(word,task))return 'correct';const vocabulary=task.accepted?[...Object.values(lexicalContexts),...Object.values(paperLexicalContexts)].flatMap(entries=>entries.flatMap(([,levels])=>levels.flatMap(([,answers])=>answers))):Object.values(lexicon).flat();return vocabulary.some(x=>norm(x)===w)?'incorrect':'unreviewed';}
 function paperEligible(item){
  if(!item||item.interactiveOnly||item.audioMemory||item.roomSpeedTask||item.interactionTask||item.printable==='interactive-only')return false;
  if((item.sourceDomain||item.domain)==='english'&&item.requiresStimulus!==false&&!item.stimulus?.length&&!item.scenario&&!item.text)return false;

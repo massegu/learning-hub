@@ -23,6 +23,13 @@ await import("./data/teen.js");
 await import("./data/english.js");
 await import("./data/literacy.js");
 
+await import("./content-policy.js");
+await import("./early-refinements.js");
+await import("./early-language.js");
+await import("./early-content.js");
+await import("./activity-model.js");
+await import("./worksheet-catalog.js");
+
 const DATA:any = (globalThis as any).LEARNING_DATA;
 (globalThis as any).Curriculum.registerReasoning((age:string,level:number)=>{
   const root:any=globalThis;
@@ -2391,6 +2398,128 @@ function worksheetTask(age:string, domain:string, level:number){
   return {...structuredClone(pick(pool)),sourceDomain:domain};
 }
 
+const paperCache=new Map<string,any>();
+function worksheetInventory(age:string,level:number,locale:string){
+  const catalog=(globalThis as any).WorksheetCatalog;
+  const cacheKey=[age,level,locale].join(':');
+  if(paperCache.has(cacheKey))return paperCache.get(cacheKey);
+  const api=globalThis as any;
+  const profile={age_band:age,progress:{ageRoute:age},contentLocale:locale};
+  const grouped=new Map<string,any>();
+  for(const domain of api.Curriculum.visible(SUBJECTS[age],age)){
+    const curriculum=api.Curriculum;
+    const items=[
+      ...(age==='early'?api.EarlyContent.pool(domain,level):curriculum.pool(age,domain,level)),
+      ...curriculum.practice(age,domain,level),
+      ...api.FunctionalContent.pool(age,domain,level),
+      ...api.DocumentLibrary.pool(age,domain,level),
+      ...api.PhotoLibrary.pool(age,domain,level),
+      ...api.ExecutedTasks.pool(age,domain,level),
+      ...curriculum.interactivePool(age,domain,level),
+      ...curriculum.academic(age,domain,level,'grammar')
+    ];
+    if(['language','middleLanguage','teenLanguage'].includes(domain)){
+      items.push(...api.CognitiveFamilies.pool(age,domain,level,'words',3),...api.CognitiveFamilies.pool(age,domain,level,'falling'),...curriculum.vocabulary(age,domain,level));
+    }
+    if(domain==='attention'||domain==='executive')items.push(...api.CognitiveFamilies.pool(age,domain,level));
+    if(domain==='speedReasoning')items.push(...api.CognitiveFamilies.pool(age,domain,level,'words',3),...curriculum.roomSpeedPool(age,level));
+    for(const original of items){
+      if(!original||original.domain&&original.domain!==domain)continue;
+      const item=original.domain?original:{...original,domain};
+      if(item.level!==level)continue;
+      const meta=catalog.classify(item,domain);
+      if(!grouped.has(meta.id))grouped.set(meta.id,{meta,entries:[],sources:new Set(),outputs:new Set(),mechanics:new Set(),excluded:0,issues:{}});
+      const group=grouped.get(meta.id);
+      const key=catalog.semanticSource(item);
+      if(group.sources.has(key))continue;
+      group.sources.add(key);
+      if(item.mechanic)group.mechanics.add(item.mechanic);
+      if(!['direct','adapted'].includes(meta.status)||!catalog.staticPaper(item))continue;
+      try{
+        const localized=api.LocaleContent.localizeItem(item,locale,domain);
+        if(!validateItem(localized))throw Error('Contrato de origen');
+        const checked=api.ActivityModel.preparePrintable(localized,profile,locale,domain);
+        if(catalog.classify(checked.item,domain).id!==meta.id)throw Error('Clasificación pendiente al adaptar la actividad.');
+        const output=catalog.semanticSource(checked.item);
+        if(group.outputs.has(output))continue;
+        group.outputs.add(output);
+        group.entries.push({item:checked.item,identity:output,signature:catalog.fingerprint(item)});
+      }catch(error){
+        group.excluded++;
+        const report=error instanceof Error?error.message:'No se pudo adaptar el ejercicio.';
+        group.issues[report]=(group.issues[report]||0)+1;
+      }
+    }
+  }
+  const families=[...grouped.values()].map(group=>({...group.meta,available:group.entries.length,
+    inspected:group.sources.size,excluded:group.excluded,issues:group.issues,mechanics:[...group.mechanics].sort()}));
+  const result={grouped,families};
+  if(paperCache.size>=12)paperCache.delete(paperCache.keys().next().value!);
+  paperCache.set(cacheKey,result);
+  return result;
+}
+
+async function configuredWorksheet(admin:any,userId:string,profileId:string,body:any,account:any){
+  const api=globalThis as any;
+  const catalog=api.WorksheetCatalog;
+  const reply=(data:any,status=200)=>new Response(JSON.stringify(data),{status,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.client_revision!==16)return reply({error:'Actualiza GLIAX para usar Ficha a la carta.'},409);
+  if(body.session_only!==undefined&&typeof body.session_only!=='boolean')return reply({error:'Modalidad de sesión no válida.'},400);
+  const config=body.kind==='worksheet_catalog'?body.catalogue:body.worksheet_plan;
+  if(!config||!Object.hasOwn(catalog.ages,config.age)||![1,2,3].includes(config.level)||!Object.hasOwn(api.LocaleContent.labels,config.locale))
+    return reply({error:'Edad, nivel o variante del español no válidos.'},400);
+  const metadata=body.kind==='worksheet_catalog';
+  let total=0;
+  if(!metadata){
+    try{total=catalog.configuration(config,api.LocaleContent.labels);}
+    catch(error){return reply({error:(error as Error).message},400);}
+    if(account.subscription_status==='trial'&&total>15)return reply({error:'La cuenta de prueba admite hasta 15 actividades por ficha.'},400);
+  }
+  const {grouped,families}=worksheetInventory(config.age,config.level,config.locale);
+  if(metadata)return reply({families,maxPerSheet:account.subscription_status==='trial'?15:20});
+  const limits=LIMITS[account.subscription_status]||LIMITS.trial;
+  const date=todayUTC();
+  const {data:usage,error:usageError}=await admin.from('content_usage').select('used').eq('user_id',userId).eq('usage_date',date).eq('kind','worksheet').maybeSingle();
+  if(usageError)return reply({error:'No se pudo verificar la cuota de fichas.'},503);
+  const used=Number(usage?.used||0);
+  if(used+config.versions>limits.worksheet)return reply({error:'Daily content limit reached'},403);
+  const seen=new Set();
+  if(!body.session_only){
+    const {data,error}=await admin.from('content_seen').select('item_signature').eq('user_id',userId).eq('profile_id',profileId)
+      .like('domain','worksheet:%').order('created_at',{ascending:false}).limit(500);
+    if(error)return reply({error:'No se pudo consultar el historial de fichas.'},503);
+    for(const row of data||[])seen.add(row.item_signature);
+  }
+  const candidates=new Map();
+  for(const {id} of config.families){
+    const pool=shuffle(grouped.get(id)?.entries||[]);
+    pool.sort((a:any,b:any)=>Number(seen.has(a.signature))-Number(seen.has(b.signature)));
+    candidates.set(id,pool);
+  }
+  const chosen=catalog.allocate(config.families,config.versions,candidates);
+  const shortages=config.families.flatMap(({id,count}:any)=>{
+    const required=count*config.versions,available=chosen.get(id).length;
+    return available<required?[{id,label:catalog.familyLabel(id),required,available}]:[];
+  });
+  if(shortages.length)return reply({shortages,error:shortages.map(({label,required,available})=>`${label}: disponibles ${available} de ${required} actividades distintas solicitadas para el paquete.`).join(' ')},422);
+  const versions=Array.from({length:config.versions},(_,index)=>config.families.flatMap(({id,count}:any)=>
+    chosen.get(id).slice(index*count,(index+1)*count)));
+  const nextUsed=used+config.versions;
+  const update={used:nextUsed,updated_at:new Date().toISOString()};
+  const reservation=usage
+    ? await admin.from('content_usage').update(update).eq('user_id',userId).eq('usage_date',date).eq('kind','worksheet').eq('used',used).select('used').maybeSingle()
+    : await admin.from('content_usage').insert({...update,user_id:userId,usage_date:date,kind:'worksheet'}).select('used').maybeSingle();
+  if(reservation.error?.code==='23505'||!reservation.error&&!reservation.data)
+    return reply({error:'Otra solicitud actualizó la cuota. Inténtalo de nuevo.'},409);
+  if(reservation.error)return reply({error:'No se pudo registrar la cuota. Inténtalo de nuevo.'},503);
+  if(!body.session_only){
+    const entries=versions.flat().map(({item,signature})=>({user_id:userId,profile_id:profileId,domain:'worksheet:'+item.domain,item_signature:signature,mechanic_signature:mechanicSignature(item.domain,item)}));
+    const {error}=await admin.from('content_seen').insert(entries);
+    if(error)console.warn('No se pudo guardar la rotación de la ficha a la carta.');
+  }
+  return reply({versions:versions.map(entries=>entries.map(entry=>entry.item)),usage:{kind:'worksheet',used:nextUsed,limit:limits.worksheet}});
+}
+
 Deno.serve(async (req:Request)=>{
   if(req.method==="OPTIONS") return new Response("ok",{headers:corsHeaders});
   if(req.method!=="POST") return new Response(JSON.stringify({error:"Method not allowed"}),{status:405,headers:{...corsHeaders,"Content-Type":"application/json"}});
@@ -2404,12 +2533,14 @@ Deno.serve(async (req:Request)=>{
   let body:any={}; try{ body=await req.json(); }catch{}
   const profileId=body.profile_id;
   const kind=body.kind;
-  if(!profileId || !["exercise","worksheet","game"].includes(kind)) return new Response(JSON.stringify({error:"Invalid request"}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
+  if(!profileId || !["exercise","worksheet","game","worksheet_catalog"].includes(kind)) return new Response(JSON.stringify({error:"Invalid request"}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
   const {data:profile,error:pe}=await admin.from("learner_profiles").select("id,account_id,age_band,locale,progress").eq("id",profileId).single();
   if(pe||!profile||profile.account_id!==user.id) return new Response(JSON.stringify({error:"Profile not found"}),{status:404,headers:{...corsHeaders,"Content-Type":"application/json"}});
   const {data:account,error:ae}=await admin.from("accounts").select("subscription_status,trial_ends_at,content_locale").eq("user_id",user.id).single();
   if(ae||!account) return new Response(JSON.stringify({error:"Account not found"}),{status:404,headers:{...corsHeaders,"Content-Type":"application/json"}});
   if(account.subscription_status==="trial" && new Date(account.trial_ends_at)<=new Date()) return new Response(JSON.stringify({error:"Trial expired"}),{status:403,headers:{...corsHeaders,"Content-Type":"application/json"}});
+  if(kind==='worksheet_catalog'||kind==='worksheet'&&body.worksheet_plan!==undefined)
+    return configuredWorksheet(admin,user.id,profileId,body,account);
   const limit=(LIMITS[account.subscription_status]||LIMITS.trial)[kind];
   if(body.session_only!==undefined&&typeof body.session_only!=='boolean')return new Response(JSON.stringify({error:'Modalidad de sesión no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   const sessionOnly=body.session_only===true;
@@ -2428,7 +2559,7 @@ Deno.serve(async (req:Request)=>{
   const requestedDomains=kind==="worksheet" ? (Array.isArray(body.domains)&&body.domains.length?body.domains:(globalThis as any).Curriculum.visible(SUBJECTS[age]||[],age)) : [body.domain];
   if(!SUBJECTS[age] || !Number.isInteger(level) || (kind!=="game" && (!Array.isArray(requestedDomains)||!requestedDomains.length||requestedDomains.some((d:any)=>!SUBJECTS[age].includes(d)))))
     return new Response(JSON.stringify({error:"Área o nivel no permitido para este perfil."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
-  if(body.client_revision!==undefined&&![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.client_revision!==undefined&&![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.memory_audio_only!==undefined&&(typeof body.memory_audio_only!=='boolean'||body.memory_audio_only&&(kind!=='exercise'||body.domain!=='memory'||body.photos_only||body.interaction_only||body.documents_only||body.executed_only||body.cognitive_only)))return new Response(JSON.stringify({error:'Modalidad de memoria auditiva no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.memory_audio_only&&Number(body.client_revision||1)<12)return new Response(JSON.stringify({error:'Actualiza la página para abrir la memoria auditiva.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.speed_mechanic!==undefined&&(!(kind==='exercise'&&body.domain==='speedReasoning'&&body.speed_mechanic==='unpaired')||body.room_speed_only||body.photos_only||body.documents_only||body.interaction_only||body.cognitive_only||body.executed_only))return new Response(JSON.stringify({error:'Mecánica de velocidad no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -2522,7 +2653,7 @@ Deno.serve(async (req:Request)=>{
       const preferredCount=preferred.length;
       for(let tries=0;tries<220;tries++){
         const source=preferred.length?preferred.shift():worksheetTask(age,domain,level);
-        if(paperRevision&&!cognitive.paperEligible(source))continue;
+        if(paperRevision&&!(body.client_revision>=16?(globalThis as any).WorksheetCatalog.staticPaper(source):cognitive.paperEligible(source)))continue;
         const cand=regionalCandidate(normalizeItem(ensureWorksheetMemoryCoherence(source)),locale,domain,age);
         if(!compatibleSource(cand))continue;
         if(cand?.photoTask&&Number(body.client_revision||1)<3)continue;
