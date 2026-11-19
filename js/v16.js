@@ -207,7 +207,7 @@
         const n=s.rows.length,c=s.rows.filter(r=>r.correct).length,p=s.rows.reduce((a,r)=>a+Number(r.points||0),0);
         return {num:i+1,id:s.id,start:s.start,n,c,e:n-c,acc:n?Math.round(c/n*100):0,p,areas:[...new Set(s.rows.map(r=>SUBJECT_LABELS[r.subject]||r.subject))].join(', '),avg:s.rows.length?s.rows.reduce((a,r)=>a+Number(r.level||1),0)/s.rows.length:1};
       });
-      const wb=new ExcelJS.Workbook(); wb.creator='Learning Hub'; wb.created=new Date();
+      const wb=new ExcelJS.Workbook(); wb.creator='GLIAX'; wb.created=new Date();
       const dark='173C2A',green='2F7D4A',light='E5F1E8',cream='FFFDF8',muted='65766D',white='FFFFFF',red='FCE8E8';
       const headerStyle=row=>{row.font={bold:true,color:{argb:white}};row.fill={type:'pattern',pattern:'solid',fgColor:{argb:dark}};row.alignment={vertical:'middle'};row.height=24;};
       const title=(ws,text,range)=>{ws.mergeCells(range);const c=ws.getCell(range.split(':')[0]);c.value=text;c.font={bold:true,size:20,color:{argb:dark}};c.alignment={vertical:'middle'};ws.getRow(c.row).height=32;};
@@ -226,7 +226,7 @@
       evo.autoFilter={from:'A3',to:'I3'};
 
       const sum=wb.addWorksheet('Resumen',{views:[{showGridLines:false}]});
-      title(sum,'Learning Hub · Informe de evolución','A1:H2');
+      title(sum,'GLIAX · Informe de evolución','A1:H2');
       sum.mergeCells('A3:H3');sum.getCell('A3').value=`Perfil: ${prof.name} · Grupo: ${prof.age_band||''} · Exportado: ${new Date().toLocaleDateString('es-ES')}`;sum.getCell('A3').font={color:{argb:muted},italic:true};
       sum.getCell('A5').value='INDICADOR';sum.getCell('B5').value='VALOR';headerStyle(sum.getRow(5));
       const end=Math.max(2,data.length+1);
@@ -244,13 +244,14 @@
       const chart=chartDataUrl(sess.map(s=>`S${s.num}`),sess.map(s=>s.acc));const img=wb.addImage({base64:chart,extension:'png'});sum.addImage(img,{tl:{col:0,row:12},ext:{width:780,height:278}});
       sum.getRow(12).height=20;
       [sum,evo,detail].forEach(ws=>{ws.properties.defaultRowHeight=20;ws.eachRow(row=>row.eachCell(cell=>{cell.border={bottom:{style:'hair',color:{argb:'D9E1D9'}}};}));});
-      const buffer=await wb.xlsx.writeBuffer();downloadBlob(new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),`LearningLab_${String(prof.name||'perfil').replace(/[^a-z0-9_-]+/gi,'_')}_evolucion.xlsx`);
+      const buffer=await wb.xlsx.writeBuffer();downloadBlob(new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),`GLIAX_${String(prof.name||'perfil').replace(/[^a-z0-9_-]+/gi,'_')}_evolucion.xlsx`);
       toast('Informe Excel generado.');
     }catch(e){console.error('V16.2 export',e);toast(e?.message||'No se pudo generar el informe Excel.');}
     finally{if(btn) btn.disabled=false;}
   }
 
   function upgradeExports(){
+    if(window.ProgressReport)return;
     const btn=$('#exportSessionCsv'); if(!btn||btn.dataset.v162Bound) return;
     btn.dataset.v162Bound='1';btn.textContent='Descargar informe Excel';btn.title='Resumen visual, evolución por sesiones, detalle y gráfica';btn.onclick=exportEvolutionExcel;
     const detail=$('#exportDetailCsv'); if(detail) detail.textContent='Descargar CSV de datos';

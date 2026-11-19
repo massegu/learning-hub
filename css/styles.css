@@ -3274,3 +3274,25 @@ body {
 .falling-form p { flex-basis: 100%; }
 .falling-form[hidden] { display: none; }
 @media (prefers-reduced-motion: reduce) { .falling-target { transform: none !important; } }
+
+.progress-summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%, 12rem),1fr)); gap:.8rem; margin-block:1rem; }
+.progress-total { display:grid; gap:.2rem; padding:1rem; align-content:start; border-block-start:3px solid var(--accent,#5754c8); }
+.progress-total strong { font-size:clamp(1.6rem,4vw,2.2rem); line-height:1.1; }
+.progress-total span { font-weight:700; }
+.progress-total small { color:var(--muted,#526077); }
+#progress .progress-subject { min-inline-size:0; text-align:center; }
+#progress .accuracy-ring { position:relative; width:min(7.5rem,100%); height:auto; aspect-ratio:1; }
+#progress .accuracy-ring > div { position:absolute; inset:17%; display:grid; align-content:center; justify-items:center; gap:.1rem; }
+#progress .accuracy-ring strong { font-size:clamp(1rem,4vw,1.5rem); line-height:1.1; }
+#progress .accuracy-ring span { max-inline-size:100%; white-space:normal; font-size:.67rem; line-height:1.1; }
+
+.digital-stimulus { overflow:hidden; border:1px solid #c6cede; border-radius:.9rem; background:#f6f8fc; color:#172339; }
+.digital-stimulus header { display:grid; gap:.2rem; padding:.8rem 1rem; background:#293b60; color:#fff; }
+.digital-video header, .digital-game header { background:#433b66; }
+.digital-chat header, .digital-editor header { background:#195a5c; }
+.digital-stimulus dl { display:grid; gap:.55rem; margin:0; padding:.75rem; }
+.digital-stimulus dl > div { min-width:0; padding:.75rem; background:#fff; border-inline-start:3px solid #8ba4cf; border-radius:.35rem; }
+.digital-chat dl > div { border-radius:.65rem .65rem .65rem .2rem; }
+.digital-search dl > div { border-inline-start:0; border-block-end:1px solid #c6cede; }
+.digital-stimulus dt { font-weight:700; }
+.digital-stimulus dd { margin:.25rem 0 0; line-height:1.45; overflow-wrap:anywhere; }

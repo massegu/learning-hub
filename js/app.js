@@ -1398,13 +1398,45 @@
   }
   $('#cognitiveFamilyModes').addEventListener('click',event=>{const button=event.target.closest('[data-cognitive-family]');if(!button)return;if(!button.dataset.cognitiveFamily){startRandomSession();return;}if(guidedSession?.randomFamilies){guidedSession=null;hideGuidedBar();}cognitiveFamily=button.dataset.cognitiveFamily;cognitiveOnly=true;executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;setupExercise();});
   $('#executedMode').onclick=()=>{cognitiveOnly=false;executedOnly=true;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;setupExercise();};
+  function completeEarlyWorksheet(response,payload,targetProfile,locale){
+    if(!Array.isArray(response?.items))throw new Error('No se recibieron actividades para esta ficha.');
+    const selection=window.WorksheetSelection,models=window.CognitiveFamilies;
+    const accepted=new Set();
+    const domainOf=item=>item.sourceDomain||item.domain||item.localization?.domain;
+    const compatible=(item,domain)=>payload.domains.includes(domain)&&models.paperEligible(item)&&selection.compatible(item,targetProfile,locale,domain);
+    const retain=item=>{
+      const domain=domainOf(item);
+      if(!compatible(item,domain))return false;
+      const checked=selection.checked(item,targetProfile,locale,domain);
+      const key=selection.key(checked.item,checked.projection);
+      if(accepted.has(key))return false;
+      accepted.add(key);
+      return true;
+    };
+    const valid=response.items.map(retain);
+    if(valid.every(Boolean))return response;
+    const missing=new Map();
+    response.items.forEach((item,index)=>{
+      const domain=domainOf(item)||payload.domains[index%payload.domains.length];
+      if(!valid[index])missing.set(domain,(missing.get(domain)||0)+1);
+    });
+    const replacements=new Map([...missing].map(([domain,count])=>[domain,window.EarlyContent.select(
+      targetProfile,[domain],count,payload.level,Math.random,item=>{
+        if(!compatible(item,domain))return false;
+        const checked=selection.checked(item,targetProfile,locale,domain);
+        return !accepted.has(selection.key(checked.item,checked.projection));
+      }
+    )]));
+    return {...response,items:response.items.map((item,index)=>valid[index]?item:
+      replacements.get(domainOf(item)||payload.domains[index%payload.domains.length]).shift())};
+  }
   async function requestForProfile(payload, targetProfile = profile) {
     if (!targetProfile?.id) throw new Error('Selecciona o crea un perfil para empezar.');
     const locale = API.effectiveLocale(targetProfile);
     const localeRevision = API.localeRevision;
     const res = await API.requestContent({
       ...payload,
-      client_revision:(payload.cognitive_family==='falling'||payload.domain==='speedReasoning'&&payload.cognitive_family==='words')?14:13,
+      client_revision:payload.kind==='worksheet'&&!payload.cognitive_only||payload.cognitive_family==='words'||payload.domain==='communication'?15:payload.cognitive_family==='falling'?14:13,
       ...(targetProfile._sessionOnly?{session_only:true}:{}),
       profile_id: targetProfile.id,
       locale,
@@ -1414,7 +1446,9 @@
     // Server authentication, subscription checks and usage accounting happen
     // first. The browser never supplies local content after a rejected call.
     const worksheet=payload.kind==='worksheet';
-    const selected = payload.executed_only||payload.cognitive_only?res:window.EarlyContent.adaptResponse(res, payload, targetProfile, worksheet?{
+    const selected = worksheet&&!payload.cognitive_only&&window.ContentPolicy.forProfile(targetProfile)
+      ?completeEarlyWorksheet(res,payload,targetProfile,locale)
+      :worksheet||payload.executed_only||payload.cognitive_only?res:window.EarlyContent.adaptResponse(res, payload, targetProfile, worksheet?{
       accept:(item,domain)=>window.WorksheetSelection.compatible(item,targetProfile,locale,domain),
     }:payload.memory_audio_only?{accept:item=>item.audioMemory===true}:{});
     // Worksheet candidates are localized/validated individually by the selector.
@@ -1561,7 +1595,7 @@
       !$("#exerciseTopic").textContent,
     );
     if(it.type==='cognitiveTask'){
-      const isWordFit=it.cognitiveTask.kind==='words';
+      const isWordFit=it.cognitiveTask.kind==='words'&&!it.cognitiveTask.cue;
       $('#exercisePrompt').textContent=isWordFit
         ?window.CognitiveFamilies.wordResponseMode(it)==='selection'?'Selecciona las palabras que cumplen todas las condiciones.':'Escribe una palabra que cumpla todas las condiciones.'
         :it.q;
@@ -2071,10 +2105,10 @@
   };
   function renderSpeedProgress() {
     const container = $('#speedProgressChart');
-    const history = state.history.filter(x => x.subject === 'speedReasoning');
+    const history = state.history.filter(row => row.speedFamily);
     container.classList.toggle('hidden', !history.length);
     if (!history.length) { container.innerHTML = ''; return; }
-    const names = {figures:'Figuras',objects:'Objetos',arrows:'Flechas',orientation:'Orientación',pictograms:'Pictogramas',characters:'Letras y números',mixed:'Series mixtas',category:'Categorías',key:'Clave de códigos',match:'Coincidencias',search:'Búsqueda visual',pairs:'Revisar parejas',flanker:'Ignorar distractores',translation:'Traducción de claves',crossedKeys:'Cruzar dos claves',rapidAgenda:'Agenda rápida',ruleChoice:'Cambiar de criterio'};
+    const names = window.ProgressReport.activities;
     const groups = new Map();
     for (const row of history) {
       if (!row.speedFamily) continue;
@@ -2091,7 +2125,7 @@
       return {...stats, family:sample.speedFamily, level:sample.level, revision:sample.speedRevision || 2, lastIndex:history.lastIndexOf(sample)};
     }).filter(row => row.attempts).sort((a,b)=>b.lastIndex-a.lastIndex);
     const seconds = ms => (ms / 1000).toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2});
-    const label = row => `${names[row.family] || row.family} · nivel ${row.level}${row.revision !== 4 ? ' · formato anterior' : ''}`;
+    const label = row => `${names[row.family] || 'Reto de velocidad'} · nivel ${row.level}${row.revision !== 4 ? ' · formato anterior' : ''}`;
     const maximum = Math.max(1, ...rows.map(row => (row.medianMs || 0) / 1000));
     const timingRow = row => `<li class="speed-timing-row" data-family="${escapeHtml(row.family)}" data-level="${escapeHtml(row.level)}" data-revision="${row.revision}" data-median-ms="${row.medianMs === null ? '' : row.medianMs}"><div class="speed-timing-heading"><strong>${escapeHtml(label(row))}</strong><span class="speed-timing-value">${row.medianMs === null ? 'Sin aciertos medidos' : seconds(row.medianMs) + ' s'}</span></div><svg viewBox="0 0 600 24" preserveAspectRatio="none" aria-hidden="true"><rect width="600" height="24" rx="12" fill="#e9eee5"/>${row.medianMs === null ? '' : `<rect width="${600 * row.medianMs / 1000 / maximum}" height="24" rx="12" fill="${['#548c76','#5c80ae','#b27855','#946cac','#b5667a'][Object.keys(names).indexOf(row.family)%5]||'#548c76'}"/>`}</svg><p><strong>${row.accuracy}% de aciertos</strong><span>${row.attempts} ${row.attempts === 1 ? 'respuesta medida' : 'respuestas medidas'}</span></p></li>`;
     container.innerHTML = `<p class="eyebrow">VELOCIDAD DE PROCESAMIENTO</p><h3>Tiempo y precisión por reto</h3><p class="speed-timing-intro">Tiempo al acertar y precisión. Compara el mismo reto, nivel y formato.</p>${rows.length ? `<div class="speed-timing-scale"><span>0 s</span><span>${seconds(maximum * 1000)} s</span></div><ul class="speed-timing-list">${rows.slice(0,6).map(timingRow).join('')}</ul>${rows.length>6?`<details class="speed-timing-history"><summary>Ver otros retos (${rows.length-6})</summary><ul class="speed-timing-list">${rows.slice(6).map(timingRow).join('')}</ul></details>`:''}<p class="muted speed-timing-note">Hasta 20 intentos por reto. Se excluyen tiempos interrumpidos y práctica sin cronómetro.</p><details class="progress-chart-data"><summary>Ver los datos de tiempos</summary><div class="speed-timing-table"><table><thead><tr><th>Reto y nivel</th><th>Mediana al acertar</th><th>Aciertos</th><th>Respuestas medidas</th></tr></thead><tbody>${rows.map(row => `<tr><th scope="row">${escapeHtml(label(row))}</th><td>${row.medianMs === null ? 'Sin aciertos medidos' : seconds(row.medianMs) + ' s'}</td><td>${row.accuracy}%</td><td>${row.attempts}</td></tr>`).join('')}</tbody></table></div></details>` : '<p class="muted">Todavía no hay respuestas con tiempos válidos. Completa un reto con cronómetro para ver la gráfica.</p>'}`;
@@ -2101,14 +2135,17 @@
     return new Intl.DateTimeFormat('es-ES',/^\d{4}-\d{2}-\d{2}$/.test(value)?{dateStyle:'medium'}:{dateStyle:'medium',timeStyle:'short'}).format(date);
   }
   function renderProgress() {
+    const report=window.ProgressReport.build(state.history);
+    $('#progressSummary').innerHTML=Object.entries(report.groups).map(([key,group])=>
+      `<div class="card progress-total" data-category="${key}" data-count="${group.count}"><strong>${group.count}</strong><span>${window.ProgressReport.labels[key]}</span><small>${key==='scored'&&group.count?`${group.correct} aciertos · ${group.precision}% de precisión`:key==='rules'?'Actividades de aplicación de reglas':key==='wait'?'Intervalos finalizados':'Prácticas fuera de la puntuación'}</small></div>`).join('');
     let guidedWaitProgress=$('#guidedWaitProgress');if(!guidedWaitProgress){guidedWaitProgress=document.createElement('details');guidedWaitProgress.id='guidedWaitProgress';guidedWaitProgress.className='card panel-card guided-wait-history';$('#sessionEvolution').parentElement.before(guidedWaitProgress);}
-    const guidedWaitRows=state.history.filter(isGuidedWaitResult),waitSessions=new Set(guidedWaitRows.map(row=>row.sessionId).filter(Boolean)).size;
+    const guidedWaitRows=report.rows.filter(entry=>entry.category==='wait').map(entry=>entry.row),waitSessions=new Set(guidedWaitRows.map(row=>row.sessionId).filter(Boolean)).size;
     guidedWaitProgress.classList.toggle('hidden',!guidedWaitRows.length);
     guidedWaitProgress.innerHTML=`<summary>Espera guiada · ${guidedWaitRows.length} intervalos finalizados</summary><p>Registro de intervalos finalizados, separado de los aciertos, puntos y evolución de nivel. No indica si la persona esperó ni es una medida clínica.</p><ul>${guidedWaitRows.slice(-12).reverse().map(row=>{let m={};try{m=JSON.parse(row.detail||'{}');}catch{}return `<li><strong>Nivel ${Number(m.level)||Number(row.level)||1}</strong> · ${escapeHtml(sessionDateLabel(row.ts))} · intervalo ${Math.round(Number(m.interval_ms)||0)/1000} s · duración activa ${(Math.max(0,Number(m.duration_ms)||0)/1000).toFixed(1).replace('.',',')} s · reinicios ${Number(m.restarts)||0} · interrupciones ${Number(m.interruptions)||0}</li>`;}).join('')}</ul><small>${guidedWaitRows.length} intervalos finalizados en ${waitSessions} sesiones registradas.</small>`;
     let ruleApplicationProgress=$('#ruleApplicationProgress');if(!ruleApplicationProgress){ruleApplicationProgress=document.createElement('details');ruleApplicationProgress.id='ruleApplicationProgress';ruleApplicationProgress.className='card panel-card rule-application-history';$('#sessionEvolution').parentElement.before(ruleApplicationProgress);}
-    const ruleRows=state.history.filter(row=>exerciseMetrics(row)?.modality==='rule_application');ruleApplicationProgress.classList.toggle('hidden',!ruleRows.length);
+    const ruleRows=report.rows.filter(entry=>entry.category==='rules').map(entry=>entry.row);ruleApplicationProgress.classList.toggle('hidden',!ruleRows.length);
     const median=values=>{const sorted=values.filter(Number.isFinite).sort((a,b)=>a-b),middle=Math.floor(sorted.length/2);return sorted.length?(sorted.length%2?sorted[middle]:(sorted[middle-1]+sorted[middle])/2):null;};
-    ruleApplicationProgress.innerHTML=`<summary>Actúa con reglas · ${ruleRows.length} actividades</summary><p>Resultados de aplicar o cambiar reglas; se registran por separado de la práctica de espera guiada.</p><ul>${ruleRows.slice(-12).reverse().map(row=>{const m=exerciseMetrics(row),responseMedian=median(m?.response_times_ms||[]);return `<li><strong>Nivel ${Number(m?.level)||Number(row.level)||1}</strong> · ${escapeHtml(sessionDateLabel(row.ts))} · ${Number(m?.correct)||0}/${Number(m?.trials)||0} aciertos por ensayo · errores ${Number(m?.errors)||0} · omisiones ${Number(m?.omissions)||0} · cambios ${Number(m?.switches)||0} · ${responseMedian===null?'sin tiempo medido':`mediana de respuesta ${Math.round(responseMedian)} ms`}</li>`;}).join('')}</ul>`;
+    ruleApplicationProgress.innerHTML=`<summary>Actúa con reglas · ${ruleRows.length} actividades</summary><p>Resultados de aplicar o cambiar reglas; se registran por separado de la práctica de espera guiada.</p><ul>${ruleRows.slice(-12).reverse().map(row=>{const m=exerciseMetrics(row),responseMedian=median(m?.response_times_ms||[]);return `<li><strong>Nivel ${Number(m?.level)||Number(row.level)||1}</strong> · ${escapeHtml(sessionDateLabel(row.ts))} · ${m?.trials?`${m.correct}/${m.trials} aciertos por ensayo`:'Sin desglose de ensayos en el registro'} · errores ${Number(m?.errors)||0} · omisiones ${Number(m?.omissions)||0} · cambios ${Number(m?.switches)||0} · ${responseMedian===null?'sin tiempo medido':`mediana de respuesta ${Math.round(responseMedian)} ms`}</li>`;}).join('')}</ul>`;
     let environment=$('#environmentSpeedProgress');if(!environment){environment=document.createElement('details');environment.id='environmentSpeedProgress';environment.className='card';$('#speedProgressChart').after(environment);}
     const environmentEntries=profile.progress.environmentSpeedObservations||[];environment.classList.toggle('hidden',!environmentEntries.length);
     environment.innerHTML='<summary>Velocidad · búsquedas en el entorno</summary><p>Observaciones declaradas, separadas de aciertos y tiempos en pantalla. Los tiempos incluyen lectura y respuesta con el botón.</p><ul>'+environmentEntries.slice(-8).reverse().map(x=>`<li>Nivel ${Number(x.level)||1} · ${x.report==='found'?'Objeto localizado según la valoración':x.report==='not_met'?'No cumplía las condiciones':x.report==='not_found'?'No se encontró un objeto adecuado':'Práctica detenida'} · ${x.timingValid&&x.report==='found'?(Number(x.elapsedMs)/1000).toFixed(1).replace('.',',')+' s':'sin tiempo comparable'} · Utilidad: ${x.explanation==='explained'?'explicada':x.explanation==='with_help'?'con ayuda':x.explanation==='skipped'?'omitida':'sin registro'}</li>`).join('')+'</ul>';
@@ -2128,90 +2165,52 @@
     $("#progressProfileTitle").textContent = `Evolución de ${profile.name}`;
     $("#progressCards").innerHTML = ageData()
       .subjects.map((s) => {
-        const r = state.history.filter((x) => x.subject === s&&!isPracticeResult(x)),
-          c = r.filter((x) => x.correct).length,
-          acc = r.length ? Math.round((c / r.length) * 100) : 0;
+        const {count,precision}=report.areas.get(window.ProgressReport.areas[s])||{count:0,precision:null};
+        const acc=precision??0;
         const palette={language:['#4C5BDD','#EAF0FF'],middleLanguage:['#4C5BDD','#EAF0FF'],teenLanguage:['#4C5BDD','#EAF0FF'],division:['#A7463D','#FFF0EE'],geometry:['#3645B9','#EAF0FF'],middleMath:['#A7463D','#FFF0EE'],teenMath:['#A7463D','#FFF0EE'],literacy:['#3645B9','#EEE9FA'],reading:['#3645B9','#EEE9FA'],english:['#4C5BDD','#EAF0FF'],social:['#A7463D','#FFF0EE'],attention:['#4C5BDD','#EEE9FA'],applied:['#A7463D','#FFF0EE'],executive:['#A7463D','#FFF0EE'],memory:['#A7463D','#F8E8EC'],speedReasoning:['#4C5BDD','#EAF0FF']};
         const [color,tint]=palette[s]||['#087D71','#E1F8F4'];
-        return `<div class="progress-subject card" style="--progress-color:${color};--progress-tint:${tint}"><small>${SUBJECT_META[s].name}</small><div class="accuracy-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="ring-track" cx="60" cy="60" r="49"/><circle class="ring-value" cx="60" cy="60" r="49" pathLength="100" stroke-opacity="${acc?1:0}" stroke-dasharray="${acc} 100"/></svg><div><strong>${r.length?acc+'%':'—'}</strong><span>${r.length?'aciertos':'sin práctica'}</span></div></div><small>${r.length} ${r.length===1?'ejercicio':'ejercicios'} · nivel ${state.levels[s] || 1}</small></div>`;
+        return `<div class="progress-subject card" style="--progress-color:${color};--progress-tint:${tint}"><small>${SUBJECT_META[s].name}</small><div class="accuracy-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="ring-track" cx="60" cy="60" r="49"/><circle class="ring-value" cx="60" cy="60" r="49" pathLength="100" stroke-opacity="${acc?1:0}" stroke-dasharray="${acc} 100"/></svg><div><strong>${count?acc+'%':'—'}</strong><span>${count?'aciertos':'sin práctica'}</span></div></div><small>${count} ${count===1?'ejercicio':'ejercicios'} · nivel ${state.levels[s] || 1}</small></div>`;
       })
       .join("");
     renderSpeedProgress();
-    const sessions=new Map();
-    for(const row of state.history.filter(row=>!isPracticeResult(row))){
-      const key=row.sessionId||row.ts?.slice(0,10)||'anterior';
-      if(!sessions.has(key))sessions.set(key,{attempts:0,correct:0,date:row.sessionStartedAt||row.ts});
-      const session=sessions.get(key);session.attempts++;if(row.correct)session.correct++;
-    }
-    const recent=[...sessions.values()].slice(-12);
+    const recent=report.sessions.slice(-12).map(row=>({...row,attempts:row.count}));
     if(!recent.length){$('#sessionEvolution').innerHTML='<p class="muted">Completa algunos ejercicios para ver aquí tu evolución.</p>';return;}
     const points=recent.map((row,i)=>({x:recent.length===1?350:60+i*580/(recent.length-1),y:200-160*row.correct/row.attempts,accuracy:Math.round(100*row.correct/row.attempts),...row}));
     const path=points.map((p,i)=>`${i?'L':'M'}${p.x},${p.y}`).join(' ');
     $('#sessionEvolution').innerHTML=`<div class="progress-chart-summary"><strong>${recent.reduce((n,r)=>n+r.attempts,0)} ejercicios</strong><span>en ${recent.length} ${recent.length===1?'sesión reciente':'sesiones recientes'}</span></div><svg class="evolution-chart" viewBox="0 0 700 250" role="img" aria-label="Porcentaje de aciertos por sesión; cada punto representa una sesión. La tabla accesible conserva las fechas, el número de respuestas, los aciertos y la precisión."><defs><linearGradient id="progressFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4C5BDD" stop-opacity=".18"/><stop offset="100%" stop-color="#4C5BDD" stop-opacity=".015"/></linearGradient></defs>${[0,50,100].map(n=>`<g><path class="chart-grid" d="M60 ${200-n*1.6}H650"/><text class="chart-axis-label" x="46" y="${205-n*1.6}" text-anchor="end">${n}%</text></g>`).join('')}<path d="${path}L${points.at(-1).x},200L${points[0].x},200Z" fill="url(#progressFill)"/><path class="chart-line" d="${path}"/>${points.map((p,i)=>`<g><circle class="chart-point" cx="${p.x}" cy="${p.y}" r="7"><title>Sesión ${i+1} · ${escapeHtml(sessionDateLabel(p.date))}: ${p.accuracy}% de aciertos, ${p.correct} de ${p.attempts} ejercicios</title></circle><circle class="chart-point-core" cx="${p.x}" cy="${p.y}" r="2.5"/><text class="chart-session-label" x="${p.x}" y="230" text-anchor="middle">${i+1}</text></g>`).join('')}</svg><p class="session-evolution-note">La precisión puede variar entre sesiones según la dificultad y las actividades realizadas.</p><details class="progress-chart-data"><summary>Ver los datos exactos por sesión</summary><table><thead><tr><th scope="col">Sesión</th><th scope="col">Fecha y hora</th><th scope="col">Ejercicios</th><th scope="col">Aciertos</th><th scope="col">Precisión</th></tr></thead><tbody>${points.map((p,i)=>`<tr><th scope="row">${i+1}</th><td>${escapeHtml(sessionDateLabel(p.date))}</td><td>${p.attempts}</td><td>${p.correct}</td><td>${p.accuracy}%</td></tr>`).join('')}</tbody></table></details>`;
   }
-  function csvEscape(v) {
-    const s = String(v ?? "");
-    return /[;"\n]/.test(s) ? `"${s.replaceAll('"', '""')}"` : s;
+  function downloadReport(blob,name){
+    const link=document.createElement('a');link.href=URL.createObjectURL(blob);
+    link.download=name;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),1500);
   }
-  function downloadText(text, name) {
-    const blob = new Blob(["\uFEFF" + text], {
-      type: "text/csv;charset=utf-8",
-    });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = name;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+  async function exportProgress(format){
+    const owner=profile;
+    if(!owner)return;
+    if(!owner._sessionOnly&&!(await recoverConfirmedResults(owner.id)))return;
+    if(profile!==owner)return;
+    const report=window.ProgressReport;
+    const tables=report.tables(report.build(state.history),owner.name,ageLabel(owner));
+    const filename=`GLIAX_${new Date().toISOString().slice(0,10)}`;
+    if(format==='excel'){
+      const Zip=await window.WorksheetGenerator.loadZip();
+      if(profile!==owner)return;
+      const bytes=await report.excel(tables,Zip);
+      if(profile===owner)downloadReport(new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),filename+'_informe.xlsx');
+    }else{
+      const sessions=format==='sesiones',rows=sessions?tables.Sesiones:tables.Detalle;
+      downloadReport(new Blob(['\uFEFF',report.csv(rows)],{type:'text/csv;charset=utf-8'}),filename+'_'+format+'.csv');
+    }
   }
-  $("#exportDetailCsv").onclick = async () => {
-    const exportProfile=profile;
-    if(!exportProfile)return;
-    if(!exportProfile._sessionOnly&&!(await recoverConfirmedResults(exportProfile.id)))return;
-    if(profile!==exportProfile)return;
-    const rows = [
-      [
-        "usuario",
-        "grupo",
-        "fecha",
-        "area",
-        "nivel",
-        "resultado",
-        "puntos",
-        "id", "area_original", "tiempo_ms", "tiempo_valido", "tarea_velocidad", "version_velocidad", "metricas_modalidad", "client_attempt_id", "modalidad_metricas", "version_esquema_metricas",
-      ],
-    ];
-    state.history.forEach((x) =>
-      rows.push([
-        profile.name,
-        AGE[profile.age_band].label,
-        x.ts,
-        x.subject,
-        x.level,
-        isGuidedWaitResult(x)?"intervalo finalizado":isPracticeResult(x)?"práctica de transcripción":x.correct ? "correcto" : "revisar",
-        x.points,
-        x.itemId, x.originalSubject||"", x.responseMs??"", x.timingValid??"", x.speedFamily||"", x.speedFamily?(x.speedRevision||2):"", exerciseMetrics(x)?(typeof x.detail==='string'?x.detail:JSON.stringify(x.detail)):"", x.clientAttemptId||"", exerciseMetrics(x)?.modality||"", exerciseMetrics(x)?.schema||"",
-      ]),
-    );
-    downloadText(
-      rows.map((r) => r.map(csvEscape).join(";")).join("\n"),
-      `LearningLab_${profile.name}_detalle.csv`,
-    );
-  };
-  $("#exportSessionCsv").onclick = () =>
-    downloadText(
-      "usuario;grupo;ejercicios;aciertos\n" +
-        [
-          profile.name,
-          AGE[profile.age_band].label,
-          state.totalAttempts,
-          state.totalCorrect,
-        ]
-          .map(csvEscape)
-          .join(";"),
-      `LearningLab_${profile.name}_resumen.csv`,
-    );
+  for(const [id,format] of [['exportDetailCsv','detalle'],['exportSessionCsv','sesiones'],['exportExcel','excel']]){
+    const button=$('#'+id);
+    button.onclick=async()=>{
+      button.disabled=true;
+      try{await exportProgress(format);}catch{setPendingResultHomeStatus('No se pudo preparar el informe. Vuelve a intentarlo.','error');}
+      finally{button.disabled=false;}
+    };
+  }
   function buildHomework() {
-    const options = ageData().subjects.filter(domain=>domain!=='communication');
+    const options = ageData().subjects;
     $("#homeworkOptions").innerHTML = options
       .map(
         (s, i) =>
@@ -2233,8 +2232,10 @@
     if (!selected.length)
       return ($("#docxStatus").textContent =
         "Selecciona al menos un contenido.");
-    const count = Number($("#worksheetCount").value),
-      questions = Number($("#worksheetQuestions").value);
+    const count=Number($('#worksheetCount').value);
+    const questions=Number($('#worksheetQuestions').value);
+    const level=Number($('#worksheetLevel').value)||Math.max(...selected.map(domain=>state.levels[domain]||1));
+    const solutions=$('#worksheetSolutions').checked;
     $("#docxStatus").textContent = "Preparando fichas desde el banco seguro…";
     generateButton.disabled=true;
     try {
@@ -2245,7 +2246,7 @@
           kind: "worksheet",
           domains: selected,
           questions,
-          level: Math.max(...selected.map((s) => state.levels[s] || 1)),
+          level,
         };
         const request=async()=>{
           if(worksheetLocaleRevision!==API.localeRevision || worksheetProfile!==profile)throw new Error('El perfil o la variante de español ha cambiado. Solicita una ficha nueva.');
@@ -2253,7 +2254,7 @@
         };
         const res=await request();
         const valid=await window.WorksheetSelection.collect({initial:res,profile:worksheetProfile,
-          country:worksheetExportProfile.contentLocale,domains:selected,count:questions,
+          country:worksheetExportProfile.contentLocale,domains:selected,count:questions,professional:true,
           fetchMore:async()=>{
             $('#docxStatus').textContent=`Completando la ficha ${i+1}: buscamos actividades compatibles…`;
             return request();
@@ -2261,11 +2262,11 @@
         all.push(valid.items);
       }
       if (worksheetLocaleRevision !== API.localeRevision || worksheetProfile!==profile) throw new Error('El perfil o la variante de español ha cambiado. Solicita una ficha nueva.');
-      await window.WorksheetGenerator.generate(all, worksheetExportProfile, {domains:selected,fetchMore:async()=>{
+      await window.WorksheetGenerator.generate(all, worksheetExportProfile, {domains:selected,professional:true,fetchMore:async()=>{
         if(worksheetLocaleRevision!==API.localeRevision||worksheetProfile!==profile)throw new Error('El perfil o la variante de español ha cambiado. Solicita una ficha nueva.');
         $('#docxStatus').textContent='Comprobando el paquete: sustituimos actividades incompatibles…';
-        return requestForProfile({kind:'worksheet',domains:selected,questions,level:Math.max(...selected.map(s=>state.levels[s]||1))},worksheetProfile);
-      }});
+        return requestForProfile({kind:'worksheet',domains:selected,questions,level},worksheetProfile);
+      }},{professional:true,solutions});
       $("#docxStatus").textContent =
         `${count} ficha${count > 1 ? "s" : ""} creada${count > 1 ? "s" : ""}.`;
     } catch (e) {
@@ -2389,8 +2390,8 @@
     }catch(_){}
   };
   $('#exportProfilePrivacy').onclick=async()=>{
-    try{const data=await privacyAction('export'),url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
-      const a=document.createElement('a');a.href=url;a.download='perfil-'+privacyTarget+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);privacyMessage('Exportación preparada. Guarda el archivo en un lugar seguro.');
+    try{const data=await privacyAction('export'),url=URL.createObjectURL(new Blob([JSON.stringify({...data,producto:'GLIAX',titulo:'GLIAX · Exportación de datos del perfil'},null,2)],{type:'application/json'}));
+      const a=document.createElement('a');a.href=url;a.download='GLIAX_datos_del_perfil.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);privacyMessage('Exportación preparada. Guarda el archivo en un lugar seguro.');
     }catch(_){}
   };
   $('#eraseProfilePrivacy').onclick=async()=>{
@@ -2442,7 +2443,7 @@
         if(account.subscription_status==='active'){billingMessage('Suscripción activa. Ya puedes continuar.');return;}
       }catch{/* Do not infer payment success from a redirect or a failed refresh. */}
       if(--remaining>0)setTimeout(refresh,5000);
-      else billingMessage('El pago aún no se ha confirmado en Learning Hub. Puedes volver a entrar más tarde; si ya pagaste, evita repetir el pago mientras lo comprobamos.');
+      else billingMessage('El pago aún no se ha confirmado en GLIAX. Puedes volver a entrar más tarde; si ya pagaste, evita repetir el pago mientras lo comprobamos.');
     };
     refresh();
   }

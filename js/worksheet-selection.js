@@ -15,7 +15,7 @@
     return JSON.stringify([projection.question,projection.stimulus,projection.tokens,item.a,item.answer,item.sample])
       .replace(/\b(?:Ana|Leo|Mar|Pau|Lola|Hugo|Nora|Dani|Sol)\b/g,'PERSONA');
   }
-  async function collect({initial,profile,country,domains,count,fetchMore,maxStalledBatches=3}){
+  async function collect({initial,profile,country,domains,count,fetchMore,maxStalledBatches=3,professional=false}){
     if(!Array.isArray(domains)||!domains.length||!Number.isInteger(count)||count<1)throw new Error(message);
     const items=[],seen=new Set();let rejected=0,duplicates=0,batch=initial,round=0,stalled=0;
     while(true){
@@ -25,6 +25,7 @@
         const candidate=batch.items[i],domain=candidate?.domain || candidate?.sourceDomain || candidate?.localization?.domain || domains[i%domains.length];
         let accepted;
         try{
+          if(professional&&!root.CognitiveFamilies?.paperEligible(candidate))throw new Error('Requiere presentación en pantalla.');
           if(!domains.includes(domain))throw new Error('Área no seleccionada.');
           accepted=checked(candidate,profile,country,domain);
         }catch(_){rejected++;continue;}
