@@ -5,8 +5,7 @@ from playwright.sync_api import sync_playwright
 from browser_support import workspace,ROOT, area, training_areas, wait_for_area
 spec=importlib.util.spec_from_file_location('review',ROOT/'tools/review-preview.py');review=importlib.util.module_from_spec(spec);spec.loader.exec_module(review)
 server=review.ReviewServer(('127.0.0.1',0),review.prepare());threading.Thread(target=server.serve_forever,daemon=True).start()
-proof=ROOT/'docs/review-assets/cognitive-families-20261104';proof.mkdir(parents=True,exist_ok=True)
-phase1_proof=ROOT/'docs/review-assets/gliax-phase1';phase1_proof.mkdir(parents=True,exist_ok=True)
+proof=Path(os.environ['GLIAX_AC_CAPTURAS']) if os.environ.get('GLIAX_AC_CAPTURAS') else None
 try:
  with sync_playwright() as p,tempfile.TemporaryDirectory() as tmp:
   browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_EXECUTABLE') or ('/usr/bin/chromium' if Path('/usr/bin/chromium').exists() else p.chromium.executable_path),args=['--no-sandbox']);page=browser.new_page(viewport={'width':1440,'height':1050});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
@@ -34,7 +33,8 @@ try:
      if kind=='wait':
       assert page.locator('.guided-wait-panel [role=timer]').is_visible();assert page.locator('.guided-wait-progress').is_visible()
       if age=='early' and level==1:
-       page.locator('.cognitive-area').get_by_role('button',name='Reiniciar espera',exact=True).click();page.set_viewport_size({'width':1440,'height':1050});page.locator('#exercise').screenshot(path=str(phase1_proof/'guided-wait-desktop.png'));page.set_viewport_size({'width':390,'height':844});page.locator('#exercise').screenshot(path=str(phase1_proof/'guided-wait-mobile.png'))
+       page.locator('.cognitive-area').get_by_role('button',name='Reiniciar espera',exact=True).click()
+       if proof:page.locator('#exercise').screenshot(path=str(proof/'guided-wait-desktop.png'))
       if age=='early' and level==2:
        page.clock.fast_forward(500);page.evaluate("()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'));}")
        assert 'pausó' in page.locator('.cognitive-status').inner_text();page.evaluate('()=>{delete document.hidden;}');page.locator('.cognitive-area').get_by_role('button',name='Reanudar espera',exact=True).click()
@@ -68,10 +68,13 @@ try:
       if omission_case:
        saved=page.evaluate('__savedResults.at(-1)');metrics=__import__('json').loads(saved['detail']);assert metrics['modality']=='rule_application';assert metrics['omissions']==1 and metrics['errors']==0 and metrics['correct']==metrics['trials']-1;assert len(metrics['response_times_ms'])==sum(trial['target']!=trial['inverted'] for trial in task['trials'])-1;assert all(isinstance(ms,(int,float)) and ms>=0 for ms in metrics['response_times_ms'])
      elif kind=='words':
-      if task['productionAllowed']:
-       page.locator('#cognitiveWord').fill('inexistente xyz');page.locator('.cognitive-area').get_by_role('button',name='Comprobar palabra',exact=True).click();assert 'registramos un resultado' in page.locator('.cognitive-status').inner_text();assert page.evaluate('__saves')==before
-       page.locator('#cognitiveWord').fill(task['answer'][0].upper());page.locator('.cognitive-area').get_by_role('button',name='Comprobar palabra',exact=True).click()
-      else:page.locator('.cognitive-area').get_by_role('button',name=task['answer'][0],exact=True).click()
+      if age in ['early','junior'] and level<=2:
+       valid=page.evaluate('(item)=>CognitiveFamilies.wordChoices(item).filter(word=>CognitiveFamilies.wordFits(word,item.cognitiveTask))',item)
+       for word in valid:page.locator('.cognitive-word-choice input').filter(visible=True).evaluate_all('(fields,word)=>fields.find(field=>field.value===word).click()',word)
+       page.get_by_role('button',name='Comprobar selección').click()
+      else:
+       page.locator('#cognitiveWord').fill('inexistente xyz');page.get_by_role('button',name='Comprobar palabra',exact=True).click();assert 'no se registra' in page.locator('.cognitive-status').inner_text();assert page.evaluate('__saves')==before
+       page.locator('#cognitiveWord').fill(task['answer'][0].upper());page.get_by_role('button',name='Comprobar palabra',exact=True).click()
      elif kind=='deduction':
       for _ in range(len(task['clues'])-1):page.locator('.cognitive-area').get_by_role('button',name='Ver siguiente pista',exact=True).click()
       target=int(task['answer'][0][1:])
@@ -94,7 +97,7 @@ try:
      assert page.locator('#exerciseNext').is_visible()
      page.set_viewport_size({'width':390,'height':844});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),(age,kind,level)
      page.set_viewport_size({'width':1440,'height':1050})
-     if age=='teen' and level==2:page.locator('#exercise').screenshot(path=str(proof/(kind+'.png')))
+     if proof and age=='teen' and level==2:page.locator('#exercise').screenshot(path=str(proof/(kind+'.png')))
      if age=='teen' and level==2 and kind!='rules':
       with page.expect_download() as dl:page.locator('#printCognitive').click()
       file=Path(tmp)/(kind+'.docx');dl.value.save_as(file)

@@ -57,7 +57,7 @@ test('solutions derive independently from clues, facts, constraints, dependencie
 });
 test('difficulty changes actual loads while elementary recognition, distinct pictures and language stay accessible',()=>{
  for(const age of ages)for(const family of Object.keys(families.definitions)){
-  const domain=family==='words'?languageDomain(age):family==='contradiction'?'attention':'executive';const rows=[1,2,3].map(l=>families.pool(age,domain,l,family)[0]);
+  const domain=['words','falling'].includes(family)?languageDomain(age):family==='contradiction'?'attention':'executive';const rows=[1,2,3].map(l=>families.pool(age,domain,l,family)[0]);
   assert.notDeepEqual(rows[0].difficultyProfile,rows[1].difficultyProfile);assert.notDeepEqual(rows[1].difficultyProfile,rows[2].difficultyProfile);
   if(family==='change')assert.ok(rows[2].cognitiveTask.steps.length>rows[0].cognitiveTask.steps.length);
   if(family==='contradiction'||family==='information')assert.ok(rows[2].cognitiveTask.facts.length>rows[0].cognitiveTask.facts.length);
@@ -79,7 +79,7 @@ test('authenticated delivery persists usage/history, gates cached clients and ro
  const rows=requests('teen',Array.from({length:18},()=>base));const items=rows.map(r=>{assert.equal(r.status,200);return r.data.items[0];});
  assert.equal(new Set(items.map(x=>x.id)).size,18);for(let i=1;i<items.length;i++){assert.notEqual(items[i].semanticFamily,items[i-1].semanticFamily);assert.notEqual(items[i].scenarioFamily,items[i-1].scenarioFamily);assert.equal(rows[i].data.usage.used,rows[i-1].data.usage.used+1);}
  for(const age of ages)for(const family of Object.keys(families.definitions)){
-  const domain=family==='words'?languageDomain(age):family==='contradiction'?'attention':'executive';const [row]=requests(age,[{...base,domain,profile_id:age,cognitive_family:family,locale:'es_ar'}]);assert.equal(row.status,200);assert.equal(row.data.items[0].ageRoute,age);families.validate(row.data.items[0]);
+  const domain=['words','falling'].includes(family)?languageDomain(age):family==='contradiction'?'attention':'executive';const [row]=requests(age,[{...base,domain,profile_id:age,cognitive_family:family,client_revision:family==='falling'?14:11,locale:'es_ar'}]);assert.equal(row.status,200);assert.equal(row.data.items[0].ageRoute,age);families.validate(row.data.items[0]);
  }
 });
 test('individual paper export honors canonical age, same-source integrity and the existing worksheet quota',()=>{

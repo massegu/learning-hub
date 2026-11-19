@@ -28,7 +28,7 @@ try:
       assert page.locator('#exerciseVisual .executed-picture').count()>0
       if kind=='serial':
        assert page.locator('#exerciseVisual [data-icon-library=phosphor]').count()>0 if age=='teen' else page.locator('#exerciseVisual [data-icon-library=phosphor]').count()==0
-       if age=='teen':page.locator('#exercise').screenshot(path='/tmp/phosphor-memory-desktop.png')
+       if age=='teen':page.locator('#exercise').screenshot(path=str(Path(tmp)/'phosphor-memory-desktop.png'))
       page.clock.fast_forward(task['exposureMs']+20)
       if kind=='update':
        assert 'Cambio' in page.locator('.executed-status').inner_text();page.clock.fast_forward(3600)
@@ -50,7 +50,7 @@ try:
         assert 'Libro: pulsa' not in page.locator('#exerciseVisual').inner_text()
         if trial['symbol']=='libro':page.locator('.executed-area').get_by_role('button',name='Responder',exact=True).click()
         else:
-         assert page.locator('.executed-wait-countdown').inner_text().startswith('Espera ')
+         assert not page.locator('#exerciseVisual progress, #exerciseVisual [role=timer]').count()
          page.clock.fast_forward(task['trialMs']+10)
        else:
         answer=('B' if trial['symbol']=='libro' else 'A') if trial['reversed'] else ('A' if trial['symbol']=='libro' else 'B')
@@ -66,12 +66,12 @@ try:
      assert 'correctamente' in page.locator('#exerciseFeedback').inner_text();
      if kind in ['serial','spatial','update']:
       assert page.locator('.memory-solution').is_visible()
-      if age=='teen' and kind=='update':page.locator('#exercise').screenshot(path=str(ROOT/'docs/review-assets/cognitive-families-20261104/memory-correct-sequence.png'))
+      if age=='teen' and kind=='update':page.locator('#exercise').screenshot(path=str(Path(tmp)/'memory-correct-sequence.png'))
      assert page.evaluate('__completedCalls')==completed_before+1
      if kind not in ['switch','inhibit']:
       page.locator('.executed-area').get_by_role('button',name='Comprobar',exact=True).evaluate('(b)=>b.onclick()');assert page.evaluate('__completedCalls')==completed_before+1
      page.set_viewport_size({'width':390,'height':844});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),(age,kind)
-     if age=='teen' and kind=='compare':page.locator('#exercise').screenshot(path='/tmp/phase2-compare-mobile.png')
+     if age=='teen' and kind=='compare':page.locator('#exercise').screenshot(path=str(Path(tmp)/'phase2-compare-mobile.png'))
      page.set_viewport_size({'width':1440,'height':1000})
   # Interrupt an unfinished timed block; no delayed response may grade the next view.
   page.evaluate("()=>window.__task=ExecutedTasks.pool('teen','memory',1).find(x=>x.execution.kind==='serial')")
@@ -89,11 +89,11 @@ try:
   # Every activity tab shares a minimum target height; older submodes join the toolbar.
   area(page, 'attention').click();open_level_options();page.locator('#interactionModeBtn').click()
   boxes=page.locator('.activity-toolbar button:visible').evaluate_all('(els)=>els.map(e=>({h:e.getBoundingClientRect().height,y:e.getBoundingClientRect().y}))');assert all(b['h']>=44 for b in boxes);assert page.locator('.activity-toolbar').evaluate('(e)=>e.scrollWidth<=e.clientWidth+1');assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
-  page.wait_for_selector('#roomDescription');page.locator('#exercise').screenshot(path='/tmp/phase2-toolbar-desktop.png')
+  page.wait_for_selector('#roomDescription');page.locator('#exercise').screenshot(path=str(Path(tmp)/'phase2-toolbar-desktop.png'))
   # Existing pictograms stay legible at mobile widths in the timed speed renderer.
   page.evaluate("()=>{const previous=LearningAPI.requestContent;LearningAPI.requestContent=async payload=>payload.domain==='speedReasoning'?{items:[Curriculum.pool('teen','speedReasoning',1).find(x=>x.speedFamily==='category'&&!x.qualityEvidence)],usage:{used:1,limit:500}}:previous(payload);}")
   area(page, 'speedReasoning').click();page.locator('#practiceSpeedTrial').click();page.set_viewport_size({'width':390,'height':844})
   icons=page.locator('.speed-search-grid .picture-icon svg').evaluate_all('(els)=>els.map(e=>e.getBoundingClientRect().width)');assert icons and min(icons)>=55,icons
-  assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1');page.locator('#exercise').screenshot(path='/tmp/phase2-speed-mobile.png')
+  assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1');page.locator('#exercise').screenshot(path=str(Path(tmp)/'phase2-speed-mobile.png'))
   assert not errors,errors;browser.close();print('PASS: 18 completed executed tasks, hidden memory and update, factual grid actions, changing rules, inhibition, keyboard, 390px, interruption, aligned toolbar and Word source')
 finally:server.shutdown();server.server_close()
