@@ -10,9 +10,21 @@ context.createClient=()=>({auth:{getUser:async()=>({data:{user:{id:'account'}}})
     insert(v){op='insert';values=v;return q},update(v){op='update';values=v;return q},upsert(v){op='upsert';values=v;return q},
     single(){return Promise.resolve(result())},maybeSingle(){return Promise.resolve(result())},then(a,b){return Promise.resolve(result()).then(a,b)}};
   function result(){
-    if(op){if(table==='content_seen')seen.push(...values);if(table==='content_usage')usage[values.kind]={used:values.used};if(table==='learner_profiles')Object.assign(profile,values);return {data:null,error:null};}
+    if(op){
+      if(table==='content_seen')seen.push(...values);
+      if(table==='content_usage'){
+        const key=values.kind||filters.find(([field])=>field==='kind')?.[1],current=usage[key];
+        const expected=filters.find(([field])=>field==='used')?.[1];
+        if(op==='insert'&&current)return {data:null,error:{code:'23505'}};
+        if(op==='update'&&current?.used!==expected)return {data:null,error:null};
+        usage[key]={used:values.used};
+        return {data:usage[key],error:null};
+      }
+      if(table==='learner_profiles')Object.assign(profile,values);
+      return {data:null,error:null};
+    }
     const kind=filters.find(x=>x[0]==='kind')?.[1];
-    const data=table==='learner_profiles'?profile:table==='accounts'?account:table==='content_usage'?usage[kind]||{used:0}:table==='content_seen'?seen.filter(row=>filters.every(([k,v,like])=>like?String(row[k]).startsWith(v.replace('%','')):row[k]===v)).slice(-maximum).reverse():[];
+    const data=table==='learner_profiles'?(filters.every(([key,value])=>profile[key]===value)?profile:null):table==='accounts'?account:table==='content_usage'?usage[kind]||null:table==='content_seen'?seen.filter(row=>filters.every(([k,v,like])=>like?String(row[k]).startsWith(v.replace('%','')):row[k]===v)).slice(-maximum).reverse():[];
     return {data,error:null};
   }return q;
 }});

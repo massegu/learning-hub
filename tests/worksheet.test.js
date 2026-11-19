@@ -358,3 +358,56 @@ test('GLIAX professional packages cover all ages and levels with separate A4 sol
   }
  }
 });
+
+test('Ficha a la carta writes the exact typologies and independent A4 solutions for each age and level',async()=>{
+ const {execFileSync}=require('node:child_process');
+ const catalogue=require('../js/worksheet-catalog'),families=require('../js/cognitive-families');
+ const domains={early:'language',junior:'language',primary:'language',middle:'middleLanguage',teen:'teenLanguage'};
+ for(const [age,domain] of Object.entries(domains)){
+  const plans=[1,2,3].map(level=>({age,level,locale:level===1?'es_intl':level===2?'es_mx':'es_ar',versions:1,solutions:true,families:[
+    {id:domain+':words',count:2},{id:'executive:deduction',count:2},{id:'executive:filter',count:2},
+    {id:'communication:help',count:1},{id:'attention:contradiction',count:2},{id:'executive:updatePlan',count:2},
+    {id:domain+':grammar',count:age==='early'||age==='junior'?5:4},...(['early','junior'].includes(age)?[]:[{id:'attention:documents',count:1}])
+  ]}));
+  const requests=plans.map(worksheet_plan=>({kind:'worksheet',profile_id:age,client_revision:16,worksheet_plan}));
+  const responses=execFileSync(process.execPath,['tests/edge-worker.js',age],{
+   input:requests.map(JSON.stringify).join('\n')+'\n',encoding:'utf8',timeout:90000,maxBuffer:12e6
+  }).trim().split('\n').map(JSON.parse);
+  for(const [index,response] of responses.entries()){
+   const plan=plans[index];
+   assert.equal(response.status,200,JSON.stringify(response.data));
+   const profile={age_band:age,name:'DEMO-H',contentLocale:plan.locale,progress:{ageRoute:age}};
+   const verified=catalogue.verify(response.data.versions,plan,(item,domain)=>model.preparePrintable(item,profile,plan.locale,domain).item);
+   const {generator,downloads,context}=harness();
+   Object.assign(context.window,{WorksheetCatalog:catalogue,CognitiveFamilies:families,DocumentLibrary:require('../js/document-library'),PhotoLibrary:require('../js/photo-library')});
+   context.fetch=async path=>({ok:true,arrayBuffer:async()=>{
+    const file=fs.readFileSync(path);return file.buffer.slice(file.byteOffset,file.byteOffset+file.byteLength);
+   }});
+   await generator.generate(verified,profile,undefined,{professional:true,solutions:true,catalogue:true});
+   const bytes=await downloads[0].blob.arrayBuffer();
+   if(process.env.GLIAX_H_EVIDENCE)fs.writeFileSync(require('node:path').join(process.env.GLIAX_H_EVIDENCE,`GLIAX_${age}_N${plan.level}.zip`),Buffer.from(bytes));
+   const bundle=await JSZip.loadAsync(bytes);
+   assert.equal(Object.keys(bundle.files).length,2);
+   for(const file of Object.values(bundle.files)){
+    const doc=await JSZip.loadAsync(await file.async('uint8array'));
+    const document=await doc.file('word/document.xml').async('string');
+    const nodes=textNodes(document);
+    assert.match(document,/<w:pgSz[^>]*w:w="11906"[^>]*w:h="16838"/);
+    assert.match(await doc.file('docProps/core.xml').async('string'),/<dc:creator>GLIAX/);
+    assert.doesNotMatch(document,/Level Up|Learning Hub|Learning Lab/i);
+    assert.ok(nodes.some(text=>text.includes(locale.labels[plan.locale])),plan.locale);
+    if(file.name.includes('_solucionario_')){
+      assert.equal(nodes.filter(text=>/^Actividad \d+ ·/.test(text)).length,16);
+      for(const item of verified[0].filter(it=>it.cognitiveTask?.kind==='words')){
+        assert.ok(nodes.includes(model.preparePrintable(item,profile,plan.locale,item.domain).projection.solution));
+      }
+    }else{
+      const labels=nodes.filter(text=>text.startsWith('Tipología · '));
+      assert.deepEqual(labels,plan.families.flatMap(({id,count})=>Array(count).fill('Tipología · '+catalogue.familyLabel(id))));
+      assert.equal((document.match(/<w:pageBreakBefore\/>/g)||[]).length,15);
+      assert.ok(nodes.some(text=>text.includes('Leer todas las pistas impresas')));
+    }
+   }
+  }
+ }
+});

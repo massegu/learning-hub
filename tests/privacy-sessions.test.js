@@ -6,12 +6,12 @@ test('independent profile starts fresh and does not mutate the tracked learner',
  s.progress.history=[{correct:false}];assert.equal(p.progress.history[0].correct,true);
  const minimized=privacy.minimize(p.progress);assert.equal(minimized.interactiveObservations[0].description,undefined);assert.equal(p.progress.interactiveObservations[0].description,'private text');
 });
-test('new profile codes use the generated non-name format at the privacy and API boundaries',async()=>{
- assert.match(privacy.newCode(),/^P-[A-F0-9]{8}$/);assert.equal(privacy.isCode('P-ABCDEF09'),true);assert.equal(privacy.isCode('p-abcdef09'),true);assert.equal(privacy.isCode('P-ZZZZ0001'),false);assert.equal(privacy.isCode('María'),false);assert.equal(privacy.isCode('P-024'),false);
+test('suggested codes remain valid and custom codes are normalized at the API boundary',async()=>{
+ assert.match(privacy.newCode(),/^P-[A-F0-9]{8}$/);assert.equal(privacy.isCode('P-ABCDEF09'),true);assert.equal(privacy.isCode('p-abcdef09'),true);assert.equal(privacy.isCode('P-ZZZZ0001'),true);assert.equal(privacy.isCode('María'),false);assert.equal(privacy.isCode('P-024'),true);
  let inserted=null,duplicate=false;const client={auth:{},from(){const q={insert(value){inserted=value;return q},select(){return q},single(){return Promise.resolve(duplicate?{data:null,error:{code:'23505',message:'duplicate key violates learner_profiles_account_code_normalized_key'}}:{data:{...inserted,id:'created'}})}};return q;},rpc:async()=>({data:null,error:{code:'23505',message:'duplicate key violates learner_profiles_account_code_normalized_key'}})};
  const ctx={structuredClone,PrivacyControls:privacy,LH_CONFIG:{},supabase:{createClient:()=>client}};ctx.window=ctx;vm.createContext(ctx);vm.runInContext(fs.readFileSync('js/api.js','utf8'),ctx);const api=ctx.LearningAPI;api.user={id:'owner'};
- await assert.rejects(api.createProfile('María','primary'),/código generado/);assert.equal(inserted,null);
- const created=await api.createProfile('p-abcdef09','junior');assert.equal(created.name,'P-ABCDEF09');assert.equal(inserted.account_id,'owner');
+ await assert.rejects(api.createProfile('María','primary'),/código de 2 a 24 caracteres/);assert.equal(inserted,null);
+ const created=await api.createProfile(' nh84350 ','junior');assert.equal(created.name,'NH84350');assert.equal(inserted.account_id,'owner');
  duplicate=true;await assert.rejects(api.createProfile('P-ABCDEF09','junior'),/Este código ya está asignado a otro perfil\. Genera uno nuevo para continuar/);
  await assert.rejects(api.privacy('settings','created',{alias:'P-ABCDEF09'}),/Este código ya está asignado a otro perfil\. Genera uno nuevo para continuar/);
 });
