@@ -7,6 +7,11 @@ if(ref){if(!/^[a-zA-Z0-9_./-]+$/.test(ref))throw Error('Invalid baseline ref');t
 const hash=x=>crypto.createHash('sha256').update(JSON.stringify(x)).digest('hex').slice(0,20);
 try{
  const {api,context}=require(path.join(source,'tests/edge-harness'))(),c=require(path.join(source,'js/curriculum')),d=require(path.join(source,'js/document-library'));
+ const cognitivePath=path.join(source,'js/cognitive-families.js');
+ const cognitive=fs.existsSync(cognitivePath)?require(cognitivePath):null;
+ // Register the optional families with the taxonomy that classifies all rows.
+ require('../js/cognitive-families');
+ require('../js/executed-tasks');
  const inputs=[...['js/early-content.js','js/early-refinements.js','js/early-language.js','js/curriculum.js','supabase/functions/request-learning-content/index.ts'],...require(path.join(source,'tests/edge-harness'))().loadedImports.map(x=>'supabase/functions/request-learning-content/'+x.slice(2))].sort();
  const sourceDigest=hash(inputs.map(file=>[file,fs.readFileSync(path.join(source,file),'utf8')]));
  const inventory={schemaVersion:1,sourceDigest,taxonomyDigest:hash(fs.readFileSync(path.join(root,'js/content-quality.js'),'utf8')),revision:ref||execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),mode:ref?'baseline':'working-tree',seed:73,method:'Finite public banks plus 80 seeded legacy samples per level and focus. Exact duplicates exclude IDs and distractors within each level; exactVisibleActivities also deduplicates across levels and unchangedAcrossLevels flags sources repeated at different levels. Near-duplicates are review groups, not automatic deletions. Selection exposure is a controlled simulation of 12 deliveries at each of L1/L2/L3, preserving history. Ages 6–7 use the actual local selector; other ages use the backend selector over the known bank; it is not real-user telemetry or an estimate of all production traffic.',rows:[],examples:[]};
@@ -21,6 +26,12 @@ try{
    if(age==='early'){require(path.join(source,'js/early-refinements'));require(path.join(source,'js/early-language'));rows.push(...require(path.join(source,'js/early-content')).pool(domain,level));}else rows.push(...c.pool(age,domain,level));if(domain==='attention')rows.push(...c.practice(age,domain,level));if(d.supports(age,domain))rows.push(...d.pool(age,domain,level));
    if(['language','middleLanguage','teenLanguage'].includes(domain))rows.push(...c.vocabulary(age,domain,level));
    if(!ref&&context.FunctionalContent)rows.push(...context.FunctionalContent.pool(age,domain,level));
+   if(cognitive&&['attention','executive'].includes(domain))rows.push(...cognitive.pool(age,domain,level));
+   if(cognitive&&['language','middleLanguage','teenLanguage','speedReasoning'].includes(domain))
+     rows.push(...cognitive.pool(age,domain,level,'words',ref?1:2));
+   if(cognitive&&['language','middleLanguage','teenLanguage'].includes(domain))rows.push(...cognitive.pool(age,domain,level,'falling'));
+   if(context.ExecutedTasks&&['attention','memory','executive'].includes(domain))rows.push(...context.ExecutedTasks.pool(age,domain,level));
+
    for(const raw of rows.filter(x=>x&&typeof x.q==='string'&&x.type)){
     const it={...raw,domain,level:raw.level||level},key=hash([it.domain,it.level,it.type,it.q,it.memoryQuestion,it.stimulus,it.scenario,it.memoryContent,it.a,it.answer,it.answers]);if(seen.has(key))continue;seen.add(key);bank.push(it);
     const nearKey=quality.nearDuplicateKey(it);near.set(nearKey,(near.get(nearKey)||0)+1);

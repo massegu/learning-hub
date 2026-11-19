@@ -23,7 +23,7 @@ const lexicon={
  herramientas:['pala','sierra','martillo','taladro','regla','alicate','lima','tijera','destornillador','rastrillo'],
  acciones:['cantar','bailar','cocinar','caminar','ordenar','reparar','pintar','observar','medir','leer','escribir','revisar','limpiar','mezclar','construir','compartir']
 };
-function wordFits(word,task){const w=norm(word),c=task.constraints;return (lexicon[c.category]||[]).some(x=>norm(x)===w)&&(!c.contains||w.includes(c.contains))&&(!c.excludes||!w.includes(c.excludes))&&(!c.suffix||w.endsWith(c.suffix))&&(!c.starts||w.startsWith(c.starts))&&(!c.minLength||w.length>=c.minLength);}
+function wordFits(word,task){const w=norm(word),c=task.constraints;if(task.accepted)return task.accepted.some(value=>norm(value)===w);return (lexicon[c.category]||[]).some(x=>norm(x)===w)&&(!c.contains||w.includes(c.contains))&&(!c.excludes||!w.includes(c.excludes))&&(!c.suffix||w.endsWith(c.suffix))&&(!c.starts||w.startsWith(c.starts))&&(!c.minLength||w.length>=c.minLength);}
 function words(age,level,index){
  const rank=ages.indexOf(age),category=Object.keys(lexicon)[index],catalog=lexicon[category];
  const constraints={category};if(rank>0||level>1)constraints.contains=['a','a','a','a'][index];
@@ -38,6 +38,72 @@ function words(age,level,index){
  task.answer=[task.options[0]];
  const labels=['Debe ser de la categoría: '+category];if(constraints.contains)labels.push('Debe contener '+constraints.contains.toUpperCase());if(constraints.excludes)labels.push('No puede contener '+constraints.excludes.toUpperCase());if(constraints.suffix)labels.push('Debe terminar en -'+constraints.suffix);if(constraints.starts)labels.push('Debe empezar por '+constraints.starts.toUpperCase());if(constraints.minLength)labels.push('Debe tener al menos '+constraints.minLength+' letras');
  return {task,scenario:'lexical.'+category,q:rank===0?'Elige la palabra que cumple la regla.':'Busca una palabra que cumpla todas las condiciones.',stimulus:[L('Condiciones',labels),L('Opciones',task.options)],sample:task.answer[0],why:'Comprueba cada condición: '+labels.join('; ')+'.',difficulty:{constraints:labels.length,productionAllowed:rank>0}};
+}
+// Each cue names a functional decision. The final levels add an explicit
+// competing requirement. Answers are curated examples, never shown in the task.
+const lexicalContexts={
+ primary:[
+  ['En la cocina del taller',[
+   ['Buscas un alimento que se pueda tomar con cuchara sin masticar.', ['sopa','yogur']],
+   ['Buscas un ingrediente seco para cocer en agua. Debe ser de cereales.', ['arroz','pasta']],
+   ['Buscas una fruta que puedas llevar entera como merienda. Su nombre empieza por M.', ['manzana']]]],
+  ['Preparar una maqueta',[
+   ['Buscas algo para medir el largo del cartón.', ['regla','cinta métrica']],
+   ['Debes separar un trozo de cartón por una línea, sin hacer agujeros.', ['tijeras','cúter']],
+   ['Vas a alisar el borde de una pieza rígida. No quieres acortarla cortando un trozo.', ['lima','lija']]]],
+  ['La actividad del grupo',[
+   ['Hay pintura en la mesa. ¿Qué acción la deja lista para otra persona?', ['limpiar']],
+   ['Los pasos están mezclados y el equipo no sabe con cuál empezar. Nombra la acción necesaria.', ['ordenar','organizar']],
+   ['Un trabajo ya está escrito. Antes de enviarlo debes encontrar posibles fallos, sin redactarlo de nuevo.', ['revisar','comprobar','verificar']]]],
+  ['Visita a una reserva',[
+   ['Buscas un animal que se desplace volando y pueda anidar en árboles.', ['paloma','canario']],
+   ['Buscas un animal acuático que respire aire y alimente a sus crías con leche.', ['ballena','delfín']],
+   ['Buscas un ave que pueda desplazarse nadando, pero que no pueda volar.', ['pingüino']]]]
+ ],
+ middle:[
+  ['Mensaje de un grupo',[
+   ['Un aviso dice «nos vemos luego». Escribe un verbo para la acción de pedir que la hora quede clara.', ['aclarar','precisar']],
+   ['Dos personas han entendido horas distintas. Nombra la acción que sirve para verificar cuál es la hora definitiva con quien creó el aviso.', ['confirmar','comprobar','verificar']],
+   ['Tienes la hora confirmada. Nombra la acción que modifica el aviso original sin enviar un segundo mensaje contradictorio.', ['actualizar','corregir','editar']]]],
+  ['Diseño para una exposición',[
+   ['Escoge una herramienta que permita doblar con la misma medida varias piezas. Primero hay que marcar la distancia.', ['regla','cinta métrica']],
+   ['Ya hay un agujero. Escoge una herramienta para sujetar la pieza mientras otra persona trabaja, sin perforarla más.', ['pinza','alicate','sargento']],
+   ['La pieza tiene una rebaba pequeña: escoge una herramienta manual que quite la rebaba sin abrir otro agujero.', ['lima','lija']]]],
+  ['Seleccionar una evidencia',[
+   ['Una publicación cita un dato. Necesitas comprobar de dónde salió. Escribe el nombre de lo que buscas.', ['fuente','referencia']],
+   ['Un vídeo tiene voz poco clara. Quieres conservar las palabras en texto tal como se dijeron, sin resumir.', ['transcripción']],
+   ['La página cambia tras publicarse. Quieres guardar una evidencia del estado visual exacto, que no cambie al recargarla.', ['captura','captura de pantalla']]]],
+  ['Preparar un mensaje accesible',[
+   ['Un anuncio es demasiado largo. Nombra la acción de dejar solo sus ideas principales.', ['resumir','sintetizar']],
+   ['El mensaje contiene tecnicismos. Debes decir lo mismo con palabras más claras, sin perder pasos.', ['reformular','reescribir']],
+   ['La autora pide mantener el texto original. Nombra la acción de añadir texto al vídeo para que el mensaje se entienda sin audio.', ['subtitular']]]]
+ ],
+ teen:[
+  ['Preparar una cesión de material',[
+   ['Antes de compartir una grabación con voces de otras personas, necesitas que acepten su uso. Escribe el nombre de lo que solicitas.', ['permiso','consentimiento','autorización']],
+   ['Has recibido permiso para mostrar el vídeo en una sala. Necesitas otro permiso para difundirlo en internet. Escribe un término para esa difusión.', ['publicación','difusión']],
+   ['Se debe impedir reconocer a las personas, incluso combinando los datos con otras fuentes. ¿Cómo se llama el proceso?', ['anonimización']]]],
+  ['Gestionar un plazo',[
+   ['El plazo termina hoy. Buscas ampliar el tiempo permitido, conservando la solicitud original.', ['prórroga','ampliación']],
+   ['Ya te confirmaron la ampliación por escrito. Debes responder indicando que recibiste el aviso, sin solicitar otro cambio. Escribe el tipo de mensaje.', ['acuse de recibo','confirmación de recepción']],
+   ['El plazo concedido es correcto, pero faltan documentos y la solicitud sigue abierta. Escribe el término administrativo para corregir esa carencia.', ['subsanación']]]],
+  ['Revisar una afirmación pública',[
+   ['Una publicación se apoya en un estudio. Escribe el término que identifica el origen del dato.', ['fuente','referencia']],
+   ['Dos publicaciones citan el mismo estudio. Buscas evidencia de un origen diferente para comprobar el dato. Nombra lo que buscas.', ['fuente independiente','evidencia independiente']],
+   ['Los datos muestran que dos variables cambian juntas, pero no prueban que una provoque la otra. Nombra esa relación.', ['correlación','asociación']]]],
+  ['Editar un archivo compartido',[
+   ['Un archivo se editó y quieres recuperar el contenido de ayer. Nombra el lugar de la aplicación donde buscarías.', ['historial','historial de versiones']],
+   ['El original debe quedar intacto. Necesitas una versión que puedas editar sin compartir los cambios con el grupo.', ['copia','duplicado']],
+   ['El archivo contiene datos que deben retirarse antes de compartirlo. Necesitas un documento que deje constancia de las modificaciones realizadas.', ['registro de cambios','historial de cambios','bitácora de cambios']]]]
+ ]
+};
+function situatedWords(age,level,index){
+ const [context,levels]=lexicalContexts[age][index];
+ const [cue,accepted]=levels[level-1];
+ const task={kind:'words',constraints:{},context,cue,accepted,productionAllowed:true,answer:[accepted[0]],options:[]};
+ return {task,scenario:'lexical.situated.'+index,q:'Escribe la palabra o expresión que encaja.',stimulus:[T(context),T(cue)],
+  sample:accepted.join(' / '),why:'La respuesta debe expresar con precisión lo que pide la situación.',
+  difficulty:{semanticContext:true,conditions:level,inference:age!=='primary'}};
 }
 const deductionSettings=[
  {id:'garden',goal:'Localiza a la persona que tiene tu turno en el taller del jardín.',attrs:[['gato','perro','conejo'],['camiseta','bufanda'],['jardín','taller']]},
@@ -175,22 +241,53 @@ function falling(age,level,index){
  };
 }
 const builders={rules,wait:waitPractice,words,deduction,change,information,contradiction,falling},cache=new Map();
-function pool(age,domain,level=1,family=null){
+function pool(age,domain,level=1,family=null,revision=1){
  if(!ages.includes(age)||![1,2,3].includes(level)||!['executive','language','middleLanguage','teenLanguage','attention','literacy','reading','middleReading','speedReasoning'].includes(domain))return [];
  const allowed=domain==='executive'?Object.keys(definitions).filter(kind=>!['words','contradiction','falling'].includes(kind)):domain.includes('Language')||domain==='language'?(family==='falling'?['falling']:['words']):domain==='speedReasoning'?(family==='words'?['words']:[]):['contradiction'];
  if(family&&!allowed.includes(family))return [];
- const key=[age,domain,level,family||'all'].join(':');if(cache.has(key))return structuredClone(cache.get(key));const out=[];
+ const advancedWords=revision===2&&Boolean(lexicalContexts[age]);
+ const key=[age,domain,level,family||'all',revision].join(':');if(cache.has(key))return structuredClone(cache.get(key));const out=[];
  for(const kind of family?[family]:allowed)for(let i=0;i<(kind==='rules'?6:kind==='wait'?4:kind==='information'?8:4);i++){
-  const d=definitions[kind],b=builders[kind](age,level,i),id=['cognitive-v1',age,domain,level,kind,i].join(':');
+  const d=definitions[kind],advanced=kind==='words'&&advancedWords,b=(advanced?situatedWords:builders[kind])(age,level,i),id=[advanced?'cognitive-v2':'cognitive-v1',age,domain,level,kind,i].join(':');
   const speedWords=domain==='speedReasoning',semanticFamily=speedWords?'cognitive.words_selection':'cognitive.'+kind;
   out.push({id,contentKey:id,type:'cognitiveTask',mechanic:kind==='wait'?'guided_wait_v1':kind==='rules'?'rule_application_v1':'cognitive_'+kind,domain,level,q:b.q,topic:d.title,stimulus:b.stimulus,sample:b.sample,why:b.why,cognitiveTask:b.task,primaryConstruct:speedWords?'lexicalSelection':d.primaryConstruct,secondaryLoads:d.secondaryLoads,functionalPurpose:speedWords?speedWordPurpose:d.functionalPurpose,semanticFamily,scenarioFamily:b.scenario,qualityDescriptor:{semanticFamily,scenarioFamily:b.scenario},readingDemand:age==='early'?'low':kind==='rules'?'minimal':'medium',visualDemand:kind==='deduction'?'medium':'low',motorDemand:kind==='wait'?'none':kind==='rules'?'timedSelection':kind==='falling'?'textEntry':'selection',printable:d.printable,ageRoute:age,difficultyProfile:{level,...b.difficulty},responseType:'cognitive'});
  }
  cache.set(key,out);return structuredClone(out);
 }
-function validate(item,age=item?.ageRoute){const parts=String(item?.contentKey||'').split(':'),canonical=pool(age,item?.domain,item?.level,parts[4]).find(x=>x.contentKey===item.contentKey);if(!canonical)throw Error('Familia o edad no registrada.');const locale=root.LocaleContent||(typeof require==='function'&&require('./locale-content')),expected=item.localization?locale.localizeItem(canonical,item.localization.locale,item.domain):canonical;for(const field of Object.keys(canonical))if(JSON.stringify(item[field])!==JSON.stringify(expected[field]))throw Error('La actividad o su respuesta han cambiado: '+field);return true;}
+function validate(item,age=item?.ageRoute){const parts=String(item?.contentKey||'').split(':'),canonical=pool(age,item?.domain,item?.level,parts[4],parts[0]==='cognitive-v2'?2:1).find(x=>x.contentKey===item.contentKey);if(!canonical)throw Error('Familia o edad no registrada.');const locale=root.LocaleContent||(typeof require==='function'&&require('./locale-content')),expected=item.localization?locale.localizeItem(canonical,item.localization.locale,item.domain):canonical;for(const field of Object.keys(canonical))if(JSON.stringify(item[field])!==JSON.stringify(expected[field]))throw Error('La actividad o su respuesta han cambiado: '+field);return true;}
 function grade(item,response){validate(item);const t=item.cognitiveTask;if(t.kind==='falling')return false;if(!Array.isArray(response)||response.some(x=>typeof x!=='string'))return false;if(t.kind==='words')return response.length===1&&wordFits(response[0],t);const answer=t.answer;if(new Set(response).size!==response.length&&!t.ordered)return false;return JSON.stringify(t.ordered?response:[...response].sort())===JSON.stringify(t.ordered?answer:[...answer].sort());}
-function productionStatus(item,word){validate(item);const w=norm(word);return !Object.values(lexicon).flat().some(x=>norm(x)===w)?'unreviewed':wordFits(word,item.cognitiveTask)?'correct':'incorrect';}
-function printable(item,age){validate(item,age);if(item.printable==='interactive-only')throw Error('Esta actividad requiere presentación temporal en pantalla.');return {question:item.q,stimulus:item.stimulus,options:[],tokens:[],writingRubric:[],responseType:'written'};}
+function productionStatus(item,word){validate(item);const task=item.cognitiveTask,w=norm(word);if(wordFits(word,task))return 'correct';const vocabulary=task.accepted?Object.values(lexicalContexts).flatMap(entries=>entries.flatMap(([,levels])=>levels.flatMap(([,answers])=>answers))):Object.values(lexicon).flat();return vocabulary.some(x=>norm(x)===w)?'incorrect':'unreviewed';}
+function paperEligible(item){
+ if(!item||item.interactiveOnly||item.audioMemory||item.roomSpeedTask||item.interactionTask||item.printable==='interactive-only')return false;
+ if((item.sourceDomain||item.domain)==='english'&&item.requiresStimulus!==false&&!item.stimulus?.length&&!item.scenario&&!item.text)return false;
+ if(item.type==='executed')return ['cancel','compare','plan','follow','serial','spatial'].includes(item.execution?.kind);
+ return true;
+}
+function printable(item,age){
+ validate(item,age);
+ if(item.printable==='interactive-only')throw Error('Esta actividad requiere presentación temporal en pantalla.');
+ const task=item.cognitiveTask;
+ let {q:question,stimulus,sample:solution}=item;
+ let options=[],administration='',responseType='written';
+ if(task.kind==='words'){
+  if(wordResponseMode(item)==='selection'){
+   options=wordChoices(item);
+   stimulus=stimulus.filter(block=>block.label!=='Opciones');
+   question='Marca todas las palabras que cumplen las condiciones.';
+   solution=options.filter(word=>wordFits(word,task)).join(' · ');
+   responseType='choice';
+  }else{
+   stimulus=stimulus.filter(block=>block.label!=='Opciones');
+   question='Escribe una palabra o expresión que cumpla las condiciones.';
+   solution='Ejemplos aceptados · '+(task.accepted||Object.values(lexicon).flat().filter(word=>wordFits(word,task))).join(' · ');
+   administration='Si propone otra respuesta, comprueba todas las condiciones antes de valorar.';
+  }
+ }
+ if(task.kind==='deduction')question+=' Escribe el número de la tarjeta que cumple todas las pistas.';
+ if(task.kind==='change')question+=' Escribe el plan corregido, paso a paso.';
+ if(task.kind==='contradiction')question='Compara las dos fuentes. Escribe el dato que no coincide y el valor que aparece en cada una.';
+ return {question,stimulus,options,tokens:[],writingRubric:[],responseType,solution,administration};
+}
 function wordResponseMode(item){
  validate(item);
  if(item.cognitiveTask.kind!=='words')throw Error('Se requiere una actividad de vocabulario.');
@@ -210,5 +307,5 @@ function matchesTranscription(prompt,value){
  const normalize=word=>String(word).trim().normalize('NFC').toLocaleLowerCase('es');
  return normalize(prompt)===normalize(value);
 }
-const api={pool,validate,grade,printable,productionStatus,definitions,lexicon,wordFits,wordResponseMode,wordChoices,gradeWordSelection,matchesTranscription};root.CognitiveFamilies=api;if(typeof module!=='undefined')module.exports=api;
+const api={pool,validate,grade,printable,productionStatus,definitions,lexicon,wordFits,wordResponseMode,wordChoices,gradeWordSelection,matchesTranscription,paperEligible};root.CognitiveFamilies=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);

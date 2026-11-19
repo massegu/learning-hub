@@ -979,6 +979,7 @@ function socialExercise(level:number){
 
 function validateItem(item:any):boolean{
   if(item?.type==="cognitiveTask"||String(item?.contentKey||"").startsWith("cognitive-v")){try{(globalThis as any).CognitiveFamilies.validate(item);return true;}catch(_){return false;}}
+  if(item?.domain==='communication'){try{(globalThis as any).CommunicationContent.validate(item);}catch(_){return false;}}
   if(item?.type==="executed"||String(item?.contentKey||"").startsWith("executed-v")){try{(globalThis as any).ExecutedTasks.validate(item);return true;}catch(_){return false;}}
   if(item?.qualityEvidence||/^functional_/.test(item?.mechanic||'')||String(item?.contentKey||'').startsWith('functional-v1:')){try{(globalThis as any).FunctionalContent.validate(item);}catch(_){return false;}}
   if(item?.roomSpeedTask){try{(globalThis as any).Curriculum.validateRoomSpeed(item);}catch(_){return false;}}
@@ -2427,7 +2428,7 @@ Deno.serve(async (req:Request)=>{
   const requestedDomains=kind==="worksheet" ? (Array.isArray(body.domains)&&body.domains.length?body.domains:(globalThis as any).Curriculum.visible(SUBJECTS[age]||[],age)) : [body.domain];
   if(!SUBJECTS[age] || !Number.isInteger(level) || (kind!=="game" && (!Array.isArray(requestedDomains)||!requestedDomains.length||requestedDomains.some((d:any)=>!SUBJECTS[age].includes(d)))))
     return new Response(JSON.stringify({error:"Área o nivel no permitido para este perfil."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
-  if(body.client_revision!==undefined&&![1,2,3,4,5,6,7,8,9,10,11,12,13,14].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.client_revision!==undefined&&![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.memory_audio_only!==undefined&&(typeof body.memory_audio_only!=='boolean'||body.memory_audio_only&&(kind!=='exercise'||body.domain!=='memory'||body.photos_only||body.interaction_only||body.documents_only||body.executed_only||body.cognitive_only)))return new Response(JSON.stringify({error:'Modalidad de memoria auditiva no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.memory_audio_only&&Number(body.client_revision||1)<12)return new Response(JSON.stringify({error:'Actualiza la página para abrir la memoria auditiva.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.speed_mechanic!==undefined&&(!(kind==='exercise'&&body.domain==='speedReasoning'&&body.speed_mechanic==='unpaired')||body.room_speed_only||body.photos_only||body.documents_only||body.interaction_only||body.cognitive_only||body.executed_only))return new Response(JSON.stringify({error:'Mecánica de velocidad no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -2448,10 +2449,15 @@ Deno.serve(async (req:Request)=>{
   if((age==="junior"||age==="primary"||age==="middle"||age==="teen")&&kind==="exercise"&&["language","middleLanguage","teenLanguage"].includes(body.domain)&&body.subdomain&&!["grammar","spelling","vocabulary","writing"].includes(body.subdomain))
     return new Response(JSON.stringify({error:"Habilidad de Lenguaje no válida."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
   // Cached clients do not yet know these document IDs and photographic sources.
-  const compatibleSource=(item:any)=>(Number(body.client_revision||1)>=8||!(item?.stimulus||[]).some((block:any)=>block.type==='document'&&String(block.documentId).startsWith('everyday-')||block.type==='photo'&&['library2026','autumnPark2026','museumVisit','museumComparison','peacefulMarch','footballMatch','railwayRecreation','peopleMarket'].includes(block.photoId)||block.type==='photoPair'&&block.pairId==='museumComparison'));
+  const compatibleSource=(item:any)=>(Number(body.client_revision||1)>=15||!String(item?.contentKey||'').startsWith('communication-v2:'))&&(Number(body.client_revision||1)>=8||!(item?.stimulus||[]).some((block:any)=>block.type==='document'&&String(block.documentId).startsWith('everyday-')||block.type==='photo'&&['library2026','autumnPark2026','museumVisit','museumComparison','peacefulMarch','footballMatch','railwayRecreation','peopleMarket'].includes(block.photoId)||block.type==='photoPair'&&block.pairId==='museumComparison'));
   if(body.cognitive_family==='falling'&&Number(body.client_revision||1)<14)return new Response(JSON.stringify({error:'Actualiza la página para abrir Palabras que caen.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.domain==='speedReasoning'&&body.cognitive_family==='words'&&Number(body.client_revision||1)<14)return new Response(JSON.stringify({error:'Actualiza la página para abrir esta práctica de vocabulario.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
-  const cognitiveBank=body.cognitive_only?(globalThis as any).CognitiveFamilies.pool(age,body.domain,level,body.cognitive_family||null):[];
+  const paperRevision=kind==='worksheet'&&Number(body.client_revision||1)>=15;
+  const cognitive=(globalThis as any).CognitiveFamilies;
+  const wordRevision=kind==='worksheet'&&body.cognitive_content_key
+    ? (String(body.cognitive_content_key).startsWith('cognitive-v2:')&&paperRevision?2:1)
+    : (Number(body.client_revision||1)>=15?2:1);
+  const cognitiveBank=body.cognitive_only?cognitive.pool(age,body.domain,level,body.cognitive_family||null,wordRevision):[];
   const cognitivePrint=body.cognitive_only&&kind==='worksheet'&&typeof body.cognitive_content_key==='string'?cognitiveBank.find((it:any)=>it.contentKey===body.cognitive_content_key&&it.printable!=='interactive-only'):null;
   if(body.cognitive_content_key!==undefined&&(!body.cognitive_only||kind!=='worksheet'||!cognitivePrint))return new Response(JSON.stringify({error:'Esta actividad no está disponible en papel para este perfil.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.cognitive_only!==undefined&&(typeof body.cognitive_only!=='boolean'||body.cognitive_only&&(!['exercise','worksheet'].includes(kind)||kind==='worksheet'&&(!cognitivePrint||requestedDomains.length!==1||requestedDomains[0]!==body.domain)||body.executed_only||body.interaction_only||body.photos_only||body.documents_only||body.room_speed_only||!cognitiveBank.length)))return new Response(JSON.stringify({error:'Familia cognitiva no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -2491,17 +2497,43 @@ Deno.serve(async (req:Request)=>{
       for(const d of cycle){ if(domainOrder.length<qn) domainOrder.push(d); }
     }
     const wsRows:any[]=[];
+    const paperBanks=new Map();
+    if(paperRevision)for(const domain of domains){
+      const families=domain==='executive'?['deduction','change','information']:domain==='attention'?['contradiction']:
+        ['language','middleLanguage','teenLanguage','speedReasoning'].includes(domain)?['words']:[];
+      const choices=families.map(family=>shuffle(cognitive.pool(age,domain,level,family,2)));
+      const documents=(globalThis as any).DocumentLibrary.pool(age,domain,level);
+      if(documents.length)choices.push(shuffle(documents).slice(0,2));
+      if(domain==='communication')choices.push(shuffle((globalThis as any).CommunicationContent.pool(age,level)));
+      const queue:any[]=[];
+      while(choices.some(bank=>bank.length))for(const bank of choices)if(bank.length)queue.push(bank.shift());
+      paperBanks.set(domain,queue);
+    }
+    const worksheetVisits=new Map();
     for(const domain of domainOrder){
       let chosen:any=null, fallback:any=null;
       const recent=recentByDomain.get(domain)||new Set<string>();
+      const visit=worksheetVisits.get(domain)||0;
+      worksheetVisits.set(domain,visit+1);
+      const curated=paperBanks.get(domain)||[];
+      // Preserve breadth in a single-domain sheet once the distinct authored
+      // types have appeared. Communication uses the authored bank throughout.
+      const preferred=visit<4||domain==='communication'?curated:[];
+      const preferredCount=preferred.length;
       for(let tries=0;tries<220;tries++){
-        const cand=regionalCandidate(normalizeItem(ensureWorksheetMemoryCoherence(worksheetTask(age,domain,level))),locale,domain,age);
+        const source=preferred.length?preferred.shift():worksheetTask(age,domain,level);
+        if(paperRevision&&!cognitive.paperEligible(source))continue;
+        const cand=regionalCandidate(normalizeItem(ensureWorksheetMemoryCoherence(source)),locale,domain,age);
         if(!compatibleSource(cand))continue;
         if(cand?.photoTask&&Number(body.client_revision||1)<3)continue;
         if(!validateItem(cand)) continue;
         const sig=contentSignature(domain,cand);
-        if(!fallback&&!localSeen.has(sig)) fallback=cand;
-        if(!recent.has(sig)&&!localSeen.has(sig)){ chosen=cand; break; }
+        if(localSeen.has(sig))continue;
+        if(!fallback) fallback=cand;
+        if(!recent.has(sig)){chosen=cand;break;}
+        // A curated family remains in this sheet even after the entire bank
+        // was seen recently. The next request still prefers unseen candidates.
+        if(preferredCount&&tries===preferredCount-1&&fallback)break;
       }
       const item=chosen || (fallback&&!localSeen.has(contentSignature(domain,fallback))?fallback:null);
       if(!item) return new Response(JSON.stringify({error:"No hay suficientes actividades distintas para esta ficha. Reduce el número de ejercicios o añade otra área."}),{status:422,headers:{...corsHeaders,"Content-Type":"application/json"}});
@@ -2546,7 +2578,7 @@ Deno.serve(async (req:Request)=>{
       const bank=(globalThis as any).Curriculum.pool(age,'speedReasoning',level).filter((it:any)=>it.mechanic==='speed_unpaired').map((it:any)=>regionalCandidate(it,locale,'speedReasoning',age)).filter(Boolean);
       items=generatedItems(domain,n,recentEntries,()=>null,bank);
     }else if(body.cognitive_only===true){
-      const bank=(globalThis as any).CognitiveFamilies.pool(age,domain,level,body.cognitive_family||null).map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
+      const bank=cognitiveBank.map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
       items=generatedItems(domain,n,recentEntries,()=>null,bank);
     }else if(body.executed_only===true){
       const bank=(globalThis as any).ExecutedTasks.pool(age,domain,level).map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);

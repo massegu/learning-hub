@@ -3,7 +3,7 @@
 function mount(item,{visual,area,onFinish}){
  root.CognitiveFamilies.validate(item);const t=item.cognitiveTask;
  if(t.kind==='falling')return root.FallingWords.mount(item,{visual,area,onFinish});
- const wordMetrics=mode=>({schema:'gliax.exercise-metrics.v1',modality:'word_fit',definition_version:2,response_mode:mode,purpose:item.domain==='speedReasoning'?'lexical_selection':'lexical_search'});let stopped=false,finished=false,timer=null,round=0,trialOpen=false,response=[],trialStartedAt=0,ruleStats=[];
+ const wordMetrics=mode=>({schema:'gliax.exercise-metrics.v1',modality:'word_fit',definition_version:t.accepted?3:2,response_mode:mode,purpose:item.domain==='speedReasoning'?'lexical_selection':'lexical_search'});let stopped=false,finished=false,timer=null,round=0,trialOpen=false,response=[],trialStartedAt=0,ruleStats=[];
  const n=(tag,text,cls)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(cls)el.className=cls;return el;};
  const b=(label,fn)=>{const el=n('button',label,'secondary-btn');el.type='button';el.onclick=fn;return el;};
  const status=n('p','','cognitive-status');status.setAttribute('role','status');status.setAttribute('aria-live','polite');
@@ -29,15 +29,17 @@ function mount(item,{visual,area,onFinish}){
  function choices(values,answer){const box=n('div',undefined,'cognitive-choices');values.forEach((label,i)=>{const button=b(label,()=>answer(label,i));button.dataset.answer=label;box.append(button);});area.replaceChildren(box);}
  function selectFacts(){const selected=new Set(),contradiction=t.kind==='contradiction';status.textContent=contradiction?'Compara los dos cuadros. Busca el mismo dato en ambas fuentes y marca los valores que no coinciden.':'Marca solo los datos que necesitas para el objetivo.';const sourceGroups=contradiction?t.sourceDocs?.map(source=>({title:source.title,facts:source.rows.map(row=>({id:row.id,text:row.field+': '+row.value}))})):t.sourceGroups;if(Array.isArray(sourceGroups)){const box=n('div',undefined,'cognitive-source-grid');sourceGroups.forEach(source=>{const card=n('section',undefined,'cognitive-source-card');card.setAttribute('aria-label',source.title);card.append(n('h4',source.title));source.facts.forEach(fact=>{const label=n('label',undefined,'cognitive-fact cognitive-source-fact'),input=n('input'),copy=n('span',undefined,'cognitive-source-copy');input.type='checkbox';input.value=fact.id;input.onchange=()=>input.checked?selected.add(input.value):selected.delete(input.value);copy.append(n('span',fact.text));label.append(input,copy);if(t.factIcons?.[fact.id])label.append(picture(t.factIcons[fact.id]));card.append(label);});box.append(card);});area.replaceChildren(box,b('Comprobar',()=>finish([...selected])));return;}const box=n('div',undefined,'cognitive-facts');t.facts.forEach((fact,i)=>{const label=n('label',undefined,'cognitive-fact'),input=n('input');input.type='checkbox';input.value='f'+i;input.onchange=()=>input.checked?selected.add(input.value):selected.delete(input.value);label.append(input,n('span',fact));if(t.factIcons?.['f'+i])label.append(picture(t.factIcons['f'+i]));box.append(label);});area.replaceChildren(box,b('Comprobar',()=>finish([...selected])));}
  function words(){const constraints=t.constraints,category={acciones:'una acción',animales:'un animal',alimentos:'un alimento',herramientas:'una herramienta'}[constraints.category];
-  const clauses=['Ser '+category];
+  const clauses=category?['Ser '+category]:[];
   if(constraints.starts)clauses.push('Empezar por la letra '+constraints.starts.toUpperCase());
   if(constraints.contains)clauses.push('Contener la letra '+constraints.contains.toUpperCase());
   if(constraints.excludes)clauses.push('No contener la letra '+constraints.excludes.toUpperCase());
   if(constraints.suffix)clauses.push('Terminar en «'+constraints.suffix+'»');
   if(constraints.minLength)clauses.push('Tener al menos '+constraints.minLength+' letras');
   const list=n('ul',undefined,'cognitive-conditions');
-  list.append(...clauses.map(clause=>n('li',clause)));visual.append(list);
-  if(item.domain==='speedReasoning')visual.append(n('p','Practica un orden de búsqueda: comprueba la categoría primero y después las condiciones de las letras. La respuesta no se cronometra.'));
+  list.append(...clauses.map(clause=>n('li',clause)));
+  if(t.cue)visual.append(n('h4',t.context),n('p',t.cue,'cognitive-conditions'));
+  else visual.append(list);
+  if(item.domain==='speedReasoning')visual.append(n('p',t.cue?'Identifica lo que se pide y descarta palabras que no cumplan todas las condiciones. La respuesta no se cronometra.':'Comprueba la categoría primero y después las condiciones de las letras. La respuesta no se cronometra.'));
   const selection=root.CognitiveFamilies.wordResponseMode(item)==='selection';
   const form=n('form',undefined,'word-fit-answer'),submit=b(selection?'Comprobar selección':'Comprobar palabra');
   submit.type='submit';

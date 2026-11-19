@@ -116,7 +116,12 @@
     if(item?.interactiveOnly)fail('actividad disponible solo en pantalla.');
     if(item?.domain==='communication')(root.CommunicationContent||(typeof require==='function'&&require('./communication-content'))).validate(item);
     if(item?.type==='cognitiveTask'||String(item?.contentKey||'').startsWith('cognitive-v'))return (root.CognitiveFamilies||(typeof require==='function'&&require('./cognitive-families'))).printable(item,profile?.progress?.ageRoute||profile?.age_band);
-    if(item?.type==='executed'||String(item?.contentKey||'').startsWith('executed-v')){const bank=root.ExecutedTasks||(typeof require==='function'&&require('./executed-tasks'));bank.validate(item,profile?.progress?.ageRoute||profile?.age_band);return {question:item.paperQuestion,stimulus:item.stimulus,options:[],tokens:[],writingRubric:[],responseType:'written'};}
+    if(item?.type==='executed'||String(item?.contentKey||'').startsWith('executed-v')){
+      const bank=root.ExecutedTasks||(typeof require==='function'&&require('./executed-tasks'));
+      bank.validate(item,profile?.progress?.ageRoute||profile?.age_band);
+      const administration=['serial','spatial'].includes(item.execution.kind)?'Administración acompañada. Enseña el material y cúbrelo antes de pedir la respuesta. No cronometres ni compares el resultado con la versión de pantalla.':'';
+      return {question:item.paperQuestion,stimulus:item.stimulus,options:[],tokens:[],writingRubric:[],responseType:'written',solution:item.sample,administration};
+    }
     if(item?.qualityEvidence||/^functional_/.test(item?.mechanic||'')||String(item?.contentKey||'').startsWith('functional-v1:'))(root.FunctionalContent||(typeof require==='function'&&require('./functional-content'))).validate(item);
     if(item?.roomSpeedTask)(root.Curriculum||(typeof require==='function'&&require('./curriculum'))).validateRoomSpeed(item);
     if(item?.socialEvidence||/^social_perspective_/.test(item?.mechanic||''))(root.Curriculum||(typeof require==='function'&&require('./curriculum'))).validateSocial(item);
@@ -359,6 +364,10 @@
       if(block.type==='table'&&block.presentation==='homeworkBoard'){
         const icons=root.BioArtIcons;
         return `<section class="homework-board" aria-label="${escape(block.label||'Pizarra de deberes')}"><div class="homework-board-heading"><span aria-hidden="true">✎</span><strong>${escape(block.label||'Pizarra de deberes')}</strong></div><div class="homework-board-scroll" role="region" tabindex="0" aria-label="Tareas anotadas en la pizarra"><table><caption class="sr-only">Área y tarea anotada</caption><thead><tr><th scope="col">Área</th><th scope="col">Tarea</th></tr></thead><tbody>${block.rows.map(([area,task])=>`<tr><th scope="row"><span class="homework-area-icon">${icons?.svgForArea(area)||''}</span><span>${escape(area)}</span></th><td>${escape(task)}</td></tr>`).join('')}</tbody></table></div></section>`;
+      }
+      if(block.type==='table'&&block.presentation==='digitalInterface'){
+        const labels={chat:'Mensajería',social:'Publicaciones',video:'Reproductor',search:'Resultados de búsqueda',editor:'Espacio de edición',game:'Registro de partida'};
+        return `<section class="digital-stimulus digital-${escape(block.materialType)}" aria-label="${escape(block.label)}"><header><strong>${escape(block.label)}</strong><small>${escape(labels[block.materialType])} · simulación</small></header><dl>${block.rows.slice(1).map(([name,value])=>`<div><dt>${escape(name)}</dt><dd>${escape(value)}</dd></div>`).join('')}</dl></section>`;
       }
       if(block.type==='table'&&block.presentation==='everydayMaterial'){
         const heading=everydayMaterials[block.materialType],rows=block.rows,head=rows[0],body=rows.slice(1);

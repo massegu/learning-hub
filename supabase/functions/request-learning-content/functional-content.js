@@ -4,6 +4,29 @@ const quality=root.ContentQuality||(typeof require==='function'&&require('./cont
 const ages=['early','junior','primary','middle','teen'],T=text=>({type:'text',text}),L=items=>({type:'list',presentation:'cards',items}),table=rows=>({type:'table',rows});
 const extra=[['math.count','Relacionar una cantidad con su número','elements'],['math.compare','Comparar cantidades para decidir','quantities'],['math.money','Distinguir número de monedas y valor representado','denominations'],['math.measure','Interpretar una medida con su unidad','units'],['math.order','Ordenar cantidades en una recta numérica','elements'],['geometry.symmetry','Reconocer una reflexión conservando las distancias','spatialRelations'],['geometry.perimeter','Calcular el borde necesario para rodear un espacio','operations'],['geometry.properties','Clasificar figuras por sus propiedades','criteria'],['geometry.faces','Relacionar una figura plana con un cuerpo','spatialRelations'],['reading.chronology','Reconstruir el orden de hechos de un mensaje','steps'],['reading.follow_instruction','Aplicar una indicación escrita a una situación','conditions']];
 for(const [id,purpose,dimension] of extra)quality.register(id,purpose,dimension);
+quality.register('executive.digital_workflow','Organizar una entrega digital respetando dependencias, permisos y verificaciones','dependencies');
+const digitalWorkflows=[
+ {
+  id:'project.poster',title:'Mesa de edición · Cartel del equipo',
+  steps:['Hacer una copia de trabajo','Corregir el dato en la copia','Exportar el PDF','Revisar el PDF exportado','Enviar el PDF al equipo'],
+  source:[
+   ['Original','Es de solo lectura. Solo se corrigen datos en una copia.'],
+   ['Exportación','El archivo que se exporte tiene que incluir el dato corregido.'],
+   ['Control','La prueba se hace en el PDF, no en el archivo de edición.'],
+   ['Entrega','Solo se envía un PDF cuyo contenido ya se ha comprobado.']
+  ]
+ },
+ {
+  id:'community.video',title:'Sala de contenidos · Vídeo del taller',
+  steps:['Confirmar el permiso de uso','Subtitular la copia aprobada','Preparar la vista previa','Verificar los subtítulos sin audio','Publicar la versión revisada'],
+  source:[
+   ['Permiso','Solo se subtitula una copia autorizada.'],
+   ['Previsualización','La vista previa debe contener los subtítulos nuevos.'],
+   ['Accesibilidad','La revisión se hace sin audio, sobre la vista previa.'],
+   ['Publicación','Solo se puede publicar una versión revisada.']
+  ]
+ }
+];
 const cache=new Map();
 function pool(age,domain,level=1){
  const key=[age,domain,level].join(':');if(cache.has(key))return structuredClone(cache.get(key));if(!ages.includes(age)||![1,2,3].includes(level))return [];
@@ -322,6 +345,15 @@ function pool(age,domain,level=1){
    ]]
   ];
   for(const [family,versions] of cases){const [source,q,a,wrong]=versions[level-1];add(family,'home.shared_activity',q,[T(source)],a,wrong,{topic:'Social Lab · convivencia en casa',why:quality.registry[family].functionalPurpose+'.',difficultyParameters:{operation:['explicitCue','combineCues','limitInference'][level-1]}});}
+ }
+ if(domain==='executive'&&rank>=2)for(const workflow of digitalWorkflows){
+  const count=level+2,answer=workflow.steps.slice(0,count);
+  const rows=workflow.source.slice(0,count-1).reverse();
+  const tokens=[...answer].reverse();
+  add('executive.digital_workflow',workflow.id,'Organiza las acciones respetando las condiciones de la entrega.',
+   [{type:'table',label:workflow.title,rows:[['Condición','Detalle'],...rows],presentation:'digitalInterface',materialType:'editor'}],
+   undefined,[],{type:'order',responseType:'order',tokens,answer,topic:workflow.title,
+    difficultyParameters:{dependencies:count-1,steps:count},why:'Cada paso prepara el archivo o la información que requiere el siguiente.'});
  }
  const transfer=root.TransferContent||(typeof require==='function'&&require('./transfer-content'));
  transfer.extend({age,domain,level,add,T,L,table});
