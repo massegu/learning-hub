@@ -178,18 +178,60 @@
 
       <section id="homework" class="section">
         <div class="section-intro card"><div><span class="pill">FICHAS</span><h3>Crear paquetes de fichas</h3><p>Selecciona exactamente qué contenidos quieres trabajar y genera una o varias versiones diferentes en DOCX.</p></div></div>
-        <div class="worksheet-builder card">
+        <div id="worksheetMode" class="mode-switch" role="group" aria-label="Modo de selección de fichas">
+          <button type="button" aria-pressed="true">Selección rápida por áreas</button>
+          <button type="button" aria-pressed="false">Ficha a la carta</button>
+        </div>
+        <div id="quickWorksheet" class="worksheet-builder card">
           <div class="worksheet-controls"><label>Número de versiones<select id="worksheetCount"><option value="1">1 ficha</option><option value="2">2 fichas</option><option value="3" selected>3 fichas</option><option value="4">4 fichas</option><option value="5">5 fichas</option></select></label><label>Ejercicios por ficha<select id="worksheetQuestions"><option value="6">6</option><option value="10">10</option><option value="12" selected>12</option><option value="15">15</option><option value="20">20</option></select></label><label>Nivel de la ficha<select id="worksheetLevel"><option value="0">Según las áreas seleccionadas</option><option value="1">Nivel 1</option><option value="2">Nivel 2</option><option value="3">Nivel 3</option></select></label><label><input id="worksheetSolutions" type="checkbox"> Incluir solucionario profesional separado</label></div>
           <div class="worksheet-heading-row"><div><p class="eyebrow">CONTENIDOS</p><h4>Elige una o varias áreas</h4></div><div class="worksheet-quick-actions"><button id="worksheetAll" class="mini-btn">Seleccionar todo</button><button id="worksheetNone" class="mini-btn">Limpiar</button></div></div>
           <div id="homeworkOptions" class="homework-options"></div>
           <button id="generateWorksheetsBtn" class="primary-btn worksheet-generate">Generar fichas seleccionadas</button>
           <p class="muted worksheet-note">Varias versiones o una ficha con solucionario se descargan en un ZIP. Extrae primero su contenido y abre los archivos .docx en Word. El generador intenta evitar repeticiones dentro del mismo lote.</p>
         </div>
+        <div id="paperConfigurator" class="worksheet-builder card" hidden>
+          <div class="worksheet-controls">
+            <label>Franja de edad<select id="hAge"></select></label>
+            <label>Nivel<select id="hLevel"><option value="1">Nivel 1</option><option value="2">Nivel 2</option><option value="3">Nivel 3</option></select></label>
+            <label>Variante del español<select id="hLocale"></select></label>
+            <label>Versiones<select id="hVersions"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+            <label><input id="hSolutions" type="checkbox" checked> Incluir solucionario separado</label>
+          </div>
+          <div class="worksheet-config-grid">
+            <section aria-label="Tipologías imprimibles">
+              <label>Orientación pedagógica<select id="hOrientation"><option value="">Todas</option><option value="cognitive">Entrenamiento cognitivo</option><option value="curricular">Aprendizaje curricular</option></select></label>
+              <div id="hFamilies"></div>
+              <details><summary>Tipologías fuera de esta selección</summary><ul id="hExclusions"></ul></details>
+            </section>
+            <section aria-label="Composición y orden">
+              <h4>Composición y orden</h4>
+              <p id="hTotal" aria-live="polite"></p>
+              <p id="hShortages" role="status"></p>
+              <ol id="hOrder"></ol>
+              <div class="worksheet-order-controls"><button type="button" class="mini-btn" id="hGroup">Agrupar por áreas</button><button type="button" class="mini-btn" id="hClear">Limpiar cantidades</button></div>
+              <button type="button" class="primary-btn" id="hGenerate" disabled>Generar ficha a la carta</button>
+              <p id="hStatus" role="status"></p>
+            </section>
+          </div>
+          <fieldset class="worksheet-favorites">
+            <legend>Configuraciones favoritas</legend>
+            <p>Los favoritos pertenecen a tu cuenta profesional. Utiliza nombres sin datos de menores.</p>
+            <label>Favorito guardado<select id="hFavorite"></select></label>
+            <div class="worksheet-order-controls">
+              <button type="button" class="mini-btn" id="hLoad">Recuperar</button>
+              <button type="button" class="mini-btn" id="hDuplicate">Duplicar</button>
+              <button type="button" class="mini-btn" id="hDelete">Eliminar</button>
+            </div>
+            <label>Nombre del favorito<input id="hFavoriteName" maxlength="80" autocomplete="off"></label>
+            <div class="worksheet-order-controls"><button type="button" class="mini-btn" id="hSave">Guardar como nuevo</button><button type="button" class="mini-btn" id="hUpdate">Guardar cambios</button></div>
+            <p id="hFavoriteStatus" role="status"></p>
+          </fieldset>
+        </div>
         <div id="docxStatus" class="docx-status"></div>
       </section>
     </main>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/stimulus-art.js"></script><script src="js/stimulus-art-png.js"></script><script src="js/phosphor-art.js"></script><script src="js/complementary-art.js"></script><script src="js/bioart-icons.js"></script><script src="js/early-refinements.js"></script><script src="js/content-policy.js"></script><script src="js/early-language.js"></script><script src="js/document-library.js"></script><script src="js/reading-library.js"></script><script src="js/photo-library.js"></script><script src="js/content-quality.js"></script><script src="js/transfer-content.js"></script><script src="js/functional-content.js"></script><script src="js/communication-content.js"></script><script src="js/reader-assist.js"></script><script src="js/cognitive-families.js"></script><script src="js/falling-words.js"></script><script src="js/cognitive-renderer.js"></script><script src="js/executed-tasks.js"></script><script src="js/executed-renderer.js"></script><script src="js/curriculum.js"></script><script src="js/early-content.js"></script><script src="js/activity-model.js"></script><script src="js/locale-content.js"></script><script src="js/worksheet-selection.js"></script><script src="js/early-journey.js"></script><script src="js/config.js"></script><script src="js/privacy-controls.js"></script><script src="js/api.js"></script><script src="js/auth-account.js"></script><script src="js/docx.js"></script><script src="js/age-stages.js"></script><script src="js/school-journey.js"></script><script src="js/modality-catalog.js"></script><script src="js/progress-report.js"></script><script src="js/app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/stimulus-art.js"></script><script src="js/stimulus-art-png.js"></script><script src="js/phosphor-art.js"></script><script src="js/complementary-art.js"></script><script src="js/bioart-icons.js"></script><script src="js/early-refinements.js"></script><script src="js/content-policy.js"></script><script src="js/early-language.js"></script><script src="js/document-library.js"></script><script src="js/reading-library.js"></script><script src="js/photo-library.js"></script><script src="js/content-quality.js"></script><script src="js/transfer-content.js"></script><script src="js/functional-content.js"></script><script src="js/communication-content.js"></script><script src="js/reader-assist.js"></script><script src="js/cognitive-families.js"></script><script src="js/falling-words.js"></script><script src="js/cognitive-renderer.js"></script><script src="js/executed-tasks.js"></script><script src="js/executed-renderer.js"></script><script src="js/curriculum.js"></script><script src="js/early-content.js"></script><script src="js/activity-model.js"></script><script src="js/locale-content.js"></script><script src="js/worksheet-selection.js"></script><script src="js/early-journey.js"></script><script src="js/config.js"></script><script src="js/privacy-controls.js"></script><script src="js/api.js"></script><script src="js/auth-account.js"></script><script src="js/docx.js"></script><script src="js/age-stages.js"></script><script src="js/school-journey.js"></script><script src="js/modality-catalog.js"></script><script src="js/progress-report.js"></script><script src="js/worksheet-catalog.js"></script><script src="js/worksheet-builder.js"></script><script src="js/app.js"></script>
 </body>
 </html>

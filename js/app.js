@@ -165,6 +165,7 @@
     requestGeneration = 0,
     guidedSession = null;
   const API = window.LearningAPI;
+  const worksheetBuilder=window.WorksheetBuilder.mount($('#paperConfigurator'),{getProfile:()=>profile,api:API});
   const supportEmail=String(window.LH_CONFIG?.supportEmail||'').trim();
   if(/^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(supportEmail)){
     $$('[data-support-link]').forEach(link=>{link.href='mailto:'+encodeURIComponent(supportEmail);link.textContent='Ayuda y contacto: '+supportEmail;link.closest('.support-contact').classList.remove('hidden');});
@@ -1400,10 +1401,10 @@
   $('#executedMode').onclick=()=>{cognitiveOnly=false;executedOnly=true;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;setupExercise();};
   function completeEarlyWorksheet(response,payload,targetProfile,locale){
     if(!Array.isArray(response?.items))throw new Error('No se recibieron actividades para esta ficha.');
-    const selection=window.WorksheetSelection,models=window.CognitiveFamilies;
+    const selection=window.WorksheetSelection,models=window.WorksheetCatalog;
     const accepted=new Set();
     const domainOf=item=>item.sourceDomain||item.domain||item.localization?.domain;
-    const compatible=(item,domain)=>payload.domains.includes(domain)&&models.paperEligible(item)&&selection.compatible(item,targetProfile,locale,domain);
+    const compatible=(item,domain)=>payload.domains.includes(domain)&&models.staticPaper(item)&&selection.compatible(item,targetProfile,locale,domain);
     const retain=item=>{
       const domain=domainOf(item);
       if(!compatible(item,domain))return false;
@@ -1436,7 +1437,7 @@
     const localeRevision = API.localeRevision;
     const res = await API.requestContent({
       ...payload,
-      client_revision:payload.kind==='worksheet'&&!payload.cognitive_only||payload.cognitive_family==='words'||payload.domain==='communication'?15:payload.cognitive_family==='falling'?14:13,
+      client_revision:payload.kind==='worksheet'&&!payload.cognitive_only?16:payload.cognitive_family==='words'||payload.domain==='communication'?15:payload.cognitive_family==='falling'?14:13,
       ...(targetProfile._sessionOnly?{session_only:true}:{}),
       profile_id: targetProfile.id,
       locale,
@@ -1579,6 +1580,8 @@
     it = window.LocaleContent.localizeItem(it, API.effectiveLocale(profile), subject);
     window.lastDifficultyAudit=window.AgeStages.audit(it,profile,state.levels[subject]||1);
     currentItem = it;
+    it.pedagogy=window.WorksheetCatalog.orient(subject,it);
+    $('#exercise').dataset.orientation=it.pedagogy.primary;
     window.ActivityModel.forDelivery(it, profile, subject);
     $("#exerciseCounter").textContent = `Ejercicio ${counter}`;
     $("#exerciseFeedback").textContent = "";
@@ -2211,14 +2214,15 @@
   }
   function buildHomework() {
     const options = ageData().subjects;
+    worksheetBuilder.refresh();
     $("#homeworkOptions").innerHTML = options
       .map(
         (s, i) =>
-          `<label class="homework-option"><input type="checkbox" value="${s}" ${["attention", "executive", "memory", "speedReasoning", "applied"].includes(s) || i < 1 ? "checked" : ""}><span><strong>${SUBJECT_META[s].name}</strong><small>${["attention", "executive", "memory", "speedReasoning", "applied"].includes(s) ? "Ficha cognitiva funcional adaptada a la edad" : "Ficha de práctica"}</small></span></label>`,
+          `<label class="homework-option"><input type="checkbox" value="${s}" ${s==='memory'?'disabled':["attention","executive","speedReasoning","applied"].includes(s)||i<1?'checked':''}><span><strong>${SUBJECT_META[s].name}</strong><small>${s==='memory'?'Recuerdo con ocultación disponible en pantalla':["attention","executive","speedReasoning","applied"].includes(s)?'Ficha de práctica cognitiva':'Ficha de práctica'}</small></span></label>`,
       )
       .join("");
     $("#worksheetAll").onclick = () =>
-      $$("#homeworkOptions input").forEach((x) => (x.checked = true));
+      $$("#homeworkOptions input:not(:disabled)").forEach((x) => (x.checked = true));
     $("#worksheetNone").onclick = () =>
       $$("#homeworkOptions input").forEach((x) => (x.checked = false));
   }
@@ -2254,7 +2258,7 @@
         };
         const res=await request();
         const valid=await window.WorksheetSelection.collect({initial:res,profile:worksheetProfile,
-          country:worksheetExportProfile.contentLocale,domains:selected,count:questions,professional:true,
+          country:worksheetExportProfile.contentLocale,domains:selected,count:questions,professional:true,staticOnly:true,
           fetchMore:async()=>{
             $('#docxStatus').textContent=`Completando la ficha ${i+1}: buscamos actividades compatibles…`;
             return request();
@@ -2262,7 +2266,7 @@
         all.push(valid.items);
       }
       if (worksheetLocaleRevision !== API.localeRevision || worksheetProfile!==profile) throw new Error('El perfil o la variante de español ha cambiado. Solicita una ficha nueva.');
-      await window.WorksheetGenerator.generate(all, worksheetExportProfile, {domains:selected,professional:true,fetchMore:async()=>{
+      await window.WorksheetGenerator.generate(all, worksheetExportProfile, {domains:selected,professional:true,staticOnly:true,fetchMore:async()=>{
         if(worksheetLocaleRevision!==API.localeRevision||worksheetProfile!==profile)throw new Error('El perfil o la variante de español ha cambiado. Solicita una ficha nueva.');
         $('#docxStatus').textContent='Comprobando el paquete: sustituimos actividades incompatibles…';
         return requestForProfile({kind:'worksheet',domains:selected,questions,level},worksheetProfile);

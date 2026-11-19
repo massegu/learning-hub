@@ -187,5 +187,30 @@
   API.openStripeCheckout=()=>openBilling('checkout');
   API.openBillingPortal=()=>openBilling('portal');
   API.requestContent=async(payload)=>{const {data,error}=await client.functions.invoke('request-learning-content',{body:payload});if(error){let msg=error.message||'No se pudo cargar el contenido.';try{const ctx=error.context;if(ctx&&typeof ctx.clone==='function'){const body=await ctx.clone().json();if(body?.error)msg=body.error;}else if(ctx?.body?.error)msg=ctx.body.error;}catch(_){}const e=new Error(msg);e.original=error;throw e;}return data};
+  const favoriteFields='id,name,configuration,created_at';
+  async function favoriteRequest(build){
+    const owner=API.user?.id;
+    if(!owner)throw new Error('Inicia sesión para gestionar favoritos.');
+    const {data,error}=await build(client.from('worksheet_favorites'),owner);
+    if(API.user?.id!==owner)throw new Error('La cuenta ha cambiado.');
+    if(error){
+      if(['42P01','PGRST205'].includes(error.code))throw new Error('El almacenamiento de favoritos aún no está habilitado.');
+      throw new Error('No se pudo completar la operación de favoritos.');
+    }
+    return data;
+  }
+  API.listWorksheetFavorites=()=>favoriteRequest((table,owner)=>
+    table.select(favoriteFields).eq('account_id',owner).order('created_at',{ascending:false}));
+  API.saveWorksheetFavorite=(id,name,configuration)=>{
+    const label=String(name??'').trim();
+    if(!label||label.length>80||/[\x00-\x1f\x7f]/.test(label))throw new Error('Escribe un nombre válido de hasta 80 caracteres.');
+    window.WorksheetCatalog.configuration(configuration,window.LocaleContent.labels);
+    const values={name:label,configuration};
+    return favoriteRequest((table,owner)=>id
+      ?table.update(values).eq('account_id',owner).eq('id',id).select(favoriteFields).single()
+      :table.insert(values).select(favoriteFields).single());
+  };
+  API.removeWorksheetFavorite=id=>favoriteRequest((table,owner)=>
+    table.delete().eq('account_id',owner).eq('id',id).select('id').single());
   window.LearningAPI=API;
 })();

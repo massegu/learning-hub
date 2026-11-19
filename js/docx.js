@@ -70,7 +70,7 @@
       children:[new TextRun({text:`${String.fromCharCode(65+i)}. ${clean(x)}`,size,color,font:'Arial'})]
     }));
   }
-  async function makeDoc(items,version,profile,models,professional=false){
+  async function makeDoc(items,version,profile,models,professional=false,catalogue=false){
     const {Document,Packer,Paragraph,TextRun,ImageRun,Table,TableRow,TableCell,WidthType,AlignmentType,BorderStyle,Header,Footer,PageNumber}=window.docx;
     const sceneImages=new Map();
     // In the browser export the exact same SVG scene/map as a Word-compatible
@@ -114,6 +114,7 @@
       documentImages.set(id,bytes);
     }
     const route=profile?.progress?.ageRoute||profile?.age_band||'primary';
+    const variant=catalogue?' · '+window.LocaleContent.labels[profile.contentLocale]:'';
     const palettes={
       early:{accent:'D65A4A',strong:'B7453E',light:'FFF0E8',secondary:'168B8B',ink:'17324D',muted:'5F7287',line:'E7C9B8',highlight:'FFE0A8'},
       junior:{accent:'718B51',strong:'536C3A',light:'EEF3E7',secondary:'A77D35',ink:'26364A',muted:'657367',line:'D4DEC9',highlight:'F3E4BF'},
@@ -156,7 +157,7 @@
         // The document image is the primary stimulus. Its transcript remains
         // available as image alternative text, so printing it again here
         // would duplicate the source and make the worksheet unnecessarily long.
-        return [new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({data:documentImages.get(material.documentId),transformation:{width:Math.round(source.width*scale),height:Math.round(source.height*scale)},altText:{name:source.title,title:source.title,description}})]})];
+        return [...(catalogue&&source.country?[paragraph('Documento de referencia · '+source.country)]:[]),new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({data:documentImages.get(material.documentId),transformation:{width:Math.round(source.width*scale),height:Math.round(source.height*scale)},altText:{name:source.title,title:source.title,description}})]})];
       }
       if(material.type==='text') return [...heading,paragraph(material.text)];
       if(early && material.presentation==='count' && material.items.every(x=>x==='●'))return [...heading,new Paragraph({spacing:{after:130},children:material.items.flatMap(value=>[new TextRun({text:value,size:40,color:ink}),new TextRun({text:'    '})])})];
@@ -166,7 +167,7 @@
     const header=new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:noBorders,rows:[new TableRow({children:[
       new TableCell({width:{size:70,type:WidthType.PERCENTAGE},shading:{fill:light},margins:{top:170,bottom:170,left:220,right:160},children:[
         new Paragraph({children:[new TextRun({text:'FICHA DE PRÁCTICA',bold:true,size:32,color:green,font:'Arial'})]}),
-        new Paragraph({spacing:{before:40},children:[new TextRun({text:`Versión ${version} · ${profile.name} · ${ageLabel(profile)} años`,size:20,color:ink,font:'Arial'})]})]}),
+        new Paragraph({spacing:{before:40},children:[new TextRun({text:`Versión ${version} · ${profile.name} · ${ageLabel(profile)} años${variant}`,size:20,color:ink,font:'Arial'})]})]}),
       new TableCell({width:{size:30,type:WidthType.PERCENTAGE},shading:{fill:palette.strong},margins:{top:145,bottom:145,left:100,right:100},children:[
         new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'GLIAX',bold:true,size:25,color:white,font:'Arial'})]})]})
     ]})]});
@@ -181,6 +182,11 @@
       const prompt=it.speedEvidence?.kind==='category'&&it.speedEvidence.category==='animals'?(it.paperQuestion||'¿Son animales todos los elementos de la lista?'):model.question;
       const block=[new Paragraph({pageBreakBefore:professional&&i>0,keepNext:true,spacing:{before:i&&!professional?160:0,after:90},children:[new TextRun({text:`ACTIVIDAD ${i+1}`,bold:true,size:17,color:green2,font:'Arial'})]})];
       const promptParagraph=new Paragraph({keepNext:true,keepLines:true,spacing:{after:150,line:early?390:315},children:[new TextRun({text:prompt,bold:true,size:early?29:24,color:ink,font:'Arial'})]});
+      if(catalogue){
+        const meta=window.WorksheetCatalog.classify(it);
+        block.push(new Paragraph({keepNext:true,spacing:{after:65},children:[new TextRun({text:'Tipología · '+meta.label,bold:true,size:18,color:muted,font:'Arial'})]}));
+        if(meta.administration)block.push(new Paragraph({keepNext:true,spacing:{after:70},children:[new TextRun({text:meta.administration,size:18,color:ink,font:'Arial'})]}));
+      }
       if(professional)block.push(promptParagraph);
       const paperSource=it.roomSpeedTask?[{type:'text',text:'Busca solo con la vista, desde tu sitio. Después explica para qué sirve el objeto. En papel no se mide el tiempo de búsqueda ni de explicación.'},{type:'text',text:it.roomSpeedTask.followUp}]:model.stimulus;
       if(paperSource.length&&professional){
@@ -281,10 +287,11 @@
     if(item.sample)return {answer:'Ejemplo de respuesta · '+item.sample,note:item.writingRubric?.join(' · ')};
     return {answer:'Actividad de respuesta abierta. Revisar con los criterios de la ficha.'};
   }
-  async function makeSolutions(items,models,version,profile){
+  async function makeSolutions(items,models,version,profile,catalogue=false){
     const {Document,Header,Footer,Paragraph,Packer,TextRun,PageNumber}=window.docx;
     const title=new Paragraph({keepNext:true,spacing:{after:180},children:[new TextRun({text:'GLIAX · Solucionario profesional',bold:true,size:34,font:'Arial'})]});
     const copy=(text,config={})=>new Paragraph({...config,children:[new TextRun({text:clean(text),size:22,font:'Arial'})]});
+    const variant=catalogue?' · '+window.LocaleContent.labels[profile.contentLocale]:'';
     const entries=items.flatMap((item,index)=>{
       const {answer,note}=solutionFor(item,models[index],index,version);
       return [copy(`Actividad ${index+1} · ${models[index].question}`,{keepNext:true,spacing:{before:220,after:85}}),
@@ -293,7 +300,7 @@
     const doc=new Document({creator:'GLIAX',title:`GLIAX · Solucionario ${version}`,description:'Material profesional GLIAX',
       sections:[{properties:{page:a4},headers:{default:new Header({children:[copy('GLIAX · Uso profesional')]})},
         footers:{default:new Footer({children:[new Paragraph({children:[new TextRun({children:['GLIAX · Página ',PageNumber.CURRENT],size:17})]})]})},
-        children:[title,copy(`Versión ${version} · ${ageLabel(profile)} años. La numeración coincide con la ficha.`),...entries]}]});
+        children:[title,copy(`Versión ${version} · ${ageLabel(profile)} años${variant}. La numeración coincide con la ficha.`),...entries]}]});
     return new Uint8Array(await (await Packer.toBlob(doc)).arrayBuffer());
   }
   async function generate(itemsByVersion,profile,replacement,options={}){
@@ -305,7 +312,7 @@
       const selected=[];
       for(let version=0;version<itemsByVersion.length;version++){
         const valid=await window.WorksheetSelection.collect({initial:{items:itemsByVersion[version]},profile,country:locale,
-          domains:replacement.domains,count:itemsByVersion[version].length,professional:replacement.professional===true,
+          domains:replacement.domains,count:itemsByVersion[version].length,professional:replacement.professional===true,staticOnly:replacement.staticOnly===true,
           fetchMore:replacement.fetchMore?extra=>replacement.fetchMore({...extra,version}):undefined});
         selected.push(valid.items);
       }
@@ -321,16 +328,21 @@
     if(window.ContentPolicy.forProfile(profile)&&!window.StimulusArt)throw new Error('No se ha cargado el adaptador de ilustraciones.');
     await loadWorksheetLibraries();
     const p=prefix(profile);
+    const confirmDownload=()=>{if(options.canDownload&&!options.canDownload())throw new Error('El perfil activo ha cambiado.');};
     if(itemsByVersion.length===1&&!options.solutions){
-      downloadBlob(new Blob([await makeDoc(itemsByVersion[0],1,profile,models[0],options.professional)],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),`${p}_ficha_01.docx`);
+      const bytes=await makeDoc(itemsByVersion[0],1,profile,models[0],options.professional,options.catalogue);
+      confirmDownload();
+      downloadBlob(new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),`${p}_ficha_01.docx`);
       return;
     }
     const zip=new window.JSZip();
     for(let i=0;i<itemsByVersion.length;i++){
-      zip.file(`${p}_ficha_${pad(i+1)}.docx`,await makeDoc(itemsByVersion[i],i+1,profile,models[i],options.professional));
-      if(options.solutions)zip.file(`${p}_solucionario_${pad(i+1)}.docx`,await makeSolutions(itemsByVersion[i],models[i],i+1,profile));
+      zip.file(`${p}_ficha_${pad(i+1)}.docx`,await makeDoc(itemsByVersion[i],i+1,profile,models[i],options.professional,options.catalogue));
+      if(options.solutions)zip.file(`${p}_solucionario_${pad(i+1)}.docx`,await makeSolutions(itemsByVersion[i],models[i],i+1,profile,options.catalogue));
     }
-    downloadBlob(await zip.generateAsync({type:'blob'}),`${p}_fichas.zip`);
+    const packaged=await zip.generateAsync({type:'blob'});
+    confirmDownload();
+    downloadBlob(packaged,`${p}_fichas.zip`);
   }
   window.WorksheetGenerator={generate,loadLibraries:loadWorksheetLibraries,loadZip,integrityVersion:1};
 })();
