@@ -49,8 +49,8 @@ try:
   with tempfile.TemporaryDirectory() as tmp:
    with page.expect_download() as download:page.locator('#exportDetailCsv').click()
    path=Path(tmp)/'results.csv';download.value.save_as(path);csv=path.read_text(encoding='utf-8-sig')
-   for value in (wait_id,rule_id,race_id,'guided_wait','rule_application','gliax.exercise-metrics.v1','interval_completed','response_times_ms'):assert value in csv,value
-   assert csv.count('legacy-repeated-item')==2,'CSV retains the two distinct historical attempts'
+   for value in (wait_id,rule_id,race_id,'Espera guiada','Aplicación de reglas','Intervalo finalizado','Tiempos observados (ms)'):assert value in csv,value
+   assert csv.count('2026-11-17T09:59:00.000Z')==2,'CSV retains the two distinct historical attempts'
   before=page.evaluate('()=>({profiles:localStorage.getItem("__mock_profiles"),rows:localStorage.getItem("__mock_exercise_results"),operations:localStorage.getItem("__mock_result_operations")})')
   page.evaluate('''async()=>{LearningAPI.setIndependent('primary');await LearningAPI.saveProgress('primary',{history:[]});await LearningAPI.saveResult('primary',{clientAttemptId:'cccccccc-3333-4333-8333-333333333333',sessionOnly:true,correct:true});await LearningAPI.listResults('primary');LearningAPI.setIndependent(null)}''')
   after=page.evaluate('()=>({profiles:localStorage.getItem("__mock_profiles"),rows:localStorage.getItem("__mock_exercise_results"),operations:localStorage.getItem("__mock_result_operations")})');assert after==before,'independent sessions must neither query nor persist individual result records'

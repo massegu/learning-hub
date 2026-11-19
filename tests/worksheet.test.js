@@ -58,7 +58,7 @@ test('real DOCX export includes every 6-7 stimulus before its question and all r
     return mechanics.map(mechanic=>bank.find(it=>it.ageProfile.mechanic===mechanic));
   });
   await generator.generate([items],child);
-  assert.equal(downloads.length,1);assert.match(downloads[0].name,/LearningLab_6-7_.*_ficha_01\.docx$/);
+  assert.equal(downloads.length,1);assert.match(downloads[0].name,/GLIAX_6-7_.*_ficha_01\.docx$/);
   const document=await xml(downloads[0].blob);
   assertAnswerable(textNodes(document),items,child);
   assert.ok(document.includes('<w:tbl>'), 'tables must remain tables');
@@ -298,4 +298,63 @@ test('memory DOCX labels omit articles while image metadata retains canonical ev
   assert.ok(source.includes('description="'+value+'"')||source.includes('descr="'+value+'"'));
  }
  assert.deepEqual(item,before);
+});
+
+test('GLIAX professional packages cover all ages and levels with separate A4 solutions',async()=>{
+ const families=require('../js/cognitive-families'),documents=require('../js/document-library');
+ const {execFileSync}=require('node:child_process');
+ const routes=['early','junior','primary','middle','teen'];
+ for(const age of routes){
+  const language=age==='middle'?'middleLanguage':age==='teen'?'teenLanguage':'language';
+  const domains=[language,'communication','executive','attention'];
+  const requests=[1,2,3].map(level=>({profile_id:age,kind:'worksheet',questions:16,domains,level,client_revision:15}));
+  const replies=execFileSync(process.execPath,['tests/edge-worker.js',age],{input:requests.map(JSON.stringify).join('\n')+'\n',encoding:'utf8',timeout:60000}).trim().split('\n').map(JSON.parse);
+  for(const [index,response] of replies.entries()){
+   const level=index+1,caption=age+' N'+level;
+   assert.equal(response.status,200,JSON.stringify(response.data));
+   const items=response.data.items;
+   assert.equal(items.length,16,caption);
+   assert.ok(items.every(families.paperEligible),caption);
+   for(const kind of ['words','deduction','change','contradiction'])assert.ok(items.some(it=>it.cognitiveTask?.kind===kind),`${caption} ${kind}`);
+   assert.ok(items.some(it=>it.domain==='communication'));
+   const profile={id:age,name:'PRUEBA-DG',age_band:age,progress:{ageRoute:age},contentLocale:'es_es'};
+   const {generator,downloads,context}=harness();
+   Object.assign(context.window,{CognitiveFamilies:families,DocumentLibrary:documents,PhotoLibrary:require('../js/photo-library')});
+   context.fetch=async path=>({ok:true,arrayBuffer:async()=>{
+    const file=fs.readFileSync(path);return file.buffer.slice(file.byteOffset,file.byteOffset+file.byteLength);
+   }});
+   await generator.generate([items],profile,undefined,{professional:true,solutions:true});
+   assert.match(downloads[0].name,/^GLIAX_.*_fichas\.zip$/);
+   const pack=await JSZip.loadAsync(await downloads[0].blob.arrayBuffer());
+   const evidence=process.env.GLIAX_DG_EVIDENCE;
+   if(evidence)fs.writeFileSync(require('node:path').join(evidence,`GLIAX_${age}_N${level}.zip`),Buffer.from(await downloads[0].blob.arrayBuffer()));
+   assert.equal(Object.keys(pack.files).length,2);
+   const [sheet,answers]=await Promise.all(Object.values(pack.files).map(async file=>JSZip.loadAsync(await file.async('uint8array'))));
+   const rendered=await sheet.file('word/document.xml').async('string'),key=await answers.file('word/document.xml').async('string');
+   assert.equal((rendered.match(/<w:pageBreakBefore\/>/g)||[]).length,15,caption);
+   for(const doc of [sheet,answers]){
+    const types=await doc.file('[Content_Types].xml').async('string');
+    assert.match(types,/wordprocessingml\.document/);
+    const core=await doc.file('docProps/core.xml').async('string');
+    assert.match(core,/<dc:creator>GLIAX<\/dc:creator>/);
+    for(const entry of Object.values(doc.files).filter(entry=>/^(word\/(document|header1|footer1)|docProps\/core)\.xml$/.test(entry.name))){
+     assert.doesNotMatch(await entry.async('string'),/Level Up|Learning Hub|Learning Lab|LearningLab/i);
+    }
+    assert.match(await doc.file('word/document.xml').async('string'),/<w:pgSz[^>]*w:w="11906"[^>]*w:h="16838"/);
+   }
+   const nodes=textNodes(rendered),solutionNodes=textNodes(key);
+   assert.equal(nodes.filter(el=>/^ACTIVIDAD \d+$/.test(el)).length,16);
+   assert.equal(solutionNodes.filter(el=>/^Actividad \d+ ·/.test(el)).length,16);
+   for(const [i,item] of items.entries()){
+    const {projection}=model.preparePrintable(item,profile,profile.contentLocale,item.domain||item.sourceDomain);
+    assert.ok(nodes.includes(projection.question),caption+' '+projection.question);
+    assert.ok(solutionNodes.some(text=>text.startsWith(`Actividad ${i+1} · `)&&text.includes(projection.question)));
+    if(projection.solution)assert.ok(solutionNodes.includes(projection.solution),caption);
+    for(const block of projection.stimulus){
+     if(block.type==='document'||block.type==='photo'||block.type==='photoPair')assert.ok(Object.keys(sheet.files).some(path=>path.startsWith('word/media/')&&path.endsWith('.png')),caption);
+     if(block.type==='text')assert.ok(nodes.some(node=>node.includes(block.text.replace(/\s+/g,' ').trim())),caption);
+    }
+   }
+  }
+ }
 });

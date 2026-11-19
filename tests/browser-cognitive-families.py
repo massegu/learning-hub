@@ -27,7 +27,7 @@ try:
      page.wait_for_function('({kind,level})=>window.__current?.type==="cognitiveTask"&&__current.level===level&&(kind==="wait"?__current.cognitiveTask.kind==="guidedWait":__current.cognitiveTask.kind===kind)&&document.querySelector(".cognitive-area")',arg={'kind':kind,'level':level})
      item=page.evaluate('__current');task=item['cognitiveTask'];before=page.evaluate('__saves')
      if kind=='rules' and level==1 and age!='early':assert 'Adivina la regla' in page.locator('#exercisePrompt').inner_text()
-     assert page.evaluate('__lastPayload.client_revision')==13
+     assert page.evaluate('__lastPayload.client_revision')==(15 if kind=='words' else 13)
      assert page.locator('#printCognitive').count()==(0 if kind in ['rules','wait'] else 1)
      page.locator('.cognitive-area').get_by_role('button',name='Empezar espera' if kind=='wait' else 'Empezar',exact=True).press('Enter')
      if kind=='wait':
@@ -101,7 +101,8 @@ try:
      if age=='teen' and level==2 and kind!='rules':
       with page.expect_download() as dl:page.locator('#printCognitive').click()
       file=Path(tmp)/(kind+'.docx');dl.value.save_as(file)
-      with zipfile.ZipFile(file) as z:assert item['q'][:25] in z.read('word/document.xml').decode()
+      expected_q=page.evaluate('(item)=>CognitiveFamilies.printable(item).question',item)
+      with zipfile.ZipFile(file) as z:assert expected_q[:25] in z.read('word/document.xml').decode()
   # A hidden document interrupts rules, records nothing and has no pending late score.
   area(page, 'executive').click();page.locator('#cognitiveFamilyModes [data-cognitive-family="rules"]').click();page.wait_for_function('()=>window.__current?.cognitiveTask?.kind==="rules"');page.locator('.cognitive-area').get_by_role('button',name='Empezar',exact=True).click();before=page.evaluate('__saves')
   page.evaluate("()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'));}")

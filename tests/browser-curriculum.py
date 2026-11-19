@@ -148,7 +148,7 @@ try:
    assert 'Mediana al acertar' in page.locator('#speedProgressChart').inner_text()
    with page.expect_download() as dl:page.locator('#exportDetailCsv').click()
    csv_path=Path(tmp)/f'{age}.csv';dl.value.save_as(csv_path)
-   csv_data=csv_path.read_text(encoding='utf-8-sig');assert 'tiempo_ms;tiempo_valido;tarea_velocidad' in csv_data;assert 'speedReasoning' in csv_data
+   csv_data=csv_path.read_text(encoding='utf-8-sig');assert 'Tiempo (ms);Validez del tiempo;Versión de la actividad' in csv_data;assert 'Velocidad de procesamiento' in csv_data
    print(f'PASS: {age}: ten sources, L1/L3 sequential/spatial/association recall, timed/invalid/untimed/wrong trials, fused executive tasks and two DOCX',flush=True)
   # Timing survives reload in progress; the old domain is never restored as a menu area.
   before=page.evaluate('()=>__profiles.find(p=>p.id==="teen").progress.history.filter(x=>x.subject==="speedReasoning").length')

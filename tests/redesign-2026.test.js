@@ -116,5 +116,5 @@ test('professional palette is consistent across age themes and uses coherent lin
  assert.ok(css.includes('.training-group-grid .level-track span.is-active{background:#4C5BDD}'));
  assert.ok(css.includes('.evolution-chart .chart-point-core{fill:#FF7468}'));
  assert.ok(css.includes('#progressCards .accuracy-ring span{font-size:.68rem'));
- assert.ok(app.includes("r.length?'aciertos':'sin práctica'"));
+ assert.ok(app.includes("count?'aciertos':'sin práctica'"));
 });

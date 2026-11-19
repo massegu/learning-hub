@@ -27,8 +27,8 @@ test('graffiti-style comparisons are delivered only to 13+ and retain a readable
 
 test('functional communication families are available at all age routes and levels',()=>{
  for(const age of ['early','junior','primary','middle','teen'])for(const level of [1,2,3]){
-  const bank=communication.pool(age,level);assert.equal(bank.length,age==='early'?24:3);
-  assert.equal(new Set(bank.map(item=>item.qualityDescriptor.semanticFamily)).size,3);
+  const bank=communication.pool(age,level);assert.equal(bank.length,age==='early'?29:12);
+  assert.equal(new Set(bank.map(item=>item.qualityDescriptor.semanticFamily)).size,age==='early'?8:12);
   for(const item of bank){
    assert.doesNotThrow(()=>communication.validate(item));
    for(const country of Object.keys(locale.labels))assert.doesNotThrow(()=>model.forDelivery(locale.localizeItem(item,country,'communication'),{age_band:age,progress:{ageRoute:age}},'communication'));
