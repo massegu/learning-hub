@@ -157,8 +157,8 @@
     photoOnly = false,
     memoryAudioOnly = false,
     interactionOnly = false,
-    roomSpeedOnly = false, speedUnpairedOnly=false, cognitiveOnly=false, cognitiveFamily="", executedOnly=false, stopExecuted=null,stopReaderAssist=null,
-    interactionKind = 'symbols',
+    roomSpeedOnly = false, speedUnpairedOnly=false, cognitiveOnly=false, cognitiveFamily="", executedOnly=false, executedFamily="", comparisonIndex=0, stopExecuted=null,stopReaderAssist=null,
+    interactionKind = 'symbols', miraOpen = false,
     configuredSubject = null,
     currentItem = null,
     counter = 0,
@@ -409,12 +409,10 @@
   });
   function renderMultiSelect(it) {
     $('#exercise').classList.toggle('visual-only-differences',it.type==='photoDifference'&&it.level>=3);
-    if(it.type==='photoDifference'){
-      const count=it.answers.length;
-      const target=it.level===1&&count===1?' en '+it.answers[0].toLocaleLowerCase('es'):'';
-      $('#exercisePrompt').textContent='Compara A y B. Marca '+count+(count===1?' diferencia':' diferencias')+target+'.';
-    }
-    const single=subject==='attention'&&it.level===1&&it.answers?.length===1;
+    const photo=it.type==='photoDifference';
+    const count=photo?(it.differenceCount??it.answers.length):it.answers?.length;
+    if(photo)$('#exercisePrompt').textContent=window.PhotoLibrary.differencePrompt(count);
+    const single=subject==='attention'&&it.level===1&&count===1;
     $('#exerciseOptions').classList.add('structured-options');
     const selected = new Set();
     const opts = shuffle(it.opts || []);
@@ -440,10 +438,7 @@
           const [left,top,width,height]=box;Object.assign(mark.style,{left:left+'%',top:top+'%',width:width+'%',height:height+'%'});
           mark.onclick=()=>option.click();holder.append(mark);photoMarks.push({mark,option});
         }
-        const help=document.createElement('p');help.className='photo-mark-help';help.textContent=it.level>=3?'Compara las dos imágenes y pulsa directamente sobre cada detalle que haya cambiado.':'Compara las escenas y pulsa en la imagen B los elementos que han cambiado. También puedes seleccionarlos en la lista.';$('.photo-comparison').after(help);
       }
-    } else if(it.type==='photoDifference'){
-      const help=document.createElement('p');help.className='photo-mark-help';help.textContent='Compara A con B y marca solo los cambios que pide la consigna. Por ejemplo, si se pregunta por el color, selecciona un objeto solo cuando su color cambie de A a B.';$('.photo-comparison')?.after(help);
     }
     $$("#exerciseOptions .multi-option").forEach(
       (b) =>
@@ -465,7 +460,7 @@
     $("#multiCheck").onclick = () => {
       const answer = new Set((it.answers || []).map(String));
       const ok =
-        selected.size === answer.size &&
+        selected.size === (count??answer.size) &&
         [...selected].every((v) => answer.has(v));
       $$("#exerciseOptions .multi-option").forEach((b) => {
         b.disabled = true;
@@ -483,7 +478,7 @@
       );
     };
     if(single){
-      $('#multiCheck').classList.add('hidden');$('#multiCount').textContent='Selecciona una respuesta.';
+      $('#multiCheck').classList.add('hidden');$('#multiCount').textContent=photo?'':'Selecciona una respuesta.';
       $('#exerciseOptions .multi-select-grid').classList.add('single-selection');
       for(const button of $$('#exerciseOptions .multi-option')){const select=button.onclick;button.onclick=()=>{select();$('#multiCheck').click();};}
     }
@@ -1095,7 +1090,7 @@
     $("#independentSessionBtn").textContent=independent?"Terminar sesión independiente":"Empezar sesión independiente";
     $("#independentSessionStatus").textContent=independent?"Los resultados de esta sesión no se guardan. El uso se contabiliza por cuenta. Al terminar o recargar se descartan.":"Seguimiento individual: los resultados se guardan en este perfil.";
     $("#deleteProfileBtn").disabled=independent;$("#profilePrivacyBtn").disabled=independent;
-    digitalOnly=false;digitalFamily="";photoOnly = false;memoryAudioOnly=false;roomSpeedOnly=false;speedUnpairedOnly=false;executedOnly=false;cognitiveOnly=false;cognitiveFamily='';
+    digitalOnly=false;digitalFamily="";photoOnly = false;memoryAudioOnly=false;roomSpeedOnly=false;speedUnpairedOnly=false;executedOnly=false;executedFamily='';comparisonIndex=0;miraOpen=false;cognitiveOnly=false;cognitiveFamily='';
     guidedSession=null;
     hideGuidedBar();
     $('#appShell').classList.toggle('early-experience',Boolean(window.ContentPolicy.forProfile(p)));
@@ -1220,11 +1215,14 @@
   }
   function setupExercise() {
     if(profile?.id&&!profile._sessionOnly){try{localStorage.setItem(`lh_v16_last_subject_${profile.id}`,subject);}catch{}}
-    if(configuredSubject!==null&&configuredSubject!==subject){digitalOnly=false;digitalFamily="";documentOnly=false;photoOnly=false;memoryAudioOnly=false;interactionOnly=false;interactionKind=subject==='attention'?'room':'symbols';roomSpeedOnly=false;speedUnpairedOnly=false;cognitiveOnly=false;cognitiveFamily='';executedOnly=false;}
+    if(configuredSubject!==null&&configuredSubject!==subject){miraOpen=false;digitalOnly=false;digitalFamily="";documentOnly=false;photoOnly=false;memoryAudioOnly=false;interactionOnly=false;interactionKind=subject==='attention'?'room':'symbols';roomSpeedOnly=false;speedUnpairedOnly=false;cognitiveOnly=false;cognitiveFamily='';executedOnly=false;executedFamily='';}
     configuredSubject=subject;
     if(guidedSession?.randomFamilies){
-      cognitiveOnly=true;
-      cognitiveFamily=guidedSession.randomFamilies[guidedSession.index];
+      const family=guidedSession.randomFamilies[guidedSession.index];
+      executedOnly=family.startsWith('executed:');
+      executedFamily=executedOnly?family.split(':')[1]:'';
+      cognitiveOnly=!executedOnly;
+      cognitiveFamily=cognitiveOnly?family:'';
     }
     $("#exercise").dataset.subject=subject;
     $('#appShell').dataset.subject=subject;
@@ -1284,7 +1282,15 @@
     $('#interactionModeBtn').classList.toggle('hidden',!capability.roomSearch);
     $('#interactionModeBtn').textContent='Busca a tu alrededor';
     $('#interactionModeBtn').setAttribute('aria-pressed',String(interactionOnly&&interactionKind==='room'));
-    $('#interactionKindSwitch').classList.toggle('hidden',!interactionSupport);
+    const waitAvailable=subject==='executive'&&capability.cognitiveKinds.includes('guidedWait');
+    const miraAvailable=waitAvailable||supportedInteractionKinds.includes('movement')||supportedInteractionKinds.includes('symbols');
+    const miraActive=miraAvailable&&miraOpen;
+    $('#interactionKindSwitch').classList.toggle('hidden',!interactionSupport&&!miraAvailable);
+    $('#miraModeButton').classList.toggle('hidden',!miraAvailable);
+    $('#miraModeButton').setAttribute('aria-expanded',String(miraActive));
+    $('#miraChoices').classList.toggle('hidden',!miraActive);
+    $('#miraWait').classList.toggle('hidden',!waitAvailable);
+    $('#miraWait').setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily==='wait'));
     $$('#interactionKindSwitch [data-interaction-kind]').forEach(b=>{
       b.classList.toggle('hidden',!supportedInteractionKinds.includes(b.dataset.interactionKind));
       b.setAttribute('aria-pressed',String(interactionOnly&&b.dataset.interactionKind===interactionKind));
@@ -1310,11 +1316,11 @@
     const fallingButton=$('#fallingWordsMode');
     fallingButton.classList.toggle('hidden',!capability.fallingWords);
     fallingButton.setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily==='falling'));
-    if(!cognitiveBank.length&&!capability.speed.words)cognitiveOnly=false;
+    if(!cognitiveBank.length&&!capability.speed.words&&!capability.fallingWords)cognitiveOnly=false;
     $('#cognitiveMode').classList.add('hidden');
-    const families=[...new Set(cognitiveBank.map(it=>it.cognitiveTask.kind==='guidedWait'?'wait':it.cognitiveTask.kind))];
+    const families=[...new Set(cognitiveBank.map(it=>it.cognitiveTask.kind==='guidedWait'?'wait':it.cognitiveTask.kind))].filter(kind=>kind!=='wait');
     if(subject==='attention'&&families.includes('contradiction'))cognitiveFamily='contradiction';
-    else if(!families.includes(cognitiveFamily)&&!(capability.fallingWords&&cognitiveFamily==='falling')&&!(capability.speed.words&&cognitiveFamily==='words'))cognitiveFamily='';
+    else if(!families.includes(cognitiveFamily)&&!(waitAvailable&&cognitiveFamily==='wait')&&!(capability.fallingWords&&cognitiveFamily==='falling')&&!(capability.speed.words&&cognitiveFamily==='words'))cognitiveFamily='';
     const familyModes=$('#cognitiveFamilyModes');
     familyModes.replaceChildren();
     if(cognitiveBank.length&&!isLang&&!isReading){
@@ -1326,17 +1332,17 @@
     }
     familyModes.classList.toggle('hidden',!familyModes.children.length);
     if(!['attention','memory','executive'].includes(subject))executedOnly=false;
-    $('#executedMode').classList.toggle('hidden',!capability.executed);
-    $('#executedMode').textContent=subject==='attention'?'Búsqueda y secuencias':subject==='memory'?'Recuerdo activo':'Reglas y planificación';
-    $('#executedMode').setAttribute('aria-pressed',String(executedOnly));
+    $('#executedMode').classList.toggle('hidden',!capability.executed||subject==='executive');
+    $('#executedMode').textContent=subject==='attention'?'Búsqueda y secuencias':subject==='memory'?'Recuerdo activo':'Planificación';
+    $('#executedMode').setAttribute('aria-pressed',String(executedOnly&&!executedFamily));
     $('#documentModeSwitch').classList.toggle('hidden',!['attention','executive'].includes(subject)||isReading);
     $('#documentModeSwitch [data-documents="true"]').classList.toggle('hidden',!documentSupport||isReading);
     $('#documentModeSwitch [data-documents="false"]').classList.toggle('hidden',!['attention','executive'].includes(subject)||isReading);
-    $('#documentModeSwitch [data-documents=false]').textContent=subject==='executive'?'Planifica y decide':'Busca y compara';
+    $('#documentModeSwitch [data-documents=false]').textContent=subject==='executive'?'Planificación':'Busca y compara';
     $('#documentModeSwitch [data-documents=true]').textContent=subject==='executive'?'Resuelve con documentos':'Explora documentos';
     $('#photoModeSwitch [data-photos=false]').textContent='Recuerda imágenes y secuencias';
     $('#documentModeHint').classList.add('hidden');
-    $$('#documentModeSwitch [data-documents]').forEach(b=>b.setAttribute('aria-pressed',String(!cognitiveOnly&&!executedOnly&&!interactionOnly&&!photoOnly&&(b.dataset.documents==='true')===documentOnly)));
+    $$('#documentModeSwitch [data-documents]').forEach(b=>b.setAttribute('aria-pressed',String(!cognitiveOnly&&!interactionOnly&&!photoOnly&&(executedOnly?(b.dataset.documents==='false'&&['compare','plan'].includes(executedFamily)):(b.dataset.documents==='true')===documentOnly))));
     $('#attentionPhotos').setAttribute('aria-pressed',String(photoOnly&&subject==='attention'));
     const digitalMode=$('#digitalModeButton');
     digitalMode.classList.toggle('hidden',subject!=='communication');
@@ -1365,9 +1371,19 @@
     if(!button)return;
     cognitiveOnly=false;executedOnly=false;memoryAudioOnly=false;photoOnly=button.id==='attentionPhotos';
     interactionOnly=false;documentOnly=!photoOnly&&button.dataset.documents==='true';
+    if(!photoOnly&&!documentOnly){executedOnly=true;executedFamily=subject==='attention'?'compare':'plan';}
     setupExercise();
   });
   $('#interactionModeBtn').onclick=()=>{interactionKind='room';interactionOnly=true;cognitiveOnly=false;executedOnly=false;photoOnly=false;documentOnly=false;memoryAudioOnly=false;setupExercise();};
+  $('#miraWait').onclick=()=>{
+    cognitiveOnly=true;cognitiveFamily='wait';executedOnly=false;interactionOnly=false;photoOnly=false;documentOnly=false;
+    setupExercise();
+  };
+  $('#miraModeButton').onclick=()=>{
+    miraOpen=!miraOpen;
+    $('#miraChoices').classList.toggle('hidden',!miraOpen);
+    $('#miraModeButton').setAttribute('aria-expanded',String(miraOpen));
+  };
   $('#interactionKindSwitch').addEventListener('click',event=>{
     const button=event.target.closest('[data-interaction-kind]');
     if(!button)return;
@@ -1381,7 +1397,7 @@
   });
   $('#cognitiveMode').onclick=()=>{cognitiveOnly=true;cognitiveFamily='';executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;setupExercise();};
   $('#fallingWordsMode').onclick=()=>{
-    mode='vocabulary';cognitiveOnly=true;cognitiveFamily='falling';
+    mode='vocabulary';cognitiveOnly=true;cognitiveFamily='falling';roomSpeedOnly=false;speedUnpairedOnly=false;
     executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;
     setupExercise();
   };
@@ -1400,6 +1416,7 @@
         .filter(kind=>kind!=='guidedWait'&&kind!=='rules')
         .map(family=>({domain,family}));
     });
+    if(domains.includes('executive'))options.push({domain:'executive',family:'executed:plan'});
     const sequence=[...new Map(shuffle(options).map(option=>[option.family,option])).values()];
     guidedSession={plan:sequence.map(x=>x.domain),randomFamilies:sequence.map(x=>x.family),index:0};
     subject=sequence[0].domain;
@@ -1407,7 +1424,7 @@
     setupExercise();
   }
   $('#cognitiveFamilyModes').addEventListener('click',event=>{const button=event.target.closest('[data-cognitive-family]');if(!button)return;if(!button.dataset.cognitiveFamily){startRandomSession();return;}if(guidedSession?.randomFamilies){guidedSession=null;hideGuidedBar();}cognitiveFamily=button.dataset.cognitiveFamily;cognitiveOnly=true;executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;setupExercise();});
-  $('#executedMode').onclick=()=>{cognitiveOnly=false;executedOnly=true;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;setupExercise();};
+  $('#executedMode').onclick=()=>{cognitiveOnly=false;executedOnly=true;executedFamily='';photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;setupExercise();};
   function completeEarlyWorksheet(response,payload,targetProfile,locale){
     if(!Array.isArray(response?.items))throw new Error('No se recibieron actividades para esta ficha.');
     const selection=window.WorksheetSelection,models=window.WorksheetCatalog;
@@ -1479,9 +1496,13 @@
     return selected;
   }
   async function requestOne(kind, domain = subject, extra = {}) {
+    const comparison=kind==='exercise'&&executedOnly&&executedFamily==='compare';
+    const formats=window.ExecutedTasks.comparisonFormats;
+    const startIndex=comparisonIndex;
+    const comparisonFormat=comparison?formats[startIndex%formats.length]:null;
     const res = await requestForProfile({
       ...(kind==='exercise'&&cognitiveOnly?{cognitive_only:true,cognitive_family:cognitiveFamily||null}:{}),
-      ...(kind==='exercise'&&executedOnly?{executed_only:true}:{}),
+      ...(kind==='exercise'&&executedOnly?{executed_only:true,...(executedFamily?{executed_family:executedFamily}:{}),...(comparisonFormat?{comparison_format:comparisonFormat}:{})}:{}),
       ...(kind==='exercise'&&interactionOnly?{interaction_only:true,interaction_kind:interactionKind}:{}),
       ...(kind==='exercise'&&['attention','executive'].includes(domain)&&window.DocumentLibrary?.supports(window.AgeStages.route(profile),domain)?{documents_only:documentOnly}:{}),
       kind,
@@ -1501,6 +1522,7 @@
       $('#dailyUsageExplanation').textContent=`Tu cuota es de ${res.usage.limit} ${kind==='worksheet'?'fichas':kind==='game'?'juegos':'ejercicios'} al día. El contador registra contenido entregado, aunque no se complete. Se comparte entre perfiles, áreas y variantes de la cuenta para ese tipo de contenido.`;
     }
     const item=res?.items?.[0]||null;
+    if(comparison&&comparisonIndex===startIndex&&item?.execution?.format===comparisonFormat)comparisonIndex++;
     if(kind==='exercise'&&domain==='memory'&&memoryAudioOnly&&item?.audioMemory!==true){
       throw new Error('El ejercicio recibido no corresponde a memoria auditiva. Vuelve a cargarlo o elige otra modalidad.');
     }

@@ -19,7 +19,7 @@
         <label for="fallingInput">Escribe la palabra</label>
         <input id="fallingInput" type="text" maxlength="40" autocomplete="off" spellcheck="false" autocapitalize="off" aria-describedby="fallingNote" required>
         <button class="primary-btn" type="submit">Confirmar</button>
-        <p id="fallingNote">Los tiempos incluyen la lectura y el uso del dispositivo.</p>
+        <p id="fallingNote">Los tiempos describen esta práctica de lectura y mecanografía en el dispositivo.</p>
       </form>`;
     const lane=visual.querySelector('.falling-lane'),target=visual.querySelector('.falling-target');
     const progress=visual.querySelector('progress'),status=visual.querySelector('[role="status"]');

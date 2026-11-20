@@ -52,7 +52,8 @@ try:
   page.locator('#exerciseNext').click();set_level(3);page.wait_for_function('()=>__current?.domain==="attention"&&__current?.level===3&&__current?.type==="photoDifference"')
   assert page.locator('#exercise').evaluate("e=>e.classList.contains('visual-only-differences')")
   assert not page.locator('#exerciseOptions .multi-select-grid').is_visible()
-  assert 'pulsa directamente' in page.locator('.photo-mark-help').inner_text()
+  assert page.locator('#exercisePrompt').inner_text() == 'Marca 3 diferencias.'
+  assert page.locator('.photo-mark-help').count() == 0
   task3=page.evaluate('__current');assert page.locator('.photo-hit').count()==len(task3['opts'])
   for value in task3['answers']:page.get_by_role('button',name='Señalar: '+value,exact=True).click()
   page.locator('#multiCheck').click();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')

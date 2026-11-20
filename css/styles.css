@@ -3342,3 +3342,85 @@ body {
 .digital-search dl > div { border: 0; border-bottom: 1px solid #c6cede; }
 .digital-search dt { color: #173e85; }
 .digital-settings dl > div { border-inline-start-color: #745586; }
+
+.mira-choices { display:flex; flex-basis:100%; flex-wrap:wrap; gap:.5rem; padding:.55rem; border-inline-start:3px solid var(--accent,#5754c8); }
+.mira-choices.hidden { display:none; }
+.plan-available,.plan-order-controls { display:flex; flex-wrap:wrap; gap:.45rem; }
+.plan-available { margin-block:.5rem 1rem; }
+.plan-selected { display:grid; gap:.45rem; padding-inline-start:1.5rem; }
+.plan-selected li { padding:.5rem; border:1px solid var(--line,#cbd5e1); border-radius:.6rem; }
+.plan-order-controls { margin-block-start:.4rem; }
+.plan-available button,.plan-order-controls button { min-block-size:44px; }
+.word-fit-answer { inline-size:100%; }
+.word-choice-panel {
+  inline-size:min(100%, 40rem);
+  min-inline-size:0;
+  box-sizing:border-box;
+  border:1px solid var(--line,#c9cfdd);
+  border-radius:.9rem;
+  padding:.85rem;
+  background:var(--surface,#f5f7ff);
+}
+.word-choice-panel legend { padding-inline:.45rem; font-weight:750; }
+.word-choice-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,8rem),1fr)); gap:.5rem; }
+.word-choice-grid .cognitive-word-choice { border:1px solid var(--line,#c9cfdd); border-radius:.65rem; cursor:pointer; overflow-wrap:anywhere; }
+.word-choice-grid .cognitive-word-choice:has(:checked) { outline:2px solid var(--accent,#5754c8); outline-offset:-2px; font-weight:700; }
+.word-choice-grid .cognitive-word-choice:focus-within { box-shadow:0 0 0 3px var(--accent,#5754c8); }
+
+#paperConfigurator { --worksheet-border:var(--line,#c9cfdd); }
+#paperConfigurator .worksheet-controls { padding:.85rem; border:1px solid var(--worksheet-border); border-radius:.85rem; }
+#paperConfigurator h4 { margin:0 0 .5rem; }
+#paperConfigurator select,#paperConfigurator input { max-inline-size:100%; }
+.worksheet-composition { align-self:start; padding:1rem; border:1px solid var(--worksheet-border); border-block-start:4px solid var(--accent,#5754c8); border-radius:.85rem; }
+.worksheet-total { font-weight:750; }
+#hOrder li { padding:.4rem .5rem; border-block-end:1px solid var(--worksheet-border); overflow-wrap:anywhere; }
+#hGenerate { inline-size:100%; margin-block:.4rem; }
+.worksheet-family-group { overflow:hidden; padding:0; }
+.worksheet-family-group summary { padding:.8rem; }
+.worksheet-family-group[open] summary { border-block-end:1px solid var(--worksheet-border); }
+.worksheet-family-row { grid-template-columns:minmax(0,1fr) max-content; padding:.65rem .8rem; }
+.worksheet-family-row.is-selected { border-inline-start:4px solid var(--accent,#5754c8); }
+.worksheet-quantity { display:grid; grid-template-columns:2.75rem 3rem 2.75rem; align-items:center; gap:.2rem; }
+.worksheet-quantity button { min-block-size:44px; padding:0; }
+.worksheet-quantity input { min-block-size:44px; text-align:center; padding-inline:.15rem; }
+.worksheet-favorite-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; }
+@media(max-width:760px) {
+  .worksheet-favorite-grid { grid-template-columns:minmax(0,1fr); gap:.15rem; }
+}
+@media(max-width:460px) {
+  .worksheet-family-row { grid-template-columns:minmax(0,1fr); row-gap:.45rem; }
+  .worksheet-quantity { justify-self:start; }
+}
+
+.word-choice-grid .cognitive-word-choice input {
+  flex:0 0 auto;
+  inline-size:1.15rem;
+  min-inline-size:1.15rem;
+  block-size:1.15rem;
+  padding:0;
+  margin:0;
+  accent-color:var(--accent,#5754c8);
+}
+.word-choice-grid .cognitive-word-choice span { flex:1; min-inline-size:0; }
+#paperConfigurator .worksheet-order-controls .mini-btn,
+#paperConfigurator .worksheet-quantity button {
+  min-block-size:44px;
+  color:var(--text,#172339);
+  background:var(--surface,#f5f7ff);
+  border:1px solid var(--worksheet-border);
+  border-radius:.55rem;
+}
+#paperConfigurator .worksheet-order-controls .mini-btn:disabled { opacity:.58; }
+#paperConfigurator .worksheet-config-grid select,
+#paperConfigurator .worksheet-favorites select,
+#paperConfigurator .worksheet-favorites input,
+#paperConfigurator .worksheet-quantity input {
+  min-block-size:44px;
+  border:1px solid var(--worksheet-border);
+  border-radius:.55rem;
+  color:var(--text,#172339);
+  background:var(--surface,#f5f7ff);
+}
+#paperConfigurator .worksheet-config-grid select,
+#paperConfigurator .worksheet-favorites select,
+#paperConfigurator .worksheet-favorites input { padding-inline:.6rem; }

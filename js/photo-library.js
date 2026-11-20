@@ -315,16 +315,16 @@ function templates(age,domain,level=1){
   out.push({...meta,id,contentKey:id,mechanic:'memory_photo',memoryMaterialKey:'photo:'+sceneId,type:'memoryReveal',responseType:'choice',topic:'Memoria · escena cotidiana',q:'Observa la imagen. Después desaparecerá y responderás una pregunta.',memoryQuestion:f.q,stimulus:[{type:'photo',photoId:sceneId}],memoryContent:[{detail:scene.title}],a:f.a,opts:f.opts.slice(0,level===1?3:4),why:f.detail,revealMs:[10000,12000,9000][level-1],photoTask:{kind:'recall',sceneId,index,...(f.evidence?{evidence:f.evidence}:{})}});
  });
  else for(const [pairId,pair] of Object.entries(pairs).filter(([id])=>['street','park','city','factory','museumComparison'].includes(id))){
-  for(const variant of level===1&&pair.varied?[0,1,2]:[0]){
-  const id=`photo-v1:${age}:${domain}:${level}:${pairId}${variant?':'+variant:''}`;
-  const changed=pair.changes.map(([object])=>object),answers=level===1?[changed[variant]]:changed;
-  const opts=level===1?[answers[0],...changed.filter(object=>object!==answers[0]).slice(0,1),...pair.unchanged.slice(0,1)]:level===2?[...changed,...pair.unchanged.slice(0,1)]:[...changed,...pair.unchanged];
-  const q=level===1?`Compara A y B. Pulsa el detalle que ha cambiado en ${answers[0].toLowerCase()}.`:level===2?'Compara las escenas y pulsa los tres detalles que han cambiado.':'Mira con cuidado las dos escenas. Pulsa sobre cada detalle que haya cambiado.';
-  out.push({...meta,id,contentKey:id,mechanic:'attention_photo_differences',type:'photoDifference',responseType:'multiple',topic:'Atención · encuentra las diferencias',q,stimulus:[{type:'photoPair',pairId}],answers,opts,why:pair.changes.map(([object,change])=>object+': '+change.toLowerCase()+'.').join(' '),photoTask:{kind:'differences',pairId,...(pair.varied?{variant}:{})}});
-  }
+  const id=`photo-v1:${age}:${domain}:${level}:${pairId}`;
+  const answers=pair.changes.map(([object])=>object);
+  const differenceCount=level===1?1:answers.length;
+  const opts=[...answers,...pair.unchanged.slice(0,level===3?3:1)];
+  const q=differencePrompt(differenceCount);
+  out.push({...meta,id,contentKey:id,mechanic:'attention_photo_differences',type:'photoDifference',responseType:'multiple',topic:'Atención · Encuentra las diferencias',q,stimulus:[{type:'photoPair',pairId}],answers,opts,differenceCount,why:pair.changes.map(([object,change])=>object+': '+change.toLowerCase()+'.').join(' '),photoTask:{kind:'differences',pairId}});
  }
  bankCache.set(key,out);return out;
 }
+function differencePrompt(count){return 'Marca '+count+(count===1?' diferencia.':' diferencias.');}
 function pool(age,domain,level=1){return structuredClone(templates(age,domain,level));}
 function validate(item){
  const task=item.photoTask,age=item.teenReview?'teen':item.juniorProfile?.route||item.schoolProfile?.route;
@@ -333,10 +333,10 @@ function validate(item){
  if(!expected)throw new Error('La pregunta no pertenece a la escena revisada.');
  const locale=root.LocaleContent||(typeof require==='function'&&require('./locale-content'));
  const adapted=locale.localizeItem(expected,item.localization?.locale||'es_intl',item.domain);
- for(const field of ['type','responseType','q','memoryQuestion','a','photoTask','stimulus','memoryContent','why'])if(JSON.stringify(item[field])!==JSON.stringify(adapted[field]))throw new Error('La actividad no coincide con la fotografía y la pregunta revisadas: '+field);
+ for(const field of ['type','responseType','q','memoryQuestion','a','differenceCount','photoTask','stimulus','memoryContent','why'])if(JSON.stringify(item[field])!==JSON.stringify(adapted[field]))throw new Error('La actividad no coincide con la fotografía y la pregunta revisadas: '+field);
  for(const field of ['opts','answers'])if(JSON.stringify([...(item[field]||[])].sort())!==JSON.stringify([...(adapted[field]||[])].sort()))throw new Error('Las respuestas no corresponden a los datos visibles.');
  return true;
 }
 function generate(age,domain,level){const bank=templates(age,domain,level);return structuredClone(bank[Math.floor(Math.random()*bank.length)]||null);}
-const api={scenes,pairs,supports,pool,validate,generate};root.PhotoLibrary=api;if(typeof module!=='undefined')module.exports=api;
+const api={scenes,pairs,supports,pool,validate,generate,differencePrompt};root.PhotoLibrary=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);

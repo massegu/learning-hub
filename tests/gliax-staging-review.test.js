@@ -66,6 +66,11 @@ test('only allowlisted QA users in the exact Staging project benefit from bounde
     const r=await service({qa:qaId,used:30,...setup}).request({domain:'communication'});
     assert.equal(r.status,403);
   }
+  const forged=await service({url:staging,used:30}).request({
+    domain:'communication',qa:true,qa_user_id:qaId,limit:1200,subscription_status:'complimentary'
+  });
+  assert.equal(forged.status,403);
+  assert.equal(forged.data.usage.limit,30);
   const h=service({url:staging,qa:qaId,used:30});
   for(const locale of Object.keys(locales.labels)){
     h.account.content_locale=locale;

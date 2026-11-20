@@ -27,7 +27,7 @@ try:
     assert page.locator('#exerciseModalities .activity-toolbar>.mode-switch:not(.hidden)').evaluate_all('(els)=>els.every(e=>getComputedStyle(e).display==="contents")'),(age,domain,'nested visual groups')
     for kind in ['symbols','movement','auditory']:
      button=page.locator(f'[data-interaction-kind="{kind}"]')
-     assert button.is_visible()==(kind in capability['interactionKinds']),(age,domain,kind,capability)
+     assert button.is_visible()==(kind=='auditory' and kind in capability['interactionKinds']),(age,domain,kind,capability)
     assert page.locator('#interactionModeBtn').is_visible()==capability['roomSearch'],(age,domain)
     assert page.locator('#documentModeSwitch [data-documents="true"]').is_visible()==(domain in ['attention','executive'] and capability['documents']),(age,domain)
     if domain=='attention':
@@ -39,15 +39,16 @@ try:
      assert page.locator('#memoryAudioModeButton').is_visible()==capability['memoryAudio'],(age,domain,'audio')
      assert page.locator('#photoModeSwitch [data-photos=true]').is_visible()==capability['photos'],(age,domain,'photos')
     if domain=='executive':
-     assert page.locator('#executedMode').is_visible()==capability['executed'],(age,domain,'executed')
-     expected_families=set(capability['cognitiveKinds'])|{''}
+     assert page.locator('#executedMode').is_hidden(),(age,domain,'planificación dedicada')
+     assert page.locator('#miraModeButton').is_visible()
+     expected_families=(set(capability['cognitiveKinds'])-{'guidedWait'})|{''}
      assert {x.get_attribute('data-cognitive-family') for x in page.locator('#cognitiveFamilyModes button:visible').all()}==expected_families, (age,domain,capability)
     if domain=='speedReasoning':
      assert page.locator('[data-speed-mode=screen]').is_visible()==capability['speed']['screen']
      assert page.locator('[data-speed-mode=room]').is_visible()==capability['speed']['room']
      assert page.locator('#speedUnpairedMode').is_visible()==capability['speed']['unpaired']
     buttons=page.locator('#exerciseModalities .activity-toolbar button:visible').all()
-    assert all(button.get_attribute('aria-pressed') in ['true','false'] for button in buttons),(age,domain)
+    assert all(button.get_attribute('aria-pressed') in ['true','false'] or button.get_attribute('aria-expanded') in ['true','false'] for button in buttons),(age,domain)
     assert all(button.evaluate('(e)=>e.getBoundingClientRect().height>=44') for button in buttons),(age,domain,'touch target')
     if age=='primary' and domain=='attention':
      for width,name in [(1440,'desktop'),(768,None),(390,'mobile')]:
@@ -68,8 +69,10 @@ try:
     assert page.locator('#wordFitMode').is_visible()==capability['wordFit'],(age,language_area,'word-fit')
     for mode in visible_modes:
      page.evaluate('window.__current=null');before=page.evaluate('__requests.length');page.locator(f'#languageModeSwitch [data-mode="{mode}"]').click()
-     page.wait_for_function('(n)=>__requests.length>n&&__current',arg=before);request=page.evaluate('__requests.at(-1)')
      expected_subdomain=mode if language_area==language_domain else ('writing' if mode=='writing' else 'reading')
+     page.wait_for_function('({domain,mode})=>__current?.domain===domain && __requests.at(-1)?.subdomain===mode',
+                            arg={'domain':language_area,'mode':expected_subdomain})
+     request=page.evaluate('__requests.at(-1)')
      assert request['domain']==language_area and request.get('subdomain')==expected_subdomain,(age,language_area,mode,request)
     if capability['wordFit']:
      page.evaluate('window.__current=null');before=page.evaluate('__requests.length');page.locator('#wordFitMode').click()
@@ -81,17 +84,16 @@ try:
   for age in ['early','junior','primary','middle','teen']:
    route=age
    # Plain activities and every separate family are selectable in all five routes.
-   add(age,'attention','#documentModeSwitch [data-documents=false]',{'documents_only':False} if route!='early' else {})
+   add(age,'attention','#documentModeSwitch [data-documents=false]',{'executed_only':True,'executed_family':'compare'})
    add(age,'attention','[data-cognitive-family=contradiction]',{'cognitive_only':True,'cognitive_family':'contradiction'})
    add(age,'attention','#executedMode',{'executed_only':True})
    add(age,'memory','#photoModeSwitch [data-photos=false]',{'photos_only':False} if route!='early' else {})
    add(age,'memory','#memoryAudioModeButton',{'memory_audio_only':True})
    add(age,'memory','#executedMode',{'executed_only':True})
-   add(age,'executive','#documentModeSwitch [data-documents=false]',{'documents_only':False} if route!='early' else {})
-   add(age,'executive','[data-cognitive-family=""]',{'cognitive_only':True,'cognitive_family':None})
+   add(age,'executive','#documentModeSwitch [data-documents=false]',{'executed_only':True,'executed_family':'plan'})
    for family in ['rules','deduction','change','information']:
     add(age,'executive',f'[data-cognitive-family={family}]',{'cognitive_only':True,'cognitive_family':family})
-   add(age,'executive','#executedMode',{'executed_only':True})
+   add(age,'executive','#miraWait',{'cognitive_only':True,'cognitive_family':'wait'})
    add(age,'speedReasoning','[data-speed-mode=screen]',{'room_speed_only':False})
    add(age,'speedReasoning','#speedUnpairedMode',{'speed_mechanic':'unpaired'})
    if age!='early':
@@ -103,7 +105,10 @@ try:
     add(age,'memory','#photoModeSwitch [data-photos=true]',{'photos_only':True})
     add(age,'executive','#documentModeSwitch [data-documents=true]',{'documents_only':True})
   for age,domain,selector,expected in checks:
-   workspace(page).locator('#profileSelect').select_option(age);area(page,domain).click();button=page.locator(selector);assert button.is_visible(),(age,domain,selector)
+   workspace(page).locator('#profileSelect').select_option(age);area(page,domain).click();button=page.locator(selector)
+   if selector in ['#miraWait','[data-interaction-kind=symbols]','[data-interaction-kind=movement]'] and not page.locator('#miraChoices').is_visible():
+    page.locator('#miraModeButton').click()
+   assert button.is_visible(),(age,domain,selector)
    page.evaluate('window.__current=null');before=page.evaluate('__requests.length');button.click()
    page.wait_for_function('(n)=>__requests.length>n&&(__current||!document.querySelector("#retryContentLoad").classList.contains("hidden"))',arg=before)
    item=page.evaluate('__current');assert item,(age,domain,selector,page.locator('#exercisePrompt').inner_text())
@@ -116,6 +121,7 @@ try:
   # issue a movement, auditory, or symbols request.
   for age in ['early','junior','primary','middle','teen']:
    workspace(page).locator('#profileSelect').select_option(age);area(page,'executive').click()
+   if not page.locator('#miraChoices').is_visible():page.locator('#miraModeButton').click()
    for kind in ['movement','auditory']:
     button=page.locator(f'[data-interaction-kind={kind}]');available=age!='early'
     assert button.is_visible()==available,(age,'executive interaction availability',kind)

@@ -2457,7 +2457,7 @@ function worksheetInventory(age:string,level:number,locale:string){
       items.push(...api.CognitiveFamilies.pool(age,domain,level,'words',3),...api.CognitiveFamilies.pool(age,domain,level,'falling'),...curriculum.vocabulary(age,domain,level));
     }
     if(domain==='attention'||domain==='executive')items.push(...api.CognitiveFamilies.pool(age,domain,level));
-    if(domain==='speedReasoning')items.push(...api.CognitiveFamilies.pool(age,domain,level,'words',3),...curriculum.roomSpeedPool(age,level));
+    if(domain==='speedReasoning')items.push(...api.CognitiveFamilies.pool(age,domain,level,'words',3),...api.CognitiveFamilies.pool(age,domain,level,'falling'),...curriculum.roomSpeedPool(age,level));
     for(const original of items){
       if(!original||original.domain&&original.domain!==domain)continue;
       const item=original.domain?original:{...original,domain};
@@ -2609,7 +2609,7 @@ Deno.serve(async (req:Request)=>{
     return new Response(JSON.stringify({error:"Habilidad de Lenguaje no válida."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
   // Cached clients do not yet know these document IDs and photographic sources.
   const compatibleSource=(item:any)=>(Number(body.client_revision||1)>=15||!String(item?.contentKey||'').startsWith('communication-v2:'))&&(Number(body.client_revision||1)>=8||!(item?.stimulus||[]).some((block:any)=>block.type==='document'&&String(block.documentId).startsWith('everyday-')||block.type==='photo'&&['library2026','autumnPark2026','museumVisit','museumComparison','peacefulMarch','footballMatch','railwayRecreation','peopleMarket'].includes(block.photoId)||block.type==='photoPair'&&block.pairId==='museumComparison'));
-  if(body.cognitive_family==='falling'&&Number(body.client_revision||1)<14)return new Response(JSON.stringify({error:'Actualiza la página para abrir Palabras que caen.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.cognitive_family==='falling'&&Number(body.client_revision||1)<14)return new Response(JSON.stringify({error:'Actualiza la página para abrir Palabras en caída.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.domain==='speedReasoning'&&body.cognitive_family==='words'&&Number(body.client_revision||1)<14)return new Response(JSON.stringify({error:'Actualiza la página para abrir esta práctica de vocabulario.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   const paperRevision=kind==='worksheet'&&Number(body.client_revision||1)>=15;
   const cognitive=(globalThis as any).CognitiveFamilies;
@@ -2624,6 +2624,12 @@ Deno.serve(async (req:Request)=>{
   if(body.cognitive_only&&Number(body.client_revision||1)<11)return new Response(JSON.stringify({error:'Actualiza la página para abrir estas familias.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.executed_only!==undefined&&(typeof body.executed_only!=='boolean'||body.executed_only&&(kind!=='exercise'||!['attention','memory','executive'].includes(body.domain)||body.interaction_only||body.photos_only||body.documents_only||body.room_speed_only)))return new Response(JSON.stringify({error:'Modalidad interactiva no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.executed_only&&Number(body.client_revision||1)<11)return new Response(JSON.stringify({error:'Actualiza la página para abrir los retos interactivos.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  const executed=(globalThis as any).ExecutedTasks;
+  if(body.executed_family!==undefined&&(!body.executed_only||body.client_revision!==17||
+       !(body.domain==="attention"&&body.executed_family==="compare"||body.domain==="executive"&&body.executed_family==="plan")))
+    return usageReply({error:"Familia interactiva no disponible para esta petición."},400);
+  if(body.comparison_format!==undefined&&(body.executed_family!=="compare"||!executed.comparisonFormats.includes(body.comparison_format)))
+    return usageReply({error:"Formato de comparación no válido."},400);
   const digital=body.digital_only===true;
   if(body.digital_only!==undefined&&(typeof body.digital_only!=="boolean"||
       digital&&(kind!=="exercise"||body.domain!=="communication"||body.client_revision!==17||
@@ -2761,7 +2767,9 @@ Deno.serve(async (req:Request)=>{
       const bank=cognitiveBank.map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
       items=generatedItems(domain,n,recentEntries,()=>null,bank);
     }else if(body.executed_only===true){
-      const bank=(globalThis as any).ExecutedTasks.pool(age,domain,level).map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
+      const bank=executed.pool(age,domain,level,body.executed_family?5:4)
+        .filter((it:any)=>(!body.executed_family||it.execution.kind===body.executed_family)&&(!body.comparison_format||it.execution.format===body.comparison_format))
+        .map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
       items=generatedItems(domain,n,recentEntries,()=>null,bank);
     }else if(body.photos_only===true){
       const bank=(globalThis as any).PhotoLibrary.pool(age,domain,level).filter(compatibleSource).map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);

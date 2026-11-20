@@ -4,7 +4,7 @@ const ages=['early','junior','primary','middle','teen'];
 const definitions={
  rules:{title:'Actúa con reglas 2.0',primaryConstruct:'responseInhibition',secondaryLoads:['workingMemory','cognitiveFlexibility'],functionalPurpose:'Detener una respuesta automática y adaptarse cuando cambian las instrucciones',printable:'interactive-only'},
  wait:{title:'Espera guiada',primaryConstruct:'guidedWaitPractice',secondaryLoads:['externalTimeCue'],functionalPurpose:'Practicar la espera con una señal temporal visible y acompañamiento profesional',printable:'interactive-only'},
- falling:{title:'Palabras que caen',primaryConstruct:'writtenTranscription',secondaryLoads:['visualTracking','typing'],functionalPurpose:'Practicar la transcripción escrita con palabras presentadas en pantalla',printable:'interactive-only'},
+ falling:{title:'Palabras en caída',primaryConstruct:'writtenTranscription',secondaryLoads:['visualTracking','typing'],functionalPurpose:'Practicar la transcripción escrita con palabras presentadas en pantalla',printable:'interactive-only'},
  words:{title:'La palabra que encaja',primaryConstruct:'lexicalSearch',secondaryLoads:['ruleMaintenance','inhibition'],functionalPurpose:'Buscar palabras precisas que cumplan las condiciones de un mensaje',printable:'fully-printable'},
  deduction:{title:'Descubre quién',primaryConstruct:'deductiveReasoning',secondaryLoads:['selectiveAttention','hypothesisUpdating'],functionalPurpose:'Descartar alternativas con pistas antes de tomar una decisión',printable:'fully-printable'},
  change:{title:'Cambio de plan',primaryConstruct:'planning',secondaryLoads:['updating','cognitiveFlexibility'],functionalPurpose:'Reorganizar acciones ante un imprevisto conservando el objetivo',printable:'fully-printable'},
@@ -275,13 +275,13 @@ function falling(age,level,index){
 const builders={rules,wait:waitPractice,words,deduction,change,information,contradiction,falling},cache=new Map();
 function pool(age,domain,level=1,family=null,revision=1){
  if(!ages.includes(age)||![1,2,3].includes(level)||!['executive','language','middleLanguage','teenLanguage','attention','literacy','reading','middleReading','speedReasoning'].includes(domain))return [];
- const allowed=domain==='executive'?Object.keys(definitions).filter(kind=>!['words','contradiction','falling'].includes(kind)):domain.includes('Language')||domain==='language'?(family==='falling'?['falling']:['words']):domain==='speedReasoning'?(family==='words'?['words']:[]):['contradiction'];
+ const allowed=domain==='executive'?Object.keys(definitions).filter(kind=>!['words','contradiction','falling'].includes(kind)):domain.includes('Language')||domain==='language'?(family==='falling'?['falling']:['words']):domain==='speedReasoning'?(family==='words'||family==='falling'?[family]:[]):['contradiction'];
  if(family&&!allowed.includes(family))return [];
  const advancedWords=revision>=2&&Boolean(lexicalContexts[age]);
  const key=[age,domain,level,family||'all',revision].join(':');if(cache.has(key))return structuredClone(cache.get(key));const out=[];
  for(const kind of family?[family]:allowed)for(let i=0;i<(kind==='rules'?6:kind==='wait'?4:kind==='information'?8:kind==='words'&&advancedWords&&revision===3?6:4);i++){
   const d=definitions[kind],advanced=kind==='words'&&advancedWords,b=(advanced?situatedWords:builders[kind])(age,level,i),id=[advanced?(i>=4?'cognitive-v3':'cognitive-v2'):'cognitive-v1',age,domain,level,kind,i].join(':');
-  const speedWords=domain==='speedReasoning',semanticFamily=speedWords?'cognitive.words_selection':'cognitive.'+kind;
+  const speedWords=domain==='speedReasoning'&&kind==='words',semanticFamily=speedWords?'cognitive.words_selection':'cognitive.'+kind;
   out.push({id,contentKey:id,type:'cognitiveTask',mechanic:kind==='wait'?'guided_wait_v1':kind==='rules'?'rule_application_v1':'cognitive_'+kind,domain,level,q:b.q,topic:d.title,stimulus:b.stimulus,sample:b.sample,why:b.why,cognitiveTask:b.task,primaryConstruct:speedWords?'lexicalSelection':d.primaryConstruct,secondaryLoads:d.secondaryLoads,functionalPurpose:speedWords?speedWordPurpose:d.functionalPurpose,semanticFamily,scenarioFamily:b.scenario,qualityDescriptor:{semanticFamily,scenarioFamily:b.scenario},readingDemand:age==='early'?'low':kind==='rules'?'minimal':'medium',visualDemand:kind==='deduction'?'medium':'low',motorDemand:kind==='wait'?'none':kind==='rules'?'timedSelection':kind==='falling'?'textEntry':'selection',printable:d.printable,ageRoute:age,difficultyProfile:{level,...b.difficulty},responseType:'cognitive'});
  }
  cache.set(key,out);return structuredClone(out);

@@ -23,6 +23,9 @@ try:
      area(page, family_domain).click()
      open_level_options();page.locator('#exerciseLevelSelect').select_option(str(level))
      if kind=='words':page.locator('#wordFitMode').click()
+     elif kind=='wait':
+      if not page.locator('#miraWait').is_visible():page.locator('#miraModeButton').click()
+      if page.locator('#miraWait').get_attribute('aria-pressed')!='true':page.locator('#miraWait').click()
      else:page.locator(f'#cognitiveFamilyModes [data-cognitive-family="{kind}"]').click()
      page.wait_for_function('({kind,level})=>window.__current?.type==="cognitiveTask"&&__current.level===level&&(kind==="wait"?__current.cognitiveTask.kind==="guidedWait":__current.cognitiveTask.kind===kind)&&document.querySelector(".cognitive-area")',arg={'kind':kind,'level':level})
      item=page.evaluate('__current');task=item['cognitiveTask'];before=page.evaluate('__saves')

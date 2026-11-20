@@ -82,15 +82,16 @@
       display.replaceChildren(...[...groups].map(([domain,group])=>{
         const panel=element('details',null,{class:'worksheet-family-group'});
         panel.open=group.some(meta=>quantities.get(meta.id)>0);
-        panel.append(element('summary',`${catalog.areas[domain]} · ${group.length} tipologías`));
+        panel.append(element('summary',`${catalog.areas[domain]} · ${group.length} ${group.length===1?'tipología':'tipologías'}`));
         for(const meta of group){
-          const row=element('label',null,{class:'worksheet-family-row'});
+          const row=element('div',null,{class:'worksheet-family-row'});
           const copy=element('span');
           copy.append(element('strong',meta.label),element('small',`${meta.available} distintas · ${meta.orientation.primary==='curricular'?'Aprendizaje curricular':'Entrenamiento cognitivo'}`));
           if(meta.administration)copy.append(element('small',meta.administration));
           const input=element('input',null,{type:'number',min:0,max:Math.min(meta.available,maxPerSheet),step:1,'aria-label':`Cantidad de ${meta.label} · ${catalog.areas[domain]}`});
           input.dataset.family=meta.id;
           input.value=quantities.get(meta.id)||0;
+          row.classList.toggle('is-selected',Number(input.value)>0);
           if(invalidCounts.has(meta.id))input.setCustomValidity('Introduce una cantidad entera a partir de cero.');
           input.oninput=()=>{
             const count=Number(input.value);
@@ -103,10 +104,21 @@
             invalidCounts.delete(meta.id);
             input.setCustomValidity('');
             quantities.set(meta.id,count);
+            row.classList.toggle('is-selected',count>0);
             if(count&&!customOrder.includes(meta.id))customOrder.push(meta.id);
             drawOrder();
           };
-          row.append(copy,input);
+          const quantity=element('div',null,{class:'worksheet-quantity'});
+          const adjust=(step,label)=>{
+            const button=element('button',step<0?'−':'+',{type:'button','aria-label':label+' · '+meta.label});
+            button.onclick=()=>{
+              if(step<0)input.stepDown();else input.stepUp();
+              input.dispatchEvent(new Event('input',{bubbles:true}));
+            };
+            return button;
+          };
+          quantity.append(adjust(-1,'Restar una actividad'),input,adjust(1,'Añadir una actividad'));
+          row.append(copy,quantity);
           panel.append(row);
         }
         return panel;

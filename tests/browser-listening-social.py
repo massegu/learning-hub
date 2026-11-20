@@ -32,14 +32,16 @@ try:
   assert page.locator('[data-interaction-kind=movement]').is_hidden()
   assert page.locator('[data-interaction-kind=auditory]').is_hidden()
   assert page.locator('[data-interaction-kind=symbols]').is_hidden()
+  def open_mira():
+   if not page.locator('#miraChoices').is_visible():page.locator('#miraModeButton').click()
   area(page, 'attention').click();open_options();assert page.locator('#exerciseModalities').is_visible();page.locator('#interactionModeBtn').click();page.wait_for_selector('#roomDescription');assert page.evaluate('__current.interactionTask.kind')=='room'
   area(page, 'executive').click();open_options()
   assert page.locator('#interactionKindSwitch button:visible').all_text_contents()==['Retos con tarjetas','Mira y actúa','Escucha y actúa']
-  page.locator('[data-interaction-kind=movement]').click();page.wait_for_selector('#startInteractive')
+  open_mira();page.locator('[data-interaction-kind=movement]').click();page.wait_for_selector('#startInteractive')
   assert page.evaluate('__current.interactionTask.kind')=='movement'
   workspace(page).locator('#profileSelect').select_option('primary');workspace(page).locator('#navMenu [data-section=home]').click();assert page.locator('[data-school-area=social] .redesign-area-icon svg').count()==1;page.locator('#homeAreaLanding').screenshot(path='/tmp/new-area-icons.png')
   page.clock.install();page.clock.pause_at(page.evaluate('Date.now()+1000'));page.add_style_tag(content='*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}')
-  area(page, 'executive').click();open_options();page.locator('[data-interaction-kind=symbols]').click();page.wait_for_selector('#startInteractive')
+  area(page, 'executive').click();open_options();open_mira();page.locator('[data-interaction-kind=symbols]').click();page.wait_for_selector('#startInteractive')
   page.locator('#exerciseLevelSelect').select_option('3');page.wait_for_function('()=>__current?.interactionTask?.level===3')
   baseline=page.evaluate('(__profiles.find(p=>p.id==="primary").progress.history||[]).length')
   assert page.locator('#interactionKindSwitch button:visible').all_text_contents()==['Retos con tarjetas','Mira y actúa','Escucha y actúa']

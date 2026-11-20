@@ -48,7 +48,7 @@
     summary:['Resumir indicaciones para actuar','Conservar la información que sigue vigente'],
     wait:['Espera guiada','Practicar una espera con apoyo temporal'],
     rules:['Actúa con reglas','Mantener, cambiar o inhibir respuestas en pantalla'],
-    falling:['Palabras que caen','Transcribir palabras durante una presentación dinámica'],
+    falling:['Palabras en caída','Transcribir palabras durante una presentación dinámica'],
     audio:['Memoria y señales auditivas','Responder a estímulos auditivos'],
     recall:['Recuerdo con ocultación','Recuperar información después de retirar el estímulo'],
     timing:['Retos con cronómetro','Realizar una tarea dentro de un diseño de medición temporal'],

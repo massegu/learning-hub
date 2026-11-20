@@ -49,7 +49,13 @@ try:
             return page.evaluate('__ac')
 
         def mode(name):
-            page.locator(f'#cognitiveFamilyModes [data-cognitive-family="{name}"]').click()
+            if name == 'wait':
+                if not page.locator('#miraWait').is_visible():
+                    page.locator('#miraModeButton').click()
+                if page.locator('#miraWait').get_attribute('aria-pressed') != 'true':
+                    page.locator('#miraWait').click()
+            else:
+                page.locator(f'#cognitiveFamilyModes [data-cognitive-family="{name}"]').click()
 
         def start():
             page.locator('#exerciseOptions').get_by_role('button', name='Empezar', exact=True).click()

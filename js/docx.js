@@ -282,7 +282,8 @@
         const position=options.indexOf(String(part));
         return position<0?String(part):String.fromCharCode(65+position)+'. '+part;
       });
-      return {answer:answer.join(model.responseType==='order'?' → ':' · '),note:item.type==='memoryReveal'?'Administración acompañada. Cubre el material antes de pedir la respuesta.':item.why};
+      const prefix=item.type==='photoDifference'&&item.differenceCount<value.length?'Vale cualquiera de estas diferencias: ':'';
+      return {answer:prefix+answer.join(model.responseType==='order'?' → ':' · '),note:item.type==='memoryReveal'?'Administración acompañada. Cubre el material antes de pedir la respuesta.':item.why};
     }
     if(item.sample)return {answer:'Ejemplo de respuesta · '+item.sample,note:item.writingRubric?.join(' · ')};
     return {answer:'Actividad de respuesta abierta. Revisar con los criterios de la ficha.'};

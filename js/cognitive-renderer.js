@@ -39,16 +39,16 @@ function mount(item,{visual,area,onFinish}){
   list.append(...clauses.map(clause=>n('li',clause)));
   if(t.cue)visual.append(n('h4',t.context),n('p',t.cue,'cognitive-conditions'));
   else visual.append(list);
-  if(item.domain==='speedReasoning')visual.append(n('p',t.cue?'Identifica lo que se pide y descarta palabras que no cumplan todas las condiciones. La respuesta no se cronometra.':'Comprueba la categoría primero y después las condiciones de las letras. La respuesta no se cronometra.'));
+  if(item.domain==='speedReasoning')visual.append(n('p','La respuesta no se cronometra.'));
   const selection=root.CognitiveFamilies.wordResponseMode(item)==='selection';
   const form=n('form',undefined,'word-fit-answer'),submit=b(selection?'Comprobar selección':'Comprobar palabra');
   submit.type='submit';
   if(selection){
-   status.textContent='Marca todas las palabras que cumplan todas las condiciones.';
-   const group=n('fieldset'),legend=n('legend','Palabras disponibles');group.append(legend);
+   status.textContent='';
+   const group=n('fieldset',undefined,'word-choice-panel'),legend=n('legend','Palabras disponibles'),grid=n('div',undefined,'word-choice-grid');group.append(legend,grid);
    for(const word of root.CognitiveFamilies.wordChoices(item)){
     const label=n('label',undefined,'cognitive-word-choice'),input=n('input');
-    input.type='checkbox';input.value=word;label.append(input,n('span',word));group.append(label);
+    input.type='checkbox';input.value=word;label.append(input,n('span',word));grid.append(label);
    }
    form.append(group,submit);
    form.onsubmit=event=>{
@@ -58,7 +58,7 @@ function mount(item,{visual,area,onFinish}){
     finish(selected,wordMetrics('selection'));
    };
   }else{
-   status.textContent='Escribe una palabra que cumpla todas las condiciones.';
+   status.textContent='';
    const label=n('label','Tu palabra'),input=n('input');
    input.type='text';input.autocomplete='off';input.spellcheck=false;input.maxLength=45;input.required=true;input.id='cognitiveWord';label.htmlFor=input.id;
    form.append(label,input,submit);
