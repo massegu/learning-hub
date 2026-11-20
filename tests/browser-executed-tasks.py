@@ -19,7 +19,7 @@ try:
     area(page, domain).click();open_level_options();page.locator('#exerciseLevelSelect').select_option('2')
     for kind in kinds:
      page.evaluate('''({age,domain,kind})=>{window.__task=ExecutedTasks.pool(age,domain,2).find(x=>x.execution.kind===kind);window.__executionRequest=null;}''',{'age':age,'domain':domain,'kind':kind})
-     page.locator('#documentModeSwitch [data-documents=false]' if domain=='executive' else '#executedMode').click();page.wait_for_function('()=>window.__executionRequest?.executed_only&&document.querySelector(".executed-area")');assert page.evaluate('__executionRequest.client_revision')==17
+     page.locator('#documentModeSwitch [data-documents=false]' if domain=='executive' else '#executedMode').click();page.wait_for_function('()=>window.__executionRequest?.executed_only&&document.querySelector(".executed-area")');assert page.evaluate('__executionRequest.client_revision')==18
      completed_before=page.evaluate('__completedCalls');
      if kind=='switch':assert page.locator('.executed-rule-intro').is_visible() and 'LIBRO → A' in page.locator('.executed-rule-intro').inner_text()
      page.locator('.executed-area').get_by_role('button',name='Empezar',exact=True).press('Enter')
@@ -68,7 +68,9 @@ try:
       assert page.locator('.memory-solution').is_visible()
       if age=='teen' and kind=='update':page.locator('#exercise').screenshot(path=str(Path(tmp)/'memory-correct-sequence.png'))
      assert page.evaluate('__completedCalls')==completed_before+1
-     if kind not in ['switch','inhibit']:
+     if kind in ['serial','spatial','update']:
+      assert page.locator('.executed-area button').count()==0
+     elif kind not in ['switch','inhibit']:
       page.locator('.executed-area').get_by_role('button',name='Comprobar',exact=True).evaluate('(b)=>b.onclick()');assert page.evaluate('__completedCalls')==completed_before+1
      page.set_viewport_size({'width':390,'height':844});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),(age,kind)
      if age=='teen' and kind=='compare':page.locator('#exercise').screenshot(path=str(Path(tmp)/'phase2-compare-mobile.png'))

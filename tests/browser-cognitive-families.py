@@ -24,13 +24,12 @@ try:
      open_level_options();page.locator('#exerciseLevelSelect').select_option(str(level))
      if kind=='words':page.locator('#wordFitMode').click()
      elif kind=='wait':
-      if not page.locator('#miraWait').is_visible():page.locator('#miraModeButton').click()
-      if page.locator('#miraWait').get_attribute('aria-pressed')!='true':page.locator('#miraWait').click()
+      page.locator('#miraModeButton').click()
      else:page.locator(f'#cognitiveFamilyModes [data-cognitive-family="{kind}"]').click()
      page.wait_for_function('({kind,level})=>window.__current?.type==="cognitiveTask"&&__current.level===level&&(kind==="wait"?__current.cognitiveTask.kind==="guidedWait":__current.cognitiveTask.kind===kind)&&document.querySelector(".cognitive-area")',arg={'kind':kind,'level':level})
      item=page.evaluate('__current');task=item['cognitiveTask'];before=page.evaluate('__saves')
      if kind=='rules' and level==1 and age!='early':assert 'Adivina la regla' in page.locator('#exercisePrompt').inner_text()
-     assert page.evaluate('__lastPayload.client_revision')==17
+     assert page.evaluate('__lastPayload.client_revision')==18
      assert page.locator('#printCognitive').count()==(0 if kind in ['rules','wait'] else 1)
      page.locator('.cognitive-area').get_by_role('button',name='Empezar espera' if kind=='wait' else 'Empezar',exact=True).press('Enter')
      if kind=='wait':

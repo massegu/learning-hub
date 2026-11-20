@@ -86,10 +86,10 @@ try:
     page.locator('#sessionEvolution .progress-chart-data > summary').click()
     row=page.locator('#sessionEvolution .progress-chart-data table tbody tr').first.inner_text()
     assert '1' in row and '100%' in row,row
-    attention=page.locator('#progressCards .progress-subject').filter(has_text='Atención')
-    accuracy_label=attention.locator('.accuracy-ring span')
-    assert accuracy_label.inner_text()=='aciertos'
-    assert accuracy_label.evaluate('(e)=>e.scrollWidth<=e.clientWidth+1&&e.scrollHeight<=e.clientHeight+1'),accuracy_label.evaluate('(e)=>({w:e.scrollWidth,cw:e.clientWidth,h:e.scrollHeight,ch:e.clientHeight})')
+    page.locator('#progressArea').select_option('Atención')
+    accuracy=page.locator('.progress-kpi').nth(1)
+    assert accuracy.locator('strong').inner_text()=='100%'
+    assert accuracy.evaluate('(e)=>e.scrollWidth<=e.clientWidth+1')
     page.screenshot(path=str(shots/'progress-evolution-teen.png'),full_page=True)
     page.locator('#navMenu [data-section="home"]').click()
    if page.locator('#exerciseReturnHome').is_visible():page.locator('#exerciseReturnHome').click()
@@ -97,8 +97,8 @@ try:
   # Confirm profile-local last-area choice is not inherited from a different age profile.
   page.evaluate("localStorage.setItem('lh_v16_last_subject_primary','geometry')")
   workspace(page).locator('#profileSelect').select_option('primary')
-  assert page.locator('#homeAreaLanding .redesign-continue button').inner_text().startswith('Volver a Geometría')
-  assert page.locator('.mathematics-area-group [data-redesign-area="geometry"]').count()==1
+  assert page.locator('#homeAreaLanding .redesign-continue button').inner_text().startswith('Volver a Matemáticas')
+  assert page.locator('.mathematics-area-group [data-redesign-area="geometry"]').count()==0
   assert page.locator('.mathematics-area-group [data-redesign-area="division"]').count()==1
   workspace(page).locator('#profileSelect').select_option('early')
   area(page,'reading').click()

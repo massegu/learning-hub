@@ -16,7 +16,7 @@ try:
    page.locator('#exerciseLevelSelect').select_option(str(value))
   area(page, 'memory').click();page.locator('#photoModeSwitch [data-photos=true]').click();page.wait_for_selector('#showMemoryPhoto')
   assert page.evaluate('__requests.at(-1).photos_only') is True
-  assert page.evaluate('__requests.at(-1).client_revision')==17
+  assert page.evaluate('__requests.at(-1).client_revision')==18
   assert 'Entregas hoy:' in page.locator('#usageHint').inner_text()
   assert page.locator('.everyday-photo img').count()==0
   memory=page.evaluate('__current');assert memory['photoTask']['kind']=='recall'
@@ -44,21 +44,21 @@ try:
   for width in [1360,390]:
    page.set_viewport_size({'width':width,'height':1000});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
    page.locator('#exercise').screenshot(path=f'/tmp/photo-differences-{width}.png')
-  assert page.locator('#multiCheck').is_disabled()
+  assert page.locator('#multiCheck').is_enabled()
   first=difference['answers'][0];assert page.locator('.photo-hit').count()>0
   page.get_by_role('button',name='Señalar: '+first,exact=True).click()
-  for value in difference['answers'][1:]:page.get_by_role('button',name=value,exact=True).click()
-  page.locator('#multiCheck').click();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
+  assert page.locator('.photo-hit.correct,.photo-hit.missing').count()==0
+  for value in difference['answers'][1:]:page.get_by_role('button',name='Señalar: '+value,exact=True).click()
+  assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
   page.locator('#exerciseNext').click();set_level(3);page.wait_for_function('()=>__current?.domain==="attention"&&__current?.level===3&&__current?.type==="photoDifference"')
-  assert page.locator('#exercise').evaluate("e=>e.classList.contains('visual-only-differences')")
   assert not page.locator('#exerciseOptions .multi-select-grid').is_visible()
   assert page.locator('#exercisePrompt').inner_text() == 'Marca 3 diferencias.'
   assert page.locator('.photo-mark-help').count() == 0
   task3=page.evaluate('__current');assert page.locator('.photo-hit').count()==len(task3['opts'])
   for value in task3['answers']:page.get_by_role('button',name='Señalar: '+value,exact=True).click()
-  page.locator('#multiCheck').click();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
+  assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class')
   page.locator('#exerciseNext').click();set_level(2);page.wait_for_function('()=>__current?.domain==="attention"&&__current?.level===2&&__current?.type==="photoDifference"')
-  difference2=page.evaluate('__current');wrong=next(x for x in difference2['opts'] if x not in difference2['answers']);page.get_by_role('button',name=wrong,exact=True).click();page.locator('#multiCheck').click();assert 'bad' in page.locator('#exerciseFeedback').get_attribute('class')
+  difference2=page.evaluate('__current');wrong=next(x for x in difference2['opts'] if x not in difference2['answers']);page.get_by_role('button',name='Señalar: '+wrong,exact=True).click();page.locator('#multiCheck').click();assert 'bad' in page.locator('#exerciseFeedback').get_attribute('class')
   with page.expect_download() as download:
    page.evaluate('''({memory,difference})=>WorksheetGenerator.generate([[memory,difference],[memory,difference]],__profiles.find(x=>x.id==='teen'))''',{'memory':memory,'difference':difference})
   target=Path(tmp)/'photos.zip';download.value.save_as(target)
@@ -89,14 +89,14 @@ try:
   fixture={}
   def override(route):route.fulfill(json={'status':200,'data':{'items':[fixture],'usage':{'used':1,'limit':500}}})
   page.route('**/__review/content',override)
-  new_pairs=page.evaluate('PhotoLibrary.pool("teen","attention",2).filter(x=>["street","park","factory","city","museumComparison"].includes(x.photoTask.pairId))')
+  new_pairs=page.evaluate('PhotoLibrary.pool("teen","attention",2)')
   for task in new_pairs:
    fixture.clear();fixture.update(task);area(page, 'attention').click()
    page.wait_for_function('(id)=>__current?.id===id&&document.querySelectorAll(".photo-comparison img").length===2',arg=task['id'])
    for label in task['answers']:
-    page.locator('#exerciseOptions').get_by_role('button',name=label,exact=True).click()
-   page.locator('#multiCheck').click();assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class'),task['photoTask']['pairId']
+    page.get_by_role('button',name='Señalar: '+label,exact=True).click()
+   assert 'ok' in page.locator('#exerciseFeedback').get_attribute('class'),task['photoTask']['pairId']
   assert not errors,errors
-  print('PASS: real photo-only delivery, explicit start, full viewing period, photograph and answers never coexist, recall scoring, A/B comparison, wrong/correct selections, mobile and 2 DOCX embedding source photographs; direct image marking and accessible button selection stay synchronized')
+  print('PASS: real photo-only delivery, explicit start, full viewing period, photograph and answers never coexist, recall scoring, A/B comparison, wrong/correct selections, mobile and 2 DOCX embedding source photographs; direct image marking confirms each reviewed region')
   browser.close()
 finally:server.shutdown();server.server_close()

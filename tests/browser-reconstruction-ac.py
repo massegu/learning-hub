@@ -50,10 +50,7 @@ try:
 
         def mode(name):
             if name == 'wait':
-                if not page.locator('#miraWait').is_visible():
-                    page.locator('#miraModeButton').click()
-                if page.locator('#miraWait').get_attribute('aria-pressed') != 'true':
-                    page.locator('#miraWait').click()
+                page.locator('#miraModeButton').click()
             else:
                 page.locator(f'#cognitiveFamilyModes [data-cognitive-family="{name}"]').click()
 
@@ -232,9 +229,11 @@ try:
         start()
         assert 'no se cronometra' in page.locator('#exerciseVisual').inner_text()
         area(page, 'language').click()
+        assert page.locator('#fallingWordsMode').is_hidden()
+        area(page, 'speedReasoning').click()
         page.locator('#fallingWordsMode').click()
         page.wait_for_selector('.falling-settings')
-        assert page.evaluate('__requests.at(-1).client_revision') == 17
+        assert page.evaluate('__requests.at(-1).client_revision') == 18
         page.get_by_label('Velocidad', exact=True).select_option('slow')
         page.get_by_label('Palabras quietas').check()
         start()
@@ -248,9 +247,9 @@ try:
         page.get_by_role('button', name='Reanudar', exact=True).click()
         assert target.inner_text() == first
         page.clock.run_for(250)
-        field.fill(first)
+        field.fill(first[:-1])
         page.clock.run_for(270)
-        field.press('Enter')
+        field.fill(first)
         field.fill('texto de prueba no persistido')
         field.press('Enter')
         page.clock.run_for(15000)
@@ -260,7 +259,6 @@ try:
             page.locator('#exercise').screenshot(path=str(Path(os.environ['GLIAX_AC_CAPTURAS']) / 'palabras-movil.png'))
         for _ in range(len(page.evaluate('__ac.cognitiveTask.prompts')) - 3):
             field.fill(target.inner_text())
-            field.press('Enter')
         result = page.evaluate('__acResults.at(-1)')
         data = json.loads(result['detail'])
         assert result['correct'] is None and data['modality'] == 'falling_words'

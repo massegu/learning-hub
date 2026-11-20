@@ -1,6 +1,7 @@
 """Recover individual confirmed results and reconcile the cached profile history."""
 import importlib.util, json, os, tempfile, threading
 from pathlib import Path
+from datetime import datetime, timezone
 from playwright.sync_api import sync_playwright
 from browser_support import ROOT, workspace
 
@@ -28,6 +29,7 @@ try:
   race_row={'profile_id':'primary','client_attempt_id':race_id,'occurred_at':'2026-11-17T10:01:30.000Z','session_id':session,'session_started_at':'2026-11-17T10:00:00.000Z','subject':'executive','level':1,'correct':True,'points':10,'item_id':'pending-before-read','detail':'standard'}
   seed={'profile':profile,'other_profile':other_profile,'rows':{'primary:'+wait_id:dbrow(wait_id,wait_detail,'executive',None,'2026-11-17T10:00:30.000Z'),'primary:legacy-a':legacy_dbrow('legacy-a'),'primary:legacy-b':legacy_dbrow('legacy-b'),'secondary:'+other_id:other_result},'attempt':rule_id,'detail':rule_detail,'race_attempt':race_id,'race_row':race_row}
   page.add_init_script(f'''const seed={json.dumps(seed)};if(!localStorage.getItem('__reconciliationSeeded')){{localStorage.setItem('__mock_profiles',JSON.stringify([seed.profile,seed.other_profile]));localStorage.setItem('__mock_exercise_results',JSON.stringify(seed.rows));localStorage.setItem('lh:result-outbox:v1:account:primary:'+seed.attempt,JSON.stringify({{profile_id:'primary',client_attempt_id:seed.attempt,occurred_at:'2026-11-17T10:01:00.000Z',session_id:'session-recovery',session_started_at:'2026-11-17T10:00:00.000Z',subject:'executive',level:2,correct:true,points:0,item_id:'rule_application-item',detail:JSON.stringify(seed.detail),state:'uncertain',created_at:'2026-11-17T10:01:00.000Z'}}));localStorage.setItem('lh:result-outbox:v1:account:primary:'+seed.race_attempt,JSON.stringify(seed.race_row));localStorage.setItem('__reconciliationSeeded','1')}}''')
+  page.clock.set_fixed_time(datetime(2026,11,20,12,tzinfo=timezone.utc))
   page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_selector('#profileSelect',state='attached');workspace(page).locator('#profileSelect').select_option('primary')
   page.wait_for_function('()=>__profiles.find(p=>p.id==="primary").progress.history?.some(x=>x.clientAttemptId==="'+wait_id+'")')
   page.wait_for_function('()=>Object.keys(JSON.parse(localStorage.getItem("__mock_exercise_results")||"{}")).length===6')
@@ -45,7 +47,8 @@ try:
   assert 'Espera guiada · 1 intervalos finalizados' in page.locator('#guidedWaitProgress').inner_text()
   assert 'Actúa con reglas · 1 actividades' in page.locator('#ruleApplicationProgress').inner_text()
   wait_text=page.locator('#guidedWaitProgress').inner_text();rule_text=page.locator('#ruleApplicationProgress').inner_text();assert 'intervalo 3 s' in wait_text,wait_text;assert '3/4 aciertos por ensayo' in rule_text,rule_text
-  executive_accuracy=page.locator('#progressCards .progress-subject').evaluate_all("els=>{const card=els.find(el=>el.querySelector('small')?.textContent.includes('Funciones ejecutivas'));return card?.querySelector('.accuracy-ring strong')?.textContent}");assert executive_accuracy=='100%','guided_wait null scores must not lower executive accuracy'
+  page.locator('#progressArea').select_option('Funciones ejecutivas')
+  assert page.locator('.progress-kpi').nth(1).locator('strong').inner_text()=='100%', 'guided_wait null scores must not lower executive accuracy'
   with tempfile.TemporaryDirectory() as tmp:
    with page.expect_download() as download:page.locator('#exportDetailCsv').click()
    path=Path(tmp)/'results.csv';download.value.save_as(path);csv=path.read_text(encoding='utf-8-sig')

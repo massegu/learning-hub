@@ -74,7 +74,9 @@ with review.ReviewServer(('127.0.0.1', 0), review.prepare()) as server:
                     spot.press('Enter')
                     expect(page.locator('.photo-hit.selected')).to_have_count(1)
                     expect(page.locator('.photo-hit.correct, .photo-hit.missing')).to_have_count(0)
+                    save('diferencias-en-curso','#exercise')
             expect(page.locator('#exerciseFeedback')).to_have_class('feedback ok')
+            save('diferencias-final','#exercise')
 
             area(page, 'executive').click()
             assert not page.get_by_role('button', name='Retos con tarjetas', exact=True).count()

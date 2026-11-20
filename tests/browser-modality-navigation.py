@@ -87,13 +87,13 @@ try:
    add(age,'attention','#documentModeSwitch [data-documents=false]',{'executed_only':True,'executed_family':'compare'})
    add(age,'attention','[data-cognitive-family=contradiction]',{'cognitive_only':True,'cognitive_family':'contradiction'})
    add(age,'attention','#executedMode',{'executed_only':True})
-   add(age,'memory','#photoModeSwitch [data-photos=false]',{'photos_only':False} if route!='early' else {})
+   add(age,'memory','#photoModeSwitch [data-photos=false]',{'photos_only':False,'memory_visual_only':True} if route!='early' else {'memory_visual_only':True})
    add(age,'memory','#memoryAudioModeButton',{'memory_audio_only':True})
    add(age,'memory','#executedMode',{'executed_only':True})
    add(age,'executive','#documentModeSwitch [data-documents=false]',{'executed_only':True,'executed_family':'plan'})
    for family in ['rules','deduction','change','information']:
     add(age,'executive',f'[data-cognitive-family={family}]',{'cognitive_only':True,'cognitive_family':family})
-   add(age,'executive','#miraWait',{'cognitive_only':True,'cognitive_family':'wait'})
+   add(age,'executive','#miraModeButton',{'cognitive_only':True,'cognitive_family':'wait'})
    add(age,'speedReasoning','[data-speed-mode=screen]',{'room_speed_only':False})
    add(age,'speedReasoning','#speedUnpairedMode',{'speed_mechanic':'unpaired'})
    if age!='early':
@@ -106,17 +106,21 @@ try:
     add(age,'executive','#documentModeSwitch [data-documents=true]',{'documents_only':True})
   for age,domain,selector,expected in checks:
    workspace(page).locator('#profileSelect').select_option(age);area(page,domain).click();button=page.locator(selector)
-   if selector in ['#miraWait','[data-interaction-kind=symbols]','[data-interaction-kind=movement]'] and not page.locator('#miraChoices').is_visible():
+   if selector in ['[data-interaction-kind=symbols]','[data-interaction-kind=movement]'] and not page.locator('#miraChoices').is_visible():
     page.locator('#miraModeButton').click()
    assert button.is_visible(),(age,domain,selector)
    page.evaluate('window.__current=null');before=page.evaluate('__contentCalls.length');button.click()
    page.wait_for_function('(n)=>__contentCalls.length>n&&(__current||!document.querySelector("#retryContentLoad").classList.contains("hidden"))',arg=before)
    item=page.evaluate('__current');assert item,(age,domain,selector,page.locator('#exercisePrompt').inner_text())
-   if domain=='memory' and selector=='#memoryAudioModeButton':assert item.get('audioMemory') is True,(age,'audio mode must never render spatial/visual memory',item)
+   if domain=='memory' and selector=='#memoryAudioModeButton':
+    page.wait_for_function('()=>__current?.audioMemory || !document.querySelector("#retryContentLoad").classList.contains("hidden")')
+    assert page.evaluate('__current?.audioMemory') is True,(age,'audio mode must never render spatial/visual memory',page.locator('#exercisePrompt').inner_text())
    request=page.evaluate('__contentCalls.at(-1)');assert request['domain']==domain and request['profile_id']==age,(request,age,domain)
    for key,value in expected.items():assert request.get(key)==value,(age,domain,selector,key,value,request)
    if domain=='attention':assert request.get('interaction_kind')!='symbols',request
-   assert button.get_attribute('aria-pressed')=='true',(age,domain,selector)
+   if selector=='#miraModeButton':assert button.get_attribute('aria-expanded')=='true'
+   elif domain=='memory' and selector=='#executedMode':assert request['executed_family'] in ['serial','spatial','update']
+   else:assert button.get_attribute('aria-pressed')=='true',(age,domain,selector)
   # Even a stale/programmatic activation of a hidden attention control cannot
   # issue a movement, auditory, or symbols request.
   for age in ['early','junior','primary','middle','teen']:
