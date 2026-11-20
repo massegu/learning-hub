@@ -151,7 +151,7 @@ function memory(age,level){
    revealMs:Math.max(6000,count*1400),sequenceStepMs:1400,recallSequence:[...values],
    recallEvidence:{kind:'sequence',block:0,reverse},topic:'Memoria · secuencias',
    why:rank===0?'Recuerda los elementos en el mismo orden.':expected.join(' → ')},age,'memory',level,`sequence-${v}`,'memory_sequence'));
-  const size=rank===0?2:3,gridRows=size,gridColumns=rank===0&&level===2?3:size,capacity=gridRows*gridColumns,load=Math.min(capacity,level+(rank===0?1:2));
+  const size=rank===0?2:3,gridRows=size,gridColumns=rank===0&&level>=2?3:size,capacity=gridRows*gridColumns,load=Math.min(capacity,level+(rank===0?1:2));
   const places=shuffled(Array.from({length:capacity},(_,i)=>i),v+41),marked=values.slice(0,load),grid=Array.from({length:gridRows},()=>Array(gridColumns).fill('—'));
   marked.forEach((x,i)=>{grid[Math.floor(places[i]/gridColumns)][places[i]%gridColumns]=x;});
   // Level 3 asks for two positions for older groups; ordered binding prevents a swapped answer.
@@ -162,7 +162,7 @@ function memory(age,level){
   items.push(finish({type:'memoryReveal',responseType:'choice',memoryResponse:dual?'spatialPair':'spatial',spatialAnswer:!dual&&v%2===0?'grid':'coordinates',requiresStimulus:true,
    q:'Mira dónde está cada imagen. Después taparemos el cuadro.',memoryQuestion:dual?`¿Dónde estaban ${target} y ${target2}, en ese orden?`:`¿Dónde ${/^(los|las) /.test(target)?'estaban':'estaba'} ${target}?`,
    stimulus:[{...R(grid),presentation:'spatial',label:'Filas de arriba abajo; columnas de izquierda a derecha.'}],memoryContent:marked.map(detail=>({detail})),
-   a,opts,gridSize:size,gridRows,gridColumns,revealMs:Math.max(6000,load*1800),recallEvidence:{kind:'spatial',block:0,targets:dual?[target,target2]:[target]},topic:'Memoria · posiciones',why:a},age,'memory',level,`spatial-${v}`,'memory_spatial'));
+   a,opts,gridSize:size,gridRows,gridColumns,...(rank===0&&level===3?{spatialGridRevision:2}:{}),revealMs:Math.max(6000,load*1800),recallEvidence:{kind:'spatial',block:0,targets:dual?[target,target2]:[target]},topic:'Memoria · posiciones',why:a},age,'memory',level,`spatial-${rank===0&&level===3?'v2-':''}${v}`,'memory_spatial'));
   const unseen=materials.find(x=>!values.includes(x));
   items.push(finish({type:'memoryReveal',responseType:'choice',requiresStimulus:true,q:'Mira estas imágenes. Después las taparemos.',memoryQuestion:'¿Qué imagen estaba en el grupo?',stimulus:[{type:'list',items:[...values],presentation:'cards'}],memoryContent:values.map(detail=>({detail})),a:values[v%values.length],opts:[values[v%values.length],unseen],revealMs:Math.max(6000,count*1300),answerEvidence:{type:'listItem',block:0,index:v%values.length},topic:'Memoria · reconocimiento'},age,'memory',level,`recognition-${v}`,'memory_recognition'));
   if(rank>0){

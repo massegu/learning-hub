@@ -76,19 +76,21 @@
       const groups=new Map();
       for(const meta of families){
         if(!meta.available||orientation.value&&meta.orientation.primary!==orientation.value)continue;
-        if(!groups.has(meta.domain))groups.set(meta.domain,[]);
-        groups.get(meta.domain).push(meta);
+        const group=meta.domain==='geometry'?'division':meta.domain;
+        if(!groups.has(group))groups.set(group,[]);
+        groups.get(group).push(meta);
       }
       display.replaceChildren(...[...groups].map(([domain,group])=>{
+        const area=catalog.areas[domain];
         const panel=element('details',null,{class:'worksheet-family-group'});
         panel.open=group.some(meta=>quantities.get(meta.id)>0);
-        panel.append(element('summary',`${catalog.areas[domain]} · ${group.length} ${group.length===1?'tipología':'tipologías'}`));
+        panel.append(element('summary',`${area} · ${group.length} ${group.length===1?'tipología':'tipologías'}`));
         for(const meta of group){
           const row=element('div',null,{class:'worksheet-family-row'});
           const copy=element('span');
           copy.append(element('strong',meta.label),element('small',`${meta.available} distintas · ${meta.orientation.primary==='curricular'?'Aprendizaje curricular':'Entrenamiento cognitivo'}`));
           if(meta.administration)copy.append(element('small',meta.administration));
-          const input=element('input',null,{type:'number',min:0,max:Math.min(meta.available,maxPerSheet),step:1,'aria-label':`Cantidad de ${meta.label} · ${catalog.areas[domain]}`});
+          const input=element('input',null,{type:'number',min:0,max:Math.min(meta.available,maxPerSheet),step:1,'aria-label':`Cantidad de ${meta.label} · ${area}`});
           input.dataset.family=meta.id;
           input.value=quantities.get(meta.id)||0;
           row.classList.toggle('is-selected',Number(input.value)>0);

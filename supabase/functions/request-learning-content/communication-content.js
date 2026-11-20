@@ -222,6 +222,133 @@
     age==='junior'?{juniorProfile:{route:age,level}}:age==='teen'?{teenReview:{version:3}}:{schoolProfile:{route:age,level}})};
   });
  }
+ const formatOperations={
+  message:['communication','communication','communication'],
+  post:['communication','executive','communication'],
+  clip:['reading','communication','language'],
+  story:['communication','reading','communication'],
+  search:['attention','reading','reading'],
+  notice:['executive','executive','executive'],
+  app:['attention','executive','executive']
+ };
+ const languageDomain={early:'language',junior:'language',primary:'language',middle:'middleLanguage',teen:'teenLanguage'};
+ const readingDomain={early:'reading',junior:'reading',primary:'reading',middle:'middleReading',teen:'literacy'};
+ const resolveDomain=(area,age)=>area==='reading'?readingDomain[age]:area==='language'?languageDomain[age]:area;
+ const digitalDomainLabel={communication:'Comunicación funcional',attention:'Atención',executive:'Funciones ejecutivas',reading:'Lectura y escritura',language:'Lenguaje',memory:'Memoria'};
+ const revisedOperations={
+  communication:'choose_intervention',attention:'select_relevant_signal',executive:'apply_or_update_constraints',
+  reading:'integrate_written_information',language:'revise_message_for_coherence',memory:'recall_after_occlusion'
+ };
+ for(const [area,operation] of Object.entries(revisedOperations))quality.register('digital.'+operation,digitalDomainLabel[area],area==='memory'?'memoryLoad':'constraints');
+
+ function transversalPool(age,level=1,domain=null,format=null){
+  if(!digitalContexts[age]||![1,2,3].includes(level))return [];
+  const {project,place,newPlace,object}=digitalContexts[age];
+  const base=digitalPool(age,level);
+  const entries=base.map((item,index)=>{
+   const type=Object.keys(digitalFamilies)[index];
+   return [type,formatOperations[type][level-1],item];
+  });
+  const interventionFormats={
+   post:['Pedir permiso en un mensaje privado','¿Qué mensaje enviarías antes de publicar la imagen?','¿Te parece bien que comparta la imagen con el grupo?','Subo tu imagen sin avisar.','¿A qué hora acaba el taller?'],
+   clip:['Aclarar un paso que no se ve','¿Qué comentario ayuda a aclarar este paso?','¿Puedes mostrar dónde va la pieza?','El vídeo no me sirve para nada.','Cambia todo el vídeo.'],
+   story:['Responder al mensaje de una persona','¿Qué mensaje enviarías a quien pidió el dato?','Te confirmo el lugar nuevo. ¿Quieres que te ayude a llegar?','Todos pueden buscarlo por su cuenta.','No voy a responder.'],
+   search:['Pedir confirmación a la persona responsable','¿Qué pregunta enviarías a la persona responsable?','¿Puedes confirmar en qué lugar nos reunimos?','Te escribo para confirmar que ya lo sé todo.','¿Me puedes enviar un vídeo cualquiera?'],
+   notice:['Explicar un límite de privacidad','¿Qué respuesta explica el límite a quien pidió las fotos?','Las fotos solo se comparten con el grupo. Puedo enviarte el aviso.','Te envío todas las fotos.','No me escribas nunca más.'],
+   app:['Coordinar una entrega con un compañero','¿Qué le escribirías para acordar la entrega?','Puedo llevar el material al lugar nuevo. ¿Puedes confirmar que lo recibirás?','Guardaré una copia solo para mí.','Cambiaré la entrega sin avisar.']
+  };
+  for(const [type,intervention] of Object.entries(interventionFormats)){
+   if(formatOperations[type][level-1]==='communication')continue;
+   const reference=base[Object.keys(digitalFamilies).indexOf(type)];
+   const [title,q,a,...wrong]=intervention;
+   const rows=[['Fuente','Contenido'],...reference.stimulus[0].rows.slice(1,age==='early'?Math.min(3,level+1):level+2)];
+   if(type==='app'&&age==='early'){
+    rows.splice(1,rows.length-1,['Tarea','Lleva el material.'],['Lugar','Ahora va a la sala nueva.']);
+   }
+   const contextual={
+    post:['Petición','La persona quiere decidir antes de que se comparta su imagen.'],
+    clip:['Comentario','No se ve dónde va la pieza.'],
+    story:['Mensaje privado','¿Me confirmas el lugar nuevo?'],
+    search:['Nota de equipo','Aún falta confirmar el lugar con la persona responsable.'],
+    notice:['Petición','¿Puedes mandarme las fotos? No soy del grupo.'],
+    app:['Mensaje del equipo','Yo puedo recibirlo en el lugar nuevo si me confirmas.']
+   };
+   if(type==='notice'){
+    rows.splice(1,rows.length-1,['Permiso','Las fotos solo las ve el grupo. El aviso se puede enviar.']);
+    if(level>=2)rows.push(['Nota','El permiso no ha cambiado.']);
+   }
+   rows.push(contextual[type]);
+   entries.push([type,'communication',{...reference,q,a,opts:[a,...wrong],primaryConstruct:'choose_intervention',
+    stimulus:[{...reference.stimulus[0],rows}],why:title+'.'},'intervention']);
+  }
+  if(age!=='early'){
+   const legacy=scenarioPool(age,level);
+   entries.push(['search',level===1?'attention':'reading',legacy.find(item=>item.mechanic==='communication_verifySource'),'official']);
+   const notice=legacy.find(item=>item.mechanic==='communication_summarize');
+   entries.push(['notice','reading',{...notice,stimulus:[{...notice.stimulus[0],presentation:'digitalInterface',materialType:'settings'}]},'bulletin']);
+  }
+  const message=base[0].stimulus[0];
+  const event=level===1?'el taller de hoy':project;
+  const target=level===1?place:level===2?newPlace:object;
+  const rows=[['Fuente','Contenido'],['Equipo',target],...(level>=2?[['Otro grupo',place]]:[]),...(level>=3?[['Material anterior',newPlace]]:[])];
+  const comparison=level===3?[newPlace,place]:level===2?[place,object]:[newPlace,object];
+  entries.push(['message','memory',{
+   ...base[0],type:'memoryReveal',q:'Lee la conversación. Después se ocultará la pantalla.',
+   memoryQuestion:'¿Qué indicaba el Equipo?',a:target,opts:[target,...comparison],
+   stimulus:[{...message,rows}],memoryContent:rows.map(([speaker,detail])=>({person:speaker,detail})),
+   answerEvidence:{type:'tableCell',block:0,row:1,column:1,subjectColumn:0},
+   revealMs:9000,why:'Revisa la respuesta del Equipo.'
+  },'recall']);
+  entries.push(['message','attention',{
+   ...base[0],q:'Localiza el mensaje marcado como «Hoy · Equipo». ¿Qué indica?',
+   a:target,opts:[target,...comparison],stimulus:[{...message,rows:[['Fuente','Contenido'],['Ayer · Equipo',comparison[0]],['Hoy · Equipo',target],['Hoy · Otro grupo',comparison[1]]]}],
+   why:'El aviso debe coincidir tanto en el día como en el grupo.'
+  },'filter']);
+  entries.push(['message','reading',{
+   ...base[0],q:'¿Qué resumen mantiene los datos de los dos mensajes?',a:'Llevar '+object+' a la sala nueva.',
+   opts:['Llevar '+object+' a la sala nueva.','Ir a la sala anterior.','Ir sin el material.'],
+   stimulus:[{...message,rows:[['Fuente','Contenido'],['Primer mensaje','Para '+event+', trae '+object+'.'],['Segundo mensaje','Cambiamos de sala. El material sigue igual.']]}],
+   why:'Solo cambia la sala. El segundo aviso conserva el encargo.'
+  },'integrate']);
+  entries.push(['message','language',{
+   ...base[0],q:level===1?'¿Qué palabra completa la frase?':level===2?'¿Qué expresión conserva el sentido de «llevar otra vez»?':'¿Qué versión evita que «allí» se refiera a dos lugares?',
+   a:level===1?'después':level===2?'volver a llevar':'Dejo el material en el aula 2.',
+   opts:level===1?['después','debajo','dentro']:level===2?['volver a llevar','dejar de llevar','evitar llevar']:['Dejo el material en el aula 2.','Lo dejo allí.','Lo dejo ahí mismo.'],
+   stimulus:[{...message,rows:[['Fuente','Contenido'],['Borrador',level===1?'Primero preparo el material. Lo llevo ___.':level===2?'Puedo llevar otra vez el material.':'Pasé por el aula 1 de camino al aula 2. Allí dejo el material.'],...(level===3?[['Nota','El material debe quedarse en el aula 2.']]:[])]}],
+   why:level===1?'La frase indica orden temporal.':level===2?'«Volver a» indica que la acción se repite.':'Nombrar el aula elimina la ambigüedad.'
+  },'language']);
+  entries.push(['message','executive',{
+   ...base[0],q:'¿Qué plan cumple el encargo y el aviso más reciente?',
+   a:'Recoger '+object+' y dejarlo en el lugar nuevo.',opts:['Recoger '+object+' y dejarlo en el lugar nuevo.','Dejar el material en el lugar anterior.','Cambiar de lugar sin recoger el material.'],
+   stimulus:[{...message,rows:[['Fuente','Contenido'],['Encargo','Recoge '+object+' y déjalo en el lugar acordado.'],['Aviso nuevo','Ha cambiado el lugar, pero el encargo se mantiene.']]}],
+   why:'El cambio afecta al lugar de entrega. La recogida sigue siendo necesaria.'
+  },'plan']);
+  return entries.filter(([type,area])=>(!domain||resolveDomain(area,age)===domain)&&(!format||type===format)).map(([type,area,item,variant='original'])=>{
+   const domain=resolveDomain(area,age), id=['digital-v1',age,level,area,type,variant].join(':');
+   const operation=['original','intervention'].includes(variant)&&area==='communication'?item.primaryConstruct:revisedOperations[area];
+   const mechanic={attention:'search',memory:'rememberPair',executive:'planning',language:'vocabulary',reading:'literal',communication:'communication'}[area];
+   return {...item,id,contentKey:id,semanticKey:id,domain,
+    topic:digitalDomainLabel[area]+' · '+digitalFamilies[type],mechanic:'digital_'+area+'_'+type,
+    primaryConstruct:operation,
+    qualityDescriptor:{semanticFamily:area==='communication'?'communication.'+operation:'digital.'+operation,scenarioFamily:'digital.'+type},
+    simulation:{format:type,operation,response:item.responseType,correction:'exact_choice',age,level},
+    ...(age==='early'?{ageProfile:{...item.ageProfile,mechanic,family:'digital-'+area+'-'+type}}:{})
+   };
+  });
+ }
+ const availableFormats=(age,level,domain)=>Object.keys(digitalFamilies).filter(format=>transversalPool(age,level,domain,format).length);
+ function validateTransversal(item){
+  const [prefix,age]=String(item.contentKey||'').split(':');
+  const source=prefix==='digital-v1'&&transversalPool(age,item.level,item.domain).find(entry=>entry.contentKey===item.contentKey);
+  if(!source)throw new Error('La simulación no pertenece al banco de esta área.');
+  const regional=root.LocaleContent||(typeof require==='function'&&require('./locale-content'));
+  const expected=item.localization?regional.localizeItem(source,item.localization.locale,item.domain):source;
+  for(const field of ['domain','q','a','stimulus','type','responseType','mechanic','simulation','memoryContent','memoryQuestion','answerEvidence','qualityDescriptor','primaryConstruct','why','revealMs']){
+   if(JSON.stringify(item[field])!==JSON.stringify(expected[field]))throw new Error('La simulación no coincide con su fuente: '+field);
+  }
+  if(JSON.stringify([...item.opts].sort())!==JSON.stringify([...expected.opts].sort()))throw new Error('Las opciones no corresponden a la pantalla.');
+  return true;
+ }
  function pool(age,level=1){
   const rank=ages.indexOf(age);if(rank<0||![1,2,3].includes(level))return [];
   const entries=age==='early'?earlyVariants.flat():cases[age];
@@ -233,9 +360,47 @@
   });
   return [...original,...scenarioPool(age,level)];
  }
+ const conversationCases=[
+  ['help','Pedir ayuda','Comercio','No encuentras el producto en el estante. Hay una persona del comercio cerca.','Pide ayuda e indica qué estás buscando.','¿Podrías ayudarme a encontrar el producto que busco?',['Nombra lo que necesitas encontrar','Dirige la petición a alguien que pueda ayudarte']],
+  ['clarify','Pedir una aclaración','Transporte','Te dicen que el autobús sale desde otra parada, pero no indican dónde está.','Pregunta qué parada debes usar y cómo llegar a ella.','¿Cuál es la nueva parada y cómo se llega desde aquí?',['Pregunta por la nueva parada','Pide una indicación para llegar']],
+  ['preferences','Expresar una preferencia','Restaurante','El grupo pide un plato para compartir. Prefieres que el acompañamiento vaya aparte.','Explica tu preferencia y pregunta si es posible.','Prefiero que el acompañamiento vaya aparte. ¿Se podría servir así?',['Expresa una preferencia concreta','Comprueba si el cambio es posible']],
+  ['start','Iniciar una conversación','Actividad con amigos','Llegas a un taller. Una persona termina de preparar la mesa. Quieres participar.','Inicia una conversación y pregunta cómo incorporarte.','Hola, ¿puedo unirme al taller? ¿Dónde puedo empezar?',['Saluda o abre la conversación','Explica por qué te acercas']],
+  ['turn','Responder a un turno','Conversación familiar','Una persona de tu familia propone dar un paseo. Te pregunta qué te parece.','Responde a su propuesta y añade una idea.','Me apetece. ¿Podemos pasar por el parque?',['Responde a lo que te han preguntado','Añade una propuesta que mantenga el tema']],
+  ['question','Formular una pregunta','Centro educativo','Puedes participar en una actividad si entregas una autorización. Falta saber dónde se entrega.','Formula una pregunta que permita averiguarlo.','¿En qué lugar debo entregar la autorización?',['Pregunta por el dato que falta','Menciona la autorización']],
+  ['service','Comunicarse en un servicio','Biblioteca','Quieres devolver un libro, pero el mostrador está cerrado. Hay una persona de recepción.','Pregunta cómo puedes devolver el libro hoy.','¿Hay un buzón o algún otro sitio donde pueda devolver este libro hoy?',['Explica qué necesitas hacer','Pregunta por una opción disponible hoy']],
+  ['repair','Resolver un malentendido','Actividad de equipo','Alguien entendió que cancelabas el encuentro. Solo pediste retrasarlo.','Aclara el malentendido y propón confirmar la nueva hora.','El encuentro sigue en pie. Solo pedí retrasarlo. ¿Confirmamos a qué hora será?',['Aclara qué se mantiene','Pide acordar la nueva hora']],
+  ['assert','Defender una petición','Reunión','Dos personas te han interrumpido mientras explicabas una propuesta. Quieres terminar en un minuto.','Pide terminar tu explicación antes de abrir otro turno.','Me falta un minuto para terminar. ¿Puedo cerrar mi propuesta y después escuchamos las demás?',['Pide un tiempo concreto','Respeta el turno posterior']],
+  ['negotiate','Negociar un acuerdo','Actividad con amigos','Una persona solo puede reunirse antes de la merienda. Otra solo después. El grupo puede preparar dos tareas por separado.','Propón un acuerdo que tenga en cuenta las dos disponibilidades.','Quedamos por turnos. Una persona prepara la primera tarea antes de merendar y la otra revisa la segunda después.',['Da un lugar a las dos personas','Distingue las tareas y los dos momentos']],
+  ['intention','Interpretar una intención y responder','Actividad de equipo','Una persona dice «Me gustaría intentarlo sola primero». Acepta ayuda si la pide.','Responde de una forma que respete lo que te ha pedido.','Vale, inténtalo. Estoy cerca si después quieres ayuda.',['Reconoce que quiere intentarlo por su cuenta','Ofrece apoyo sin imponerlo']],
+  ['digital','Reformular un mensaje','Mensajería de equipo','Tu borrador dice «Esto está mal». Encontraste un nombre equivocado en la segunda línea del cartel.','Reformula el mensaje para que el equipo pueda corregir el dato.','En la segunda línea del cartel aparece un nombre equivocado. ¿Podemos revisarlo antes de enviarlo?',['Identifica dónde está el problema','Propón una revisión sin descalificar']]
+ ];
+ function supervisedPool(age,level=3){
+  if(!['junior','primary','middle','teen'].includes(age)||level!==3)return [];
+  return conversationCases.map(([key,skill,label,context,q,sample,writingRubric])=>{
+   const id=`communication-v4:${age}:${level}:${key}`;
+   // The same interpersonal goal can have several valid formulations.
+   const topic='Comunicación funcional · '+skill;
+   return {id,contentKey:id,semanticKey:id,domain:'communication',level,type:'self',responseType:'written',
+    discussionReview:true,requiresStimulus:true,topic,q,sample,writingRubric,
+    stimulus:[{type:'text',label,text:context}],
+    mechanic:'communication_'+key,primaryConstruct:'communicative_production',
+    qualityDescriptor:{semanticFamily:'communication.'+key,scenarioFamily:'interpersonal.'+key},
+    ...(age==='junior'?{juniorProfile:{route:age,level}}:age==='teen'?{teenReview:{version:3}}:{schoolProfile:{route:age,level}})};
+  });
+ }
+ function revisedPool(age,level){
+  return [...pool(age,level).filter(item=>!['communication_verifySource','communication_summarize'].includes(item.mechanic)),...supervisedPool(age,level)];
+ }
  function validate(item){
-  const age=item?.ageProfile?.id||item?.juniorProfile?.route||item?.schoolProfile?.route||(item?.teenReview?'teen':null),source=ages.includes(age)?[...pool(age,item?.level),...digitalPool(age,item?.level)].find(entry=>entry.id===item?.contentKey||entry.id===item?.id):null;
+  const age=item?.ageProfile?.id||item?.juniorProfile?.route||item?.schoolProfile?.route||(item?.teenReview?'teen':null),source=ages.includes(age)?[...pool(age,item?.level),...digitalPool(age,item?.level),...supervisedPool(age,item?.level)].find(entry=>entry.id===item?.contentKey||entry.id===item?.id):null;
   const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+  if(/^communication-v4:/.test(source?.contentKey||'')){
+   const regional=root.LocaleContent||(typeof require==='function'&&require('./locale-content'));
+   const expected=item.localization?regional.localizeItem(source,item.localization.locale,item.domain):source;
+   for(const field of ['domain','type','responseType','q','sample','writingRubric','stimulus','discussionReview','qualityDescriptor'])
+    if(!same(item[field],expected[field]))throw new Error('La intervención no coincide con su pauta de revisión.');
+   return true;
+  }
   if(/^communication-v[23]:/.test(source?.contentKey||'')){
    const regional=root.LocaleContent||(typeof require==='function'&&require('./locale-content'));
    const expected=item.localization?regional.localizeItem(source,item.localization.locale,item.domain):source;
@@ -248,5 +413,5 @@
   if(!authored||(!unchanged&&(!item.localization||item.localization.domain!=='communication'||!item.localization.locale)))throw new Error('La actividad de comunicación no coincide con el banco revisado.');
   return true;
  }
- root.CommunicationContent={pool,digitalPool,digitalFamilies,validate};if(typeof module!=='undefined')module.exports=root.CommunicationContent;
+ root.CommunicationContent={pool,digitalPool,digitalFamilies,transversalPool,availableFormats,revisedPool,validate,validateTransversal};if(typeof module!=='undefined')module.exports=root.CommunicationContent;
 })(typeof window==='undefined'?globalThis:window);

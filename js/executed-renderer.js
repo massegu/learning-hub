@@ -16,12 +16,12 @@ function mount(item,{visual,area,onFinish,iconProfile}){
  };
  visual.replaceChildren(message);area.classList.add('executed-area');
  function complete(value=response){if(stopped||finished)return;finished=true;clearTimeout(timer);area.querySelectorAll('button').forEach(b=>b.disabled=true);const ruleTask=['switch','inhibit'].includes(task.kind);
-  const metrics=ruleTask?{schema:'gliax.exercise-metrics.v1',modality:'rule_application',definition_version:2,variant:task.kind,level:item.level,trials:observations.length,correct:observations.filter(x=>x.correct).length,errors:observations.filter(x=>!x.correct&&!x.omission).length,omissions:observations.filter(x=>x.omission).length,response_times_ms:observations.flatMap(x=>x.ms===null?[]:[x.ms])}:null;
+  const metrics=ruleTask?{schema:'gliax.exercise-metrics.v1',modality:'rule_application',definition_version:2,variant:task.kind,level:item.level,trials:observations.length,correct:observations.filter(x=>x.correct).length,errors:observations.filter(x=>!x.correct&&!x.omission).length,omissions:observations.filter(x=>x.omission).length,response_times_ms:observations.flatMap(x=>x.ms===null?[]:[x.ms])}:task.kind==='spatial'?{schema:'gliax.exercise-metrics.v1',modality:'executed_memory_spatial',definition_version:item.contentKey?.startsWith('executed-v6:')?2:1}:null;
   onFinish(root.ExecutedTasks.grade(item,value),item.why,metrics);
   if(['serial','update','spatial'].includes(task.kind)){
    const solution=node('div',undefined,'memory-solution');solution.append(node('h4',task.kind==='spatial'?'Posiciones correctas':'Secuencia correcta'));
-   if(task.kind==='spatial')solution.append(grid(task.cells,false));else{const row=node('ol',undefined,'executed-model');task.answer.forEach(label=>{const li=node('li');li.append(picture(label));row.append(li);});solution.append(row);}
-   visual.append(solution);
+   if(task.kind==='spatial')solution.append(grid(task.cells.map((label,i)=>task.occupied.includes(i)?label:null),false));else{const row=node('ol',undefined,'executed-model');task.answer.forEach(label=>{const li=node('li');li.append(picture(label));row.append(li);});solution.append(row);}
+   area.replaceChildren();visual.replaceChildren(solution);
   }}
  function grid(values,clickable=true,onClick,presentation){const g=node('div',undefined,'executed-grid');g.style.setProperty('--executed-cols',task.cols);values.forEach((value,i)=>{
   const cell=clickable?button('',()=>onClick(cell,i)):node('div',undefined,'executed-cell');cell.classList.add('executed-cell');cell.setAttribute('aria-label',`Fila ${Math.floor(i/task.cols)+1}, columna ${i%task.cols+1}${value?', '+value:''}`);

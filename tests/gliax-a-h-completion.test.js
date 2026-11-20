@@ -51,7 +51,7 @@ test('photo prompts expose only the requested count and all visible level-one ch
   assert.equal(item.q,photos.differencePrompt(item.differenceCount));
   assert.deepEqual(item.answers,photos.pairs[item.photoTask.pairId].changes.map(([name])=>name));
   assert.ok(item.answers.every(answer=>item.opts.includes(answer)));
-  assert.equal(item.differenceCount,level===1?1:item.answers.length);
+  assert.equal(item.differenceCount,item.answers.length);
   assert.ok(photos.validate(item));
  }
 });

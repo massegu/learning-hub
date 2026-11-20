@@ -407,39 +407,57 @@
       if(button){event.preventDefault();button.click();}
     }
   });
+  function renderPhotoDifferences(it){
+    const area=$('#exerciseOptions'), image=$('.photo-comparison figure:nth-child(2) img');
+    const answers=new Set(it.answers),found=new Set(), marks=new Map();
+    const regions=window.PhotoLibrary.pairs[it.photoTask.pairId].regions;
+    const status=document.createElement('p'), finish=document.createElement('button'), holder=document.createElement('div');
+    let finished=false;
+    $('#exercisePrompt').textContent=window.PhotoLibrary.differencePrompt(answers.size);
+    status.setAttribute('role','status');
+    status.textContent=`0 de ${answers.size} diferencias encontradas.`;
+    finish.type='button';finish.className='primary-btn';finish.id='multiCheck';finish.textContent='Finalizar y ver solución';
+    area.replaceChildren(status,finish);
+    holder.className='photo-hit-image';image.before(holder);holder.append(image);
+    function complete(){
+      if(finished)return;
+      finished=true;finish.disabled=true;
+      for(const [value,mark] of marks){
+        mark.disabled=true;
+        if(answers.has(value))mark.classList.add(found.has(value)?'correct':'missing');
+      }
+      const all=found.size===answers.size;
+      status.textContent=all?'Has encontrado todas las diferencias.':`Has encontrado ${found.size} de ${answers.size}. Las que faltaban están resaltadas.`;
+      const detail={schema:'gliax.exercise-metrics.v1',modality:it.mechanic,definition_version:2,correct:found.size,trials:answers.size};
+      showFeedback(all,saveResult(subject,all,it.id,JSON.stringify(detail)),it.why);
+    }
+    for(const [object,box] of Object.entries(regions)){
+      const value=window.LocaleContent.text(object,API.effectiveLocale(profile));
+      if(!it.opts.includes(value))continue;
+      const mark=document.createElement('button');
+      mark.type='button';mark.className='photo-hit';mark.dataset.value=value;
+      mark.setAttribute('aria-label','Señalar: '+value);mark.setAttribute('aria-pressed','false');
+      const [left,top,width,height]=box;
+      Object.assign(mark.style,{left:left+'%',top:top+'%',width:width+'%',height:height+'%'});
+      mark.onclick=()=>{
+        if(finished||found.has(value))return;
+        if(!answers.has(value)){status.textContent='Esa región no ha cambiado. Sigue comparando las imágenes.';return;}
+        found.add(value);mark.classList.add('selected');mark.setAttribute('aria-pressed','true');
+        status.textContent=`${found.size} de ${answers.size} diferencias encontradas.`;
+        if(found.size===answers.size)complete();
+      };
+      holder.append(mark);marks.set(value,mark);
+    }
+    finish.onclick=complete;
+  }
   function renderMultiSelect(it) {
-    $('#exercise').classList.toggle('visual-only-differences',it.type==='photoDifference'&&it.level>=3);
-    const photo=it.type==='photoDifference';
-    const count=photo?(it.differenceCount??it.answers.length):it.answers?.length;
-    if(photo)$('#exercisePrompt').textContent=window.PhotoLibrary.differencePrompt(count);
-    const single=subject==='attention'&&it.level===1&&count===1;
+    if(it.type==='photoDifference'){renderPhotoDifferences(it);return;}
+    const count=it.answers?.length;
     $('#exerciseOptions').classList.add('structured-options');
     const selected = new Set();
     const opts = shuffle(it.opts || []);
     $("#exerciseOptions").innerHTML =
       `<div class="multi-select-grid">${opts.map((o) => `<button class="option-btn multi-option" data-value="${escapeHtml(o)}" aria-label="${escapeHtml(o)}" aria-pressed="false">${it.memoryResponse==='multiple'?window.ActivityModel.visualLabel(o,{...it.lexicalSenses,memory:subject==='memory'}):escapeHtml(o)}</button>`).join("")}</div><div class="multi-actions"><span id="multiCount" role="status">${(['multiSelect','documentReview','photoDifference'].includes(it.type)||it.memoryResponse==='multiple')?'0 seleccionadas':`0/${(it.answers || []).length} seleccionados`}</span><button id="multiCheck" class="primary-btn" ${(['multiSelect','documentReview','photoDifference'].includes(it.type)||it.memoryResponse==='multiple')?'disabled':''}>Comprobar selección</button></div>`;
-    const photoMarks=[];
-    function syncPhotoMarks(){
-      for(const {mark,option} of photoMarks){
-        mark.setAttribute('aria-pressed',option.getAttribute('aria-pressed'));
-        for(const name of ['selected','correct','wrong'])mark.classList.toggle(name,option.classList.contains(name));
-        mark.disabled=option.disabled;
-      }
-    }
-    if(it.type==='photoDifference'){
-      const image=$('.photo-comparison figure:nth-child(2) img');
-      if(image){
-        const holder=document.createElement('div');holder.className='photo-hit-image';image.before(holder);holder.append(image);
-        const regions=window.PhotoLibrary.pairs[it.photoTask.pairId].regions;
-        for(const [object,box] of Object.entries(regions)){
-          const value=window.LocaleContent.text(object,API.effectiveLocale(profile));
-          const option=$$('#exerciseOptions .multi-option').find(b=>b.dataset.value===value||b.dataset.value.startsWith(value+': '));if(!option)continue;
-          const mark=document.createElement('button');mark.type='button';mark.className='photo-hit';mark.dataset.value=value;mark.setAttribute('aria-label','Señalar: '+value);mark.setAttribute('aria-pressed','false');
-          const [left,top,width,height]=box;Object.assign(mark.style,{left:left+'%',top:top+'%',width:width+'%',height:height+'%'});
-          mark.onclick=()=>option.click();holder.append(mark);photoMarks.push({mark,option});
-        }
-      }
-    }
     $$("#exerciseOptions .multi-option").forEach(
       (b) =>
         (b.onclick = () => {
@@ -452,7 +470,6 @@
             b.classList.add("selected");
           }
           b.setAttribute('aria-pressed',String(selected.has(v)));
-          syncPhotoMarks();
           $("#multiCount").textContent = (['multiSelect','documentReview','photoDifference'].includes(it.type)||it.memoryResponse==='multiple')?`${selected.size} ${selected.size===1?'seleccionada':'seleccionadas'}`:`${selected.size}/${(it.answers || []).length} seleccionados`;
           if((['multiSelect','documentReview','photoDifference'].includes(it.type)||it.memoryResponse==='multiple'))$('#multiCheck').disabled=!selected.size;
         }),
@@ -468,7 +485,6 @@
         else if (selected.has(b.dataset.value)) b.classList.add("wrong");
       });
       $("#multiCheck").disabled = true;
-      syncPhotoMarks();
       showFeedback(
         ok,
         saveResult(subject, ok, it.id, it.type),
@@ -477,11 +493,6 @@
           : "Revisa los elementos marcados en verde.",
       );
     };
-    if(single){
-      $('#multiCheck').classList.add('hidden');$('#multiCount').textContent=photo?'':'Selecciona una respuesta.';
-      $('#exerciseOptions .multi-select-grid').classList.add('single-selection');
-      for(const button of $$('#exerciseOptions .multi-option')){const select=button.onclick;button.onclick=()=>{select();$('#multiCheck').click();};}
-    }
   }
   let interactionTimer=null,interactionVersion=0,interactionAudio=null,interactionVoice=null;
   function stopInteraction(){clearTimeout(interactionTimer);interactionTimer=null;interactionVersion++;if(interactionVoice){interactionVoice.onend=null;interactionVoice.onerror=null;window.speechSynthesis?.cancel();interactionVoice=null;}if(interactionAudio){interactionAudio.close().catch(()=>{});interactionAudio=null;}}
@@ -708,6 +719,7 @@
   }
   function subjectLabel(domain){
     const schoolName={language:'Lenguaje',division:'Matemáticas',reading:'Lectura + Escritura'}[domain];
+    if(areaGroupFor(domain)==='math')return 'Matemáticas';
     return schoolName?`${schoolName} ${ageData().label.replace(' años','')}`:SUBJECT_META[domain].name;
   }
   function ageLabel(p){const route=window.AgeStages.route(p);return route==='early'?'6–7 años':route==='junior'?'8–10 años':AGE[route]?.label||AGE[p.age_band]?.label||'Grupo de edad';}
@@ -721,7 +733,7 @@
   }
   function exerciseMetrics(row){try{const metrics=typeof row?.detail==='string'?JSON.parse(row.detail||'null'):row?.detail;return metrics?.schema==='gliax.exercise-metrics.v1'?metrics:null;}catch{return null;}}
   function isGuidedWaitResult(row){return exerciseMetrics(row)?.modality==='guided_wait';}
-  function isPracticeResult(row){return ['guided_wait','falling_words'].includes(exerciseMetrics(row)?.modality);}
+  function isPracticeResult(row){return ['guided_wait','falling_words','communication_supervised'].includes(exerciseMetrics(row)?.modality);}
   function resultHistoryKey(row){
     if(row?.clientAttemptId||row?.client_attempt_id)return `attempt:${row.clientAttemptId||row.client_attempt_id}`;
     // Older rows predate attempt UUIDs. A field fingerprint avoids duplicating
@@ -1101,6 +1113,7 @@
     $('#appShell').dataset.design='calma';
     $('#appShell').classList.remove('mobile-nav-open');$('#workspaceMenu').setAttribute('aria-expanded','false');
     $('#exercise').classList.toggle('early-primary',Boolean(window.ContentPolicy.forProfile(p)));
+    progressFilters={days:28,area:""};
     API.profileLocale = p.locale;
     currentItem = null;
     requestGeneration++;
@@ -1219,6 +1232,7 @@
     configuredSubject=subject;
     if(guidedSession?.randomFamilies){
       const family=guidedSession.randomFamilies[guidedSession.index];
+      digitalOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;roomSpeedOnly=false;speedUnpairedOnly=false;
       executedOnly=family.startsWith('executed:');
       executedFamily=executedOnly?family.split(':')[1]:'';
       cognitiveOnly=!executedOnly;
@@ -1228,8 +1242,12 @@
     $('#appShell').dataset.subject=subject;
     const m = SUBJECT_META[subject];
     $("#exercisePill").textContent = m.name.toUpperCase();
-    $("#exerciseHeading").textContent = m.name;
+    $("#exerciseHeading").textContent = areaGroupFor(subject)==='math'?'Matemáticas':m.name;
+    if(areaGroupFor(subject)==='math')$("#exercisePill").textContent='MATEMÁTICAS';
     $("#exerciseDescription").textContent = m.desc;
+    const mathSwitch=$('#mathDomainSwitch');
+    mathSwitch.classList.toggle('hidden',areaGroupFor(subject)!=='math'||!ageData().subjects.includes('geometry')||Boolean(guidedSession));
+    mathSwitch.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.mathDomain===subject)));
     if (window.ContentPolicy.forProfile(profile)) {
       $('#exerciseHeading').textContent=window.EarlyJourney.areas[subject].title;
       const descriptions = {
@@ -1289,8 +1307,6 @@
     $('#miraModeButton').classList.toggle('hidden',!miraAvailable);
     $('#miraModeButton').setAttribute('aria-expanded',String(miraActive));
     $('#miraChoices').classList.toggle('hidden',!miraActive);
-    $('#miraWait').classList.toggle('hidden',!waitAvailable);
-    $('#miraWait').setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily==='wait'));
     $$('#interactionKindSwitch [data-interaction-kind]').forEach(b=>{
       b.classList.toggle('hidden',!supportedInteractionKinds.includes(b.dataset.interactionKind));
       b.setAttribute('aria-pressed',String(interactionOnly&&b.dataset.interactionKind===interactionKind));
@@ -1319,7 +1335,7 @@
     if(!cognitiveBank.length&&!capability.speed.words&&!capability.fallingWords)cognitiveOnly=false;
     $('#cognitiveMode').classList.add('hidden');
     const families=[...new Set(cognitiveBank.map(it=>it.cognitiveTask.kind==='guidedWait'?'wait':it.cognitiveTask.kind))].filter(kind=>kind!=='wait');
-    if(subject==='attention'&&families.includes('contradiction'))cognitiveFamily='contradiction';
+    if(subject==='attention'&&families.includes('contradiction')&&!guidedSession?.randomFamilies)cognitiveFamily='contradiction';
     else if(!families.includes(cognitiveFamily)&&!(waitAvailable&&cognitiveFamily==='wait')&&!(capability.fallingWords&&cognitiveFamily==='falling')&&!(capability.speed.words&&cognitiveFamily==='words'))cognitiveFamily='';
     const familyModes=$('#cognitiveFamilyModes');
     familyModes.replaceChildren();
@@ -1333,7 +1349,7 @@
     familyModes.classList.toggle('hidden',!familyModes.children.length);
     if(!['attention','memory','executive'].includes(subject))executedOnly=false;
     $('#executedMode').classList.toggle('hidden',!capability.executed||subject==='executive');
-    $('#executedMode').textContent=subject==='attention'?'Búsqueda y secuencias':subject==='memory'?'Recuerdo activo':'Planificación';
+    $('#executedMode').textContent=subject==='attention'?'Búsqueda y secuencias':'Sesión aleatoria';
     $('#executedMode').setAttribute('aria-pressed',String(executedOnly&&!executedFamily));
     $('#documentModeSwitch').classList.toggle('hidden',!['attention','executive'].includes(subject)||isReading);
     $('#documentModeSwitch [data-documents="true"]').classList.toggle('hidden',!documentSupport||isReading);
@@ -1345,9 +1361,14 @@
     $$('#documentModeSwitch [data-documents]').forEach(b=>b.setAttribute('aria-pressed',String(!cognitiveOnly&&!interactionOnly&&!photoOnly&&(executedOnly?(b.dataset.documents==='false'&&['compare','plan'].includes(executedFamily)):(b.dataset.documents==='true')===documentOnly))));
     $('#attentionPhotos').setAttribute('aria-pressed',String(photoOnly&&subject==='attention'));
     const digitalMode=$('#digitalModeButton');
-    digitalMode.classList.toggle('hidden',subject!=='communication');
+    const digitalFormats=window.CommunicationContent.availableFormats(route,state.levels[subject]||1,subject);
+    if(!digitalFormats.length)digitalOnly=false;
+    if(!digitalFormats.includes(digitalFamily))digitalFamily='';
+    digitalMode.classList.toggle('hidden',!digitalFormats.length);
     digitalMode.setAttribute('aria-pressed',String(digitalOnly));
-    $('#digitalFamilyControl').classList.toggle('hidden',subject!=='communication'||!digitalOnly);
+    $('#digitalFamilyControl').classList.toggle('hidden',!digitalFormats.length||!digitalOnly);
+    digitalSelect.replaceChildren(new Option('Todas las pantallas',''),...digitalFormats.map(id=>new Option(window.CommunicationContent.digitalFamilies[id],id)));
+    digitalSelect.value=digitalFamily;
     syncLanguageModeButtons();
     $('#wordFitMode').setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily==='words'));
     const hasAvailableModality=$$('#exerciseModalities button').some(button=>{
@@ -1361,11 +1382,21 @@
     renderSchoolTaskGuide();
     newExercise();
   }
+  $('#mathDomainSwitch').onclick=event=>{
+    const key=event.target.closest('button')?.dataset.mathDomain;
+    if(key&&ageData().subjects.includes(key)){subject=key;setupExercise();}
+  };
   const digitalSelect=$('#digitalFamilySelect');
-  digitalSelect.append(new Option('Todas las pantallas',''));
-  for(const [id,label] of Object.entries(window.CommunicationContent.digitalFamilies))digitalSelect.append(new Option(label,id));
   digitalSelect.onchange=()=>{digitalFamily=digitalSelect.value;setupExercise();};
-  $('#digitalModeButton').onclick=()=>{digitalOnly=!digitalOnly;digitalSelect.value=digitalFamily;setupExercise();};
+  $('#digitalModeButton').onclick=()=>{
+    digitalOnly=!digitalOnly;
+    cognitiveOnly=false;executedOnly=false;interactionOnly=false;photoOnly=false;documentOnly=false;
+    memoryAudioOnly=false;roomSpeedOnly=false;speedUnpairedOnly=false;
+    setupExercise();
+  };
+  $('#exerciseModalities').addEventListener('click',event=>{
+    if(event.target.closest('button:not(#digitalModeButton)'))digitalOnly=false;
+  },true);
   $('#documentModeSwitch').addEventListener('click',event=>{
     const button=event.target.closest('button[data-documents],#attentionPhotos');
     if(!button)return;
@@ -1375,14 +1406,15 @@
     setupExercise();
   });
   $('#interactionModeBtn').onclick=()=>{interactionKind='room';interactionOnly=true;cognitiveOnly=false;executedOnly=false;photoOnly=false;documentOnly=false;memoryAudioOnly=false;setupExercise();};
-  $('#miraWait').onclick=()=>{
-    cognitiveOnly=true;cognitiveFamily='wait';executedOnly=false;interactionOnly=false;photoOnly=false;documentOnly=false;
-    setupExercise();
-  };
   $('#miraModeButton').onclick=()=>{
-    miraOpen=!miraOpen;
-    $('#miraChoices').classList.toggle('hidden',!miraOpen);
-    $('#miraModeButton').setAttribute('aria-expanded',String(miraOpen));
+    miraOpen=true;
+    const available=window.ModalityCatalog.forArea(profile,subject,state.levels[subject]||1);
+    digitalOnly=false;executedOnly=false;photoOnly=false;documentOnly=false;memoryAudioOnly=false;
+    cognitiveOnly=available.cognitiveKinds.includes('guidedWait');
+    cognitiveFamily=cognitiveOnly?'wait':'';
+    interactionOnly=!cognitiveOnly&&available.interactionKinds.includes('symbols');
+    interactionKind='symbols';
+    setupExercise();
   };
   $('#interactionKindSwitch').addEventListener('click',event=>{
     const button=event.target.closest('[data-interaction-kind]');
@@ -1407,24 +1439,30 @@
   };
   $('#wordFitMode').onclick=()=>{mode='vocabulary';cognitiveOnly=true;cognitiveFamily='words';executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;setupExercise();};
   function startRandomSession(){
-    const age=window.AgeStages.route(profile);
-    const domains=ageData().subjects.filter(key=>!['reading','middleReading','literacy'].includes(key));
-    const options=domains.flatMap(domain=>{
-      const level=state.levels[domain]||1;
-      const items=window.CognitiveFamilies.pool(age,domain,level);
-      return [...new Set(items.map(item=>item.cognitiveTask.kind))]
-        .filter(kind=>kind!=='guidedWait'&&kind!=='rules')
-        .map(family=>({domain,family}));
-    });
+    const domains=ageData().subjects.filter(domain=>!['reading','middleReading','literacy'].includes(domain));
+    const options=domains.flatMap(domain=>
+      window.ModalityCatalog.forArea(profile,domain,state.levels[domain]||1).cognitiveKinds
+        .filter(kind=>!['guidedWait','rules','falling'].includes(kind))
+        .map(family=>({domain,family})));
     if(domains.includes('executive'))options.push({domain:'executive',family:'executed:plan'});
-    const sequence=[...new Map(shuffle(options).map(option=>[option.family,option])).values()];
+    beginRandomSession([...new Map(shuffle(options).map(option=>[option.family,option])).values()]);
+  }
+  function beginRandomSession(sequence){
+    if(!sequence.length)return;
     guidedSession={plan:sequence.map(x=>x.domain),randomFamilies:sequence.map(x=>x.family),index:0};
     subject=sequence[0].domain;
     updateGuidedBar();
     setupExercise();
   }
   $('#cognitiveFamilyModes').addEventListener('click',event=>{const button=event.target.closest('[data-cognitive-family]');if(!button)return;if(!button.dataset.cognitiveFamily){startRandomSession();return;}if(guidedSession?.randomFamilies){guidedSession=null;hideGuidedBar();}cognitiveFamily=button.dataset.cognitiveFamily;cognitiveOnly=true;executedOnly=false;photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;setupExercise();});
-  $('#executedMode').onclick=()=>{cognitiveOnly=false;executedOnly=true;executedFamily='';photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;setupExercise();};
+  $('#executedMode').onclick=()=>{
+    if(subject==='memory'){
+      const families=shuffle(['serial','spatial','update']);
+      beginRandomSession(families.map(family=>({domain:'memory',family:'executed:'+family})));
+      return;
+    }
+    cognitiveOnly=false;executedOnly=true;executedFamily='';photoOnly=false;documentOnly=false;interactionOnly=false;memoryAudioOnly=false;setupExercise();
+  };
   function completeEarlyWorksheet(response,payload,targetProfile,locale){
     if(!Array.isArray(response?.items))throw new Error('No se recibieron actividades para esta ficha.');
     const selection=window.WorksheetSelection,models=window.WorksheetCatalog;
@@ -1463,7 +1501,7 @@
     const localeRevision = API.localeRevision;
     const res = await API.requestContent({
       ...payload,
-      client_revision:payload.kind==='exercise'?17:payload.kind==='worksheet'&&!payload.cognitive_only?16:payload.cognitive_family==='words'||payload.domain==='communication'?15:payload.cognitive_family==='falling'?14:13,
+      client_revision:payload.kind==='exercise'?18:payload.kind==='worksheet'&&!payload.cognitive_only?16:payload.cognitive_family==='words'||payload.domain==='communication'?15:payload.cognitive_family==='falling'?14:13,
       ...(targetProfile._sessionOnly?{session_only:true}:{}),
       profile_id: targetProfile.id,
       locale,
@@ -1507,10 +1545,11 @@
       ...(kind==='exercise'&&['attention','executive'].includes(domain)&&window.DocumentLibrary?.supports(window.AgeStages.route(profile),domain)?{documents_only:documentOnly}:{}),
       kind,
       domain,
-      ...(kind==='exercise'&&domain==='communication'&&digitalOnly?{digital_only:true,...(digitalFamily?{digital_family:digitalFamily}:{})}:{}),
+      ...(kind==='exercise'&&digitalOnly?{digital_only:true,...(digitalFamily?{digital_family:digitalFamily}:{})}:{}),
       ...(kind==='exercise'&&domain==='speedReasoning'?{room_speed_only:roomSpeedOnly}:{}),
       ...(kind==='exercise'&&domain==='speedReasoning'&&speedUnpairedOnly?{speed_mechanic:'unpaired'}:{}),
       ...(kind==='exercise'&&domain==='memory'&&memoryAudioOnly?{memory_audio_only:true}:{}),
+      ...(kind==='exercise'&&domain==='memory'&&!photoOnly&&!memoryAudioOnly&&!executedOnly&&!digitalOnly?{memory_visual_only:true}:{}),
       ...(window.PhotoLibrary.supports(window.AgeStages.route(profile),domain)?{photos_only:photoOnly}:{}),
       subdomain: ["language","middleLanguage","teenLanguage"].includes(domain) ? mode : ["reading","middleReading","literacy"].includes(domain)?(mode==='writing'?'writing':'reading'):null,
       level: state.levels[domain] || 1,
@@ -1523,6 +1562,9 @@
     }
     const item=res?.items?.[0]||null;
     if(comparison&&comparisonIndex===startIndex&&item?.execution?.format===comparisonFormat)comparisonIndex++;
+    if(kind==='exercise'&&domain==='memory'&&!digitalOnly&&!executedOnly&&!memoryAudioOnly&&item){
+      if(photoOnly!==Boolean(item.photoTask?.kind==='recall'))throw new Error('La actividad de memoria recibida pertenece a otra modalidad.');
+    }
     if(kind==='exercise'&&domain==='memory'&&memoryAudioOnly&&item?.audioMemory!==true){
       throw new Error('El ejercicio recibido no corresponde a memoria auditiva. Vuelve a cargarlo o elige otra modalidad.');
     }
@@ -1624,7 +1666,8 @@
     $("#exerciseVisual").innerHTML = "";
     $("#textAnswerArea").classList.add("hidden");
     $("#selfAssessment").classList.add("hidden");
-    $("#exerciseTopic").textContent=it.topic||it.theme||'';
+    const activityTitle={symbols:'Actúa con reglas',movement:'Movimiento y pausa',auditory:'Escucha y actúa'}[it.interactionTask?.kind];
+    $("#exerciseTopic").textContent=activityTitle||(it.cognitiveTask?.kind==='guidedWait'?'Mira y actúa':it.topic||it.theme||'');
     $("#exerciseTopic").classList.toggle(
       "hidden",
       !$("#exerciseTopic").textContent,
@@ -1696,7 +1739,10 @@
     if (it.type === "self" || (!it.opts && !it.a && it.sample)) {
       $("#textAnswerArea").classList.remove("hidden");
       let criteria=$('#writingCriteria');if(!criteria){criteria=document.createElement('div');criteria.id='writingCriteria';$('#textAnswerInput').after(criteria);}
-      criteria.innerHTML=it.writingRubric?.length?`<p>Comprueba tu texto:</p><ul>${it.writingRubric.map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul>`:'';
+      $('#textAnswerCheck').textContent=it.discussionReview?'Ver un ejemplo de respuesta':'Comparar con el modelo';
+      $('.self-buttons [data-self="true"]').textContent=it.discussionReview?'Cumple la pauta':'Lo he conseguido';
+      $('.self-buttons [data-self="false"]').textContent=it.discussionReview?'Revisar con apoyo':'Necesito practicar';
+      criteria.innerHTML=it.writingRubric?.length?`<p>${it.discussionReview?'Revisad la intervención con una persona de apoyo:':'Comprueba tu texto:'}</p><ul>${it.writingRubric.map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul>`:'';
       $("#textAnswerInput").value = "";
       fitTextAnswer();
       return;
@@ -1736,7 +1782,9 @@
       currentItem.memoryAssociationRevision ? JSON.stringify({
         schema:'gliax.exercise-metrics.v1',modality:'memory_association',definition_version:currentItem.memoryAssociationRevision,
         associations:currentItem.memoryContent.length,exposure_ms:currentItem.revealMs
-      }) : currentItem.type || "standard",
+      }) : currentItem.spatialGridRevision?JSON.stringify({schema:'gliax.exercise-metrics.v1',
+        modality:'memory_spatial',definition_version:currentItem.spatialGridRevision
+      }) : currentItem.mechanic || currentItem.type || "standard",
     );
     showFeedback(correct, pts, currentItem.why);
     if(currentItem.speedTask){
@@ -1959,7 +2007,10 @@
         const ok = b.dataset.self === "true";
         if(currentItem._selfAssessed)return;
         currentItem._selfAssessed=true;
-        showFeedback(ok, saveResult(subject, ok, currentItem.id, "self"),ok?'Has indicado que lo has conseguido.':'Has indicado que necesitas practicar. Revisa tu texto con el modelo y la lista de comprobación.');
+        const supervised=currentItem.discussionReview===true;
+        const detail=supervised?JSON.stringify({schema:'gliax.exercise-metrics.v1',modality:'communication_supervised',definition_version:1,variant:currentItem.mechanic,review:ok?'met':'revise'}):'self';
+        const points=saveResult(subject,supervised?null:ok,currentItem.id,detail,{excludeFromPerformance:supervised,level:currentItem.level});
+        showFeedback(ok,points,ok?'Has indicado que lo has conseguido.':'Has indicado que necesitas practicar. Revisa tu texto con el modelo y la lista de comprobación.');
         $$('.self-buttons button').forEach(button=>button.disabled=true);
         $('#reviseWritingAnswer').classList.toggle('hidden',ok);
         if(!ok)$('#exerciseFeedback').className='feedback practice';
@@ -2100,9 +2151,13 @@
   }
   function areaGroupFor(domain){return ['geometry','division','middleMath','teenMath'].includes(domain)?'math':
     ['language','middleLanguage','teenLanguage','reading','middleReading','literacy','english','communication'].includes(domain)?'language':'cognitive';}
-  function orderedAreas(subjects){return ['cognitive','language','math'].flatMap(group=>subjects.filter(domain=>areaGroupFor(domain)===group));}
+  function visibleAreas(subjects){return subjects.filter(key=>key!=='geometry'||!subjects.includes('division'));}
+  function expandMath(domains){
+    return domains.flatMap(key=>key==='division'&&ageData().subjects.includes('geometry')?['division','geometry']:[key]);
+  }
+  function orderedAreas(subjects){return ['cognitive','language','math'].flatMap(group=>visibleAreas(subjects).filter(domain=>areaGroupFor(domain)===group));}
   function renderHomeLevels() {
-    const subjects=ageData().subjects,labels={cognitive:'Áreas cognitivas',language:'Lenguaje y comunicación',math:'Matemáticas'};
+    const subjects=visibleAreas(ageData().subjects),labels={cognitive:'Áreas cognitivas',language:'Lenguaje y comunicación',math:'Matemáticas'};
     const groups=['cognitive','language','math'].filter(group=>subjects.some(s=>areaGroupFor(s)===group));
     $("#homeLevels").innerHTML=groups.map(group=>`<section class="training-area-group"><h3>${labels[group]}</h3><div class="training-group-grid">${subjects.filter(s=>areaGroupFor(s)===group).map(s=>{const level=state.levels[s]||1;return `<button type="button" class="level-row" data-home-area="${s}" data-area="${s}"><span class="area-illustration" aria-hidden="true">${areaIcon(s,'professional')}</span><strong>${SUBJECT_META[s].name}</strong><div class="level-track" role="meter" aria-label="Nivel actual" aria-valuemin="1" aria-valuemax="3" aria-valuenow="${level}">${[1,2,3].map(n=>`<span class="${n<=level?'is-active':''}" aria-hidden="true"></span>`).join('')}</div><span class="level-tag">NIVEL ${level}</span></button>`;}).join('')}</div></section>`).join('');
     $$('[data-home-area]').forEach(button=>button.onclick=()=>{guidedSession=null;hideGuidedBar();subject=button.dataset.homeArea;switchSection('exercise');setupExercise();});
@@ -2118,7 +2173,7 @@
       .sort((a, b) => a.acc - b.acc || b.n - a.n);
     const rec = stats[0];
     $("#recommendedTitle").textContent = rec.n
-      ? `Refuerzo: ${SUBJECT_META[rec.s].name}`
+      ? `Refuerzo: ${areaGroupFor(rec.s)==='math'?'Matemáticas':SUBJECT_META[rec.s].name}`
       : `Empieza por ${SUBJECT_META[ageData().subjects[0]].name}`;
     $("#recommendedText").textContent = rec.n
       ? `Precisión reciente: ${Math.round(rec.acc * 100)}%.`
@@ -2168,10 +2223,11 @@
     const date=new Date(value);if(!value||!Number.isFinite(date.getTime()))return 'Fecha no disponible';
     return new Intl.DateTimeFormat('es-ES',/^\d{4}-\d{2}-\d{2}$/.test(value)?{dateStyle:'medium'}:{dateStyle:'medium',timeStyle:'short'}).format(date);
   }
+  let progressFilters={days:28,area:""};
   function renderProgress() {
     const report=window.ProgressReport.build(state.history);
     $('#progressSummary').innerHTML=Object.entries(report.groups).map(([key,group])=>
-      `<div class="card progress-total" data-category="${key}" data-count="${group.count}"><strong>${group.count}</strong><span>${window.ProgressReport.labels[key]}</span><small>${key==='scored'&&group.count?`${group.correct} aciertos · ${group.precision}% de precisión`:key==='rules'?'Actividades de aplicación de reglas':key==='wait'?'Intervalos finalizados':'Prácticas fuera de la puntuación'}</small></div>`).join('');
+      `<div class="card progress-total" data-category="${key}" data-count="${group.count}"><strong>${group.count}</strong><span>${window.ProgressReport.labels[key]}</span><small>${key==='scored'&&group.count?`${group.correct} aciertos · ${group.precision}% de precisión`:key==='rules'?'Actividades de aplicación de reglas':key==='wait'?'Intervalos finalizados':key==='scored'?'Sin ejercicios puntuables':'Prácticas fuera de la puntuación'}</small></div>`).join('');
     let guidedWaitProgress=$('#guidedWaitProgress');if(!guidedWaitProgress){guidedWaitProgress=document.createElement('details');guidedWaitProgress.id='guidedWaitProgress';guidedWaitProgress.className='card panel-card guided-wait-history';$('#sessionEvolution').parentElement.before(guidedWaitProgress);}
     const guidedWaitRows=report.rows.filter(entry=>entry.category==='wait').map(entry=>entry.row),waitSessions=new Set(guidedWaitRows.map(row=>row.sessionId).filter(Boolean)).size;
     guidedWaitProgress.classList.toggle('hidden',!guidedWaitRows.length);
@@ -2197,15 +2253,13 @@
     observations.classList.toggle('hidden',!entries.length);
     observations.innerHTML=`<summary>Práctica con movimientos y objetos · ${entries.length} registros</summary><p>Observaciones personales o acompañadas, separadas de los aciertos de las actividades en pantalla.</p><ul>${entries.slice(-8).reverse().map(entry=>`<li><strong>${entry.kind==='movement'?'Mira/escucha y actúa · pantalla':entry.kind==='auditory'?'Mira/escucha y actúa · audio':'Busca a tu alrededor'} · nivel ${Number(entry.level)||1}</strong> · ${escapeHtml(observationText(entry))}</li>`).join('')}</ul>`;
     $("#progressProfileTitle").textContent = `Evolución de ${profile.name}`;
-    $("#progressCards").innerHTML = ageData()
-      .subjects.map((s) => {
-        const {count,precision}=report.areas.get(window.ProgressReport.areas[s])||{count:0,precision:null};
-        const acc=precision??0;
-        const palette={language:['#4C5BDD','#EAF0FF'],middleLanguage:['#4C5BDD','#EAF0FF'],teenLanguage:['#4C5BDD','#EAF0FF'],division:['#A7463D','#FFF0EE'],geometry:['#3645B9','#EAF0FF'],middleMath:['#A7463D','#FFF0EE'],teenMath:['#A7463D','#FFF0EE'],literacy:['#3645B9','#EEE9FA'],reading:['#3645B9','#EEE9FA'],english:['#4C5BDD','#EAF0FF'],social:['#A7463D','#FFF0EE'],attention:['#4C5BDD','#EEE9FA'],applied:['#A7463D','#FFF0EE'],executive:['#A7463D','#FFF0EE'],memory:['#A7463D','#F8E8EC'],speedReasoning:['#4C5BDD','#EAF0FF']};
-        const [color,tint]=palette[s]||['#087D71','#E1F8F4'];
-        return `<div class="progress-subject card" style="--progress-color:${color};--progress-tint:${tint}"><small>${SUBJECT_META[s].name}</small><div class="accuracy-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="ring-track" cx="60" cy="60" r="49"/><circle class="ring-value" cx="60" cy="60" r="49" pathLength="100" stroke-opacity="${acc?1:0}" stroke-dasharray="${acc} 100"/></svg><div><strong>${count?acc+'%':'—'}</strong><span>${count?'aciertos':'sin práctica'}</span></div></div><small>${count} ${count===1?'ejercicio':'ejercicios'} · nivel ${state.levels[s] || 1}</small></div>`;
-      })
-      .join("");
+    window.ProgressDashboard.render($('#progressDashboard'),report,{
+      ...progressFilters,
+      pending:guidedSession?Math.max(0,guidedSession.plan.length-guidedSession.index):null,
+      onChange:(filters,control)=>{
+        progressFilters=filters;renderProgress();$('#'+control)?.focus();
+      }
+    });
     renderSpeedProgress();
     const recent=report.sessions.slice(-12).map(row=>({...row,attempts:row.count}));
     if(!recent.length){$('#sessionEvolution').innerHTML='<p class="muted">Completa algunos ejercicios para ver aquí tu evolución.</p>';return;}
@@ -2244,7 +2298,7 @@
     };
   }
   function buildHomework() {
-    const options = ageData().subjects;
+    const options = visibleAreas(ageData().subjects);
     worksheetBuilder.refresh();
     $("#homeworkOptions").innerHTML = options
       .map(
@@ -2263,7 +2317,7 @@
     const worksheetProfile = profile;
     const worksheetExportProfile = {...profile, contentLocale:API.effectiveLocale(profile)};
     const worksheetLocaleRevision = API.localeRevision;
-    const selected = $$("#homeworkOptions input:checked").map((x) => x.value);
+    const selected = expandMath($$("#homeworkOptions input:checked").map((x) => x.value));
     if (!selected.length)
       return ($("#docxStatus").textContent =
         "Selecciona al menos un contenido.");
@@ -2337,9 +2391,7 @@
       .join("");
     const update = () => {
       const n = Number($("#sessionActivityCount").value);
-      const selected = $$("#sessionDomainOptions input:checked").map(
-        (x) => x.value,
-      );
+      const selected = expandMath($$("#sessionDomainOptions input:checked").map(x=>x.value));
       const plan = [];
       for (let i = 0; i < n; i++)
         if (selected.length) plan.push(selected[i % selected.length]);
@@ -2355,9 +2407,7 @@
   }
   function startGuidedSession() {
     const n = Number($("#sessionActivityCount").value);
-    const selected = $$("#sessionDomainOptions input:checked").map(
-      (x) => x.value,
-    );
+    const selected = expandMath($$("#sessionDomainOptions input:checked").map(x=>x.value));
     if (!selected.length) return alert("Selecciona al menos un área.");
     const plan = [];
     for (let i = 0; i < n; i++) plan.push(selected[i % selected.length]);

@@ -58,6 +58,6 @@ test('everyday settings have genuinely graded recall: one, two and three indepen
    }
   }
   const differences=photo.pool(age,'attention',level);assert.equal(differences.length,5);
-  for(const it of differences){assert.equal(it.answers.length,3);assert.equal(it.differenceCount,level===1?1:3);assert.equal(new Set(it.opts).size,it.opts.length);assert.equal(it.opts.length,level===3?6:4);assert.ok(it.answers.every(x=>it.opts.includes(x)));assert.equal(it.q,level===1?'Marca 1 diferencia.':'Marca 3 diferencias.');assert.ok(['street','park','city','factory','museumComparison'].includes(it.photoTask.pairId));}
+  for(const it of differences){assert.equal(it.answers.length,3);assert.equal(it.differenceCount,3);assert.equal(new Set(it.opts).size,it.opts.length);assert.equal(it.opts.length,level===3?6:4);assert.ok(it.answers.every(x=>it.opts.includes(x)));assert.equal(it.q,'Marca 3 diferencias.');assert.ok(['kitchen','desk','bus','factory','sports'].includes(it.photoTask.pairId));}
  }
 });

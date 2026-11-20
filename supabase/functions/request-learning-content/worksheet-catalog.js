@@ -2,7 +2,7 @@
   'use strict';
 
   const ages={early:'6–7 años',junior:'8–10 años',primary:'10–12 años',middle:'13–15 años',teen:'16–18 años'};
-  const areas={attention:'Atención',executive:'Funciones ejecutivas',memory:'Memoria',speedReasoning:'Velocidad de procesamiento',social:'Perspectivas y convivencia',communication:'Comunicación funcional',language:'Lenguaje',middleLanguage:'Lenguaje',teenLanguage:'Lenguaje',reading:'Lectura y escritura',literacy:'Lectura y escritura',middleReading:'Lectura y escritura',division:'Matemáticas',middleMath:'Matemáticas',teenMath:'Matemáticas',geometry:'Geometría',english:'Inglés',applied:'Situaciones cotidianas'};
+  const areas={attention:'Atención',executive:'Funciones ejecutivas',memory:'Memoria',speedReasoning:'Velocidad de procesamiento',social:'Perspectivas y convivencia',communication:'Comunicación funcional',language:'Lenguaje',middleLanguage:'Lenguaje',teenLanguage:'Lenguaje',reading:'Lectura y escritura',literacy:'Lectura y escritura',middleReading:'Lectura y escritura',division:'Matemáticas',middleMath:'Matemáticas',teenMath:'Matemáticas',geometry:'Matemáticas',english:'Inglés',applied:'Situaciones cotidianas'};
   const curricularAreas=new Set(['language','middleLanguage','teenLanguage','reading','middleReading','literacy','division','middleMath','teenMath','geometry','english']);
   const definitions={
     differences:['Encuentra las diferencias','Comparar escenas fijas y señalar cambios'],

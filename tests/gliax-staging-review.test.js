@@ -210,3 +210,66 @@ test('concurrent identical browser loads share one request; later deliveries and
  resolve({data:{items:[{q:'Nueva entrega'}]}});
  assert.equal((await next).items[0].q,'Nueva entrega');
 });
+
+test('revision 18 delivers a mixed session after an incompatible request without charging the rejected attempt',async()=>{
+ const h=service({age:'primary'});
+ const invalid=await h.request({client_revision:18,domain:'executive',cognitive_only:true,cognitive_family:'deduction',documents_only:true});
+ assert.equal(invalid.status,400);
+ assert.equal(h.records.get('exercise'),undefined);
+ assert.deepEqual(h.writes,[]);
+ const options=[
+  ['executive',{cognitive_only:true,cognitive_family:'change'},'change'],
+  ['attention',{cognitive_only:true,cognitive_family:'contradiction'},'contradiction'],
+  ['executive',{executed_only:true,executed_family:'plan'},'plan'],
+  ['language',{cognitive_only:true,cognitive_family:'words'},'words'],
+  ['memory',{executed_only:true,executed_family:'spatial'},'spatial'],
+ ];
+ for(const [i,[domain,selection,kind]] of options.entries()){
+  const reply=await h.request({client_revision:18,domain,...selection});
+  assert.equal(reply.status,200,JSON.stringify(reply.data));
+  assert.equal(reply.data.usage.used,i+1);
+  const item=reply.data.items[0];
+  assert.equal(item.domain,domain);
+  assert.equal((item.execution||item.cognitiveTask).kind,kind);
+ }
+ const unauthenticated=await h.request({client_revision:18,domain:'attention'},null);
+ assert.equal(unauthenticated.status,401);
+ assert.equal(h.records.get('exercise'),options.length);
+});
+
+test('revision 18 separates visual recall, photographic scenes and the three interactive memory families',async()=>{
+ const h=service({age:'primary'});
+ const direct=await h.request({client_revision:18,domain:'memory',memory_visual_only:true,count:6});
+ assert.equal(direct.status,200,JSON.stringify(direct.data));
+ assert.equal(direct.data.items.length,6);
+ assert.ok(direct.data.items.every(it=>it.type==='memoryReveal'&&!it.photoTask&&!it.audioMemory));
+ const scenes=await h.request({client_revision:18,domain:'memory',photos_only:true,count:3});
+ assert.equal(scenes.status,200,JSON.stringify(scenes.data));
+ assert.ok(scenes.data.items.every(it=>it.photoTask?.kind==='recall'));
+ for(const family of ['serial','spatial','update']){
+  const actual=await h.request({client_revision:18,domain:'memory',executed_only:true,executed_family:family});
+  assert.equal(actual.status,200,JSON.stringify(actual.data));
+  assert.equal(actual.data.items[0].execution.kind,family);
+ }
+ const bad=await h.request({client_revision:18,domain:'language',cognitive_only:true,cognitive_family:'falling'});
+ assert.equal(bad.status,400);
+ assert.equal(h.records.get('exercise'),12);
+});
+
+test('transversal selector runs the real handler with separate formats and operations, in the eight variants',async()=>{
+ for(const tag of Object.keys(locales.labels)){
+  const h=service({age:'middle',locale:tag,url:staging,qa:qaId});
+  for(const [domain,format] of [['attention','message'],['communication','notice'],['memory','message'],['executive','app'],['middleLanguage','message'],['middleReading','message']]){
+   const reply=await h.request({client_revision:18,locale:tag,domain,digital_only:true,digital_family:format});
+   assert.equal(reply.status,200,JSON.stringify(reply.data));
+   assert.equal(reply.data.usage.limit,1200);
+   const item=reply.data.items[0];
+   assert.equal(item.simulation.format,format);
+   assert.equal(item.localization.locale,tag);
+   model.forDelivery(item,{age_band:'middle'},domain);
+  }
+  const invalid=await h.request({client_revision:18,locale:tag,domain:'memory',digital_only:true,digital_family:'notice'});
+  assert.equal(invalid.status,400);
+  assert.equal(h.records.get('exercise'),6);
+ }
+});

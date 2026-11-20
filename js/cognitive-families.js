@@ -2,7 +2,7 @@
 'use strict';
 const ages=['early','junior','primary','middle','teen'];
 const definitions={
- rules:{title:'Actúa con reglas 2.0',primaryConstruct:'responseInhibition',secondaryLoads:['workingMemory','cognitiveFlexibility'],functionalPurpose:'Detener una respuesta automática y adaptarse cuando cambian las instrucciones',printable:'interactive-only'},
+ rules:{title:'Adivina la regla',primaryConstruct:'responseInhibition',secondaryLoads:['workingMemory','cognitiveFlexibility'],functionalPurpose:'Detener una respuesta automática y adaptarse cuando cambian las instrucciones',printable:'interactive-only'},
  wait:{title:'Espera guiada',primaryConstruct:'guidedWaitPractice',secondaryLoads:['externalTimeCue'],functionalPurpose:'Practicar la espera con una señal temporal visible y acompañamiento profesional',printable:'interactive-only'},
  falling:{title:'Palabras en caída',primaryConstruct:'writtenTranscription',secondaryLoads:['visualTracking','typing'],functionalPurpose:'Practicar la transcripción escrita con palabras presentadas en pantalla',printable:'interactive-only'},
  words:{title:'La palabra que encaja',primaryConstruct:'lexicalSearch',secondaryLoads:['ruleMaintenance','inhibition'],functionalPurpose:'Buscar palabras precisas que cumplan las condiciones de un mensaje',printable:'fully-printable'},

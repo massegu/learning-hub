@@ -21,7 +21,7 @@
       memoryAudio:domain==='memory'&&memory.some(item=>item.audioMemory===true),
       executed:['attention','memory','executive'].includes(domain)&&(root.ExecutedTasks?.pool(age,domain,level)||[]).length>0,
       cognitiveKinds,
-      fallingWords:root.CognitiveFamilies?.pool(age,domain,level,'falling').length>0,
+      fallingWords:domain==='speedReasoning'&&root.CognitiveFamilies?.pool(age,domain,level,'falling').length>0,
       wordFit:['language','middleLanguage','teenLanguage'].includes(domain)&&cognitiveKinds.includes('words'),
       speed:{
         screen:domain==='speedReasoning'&&speed.length>0,

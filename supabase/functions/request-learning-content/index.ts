@@ -1020,7 +1020,9 @@ function socialExercise(level:number){
 
 function validateItem(item:any):boolean{
   if(item?.type==="cognitiveTask"||String(item?.contentKey||"").startsWith("cognitive-v")){try{(globalThis as any).CognitiveFamilies.validate(item);return true;}catch(_){return false;}}
-  if(item?.domain==='communication'){try{(globalThis as any).CommunicationContent.validate(item);}catch(_){return false;}}
+  if(String(item?.contentKey||'').startsWith('digital-v1:')){
+    try{(globalThis as any).CommunicationContent.validateTransversal(item);}catch(_){return false;}
+  }else if(item?.domain==='communication'){try{(globalThis as any).CommunicationContent.validate(item);}catch(_){return false;}}
   if(item?.type==="executed"||String(item?.contentKey||"").startsWith("executed-v")){try{(globalThis as any).ExecutedTasks.validate(item);return true;}catch(_){return false;}}
   if(item?.qualityEvidence||/^functional_/.test(item?.mechanic||'')||String(item?.contentKey||'').startsWith('functional-v1:')){try{(globalThis as any).FunctionalContent.validate(item);}catch(_){return false;}}
   if(item?.roomSpeedTask){try{(globalThis as any).Curriculum.validateRoomSpeed(item);}catch(_){return false;}}
@@ -2380,10 +2382,10 @@ function variantExercise(age:string,domain:string,level:number,subdomain:string|
   if(!interactionOnly&&!photosOnly&&documentsOnly!==true&&Math.random()<.3){const functional=(globalThis as any).FunctionalContent.generate(age,domain,level,subdomain);if(functional)return {...functional,id:age+'-functional-'+crypto.randomUUID()};}
   if(interactionOnly){const item=(globalThis as any).Curriculum.generateInteractive(age,domain,level,interactionKind);return item?{...item,id:age+'-interactive-'+crypto.randomUUID()}:null;}
   const photos=(globalThis as any).PhotoLibrary;
-  const photo=()=>{const item=photos.generate(age,domain,level);return item?{...item,id:age+'-photo-'+crypto.randomUUID()}:null;};
+  const photo=()=>{const item=photos.generate(age,domain,level,1);return item?{...item,id:age+'-photo-'+crypto.randomUUID()}:null;};
   if(photosOnly)return photo();
   if(domain==='social'&&age==='teen'&&Math.random()<.5)return {...matrixSocial18(age,domain,level,Math.floor(Math.random()*360)),domain};
-  if(domain==="attention"&&documentsOnly!==true&&photos.supports(age,domain)&&Math.random()<.3)return photo();
+  if(domain==="attention"&&documentsOnly!==true&&!excludeMechanics.includes('attention_photo_differences')&&photos.supports(age,domain)&&Math.random()<.3)return photo();
   if(domain==='attention'&&documentsOnly!==true&&Math.random()<.3){const bank=(globalThis as any).Curriculum.practice(age,domain,level);if(bank.length)return {...pick(bank),id:age+'-practice-'+crypto.randomUUID()};}
   const academic=(globalThis as any).Curriculum.generateAcademic(age,domain,level,subdomain||'grammar');
   if(academic)return {...academic,id:age+'-academic-'+crypto.randomUUID()};
@@ -2592,13 +2594,13 @@ Deno.serve(async (req:Request)=>{
   const route=profile.progress?.ageRoute;
   const age=(route==="early"||route==="junior")?route:profile.age_band;
   const locale=(globalThis as any).LocaleContent.normalize(account.content_locale??profile.locale);
-  if(body.client_revision===17&&body.locale!==undefined&&body.locale!==locale)
+  if(Number(body.client_revision)>=17&&body.locale!==undefined&&body.locale!==locale)
     return usageReply({error:"La variante solicitada no coincide con la preferencia guardada. Vuelve a seleccionar la variante.",code:"CONTENT_LOCALE_CHANGED"},409);
   const level=Math.max(1,Math.min(3,Number(body.level||1)));
   const requestedDomains=kind==="worksheet" ? (Array.isArray(body.domains)&&body.domains.length?body.domains:(globalThis as any).Curriculum.visible(SUBJECTS[age]||[],age)) : [body.domain];
   if(!SUBJECTS[age] || !Number.isInteger(level) || (kind!=="game" && (!Array.isArray(requestedDomains)||!requestedDomains.length||requestedDomains.some((d:any)=>!SUBJECTS[age].includes(d)))))
     return new Response(JSON.stringify({error:"Área o nivel no permitido para este perfil."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
-  if(body.client_revision!==undefined&&![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.client_revision!==undefined&&![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.memory_audio_only!==undefined&&(typeof body.memory_audio_only!=='boolean'||body.memory_audio_only&&(kind!=='exercise'||body.domain!=='memory'||body.photos_only||body.interaction_only||body.documents_only||body.executed_only||body.cognitive_only)))return new Response(JSON.stringify({error:'Modalidad de memoria auditiva no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.memory_audio_only&&Number(body.client_revision||1)<12)return new Response(JSON.stringify({error:'Actualiza la página para abrir la memoria auditiva.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.speed_mechanic!==undefined&&(!(kind==='exercise'&&body.domain==='speedReasoning'&&body.speed_mechanic==='unpaired')||body.room_speed_only||body.photos_only||body.documents_only||body.interaction_only||body.cognitive_only||body.executed_only))return new Response(JSON.stringify({error:'Mecánica de velocidad no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -2627,6 +2629,8 @@ Deno.serve(async (req:Request)=>{
   const wordRevision=kind==='worksheet'&&body.cognitive_content_key
     ? (String(body.cognitive_content_key).startsWith('cognitive-v2:')&&paperRevision?2:1)
     : (Number(body.client_revision||1)>=15?2:1);
+  if(body.client_revision===18&&body.cognitive_family==='falling'&&body.domain!=='speedReasoning')
+    return usageReply({error:'Palabras en caída pertenece a Velocidad de procesamiento.'},400);
   const cognitiveBank=body.cognitive_only?cognitive.pool(age,body.domain,level,body.cognitive_family||null,wordRevision):[];
   const cognitivePrint=body.cognitive_only&&kind==='worksheet'&&typeof body.cognitive_content_key==='string'?cognitiveBank.find((it:any)=>it.contentKey===body.cognitive_content_key&&it.printable!=='interactive-only'):null;
   if(body.cognitive_content_key!==undefined&&(!body.cognitive_only||kind!=='worksheet'||!cognitivePrint))return new Response(JSON.stringify({error:'Esta actividad no está disponible en papel para este perfil.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -2636,21 +2640,30 @@ Deno.serve(async (req:Request)=>{
   if(body.executed_only!==undefined&&(typeof body.executed_only!=='boolean'||body.executed_only&&(kind!=='exercise'||!['attention','memory','executive'].includes(body.domain)||body.interaction_only||body.photos_only||body.documents_only||body.room_speed_only)))return new Response(JSON.stringify({error:'Modalidad interactiva no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.executed_only&&Number(body.client_revision||1)<11)return new Response(JSON.stringify({error:'Actualiza la página para abrir los retos interactivos.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   const executed=(globalThis as any).ExecutedTasks;
-  if(body.executed_family!==undefined&&(!body.executed_only||body.client_revision!==17||
-       !(body.domain==="attention"&&body.executed_family==="compare"||body.domain==="executive"&&body.executed_family==="plan")))
+  if(body.executed_family!==undefined&&(!body.executed_only||Number(body.client_revision)<17||
+       !(body.domain==="attention"&&body.executed_family==="compare"||body.domain==="executive"&&body.executed_family==="plan"||
+          body.client_revision===18&&body.domain==="memory"&&["serial","spatial","update"].includes(body.executed_family))))
     return usageReply({error:"Familia interactiva no disponible para esta petición."},400);
   if(body.comparison_format!==undefined&&(body.executed_family!=="compare"||!executed.comparisonFormats.includes(body.comparison_format)))
     return usageReply({error:"Formato de comparación no válido."},400);
+  const memoryVisual=body.memory_visual_only===true;
+  if(body.memory_visual_only!==undefined&&(typeof body.memory_visual_only!=='boolean'||
+    memoryVisual&&(body.client_revision!==18||kind!=='exercise'||body.domain!=='memory'||body.photos_only||body.memory_audio_only||body.executed_only||body.digital_only)))
+    return usageReply({error:'Modalidad visual de memoria no válida.'},400);
   const digital=body.digital_only===true;
-  if(body.digital_only!==undefined&&(typeof body.digital_only!=="boolean"||
-      digital&&(kind!=="exercise"||body.domain!=="communication"||body.client_revision!==17||
-        body.cognitive_only||body.executed_only||body.interaction_only||body.photos_only||body.documents_only)))
-    return usageReply({error:"Simulación digital no disponible para esta petición."},400);
   const communication=(globalThis as any).CommunicationContent;
+  const transversal=body.client_revision===18;
+  if(body.digital_only!==undefined&&(typeof body.digital_only!=="boolean"||
+      digital&&(kind!=="exercise"||(!transversal&&(body.domain!=="communication"||body.client_revision!==17))||
+        body.cognitive_only||body.executed_only||body.interaction_only||body.photos_only||body.documents_only||body.memory_audio_only||body.room_speed_only||body.speed_mechanic)))
+    return usageReply({error:"Simulación digital no disponible para esta petición."},400);
   if(body.digital_family!==undefined&&(!digital||typeof body.digital_family!=="string"||!Object.hasOwn(communication.digitalFamilies,body.digital_family)))
-    return usageReply({error:"Familia de simulación no válida."},400);
+    return usageReply({error:"Formato digital no válido."},400);
+  const digitalCandidates=digital?(transversal?communication.transversalPool(age,level,body.domain,body.digital_family):
+    communication.digitalPool(age,level,body.digital_family)):[];
+  if(digital&&!digitalCandidates.length)return usageReply({error:"Este formato no está disponible para el área, edad y nivel indicados."},400);
   const requestedCount=Number(body.count ?? 1);
-  const count=body.client_revision===17?requestedCount:Math.max(1,Math.min(10,requestedCount));
+  const count=Number(body.client_revision)>=17?requestedCount:Math.max(1,Math.min(10,requestedCount));
   if(kind==="exercise"&&(!Number.isSafeInteger(count)||count<1||count>10))
     return usageReply({error:"Número de actividades no válido."},400);
   const cost=kind==="exercise"?count:1;
@@ -2761,12 +2774,23 @@ Deno.serve(async (req:Request)=>{
       if(row.mechanic_signature) recentEntries.push(row.mechanic_signature);
     }
     const compatibleExercise=()=>{
-      const item=body.room_speed_only?pick((globalThis as any).Curriculum.roomSpeedPool(age,level)):variantExercise(age,domain,level,subdomain,typeof body.documents_only==='boolean'?body.documents_only:null,body.photos_only===true,body.interaction_only===true,body.interaction_kind||null,progress.ageYears||null);
+      const item=body.room_speed_only?pick((globalThis as any).Curriculum.roomSpeedPool(age,level)):variantExercise(age,domain,level,subdomain,typeof body.documents_only==='boolean'?body.documents_only:null,body.photos_only===true,body.interaction_only===true,body.interaction_kind||null,progress.ageYears||null,body.client_revision===18?['attention_photo_differences']:[]);
       if(!item||!compatibleSource(item)||Number(body.client_revision||1)<2&&(item.type==='documentReview'||item.selectiveRecall)||Number(body.client_revision||1)<3&&item.photoTask)return null;
       return regionalCandidate(item,locale,domain,age);
     };
     if(digital){
-      const bank=communication.digitalPool(age,level,body.digital_family).map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
+      const bank=digitalCandidates.map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
+      items=generatedItems(domain,n,recentEntries,()=>null,bank);
+    }else if(body.client_revision===18&&domain==='communication'){
+      const bank=communication.revisedPool(age,level).map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
+      items=generatedItems(domain,n,recentEntries,()=>null,bank);
+    }else if(memoryVisual){
+      const bank=(globalThis as any).Curriculum.pool(age,'memory',level)
+        .filter((it:any)=>!it.photoTask&&!it.audioMemory&&(
+          it.memoryResponse==='order'||it.recallEvidence?.kind==='spatial'||
+          ['memory_recognition','memory_association','memory_selective_recall'].includes(it.mechanic)
+        ))
+        .map((it:any)=>regionalCandidate(it,locale,'memory',age)).filter(Boolean);
       items=generatedItems(domain,n,recentEntries,()=>null,bank);
     }else if(body.memory_audio_only===true){
       const bank=(globalThis as any).Curriculum.pool(age,'memory',level).filter((it:any)=>it.audioMemory===true).map((it:any)=>regionalCandidate(it,locale,'memory',age)).filter(Boolean);
@@ -2778,12 +2802,12 @@ Deno.serve(async (req:Request)=>{
       const bank=cognitiveBank.map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
       items=generatedItems(domain,n,recentEntries,()=>null,bank);
     }else if(body.executed_only===true){
-      const bank=executed.pool(age,domain,level,body.executed_family?5:4)
+      const bank=executed.pool(age,domain,level,body.client_revision===18?6:body.executed_family?5:4)
         .filter((it:any)=>(!body.executed_family||it.execution.kind===body.executed_family)&&(!body.comparison_format||it.execution.format===body.comparison_format))
         .map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
       items=generatedItems(domain,n,recentEntries,()=>null,bank);
     }else if(body.photos_only===true){
-      const bank=(globalThis as any).PhotoLibrary.pool(age,domain,level).filter(compatibleSource).map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
+      const bank=(globalThis as any).PhotoLibrary.pool(age,domain,level,body.client_revision===18?2:1).filter(compatibleSource).map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
       items=generatedItems(domain,n,recentEntries,compatibleExercise,bank);
     }else if(domain==="attention"){
       items=generatedItems(domain,n,recentEntries,compatibleExercise);

@@ -305,8 +305,10 @@ function questions(sceneId,level){
 const supports=(age,domain)=>['junior','primary','middle','teen'].includes(age)&&['memory','attention'].includes(domain);
 for(const image of [...Object.values(scenes),...Object.values(pairs)])if(image.path?.endsWith('.png'))image.webPath=image.path.replace(/\.png$/i,'.webp');
 const bankCache=new Map();
-function templates(age,domain,level=1){
- const key=[age,domain,level].join(':');if(bankCache.has(key))return bankCache.get(key);
+const verifiedDifferencePairs=['kitchen','desk','bus','factory','sports'];
+const historicalDifferencePairs=['street','park','city','factory','museumComparison'];
+function templates(age,domain,level=1,revision=2){
+ const key=[age,domain,level,revision].join(':');if(bankCache.has(key))return bankCache.get(key);
  if(!supports(age,domain))return [];
  const meta={domain,level,requiresStimulus:true,...(age==='teen'?{teenReview:{version:3}}:age==='junior'?{juniorProfile:{route:age,level}}:{schoolProfile:{route:age,level}})};
  const out=[];
@@ -314,10 +316,10 @@ function templates(age,domain,level=1){
   const id=`photo-v1:${age}:${domain}:${level}:${sceneId}:${index}`;
   out.push({...meta,id,contentKey:id,mechanic:'memory_photo',memoryMaterialKey:'photo:'+sceneId,type:'memoryReveal',responseType:'choice',topic:'Memoria · escena cotidiana',q:'Observa la imagen. Después desaparecerá y responderás una pregunta.',memoryQuestion:f.q,stimulus:[{type:'photo',photoId:sceneId}],memoryContent:[{detail:scene.title}],a:f.a,opts:f.opts.slice(0,level===1?3:4),why:f.detail,revealMs:[10000,12000,9000][level-1],photoTask:{kind:'recall',sceneId,index,...(f.evidence?{evidence:f.evidence}:{})}});
  });
- else for(const [pairId,pair] of Object.entries(pairs).filter(([id])=>['street','park','city','factory','museumComparison'].includes(id))){
-  const id=`photo-v1:${age}:${domain}:${level}:${pairId}`;
+ else for(const [pairId,pair] of Object.entries(pairs).filter(([id])=>(revision===1?historicalDifferencePairs:verifiedDifferencePairs).includes(id))){
+  const id=`photo-v${revision}:${age}:${domain}:${level}:${pairId}`;
   const answers=pair.changes.map(([object])=>object);
-  const differenceCount=level===1?1:answers.length;
+  const differenceCount=revision===1&&level===1?1:answers.length;
   const opts=[...answers,...pair.unchanged.slice(0,level===3?3:1)];
   const q=differencePrompt(differenceCount);
   out.push({...meta,id,contentKey:id,mechanic:'attention_photo_differences',type:'photoDifference',responseType:'multiple',topic:'Atención · Encuentra las diferencias',q,stimulus:[{type:'photoPair',pairId}],answers,opts,differenceCount,why:pair.changes.map(([object,change])=>object+': '+change.toLowerCase()+'.').join(' '),photoTask:{kind:'differences',pairId}});
@@ -325,11 +327,12 @@ function templates(age,domain,level=1){
  bankCache.set(key,out);return out;
 }
 function differencePrompt(count){return 'Marca '+count+(count===1?' diferencia.':' diferencias.');}
-function pool(age,domain,level=1){return structuredClone(templates(age,domain,level));}
+function pool(age,domain,level=1,revision=2){return structuredClone(templates(age,domain,level,revision));}
 function validate(item){
  const task=item.photoTask,age=item.teenReview?'teen':item.juniorProfile?.route||item.schoolProfile?.route;
  if(!task||!supports(age,item.domain)||![1,2,3].includes(item.level))throw new Error('Escena o nivel no válido.');
- const expected=templates(age,item.domain,item.level).find(x=>task.kind==='recall'?x.photoTask.sceneId===task.sceneId&&x.photoTask.index===task.index:x.photoTask.pairId===task.pairId&&(x.photoTask.variant||0)===(task.variant||0));
+ const revision=String(item.contentKey||item.id).startsWith('photo-v2:')?2:1;
+ const expected=templates(age,item.domain,item.level,revision).find(x=>task.kind==='recall'?x.photoTask.sceneId===task.sceneId&&x.photoTask.index===task.index:x.photoTask.pairId===task.pairId&&(x.photoTask.variant||0)===(task.variant||0));
  if(!expected)throw new Error('La pregunta no pertenece a la escena revisada.');
  const locale=root.LocaleContent||(typeof require==='function'&&require('./locale-content'));
  const adapted=locale.localizeItem(expected,item.localization?.locale||'es_intl',item.domain);
@@ -337,6 +340,6 @@ function validate(item){
  for(const field of ['opts','answers'])if(JSON.stringify([...(item[field]||[])].sort())!==JSON.stringify([...(adapted[field]||[])].sort()))throw new Error('Las respuestas no corresponden a los datos visibles.');
  return true;
 }
-function generate(age,domain,level){const bank=templates(age,domain,level);return structuredClone(bank[Math.floor(Math.random()*bank.length)]||null);}
+function generate(age,domain,level,revision=2){const bank=templates(age,domain,level,revision);return structuredClone(bank[Math.floor(Math.random()*bank.length)]||null);}
 const api={scenes,pairs,supports,pool,validate,generate,differencePrompt};root.PhotoLibrary=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);

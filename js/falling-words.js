@@ -4,7 +4,7 @@
   function mount(item,{visual,area,onFinish}){
     const task=item.cognitiveTask;
     visual.innerHTML=`
-      <p class="falling-instructions">Usa un teclado. Confirma con Intro o con el botón. Elige la velocidad y si prefieres que la palabra permanezca quieta.</p>
+      <p class="falling-instructions">Escribe la palabra completa para pasar a la siguiente. Puedes ajustar la velocidad o dejarla quieta.</p>
       <div class="falling-lane" hidden><p class="falling-target"></p></div>
       <progress class="falling-time" aria-label="Avance del turno" hidden></progress>
       <p class="falling-status" role="status">Pulsa Empezar cuando estés preparado.</p>`;
@@ -31,7 +31,7 @@
     still.disabled=reducedMotion;
     const durationFactors={slow:1.4,standard:1,fast:.8};
     const results=[];
-    let phase='idle',position=0,frame=0,baseTime=0,elapsed=0,firstInput=null;
+    let phase='idle',position=0,frame=0,baseTime=0,elapsed=0,firstInput=null,composing=false;
 
     const duration=()=>Math.round(task.windowMs*durationFactors[speed.value]);
     const activeTime=()=>elapsed+(phase==='playing'?performance.now()-baseTime:0);
@@ -83,7 +83,7 @@
       const omissions=results.length-correct-errors;
       status.textContent='Ronda terminada.';
       onFinish(correct===results.length,`${correct} correctas · ${errors} con errores · ${omissions} sin respuesta.`,{
-        schema:'gliax.exercise-metrics.v1',modality:'falling_words',definition_version:task.measurementVersion,
+        schema:'gliax.exercise-metrics.v1',modality:'falling_words',definition_version:Math.max(2,task.measurementVersion),
         input:'text_entry',pace:speed.value,presentation:still.checked?'static':'falling',
         window_ms:duration(),correct,errors,omissions,rounds:results
       });
@@ -119,17 +119,21 @@
       }
       field.focus();
     };
-    field.oninput=()=>{
-      if(phase==='playing'&&field.value.trim()&&firstInput===null)firstInput=activeTime();
-    };
-    form.onsubmit=event=>{
-      event.preventDefault();
-      if(phase!=='playing'||!field.value.trim())return;
+    function submit(explicit){
+      if(phase!=='playing'||composing||!field.value.trim())return;
       const time=activeTime();
-      if(time>=duration()){finishRound('omitted',time);return;}
+      if(firstInput===null)firstInput=time;
       const correct=root.CognitiveFamilies.matchesTranscription(task.prompts[position],field.value);
-      finishRound(correct?'correct':'error',time);
+      if(time>=duration())finishRound('omitted',time);
+      else if(correct||explicit)finishRound(correct?'correct':'error',time);
+    }
+    field.addEventListener('compositionstart',()=>{composing=true;});
+    field.addEventListener('compositionend',()=>{composing=false;submit(false);});
+    field.oninput=event=>{
+      if(phase==='playing'&&field.value.trim()&&firstInput===null)firstInput=activeTime();
+      if(!event.isComposing)submit(false);
     };
+    form.onsubmit=event=>{event.preventDefault();submit(true);};
     const interrupt=()=>{if(document.hidden)pause();};
     document.addEventListener('visibilitychange',interrupt);
     return ()=>{

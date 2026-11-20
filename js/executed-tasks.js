@@ -17,12 +17,34 @@ const definitions={
 };
 const quality=root.ContentQuality||(typeof require==='function'&&require('./content-quality'));
 for(const [family,def] of Object.entries(definitions))quality.register(family,def[4],family.startsWith('memory')?'memoryLoad':'rules');
+function spatialLayouts(size,cols,count,seed){
+ const layouts=[],seen=new Set();
+ let includedChevron=false;
+ for(let attempt=0;attempt<512&&layouts.length<8;attempt++){
+  const cells=Array.from({length:size},(_,i)=>i);
+  for(let i=cells.length-1;i>0;i--){
+   seed=(Math.imul(seed,1664525)+1013904223)>>>0;
+   const j=Math.floor(seed/4294967296*(i+1));
+   [cells[i],cells[j]]=[cells[j],cells[i]];
+  }
+  const positions=cells.slice(0,count).sort((a,b)=>a-b),key=positions.join(',');
+  const rows=new Set(positions.map(i=>Math.floor(i/cols))),columns=new Set(positions.map(i=>i%cols));
+  if(rows.size<2||columns.size<2||seen.has(key))continue;
+  const leftToRight=[...positions].sort((a,b)=>a%cols-b%cols);
+  const chevron=count===3&&columns.size===3&&Math.floor(leftToRight[0]/cols)===Math.floor(leftToRight[2]/cols);
+  if(chevron&&includedChevron)continue;
+  includedChevron||=chevron;
+  seen.add(key);layouts.push(positions);
+ }
+ return layouts;
+}
 function pool(age,domain,level=1,revision=4){
  if(!ages.includes(age)||!['attention','memory','executive'].includes(domain)||![1,2,3].includes(level))return [];
  const key=[age,domain,level,revision].join(':');if(cache.has(key))return structuredClone(cache.get(key));
  const early=age==='early',size=early?(level===1?4:6):level===1?9:12,count=early?Math.min(3,level+1):Math.min(5,level+2),out=[];
  for(const home of [false,true])for(const family of Object.keys(definitions).filter(x=>x.startsWith(domain+'.'))){
- for(const format of revision>=5&&family==='attention.compare'?comparisonFormats:[null]){
+ for(const format of revision>=5&&family==='attention.compare'?comparisonFormats:[null])
+ for(const layout of revision>=6&&family==='memory.spatial'?[0,1,2,3]:[null]){
   const pictures=!format&&['middle','teen'].includes(age)?adolescentSets[(level-1+(home?1:0))%adolescentSets.length]:classicPictures;
   const kind=family.split('.')[1],offset=format?(comparisonFormats.indexOf(format)+(home?1:0))%3:home?1:0,cols=early?(level===1?2:3):level===1?3:4;
   const cells=Array.from({length:size},(_,i)=>pictures[(i*3+Math.floor(i/3)+offset)%pictures.length]);
@@ -42,7 +64,7 @@ function pool(age,domain,level=1,revision=4){
    paperQuestion=kind==='update'?(early?'Mira los dibujos. Cambiará uno. Escribe el orden nuevo'+(execution.reverse?' empezando por el último.':'.'):'Recuerda el orden y sustituye el objeto de la posición '+(execution.replaceIndex+1)+' por '+execution.replacement+'. Escribe el orden actualizado'+(execution.reverse?' en orden inverso.':'.')):q;
    stimulus=[{type:'text',text:setting},{type:'list',items:sequence}];feedback=kind==='update'?'Sustituye solo el objeto indicado y conserva el resto del orden.':'Recorrer los objetos en orden ayuda a reconstruir la secuencia.';
   }else if(family==='memory.spatial'){
-   const spatialSize=early&&level===1?6:size,spatialCols=early&&level===1?3:cols,spatialCount=Math.min(spatialSize-1,3+level-1),occupied=[...Array.from({length:spatialSize},(_,i)=>i).filter(i=>i%2===0),...Array.from({length:spatialSize},(_,i)=>i).filter(i=>i%2===1)].map(i=>(i+offset)%spatialSize).slice(0,spatialCount),distractors=pictures.filter(x=>x!==target);execution.cols=spatialCols;execution.occupied=occupied;answer=occupied.map(String);q='Recuerda dónde está el objeto modelo. Después marca solo sus casillas; ignora los otros objetos.';paperQuestion=q+' Modelo: '+target+'.';
+   const spatialSize=early&&(level===1||layout!==null&&level===3)?(level===1?6:9):size,spatialCols=early&&level===1?3:cols,spatialCount=Math.min(spatialSize-1,3+level-1),occupied=layout!==null?spatialLayouts(spatialSize,spatialCols,spatialCount,(ages.indexOf(age)+1)*173+level*19)[layout+(home?4:0)]:[...Array.from({length:spatialSize},(_,i)=>i).filter(i=>i%2===0),...Array.from({length:spatialSize},(_,i)=>i).filter(i=>i%2===1)].map(i=>(i+offset)%spatialSize).slice(0,spatialCount),distractors=pictures.filter(x=>x!==target);execution.cols=spatialCols;execution.occupied=occupied;answer=occupied.map(String);q='Recuerda dónde está el objeto modelo. Después marca solo sus casillas; ignora los otros objetos.';paperQuestion=q+' Modelo: '+target+'.';
    execution.cells=Array.from({length:spatialSize},(_,i)=>occupied.includes(i)?target:distractors[(i+offset)%distractors.length]);stimulus=[{type:'text',text:setting},{type:'table',rows:Array.from({length:spatialSize/spatialCols},(_,r)=>execution.cells.slice(r*spatialCols,(r+1)*spatialCols).map(x=>x||'Vacío'))}];feedback='Usar las filas y columnas como referencia ayuda a recordar las posiciones.';
   }else if(family==='executive.plan'){
    if(revision>=5&&level>=2){
@@ -70,7 +92,7 @@ function pool(age,domain,level=1,revision=4){
    q=kind==='inhibit'?'Pulsa solo cuando aparezca el libro. Con la pelota, espera.':'Sigue la regla de cada bloque. La regla cambiará a mitad.';paperQuestion=q+' Indica la respuesta de cada tarjeta sin medir el tiempo.';
    stimulus=[{type:'text',text:setting},{type:'table',rows:execution.trials.map((t,i)=>[String(i+1),t.symbol,kind==='inhibit'?'Libro: pulsa. Pelota: espera.':t.reversed?'Libro: B. Pelota: A.':'Libro: A. Pelota: B.'])}];feedback=kind==='inhibit'?'Comprobar la señal antes de responder ayuda a respetar las pausas.':'Volver a mirar la regla cuando cambia ayuda a ajustar la respuesta.';
   }
-  const def=definitions[family],id=[format||revision>=5&&kind==='plan'&&level>=2?'executed-v5':'executed-v4',age,domain,level,family,home?'home':'school',...(format?[format]:[])].join(':');
+  const def=definitions[family],id=[layout!==null?'executed-v6':format||revision>=5&&kind==='plan'&&level>=2?'executed-v5':'executed-v4',age,domain,level,family,home?'home':'school',...(format?[format]:[]),...(layout!==null?[String(layout)]:[])].join(':');
   out.push({id,contentKey:id,domain,level,type:'executed',responseType:'executed',requiresStimulus:true,q,paperQuestion,stimulus,sample:answer.map(x=>['cancel','compare','spatial'].includes(kind)?'Fila '+(Math.floor(Number(x)/(execution.cols||cols))+1)+', columna '+(Number(x)%(execution.cols||cols)+1):x==='act'?'Responder':x==='wait'?'Esperar':x).join(' → '),execution:{...execution,answer,ordered:!['cancel','compare','spatial'].includes(kind),exposureMs:early?10000:Math.max(5000,10000-level*1000),trialMs:early?3000:2500},topic:({attention:'Atención',memory:'Memoria',executive:'Funciones ejecutivas'})[domain]+' · retos interactivos',mechanic:'executed_'+family.replaceAll('.','_'),qualityDescriptor:{semanticFamily:family,scenarioFamily:format?'comparison.'+format+'.'+(home?'home':'school'):home?'home.materials':'school.workshop'},primaryConstruct:domain==='memory'&&(kind==='update'||execution.reverse)?'workingMemory':def[0],...(domain==='memory'?{memorySystem:kind==='update'||execution.reverse?'workingMemory':'shortTermMemory'}:{}),secondaryLoads:domain==='memory'?['visualRecognition']:['visualRecognition','motorSelection'],readingDemand:def[1],visualDemand:def[2],motorDemand:def[3],why:feedback});
  }
  }
@@ -78,7 +100,7 @@ function pool(age,domain,level=1,revision=4){
 }
 function validate(item,age){
  if(item?.type!=='executed'||!item.contentKey)throw Error('Falta el contrato de actividad interactiva.');
- const canonical=pool(age||item.contentKey.split(':')[1],item.domain,item.level,item.contentKey.startsWith('executed-v5:')?5:4).find(x=>x.contentKey===item.contentKey);if(!canonical)throw Error('Actividad interactiva no registrada para esta edad.');
+ const canonical=pool(age||item.contentKey.split(':')[1],item.domain,item.level,item.contentKey.startsWith('executed-v6:')?6:item.contentKey.startsWith('executed-v5:')?5:4).find(x=>x.contentKey===item.contentKey);if(!canonical)throw Error('Actividad interactiva no registrada para esta edad.');
  const locale=root.LocaleContent||(typeof require==='function'&&require('./locale-content'));
  const expected=item.localization?locale.localizeItem(canonical,item.localization.locale,item.domain):canonical;
  for(const field of ['type','q','paperQuestion','stimulus','sample','execution','primaryConstruct','memorySystem','secondaryLoads','readingDemand','visualDemand','motorDemand','mechanic','qualityDescriptor'])if(JSON.stringify(item[field])!==JSON.stringify(expected[field]))throw Error('La fuente o respuesta interactiva ha cambiado: '+field);
