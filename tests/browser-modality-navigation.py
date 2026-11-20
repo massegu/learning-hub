@@ -132,7 +132,7 @@ try:
     if available:
      page.evaluate('window.__current=null');button.click();page.wait_for_function('(kind)=>__current?.interactionTask?.kind===kind',arg=kind)
      assert page.evaluate('__requests.at(-1).domain')=='executive',(age,kind,'must remain in executive')
-   area(page,'attention').click();page.wait_for_function('()=>window.__current?.domain==="attention"')
+   area(page,'attention').click();page.wait_for_function('()=>document.querySelector("#exercise").dataset.subject==="attention" && __requests.at(-1)?.domain==="attention"')
    before=page.evaluate('__requests.length')
    for kind in ['symbols','movement','auditory']:
     button=page.locator(f'[data-interaction-kind={kind}]');assert button.is_hidden(),(age,'attention',kind)

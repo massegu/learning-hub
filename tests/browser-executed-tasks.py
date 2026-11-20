@@ -16,8 +16,8 @@ try:
   for age in ['early','teen']:
    workspace(page).locator('#profileSelect').select_option(age)
    for domain,kinds in [('attention',['cancel','compare','follow']),('memory',['serial','spatial','update']),('executive',['plan','switch','inhibit'])]:
-    area(page, domain).click();open_level_options();page.locator('#exerciseLevelSelect').select_option('2')
     for kind in kinds:
+     area(page, domain).click();open_level_options();page.locator('#exerciseLevelSelect').select_option('2')
      page.evaluate('''({age,domain,kind})=>{window.__task=ExecutedTasks.pool(age,domain,2).find(x=>x.execution.kind===kind);window.__executionRequest=null;}''',{'age':age,'domain':domain,'kind':kind})
      page.locator('#documentModeSwitch [data-documents=false]' if domain=='executive' else '#executedMode').click();page.wait_for_function('()=>window.__executionRequest?.executed_only&&document.querySelector(".executed-area")');assert page.evaluate('__executionRequest.client_revision')==18
      completed_before=page.evaluate('__completedCalls');
