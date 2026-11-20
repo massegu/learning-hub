@@ -9,7 +9,7 @@ try:
  with sync_playwright() as p:
   browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);page=browser.new_page(viewport={'width':1440,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');workspace(page).locator('#profileSelect').select_option('early')
-  page.evaluate('''()=>{window.__current=null;const deliver=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return deliver(it,...args)}}''')
+  page.evaluate('''()=>{window.__current=null;window.__contentCalls=[];const request=LearningAPI.requestContent;LearningAPI.requestContent=(payload)=>{__contentCalls.push(payload);return request(payload)};const deliver=ActivityModel.forDelivery;ActivityModel.forDelivery=(it,...args)=>{window.__current=it;return deliver(it,...args)}}''')
   assert page.locator('#homeProgressSummary>div').count()==3
   assert page.locator('.home-progress').get_attribute('open') is None
   assert page.locator('.home-progress .dashboard-grid').count()==0
@@ -109,11 +109,11 @@ try:
    if selector in ['#miraWait','[data-interaction-kind=symbols]','[data-interaction-kind=movement]'] and not page.locator('#miraChoices').is_visible():
     page.locator('#miraModeButton').click()
    assert button.is_visible(),(age,domain,selector)
-   page.evaluate('window.__current=null');before=page.evaluate('__requests.length');button.click()
-   page.wait_for_function('(n)=>__requests.length>n&&(__current||!document.querySelector("#retryContentLoad").classList.contains("hidden"))',arg=before)
+   page.evaluate('window.__current=null');before=page.evaluate('__contentCalls.length');button.click()
+   page.wait_for_function('(n)=>__contentCalls.length>n&&(__current||!document.querySelector("#retryContentLoad").classList.contains("hidden"))',arg=before)
    item=page.evaluate('__current');assert item,(age,domain,selector,page.locator('#exercisePrompt').inner_text())
    if domain=='memory' and selector=='#memoryAudioModeButton':assert item.get('audioMemory') is True,(age,'audio mode must never render spatial/visual memory',item)
-   request=page.evaluate('__requests.at(-1)');assert request['domain']==domain and request['profile_id']==age,(request,age,domain)
+   request=page.evaluate('__contentCalls.at(-1)');assert request['domain']==domain and request['profile_id']==age,(request,age,domain)
    for key,value in expected.items():assert request.get(key)==value,(age,domain,selector,key,value,request)
    if domain=='attention':assert request.get('interaction_kind')!='symbols',request
    assert button.get_attribute('aria-pressed')=='true',(age,domain,selector)
