@@ -228,7 +228,7 @@ try:
         area(page, 'language').click()
         page.locator('#fallingWordsMode').click()
         page.wait_for_selector('.falling-settings')
-        assert page.evaluate('__requests.at(-1).client_revision') == 14
+        assert page.evaluate('__requests.at(-1).client_revision') == 17
         page.get_by_label('Velocidad', exact=True).select_option('slow')
         page.get_by_label('Palabras quietas').check()
         start()

@@ -411,3 +411,23 @@ test('Ficha a la carta writes the exact typologies and independent A4 solutions 
   }
  }
 });
+
+test('the same digital situation prints its localized stimulus and answer key in the eight variants',async()=>{
+ const bank=require('../js/communication-content');
+ for(const key of Object.keys(locale.labels)){
+  const raw=bank.digitalPool('early',1,'message')[0];
+  const item=locale.localizeItem(raw,key,'communication');
+  const {generator,downloads,context}=harness();
+  Object.assign(context.window,{WorksheetCatalog:require('../js/worksheet-catalog'),CognitiveFamilies:require('../js/cognitive-families')});
+  const profile={name:'QA',age_band:'primary',progress:{ageRoute:'early'},contentLocale:key};
+  await generator.generate([[item]],profile,undefined,{solutions:true,professional:true,catalogue:true});
+  const pack=await JSZip.loadAsync(await downloads[0].blob.arrayBuffer());
+  const name=Object.keys(pack.files).find(file=>file.includes('_ficha_'));
+  const solution=Object.keys(pack.files).find(file=>file.includes('_solucionario_'));
+  const open=async entry=>textNodes(await (await JSZip.loadAsync(await pack.file(entry).async('uint8array'))).file('word/document.xml').async('string'));
+  const [sheet,answers]=await Promise.all([open(name),open(solution)]);
+  assert.ok(sheet.includes(item.stimulus[0].rows[1][1]),key);
+  assert.ok(sheet.some(text=>text.includes(locale.labels[key])),key);
+  assert.ok(answers.some(text=>text.includes(item.a)),key);
+ }
+});

@@ -186,7 +186,39 @@
   }
   API.openStripeCheckout=()=>openBilling('checkout');
   API.openBillingPortal=()=>openBilling('portal');
-  API.requestContent=async(payload)=>{const {data,error}=await client.functions.invoke('request-learning-content',{body:payload});if(error){let msg=error.message||'No se pudo cargar el contenido.';try{const ctx=error.context;if(ctx&&typeof ctx.clone==='function'){const body=await ctx.clone().json();if(body?.error)msg=body.error;}else if(ctx?.body?.error)msg=ctx.body.error;}catch(_){}const e=new Error(msg);e.original=error;throw e;}return data};
+  const contentInFlight=new Map();
+  async function invokeContent(payload){
+    const {data,error}=await client.functions.invoke('request-learning-content',{body:payload});
+    if(!error)return data;
+    let body;
+    try {
+      const ctx=error.context;
+      body=typeof ctx?.clone==='function'?await ctx.clone().json():ctx?.body;
+    } catch {}
+    const failure=new Error(typeof body?.error==='string'?body.error:error.message||'No se pudo cargar el contenido.');
+    failure.code=body?.code;
+    failure.usage=body?.usage;
+    failure.original=error;
+    throw failure;
+  }
+  API.requestContent=async payload=>{
+    if(payload.kind!=='exercise')return invokeContent(payload);
+    const key=JSON.stringify([API.user?.id,API.localeRevision,payload]);
+    if(contentInFlight.has(key))return structuredClone(await contentInFlight.get(key));
+    const pending=invokeContent(payload);
+    contentInFlight.set(key,pending);
+    try{return structuredClone(await pending);}finally{contentInFlight.delete(key);}
+  };
+  API.contentErrorMessage=error=>{
+    if(error?.code!=='CONTENT_DELIVERY_LIMIT'&&!/Daily content limit reached/i.test(error?.message||''))return null;
+    const usage=error?.usage;
+    const label={exercise:'ejercicios',worksheet:'fichas',game:'juegos'}[usage?.kind]||'contenido';
+    const date=new Date(usage?.reset_at||'');
+    const reset=Number.isNaN(date.getTime())?'al comenzar el próximo día UTC':
+      'el '+new Intl.DateTimeFormat('es',{dateStyle:'short',timeStyle:'short'}).format(date)+' (hora local)';
+    const counts=Number.isFinite(usage?.used)&&Number.isFinite(usage?.limit)?' ('+usage.used+' de '+usage.limit+')':'';
+    return 'La solicitud supera el límite diario de entregas de '+label+' de la cuenta'+counts+'. Se renueva '+reset+'.';
+  };
   const favoriteFields='id,name,configuration,created_at';
   async function favoriteRequest(build){
     const owner=API.user?.id;

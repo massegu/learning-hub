@@ -237,7 +237,7 @@
         await root.WorksheetGenerator.generate(verified,sheetProfile,undefined,{professional:true,solutions:config.solutions,catalogue:true,
           canDownload:unchanged});
         message(config.versions===1?'Ficha generada con las cantidades solicitadas.':'Versiones generadas con las cantidades solicitadas.');
-      }catch(error){message(error.message);}
+      }catch(error){message(api.contentErrorMessage?.(error)||error.message);}
       finally{generating=false;syncSummary();}
     };
     return {refresh(){if(!container.hidden)activate();}};

@@ -153,7 +153,7 @@
     state = null,
     subject = null,
     mode = "grammar",
-    documentOnly = false,
+    documentOnly = false, digitalOnly = false, digitalFamily = "",
     photoOnly = false,
     memoryAudioOnly = false,
     interactionOnly = false,
@@ -1095,7 +1095,7 @@
     $("#independentSessionBtn").textContent=independent?"Terminar sesión independiente":"Empezar sesión independiente";
     $("#independentSessionStatus").textContent=independent?"Los resultados de esta sesión no se guardan. El uso se contabiliza por cuenta. Al terminar o recargar se descartan.":"Seguimiento individual: los resultados se guardan en este perfil.";
     $("#deleteProfileBtn").disabled=independent;$("#profilePrivacyBtn").disabled=independent;
-    photoOnly = false;memoryAudioOnly=false;roomSpeedOnly=false;speedUnpairedOnly=false;executedOnly=false;cognitiveOnly=false;cognitiveFamily='';
+    digitalOnly=false;digitalFamily="";photoOnly = false;memoryAudioOnly=false;roomSpeedOnly=false;speedUnpairedOnly=false;executedOnly=false;cognitiveOnly=false;cognitiveFamily='';
     guidedSession=null;
     hideGuidedBar();
     $('#appShell').classList.toggle('early-experience',Boolean(window.ContentPolicy.forProfile(p)));
@@ -1220,7 +1220,7 @@
   }
   function setupExercise() {
     if(profile?.id&&!profile._sessionOnly){try{localStorage.setItem(`lh_v16_last_subject_${profile.id}`,subject);}catch{}}
-    if(configuredSubject!==null&&configuredSubject!==subject){documentOnly=false;photoOnly=false;memoryAudioOnly=false;interactionOnly=false;interactionKind=subject==='attention'?'room':'symbols';roomSpeedOnly=false;speedUnpairedOnly=false;cognitiveOnly=false;cognitiveFamily='';executedOnly=false;}
+    if(configuredSubject!==null&&configuredSubject!==subject){digitalOnly=false;digitalFamily="";documentOnly=false;photoOnly=false;memoryAudioOnly=false;interactionOnly=false;interactionKind=subject==='attention'?'room':'symbols';roomSpeedOnly=false;speedUnpairedOnly=false;cognitiveOnly=false;cognitiveFamily='';executedOnly=false;}
     configuredSubject=subject;
     if(guidedSession?.randomFamilies){
       cognitiveOnly=true;
@@ -1338,6 +1338,10 @@
     $('#documentModeHint').classList.add('hidden');
     $$('#documentModeSwitch [data-documents]').forEach(b=>b.setAttribute('aria-pressed',String(!cognitiveOnly&&!executedOnly&&!interactionOnly&&!photoOnly&&(b.dataset.documents==='true')===documentOnly)));
     $('#attentionPhotos').setAttribute('aria-pressed',String(photoOnly&&subject==='attention'));
+    const digitalMode=$('#digitalModeButton');
+    digitalMode.classList.toggle('hidden',subject!=='communication');
+    digitalMode.setAttribute('aria-pressed',String(digitalOnly));
+    $('#digitalFamilyControl').classList.toggle('hidden',subject!=='communication'||!digitalOnly);
     syncLanguageModeButtons();
     $('#wordFitMode').setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily==='words'));
     const hasAvailableModality=$$('#exerciseModalities button').some(button=>{
@@ -1351,6 +1355,11 @@
     renderSchoolTaskGuide();
     newExercise();
   }
+  const digitalSelect=$('#digitalFamilySelect');
+  digitalSelect.append(new Option('Todas las pantallas',''));
+  for(const [id,label] of Object.entries(window.CommunicationContent.digitalFamilies))digitalSelect.append(new Option(label,id));
+  digitalSelect.onchange=()=>{digitalFamily=digitalSelect.value;setupExercise();};
+  $('#digitalModeButton').onclick=()=>{digitalOnly=!digitalOnly;digitalSelect.value=digitalFamily;setupExercise();};
   $('#documentModeSwitch').addEventListener('click',event=>{
     const button=event.target.closest('button[data-documents],#attentionPhotos');
     if(!button)return;
@@ -1437,7 +1446,7 @@
     const localeRevision = API.localeRevision;
     const res = await API.requestContent({
       ...payload,
-      client_revision:payload.kind==='worksheet'&&!payload.cognitive_only?16:payload.cognitive_family==='words'||payload.domain==='communication'?15:payload.cognitive_family==='falling'?14:13,
+      client_revision:payload.kind==='exercise'?17:payload.kind==='worksheet'&&!payload.cognitive_only?16:payload.cognitive_family==='words'||payload.domain==='communication'?15:payload.cognitive_family==='falling'?14:13,
       ...(targetProfile._sessionOnly?{session_only:true}:{}),
       profile_id: targetProfile.id,
       locale,
@@ -1447,7 +1456,7 @@
     // Server authentication, subscription checks and usage accounting happen
     // first. The browser never supplies local content after a rejected call.
     const worksheet=payload.kind==='worksheet';
-    const selected = worksheet&&!payload.cognitive_only&&window.ContentPolicy.forProfile(targetProfile)
+    const selected = payload.digital_only?res:worksheet&&!payload.cognitive_only&&window.ContentPolicy.forProfile(targetProfile)
       ?completeEarlyWorksheet(res,payload,targetProfile,locale)
       :worksheet||payload.executed_only||payload.cognitive_only?res:window.EarlyContent.adaptResponse(res, payload, targetProfile, worksheet?{
       accept:(item,domain)=>window.WorksheetSelection.compatible(item,targetProfile,locale,domain),
@@ -1477,6 +1486,7 @@
       ...(kind==='exercise'&&['attention','executive'].includes(domain)&&window.DocumentLibrary?.supports(window.AgeStages.route(profile),domain)?{documents_only:documentOnly}:{}),
       kind,
       domain,
+      ...(kind==='exercise'&&domain==='communication'&&digitalOnly?{digital_only:true,...(digitalFamily?{digital_family:digitalFamily}:{})}:{}),
       ...(kind==='exercise'&&domain==='speedReasoning'?{room_speed_only:roomSpeedOnly}:{}),
       ...(kind==='exercise'&&domain==='speedReasoning'&&speedUnpairedOnly?{speed_mechanic:'unpaired'}:{}),
       ...(kind==='exercise'&&domain==='memory'&&memoryAudioOnly?{memory_audio_only:true}:{}),
@@ -1487,8 +1497,8 @@
       ...extra,
     });
     if (res?.usage) {
-      $('#usageHint').textContent=`Hoy: ${res.usage.used} ${kind==='worksheet'?'fichas':kind==='game'?'juegos':'ejercicios'}`;
-      $('#dailyUsageExplanation').textContent=`Tu cuota es de ${res.usage.limit} ${kind==='worksheet'?'fichas':kind==='game'?'juegos':'ejercicios'} al día. Esta cifra limita el uso de la cuenta; no es el tamaño del banco de actividades.`;
+      $('#usageHint').textContent=`Entregas hoy: ${res.usage.used} ${kind==='worksheet'?'fichas':kind==='game'?'juegos':'ejercicios'}`;
+      $('#dailyUsageExplanation').textContent=`Tu cuota es de ${res.usage.limit} ${kind==='worksheet'?'fichas':kind==='game'?'juegos':'ejercicios'} al día. El contador registra contenido entregado, aunque no se complete. Se comparte entre perfiles, áreas y variantes de la cuenta para ese tipo de contenido.`;
     }
     const item=res?.items?.[0]||null;
     if(kind==='exercise'&&domain==='memory'&&memoryAudioOnly&&item?.audioMemory!==true){
@@ -1550,8 +1560,8 @@
   function friendlyContentError(e) {
     if(e?.name==='LocaleAdaptationError')return 'No se ha podido preparar una actividad para esta variante de español. Prueba otra área.';
     const raw = String(e?.message || "");
-    if (/Daily content limit reached/i.test(raw))
-      return "Has alcanzado el límite de contenido de hoy para esta modalidad. Podrás continuar cuando se renueve la cuota diaria.";
+    const quota=API.contentErrorMessage(e);
+    if(quota)return quota;
     if (/Trial expired/i.test(raw))
       return "El periodo de prueba ha finalizado.";
     if (/non-2xx|Failed to send|Edge Function/i.test(raw))
@@ -1565,7 +1575,7 @@
     $("#exerciseOptions").classList.remove('structured-options');
     $("#exerciseVisual").innerHTML = "";
     $("#exerciseNext").classList.add("hidden");
-    $('#retryContentLoad').classList.remove('hidden');
+    $('#retryContentLoad').classList.toggle('hidden',Boolean(API.contentErrorMessage(e)));
   }
   function renderExercise(it) {
     if(stopReaderAssist){stopReaderAssist();stopReaderAssist=null;}
@@ -1607,9 +1617,8 @@
         const exportButton=document.createElement('button');exportButton.id='printCognitive';exportButton.className='secondary-btn';exportButton.textContent='Descargar esta actividad en Word';
         exportButton.onclick=async()=>{exportButton.disabled=true;const exportProfile=profile;try{
           const response=await requestForProfile({kind:'worksheet',domain:it.domain,domains:[it.domain],questions:1,level:it.level,cognitive_only:true,cognitive_family:it.cognitiveTask.kind,cognitive_content_key:it.contentKey},exportProfile);
-          if(response?.usage)$('#usageHint').textContent='Hoy: '+response.usage.used+' fichas';
           await window.WorksheetGenerator.generate([response.items],exportProfile);
-        }catch(error){exportButton.textContent=error?.message||'No se ha podido generar el archivo. Vuelve a intentarlo.';}finally{exportButton.disabled=false;}};
+        }catch(error){exportButton.textContent=API.contentErrorMessage(error)||error?.message||'No se ha podido generar el archivo. Vuelve a intentarlo.';}finally{exportButton.disabled=false;}};
         $('#exerciseOptions').after(exportButton);
       }return;
     }

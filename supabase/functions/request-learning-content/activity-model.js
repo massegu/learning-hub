@@ -366,8 +366,14 @@
         return `<section class="homework-board" aria-label="${escape(block.label||'Pizarra de deberes')}"><div class="homework-board-heading"><span aria-hidden="true">✎</span><strong>${escape(block.label||'Pizarra de deberes')}</strong></div><div class="homework-board-scroll" role="region" tabindex="0" aria-label="Tareas anotadas en la pizarra"><table><caption class="sr-only">Área y tarea anotada</caption><thead><tr><th scope="col">Área</th><th scope="col">Tarea</th></tr></thead><tbody>${block.rows.map(([area,task])=>`<tr><th scope="row"><span class="homework-area-icon">${icons?.svgForArea(area)||''}</span><span>${escape(area)}</span></th><td>${escape(task)}</td></tr>`).join('')}</tbody></table></div></section>`;
       }
       if(block.type==='table'&&block.presentation==='digitalInterface'){
-        const labels={chat:'Mensajería',social:'Publicaciones',video:'Reproductor',search:'Resultados de búsqueda',editor:'Espacio de edición',game:'Registro de partida'};
-        return `<section class="digital-stimulus digital-${escape(block.materialType)}" aria-label="${escape(block.label)}"><header><strong>${escape(block.label)}</strong><small>${escape(labels[block.materialType])} · simulación</small></header><dl>${block.rows.slice(1).map(([name,value])=>`<div><dt>${escape(name)}</dt><dd>${escape(value)}</dd></div>`).join('')}</dl></section>`;
+        const labels={chat:'Mensajería',social:'Publicaciones y comentarios',video:'Clip vertical',story:'Historias',search:'Resultados de búsqueda',settings:'Notificaciones y privacidad',editor:'Espacio de edición',game:'Registro de partida'};
+        const material=block.materialType;
+        const rows=block.rows.slice(1).map(([name,value])=>`<div><dt>${escape(name)}</dt><dd>${escape(value)}</dd></div>`).join('');
+        const usePhone=['chat','social','video','story','settings'].includes(material);
+        const content=material==='video'
+          ?`<div class="digital-clip-frame" aria-hidden="true"><span>▶</span></div><details open><summary>Subtítulos y comentarios</summary><dl>${rows}</dl></details>`
+          :`<dl>${rows}</dl>`;
+        return `<section class="digital-stimulus digital-${escape(material)}${usePhone?' digital-phone':''}" aria-label="${escape(block.label)}"><header><strong>${escape(block.label)}</strong><small>${escape(labels[material]||'Pantalla')} · simulación</small></header>${content}</section>`;
       }
       if(block.type==='table'&&block.presentation==='everydayMaterial'){
         const heading=everydayMaterials[block.materialType],rows=block.rows,head=rows[0],body=rows.slice(1);

@@ -56,6 +56,40 @@ const LIMITS:any = {
   complimentary:{exercise:500, worksheet:50, game:500}
 };
 
+type UsageKind = "exercise" | "worksheet" | "game";
+const QA_STAGING_HOST = "wejcfaralctolzxjbcil.supabase.co";
+const QA_CONTENT_LIMITS = {exercise:1200,worksheet:180,game:300};
+
+function limitsFor(userId:string, status:string) {
+  const standard=LIMITS[status]||LIMITS.trial;
+  if(!["trial","active","complimentary"].includes(status)||Deno.env.get("SUPABASE_URL")?.replace(/\/$/,"")!=="https://"+QA_STAGING_HOST ||
+      !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(userId))return standard;
+  const qaIds=(Deno.env.get("GLIAX_STAGING_QA_USER_IDS")||"").split(",").map(id=>id.trim().toLowerCase());
+  return qaIds.includes(userId.toLowerCase())?QA_CONTENT_LIMITS:standard;
+}
+
+function usageReply(body:any,status=200){
+  return new Response(JSON.stringify(body),{status,headers:{...corsHeaders,"Content-Type":"application/json"}});
+}
+
+function quotaExceeded(kind:UsageKind,used:number,limit:number,date:string) {
+  const reset=new Date(date+"T00:00:00Z");
+  reset.setUTCDate(reset.getUTCDate()+1);
+  return usageReply({error:"Daily content limit reached",code:"CONTENT_DELIVERY_LIMIT",usage:{kind,used,limit,scope:"account",reset_at:reset.toISOString()}},403);
+}
+
+async function reserveUsage(admin:any,userId:string,date:string,kind:UsageKind,row:any,cost:number){
+  const used=Number(row?.used||0);
+  const update={used:used+cost,updated_at:new Date().toISOString()};
+  const reservation=row
+    ? await admin.from("content_usage").update(update).eq("user_id",userId).eq("usage_date",date).eq("kind",kind).eq("used",used).select("used").maybeSingle()
+    : await admin.from("content_usage").insert({...update,user_id:userId,usage_date:date,kind}).select("used").maybeSingle();
+  if(reservation.error?.code==="23505"||!reservation.error&&!reservation.data)
+    return usageReply({error:"Otra solicitud actualizó el uso de hoy. Vuelve a intentarlo.",code:"CONTENT_DELIVERY_CONFLICT"},409);
+  if(reservation.error)return usageReply({error:"No se pudo registrar el uso de contenido. Vuelve a intentarlo.",code:"CONTENT_USAGE_UNAVAILABLE"},503);
+  return null;
+}
+
 const SUBJECTS:any = {
   early:["social","language","division","reading","attention","executive","memory","speedReasoning","applied","communication"],
   junior:["social","language","division","reading","attention","executive","memory","speedReasoning","applied","communication"],
@@ -2412,6 +2446,7 @@ function worksheetInventory(age:string,level:number,locale:string){
       ...(age==='early'?api.EarlyContent.pool(domain,level):curriculum.pool(age,domain,level)),
       ...curriculum.practice(age,domain,level),
       ...api.FunctionalContent.pool(age,domain,level),
+      ...(domain==='communication'?api.CommunicationContent.digitalPool(age,level):[]),
       ...api.DocumentLibrary.pool(age,domain,level),
       ...api.PhotoLibrary.pool(age,domain,level),
       ...api.ExecutedTasks.pool(age,domain,level),
@@ -2477,12 +2512,12 @@ async function configuredWorksheet(admin:any,userId:string,profileId:string,body
   }
   const {grouped,families}=worksheetInventory(config.age,config.level,config.locale);
   if(metadata)return reply({families,maxPerSheet:account.subscription_status==='trial'?15:20});
-  const limits=LIMITS[account.subscription_status]||LIMITS.trial;
+  const limits=limitsFor(userId,account.subscription_status);
   const date=todayUTC();
   const {data:usage,error:usageError}=await admin.from('content_usage').select('used').eq('user_id',userId).eq('usage_date',date).eq('kind','worksheet').maybeSingle();
   if(usageError)return reply({error:'No se pudo verificar la cuota de fichas.'},503);
   const used=Number(usage?.used||0);
-  if(used+config.versions>limits.worksheet)return reply({error:'Daily content limit reached'},403);
+  if(used+config.versions>limits.worksheet)return quotaExceeded('worksheet',used,limits.worksheet,date);
   const seen=new Set();
   if(!body.session_only){
     const {data,error}=await admin.from('content_seen').select('item_signature').eq('user_id',userId).eq('profile_id',profileId)
@@ -2505,13 +2540,8 @@ async function configuredWorksheet(admin:any,userId:string,profileId:string,body
   const versions=Array.from({length:config.versions},(_,index)=>config.families.flatMap(({id,count}:any)=>
     chosen.get(id).slice(index*count,(index+1)*count)));
   const nextUsed=used+config.versions;
-  const update={used:nextUsed,updated_at:new Date().toISOString()};
-  const reservation=usage
-    ? await admin.from('content_usage').update(update).eq('user_id',userId).eq('usage_date',date).eq('kind','worksheet').eq('used',used).select('used').maybeSingle()
-    : await admin.from('content_usage').insert({...update,user_id:userId,usage_date:date,kind:'worksheet'}).select('used').maybeSingle();
-  if(reservation.error?.code==='23505'||!reservation.error&&!reservation.data)
-    return reply({error:'Otra solicitud actualizó la cuota. Inténtalo de nuevo.'},409);
-  if(reservation.error)return reply({error:'No se pudo registrar la cuota. Inténtalo de nuevo.'},503);
+  const reservation=await reserveUsage(admin,userId,date,'worksheet',usage,config.versions);
+  if(reservation)return reservation;
   if(!body.session_only){
     const entries=versions.flat().map(({item,signature})=>({user_id:userId,profile_id:profileId,domain:'worksheet:'+item.domain,item_signature:signature,mechanic_signature:mechanicSignature(item.domain,item)}));
     const {error}=await admin.from('content_seen').insert(entries);
@@ -2541,25 +2571,23 @@ Deno.serve(async (req:Request)=>{
   if(account.subscription_status==="trial" && new Date(account.trial_ends_at)<=new Date()) return new Response(JSON.stringify({error:"Trial expired"}),{status:403,headers:{...corsHeaders,"Content-Type":"application/json"}});
   if(kind==='worksheet_catalog'||kind==='worksheet'&&body.worksheet_plan!==undefined)
     return configuredWorksheet(admin,user.id,profileId,body,account);
-  const limit=(LIMITS[account.subscription_status]||LIMITS.trial)[kind];
+  const limit=limitsFor(user.id,account.subscription_status)[kind as UsageKind];
   if(body.session_only!==undefined&&typeof body.session_only!=='boolean')return new Response(JSON.stringify({error:'Modalidad de sesión no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   const sessionOnly=body.session_only===true;
   if(sessionOnly&&Number(body.client_revision||1)<6)return new Response(JSON.stringify({error:'Actualiza la página para abrir sesiones independientes.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   const progress=sessionOnly?{ageRoute:profile.progress?.ageRoute,ageYears:profile.progress?.ageYears}:profile.progress||{};
   const date=todayUTC();
   const delivery=progress._delivery?.seen ? {...progress._delivery,date} : {date,seen:{}};
-  const cost=kind==="worksheet"?1:Math.max(1,Math.min(Number(body.count||1),kind==="exercise"?10:1));
-  const {data:usageRow}=await admin.from("content_usage").select("used").eq("user_id",user.id).eq("usage_date",date).eq("kind",kind).maybeSingle();
-  const usedNow=Number(usageRow?.used||0);
-  if(usedNow+cost>limit) return new Response(JSON.stringify({error:"Daily content limit reached"}),{status:403,headers:{...corsHeaders,"Content-Type":"application/json"}});
   const route=profile.progress?.ageRoute;
   const age=(route==="early"||route==="junior")?route:profile.age_band;
   const locale=(globalThis as any).LocaleContent.normalize(account.content_locale??profile.locale);
+  if(body.client_revision===17&&body.locale!==undefined&&body.locale!==locale)
+    return usageReply({error:"La variante solicitada no coincide con la preferencia guardada. Vuelve a seleccionar la variante.",code:"CONTENT_LOCALE_CHANGED"},409);
   const level=Math.max(1,Math.min(3,Number(body.level||1)));
   const requestedDomains=kind==="worksheet" ? (Array.isArray(body.domains)&&body.domains.length?body.domains:(globalThis as any).Curriculum.visible(SUBJECTS[age]||[],age)) : [body.domain];
   if(!SUBJECTS[age] || !Number.isInteger(level) || (kind!=="game" && (!Array.isArray(requestedDomains)||!requestedDomains.length||requestedDomains.some((d:any)=>!SUBJECTS[age].includes(d)))))
     return new Response(JSON.stringify({error:"Área o nivel no permitido para este perfil."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
-  if(body.client_revision!==undefined&&![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.client_revision!==undefined&&![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.memory_audio_only!==undefined&&(typeof body.memory_audio_only!=='boolean'||body.memory_audio_only&&(kind!=='exercise'||body.domain!=='memory'||body.photos_only||body.interaction_only||body.documents_only||body.executed_only||body.cognitive_only)))return new Response(JSON.stringify({error:'Modalidad de memoria auditiva no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.memory_audio_only&&Number(body.client_revision||1)<12)return new Response(JSON.stringify({error:'Actualiza la página para abrir la memoria auditiva.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.speed_mechanic!==undefined&&(!(kind==='exercise'&&body.domain==='speedReasoning'&&body.speed_mechanic==='unpaired')||body.room_speed_only||body.photos_only||body.documents_only||body.interaction_only||body.cognitive_only||body.executed_only))return new Response(JSON.stringify({error:'Mecánica de velocidad no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -2596,7 +2624,25 @@ Deno.serve(async (req:Request)=>{
   if(body.cognitive_only&&Number(body.client_revision||1)<11)return new Response(JSON.stringify({error:'Actualiza la página para abrir estas familias.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.executed_only!==undefined&&(typeof body.executed_only!=='boolean'||body.executed_only&&(kind!=='exercise'||!['attention','memory','executive'].includes(body.domain)||body.interaction_only||body.photos_only||body.documents_only||body.room_speed_only)))return new Response(JSON.stringify({error:'Modalidad interactiva no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.executed_only&&Number(body.client_revision||1)<11)return new Response(JSON.stringify({error:'Actualiza la página para abrir los retos interactivos.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  const digital=body.digital_only===true;
+  if(body.digital_only!==undefined&&(typeof body.digital_only!=="boolean"||
+      digital&&(kind!=="exercise"||body.domain!=="communication"||body.client_revision!==17||
+        body.cognitive_only||body.executed_only||body.interaction_only||body.photos_only||body.documents_only)))
+    return usageReply({error:"Simulación digital no disponible para esta petición."},400);
+  const communication=(globalThis as any).CommunicationContent;
+  if(body.digital_family!==undefined&&(!digital||typeof body.digital_family!=="string"||!Object.hasOwn(communication.digitalFamilies,body.digital_family)))
+    return usageReply({error:"Familia de simulación no válida."},400);
+  const requestedCount=Number(body.count ?? 1);
+  const count=body.client_revision===17?requestedCount:Math.max(1,Math.min(10,requestedCount));
+  if(kind==="exercise"&&(!Number.isSafeInteger(count)||count<1||count>10))
+    return usageReply({error:"Número de actividades no válido."},400);
+  const cost=kind==="exercise"?count:1;
+  const {data:usageRow,error:usageError}=await admin.from("content_usage").select("used").eq("user_id",user.id).eq("usage_date",date).eq("kind",kind).maybeSingle();
+  if(usageError)return usageReply({error:"No se pudo consultar el uso de contenido. Vuelve a intentarlo.",code:"CONTENT_USAGE_UNAVAILABLE"},503);
+  const usedNow=Number(usageRow?.used||0);
+  if(usedNow+cost>limit)return quotaExceeded(kind,usedNow,limit,date);
   let items:any[]=[];
+  let deliveryRows:any[]=[];
   if(kind==="game"){
     const excludeTypes=Array.isArray(body.exclude_types)?body.exclude_types.slice(-2):[];
     items=[cognitiveGame(age,level,excludeTypes)];
@@ -2604,7 +2650,7 @@ Deno.serve(async (req:Request)=>{
     const item=regionalCandidate(cognitivePrint,locale,body.domain,age);
     if(!item||!validateItem(item))return new Response(JSON.stringify({error:'No se puede adaptar esta actividad a la variante de español.'}),{status:422,headers:{...corsHeaders,'Content-Type':'application/json'}});
     items=[item];
-    if(!sessionOnly)await admin.from('content_seen').insert([{user_id:user.id,profile_id:profileId,domain:'worksheet:'+body.domain,item_signature:contentSignature(body.domain,item),mechanic_signature:mechanicSignature(body.domain,item)}]);
+    deliveryRows=[{user_id:user.id,profile_id:profileId,domain:'worksheet:'+body.domain,item_signature:contentSignature(body.domain,item),mechanic_signature:mechanicSignature(body.domain,item)}];
   } else if(kind==="worksheet"){
     const qn=Math.max(6,Math.min(account.subscription_status==="trial"?15:20,Number(body.questions||12)));
     const domains=(Array.isArray(body.domains)&&body.domains.length?body.domains:(globalThis as any).Curriculum.visible(SUBJECTS[age]||[],age).filter((x:string)=>x!=="games")).filter((x:string)=>x!=="games");
@@ -2679,11 +2725,11 @@ Deno.serve(async (req:Request)=>{
         mechanic_signature:mechanicSignature(domain,item)
       });
     }
-    if(!sessionOnly&&wsRows.length) await admin.from("content_seen").insert(wsRows);
+    deliveryRows=wsRows;
   } else {
     const domain=body.domain;
     const subdomain=body.subdomain||null;
-    const n=Math.max(1,Math.min(10,Number(body.count||1)));
+    const n=cost;
     const {data:seenRows,error:seenError}=sessionOnly?{data:[],error:null}:await admin.from("content_seen")
       .select("item_signature,mechanic_signature")
       .eq("user_id",user.id)
@@ -2702,7 +2748,10 @@ Deno.serve(async (req:Request)=>{
       if(!item||!compatibleSource(item)||Number(body.client_revision||1)<2&&(item.type==='documentReview'||item.selectiveRecall)||Number(body.client_revision||1)<3&&item.photoTask)return null;
       return regionalCandidate(item,locale,domain,age);
     };
-    if(body.memory_audio_only===true){
+    if(digital){
+      const bank=communication.digitalPool(age,level,body.digital_family).map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
+      items=generatedItems(domain,n,recentEntries,()=>null,bank);
+    }else if(body.memory_audio_only===true){
       const bank=(globalThis as any).Curriculum.pool(age,'memory',level).filter((it:any)=>it.audioMemory===true).map((it:any)=>regionalCandidate(it,locale,'memory',age)).filter(Boolean);
       items=generatedItems(domain,n,recentEntries,()=>null,bank);
     }else if(body.speed_mechanic==='unpaired'){
@@ -2760,14 +2809,18 @@ Deno.serve(async (req:Request)=>{
         mechanic_signature:generated?storedMechanicSignature(domain,it):null
       };
     });
-    if(!sessionOnly&&seenInsert.length) await admin.from("content_seen").insert(seenInsert);
+    deliveryRows=seenInsert;
   }
   items=items.map(normalizeItem).filter(validateItem);
   if(age!=="early")items=localizeValue(items,locale);
   items=sanitizeGeneratedLanguage(items);
   items=items.map((it:any)=>(globalThis as any).ContentQuality.annotate(it,age,it.domain||body.domain));
   const nextUsed=usedNow+cost;
-  await admin.from("content_usage").upsert({user_id:user.id,usage_date:date,kind,used:nextUsed,updated_at:new Date().toISOString()},{onConflict:"user_id,usage_date,kind"});
+  if(!items.length || kind==="exercise"&&items.length!==cost)
+    return usageReply({error:"No se pudo preparar contenido válido para esta solicitud.",code:"CONTENT_UNAVAILABLE"},422);
+  const reservation=await reserveUsage(admin,user.id,date,kind,usageRow,cost);
+  if(reservation)return reservation;
+  if(!sessionOnly&&deliveryRows.length)await admin.from("content_seen").insert(deliveryRows);
   const nextProgress={...progress,_delivery:delivery};
   if(!sessionOnly)await admin.from("learner_profiles").update({progress:nextProgress}).eq("id",profileId);
   return new Response(JSON.stringify({items,usage:{kind,used:nextUsed,limit},subjects:(globalThis as any).Curriculum.visible(SUBJECTS[age]||[],age)}),{headers:{...corsHeaders,"Content-Type":"application/json"}});

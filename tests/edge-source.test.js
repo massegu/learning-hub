@@ -45,7 +45,7 @@ function authorized(){
     const q={select(){return q},eq(){return q},like(){return q},order(){return q},limit(){return q},
       insert(v){operation='insert';values=v;return q},update(v){operation='update';values=v;return q},upsert(v){operation='upsert';values=v;return q},
       single(){return Promise.resolve(result())},maybeSingle(){return Promise.resolve(result())},then(a,b){return Promise.resolve(result()).then(a,b)}};
-    function result(){if(operation){writes.push({table,operation,values});return {data:null,error:null};}
+    function result(){if(operation){writes.push({table,operation,values});return {data:table==='content_usage'?{used:values.used}:null,error:null};}
       return {data:table==='learner_profiles'?profile:table==='accounts'?account:table==='content_usage'?usage:table==='content_seen'?seenRows:[],error:null};}
     return q;
   }};

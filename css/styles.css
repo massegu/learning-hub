@@ -3313,3 +3313,32 @@ body {
 .worksheet-favorites label, .worksheet-config-grid section > label { display:grid; gap:.3rem; margin-block:.6rem; }
 #hShortages { font-weight:650; }
 @media(max-width:760px) { .worksheet-config-grid { grid-template-columns:minmax(0,1fr); } }
+
+/* Fictional digital stimuli. Text and response cues remain accessible. */
+.digital-stimulus.digital-phone {
+  width: min(100%, 29rem);
+  margin-inline: auto;
+  border: 5px solid #293754;
+  border-radius: 1.45rem;
+}
+.digital-phone > header { background: #293754; }
+.digital-chat dl { background: #edf3f1; }
+.digital-chat dl > div { margin-inline-end: min(12%, 2.5rem); border: 0; border-radius: .85rem .85rem .85rem .25rem; }
+.digital-chat dl > div:nth-child(even) { margin-inline: min(12%, 2.5rem) 0; background: #d5efdf; border-radius: .85rem .85rem .25rem .85rem; }
+.digital-social dl > div + div { margin-inline-start: .85rem; border-inline-start: 2px solid #879cb9; background: #eef3fa; }
+.digital-story dl { background: #34466b; }
+.digital-story dl > div { border: 0; border-radius: .7rem; }
+.digital-clip-frame {
+  display: grid;
+  place-items: center;
+  width: min(40%, 6rem);
+  aspect-ratio: 9 / 16;
+  margin: .65rem auto;
+  border-radius: .75rem;
+  background: linear-gradient(150deg, #5a3f71, #293754);
+  color: white;
+}
+.digital-video details > summary { padding: .65rem 1rem; background: #edf2fb; cursor: pointer; }
+.digital-search dl > div { border: 0; border-bottom: 1px solid #c6cede; }
+.digital-search dt { color: #173e85; }
+.digital-settings dl > div { border-inline-start-color: #745586; }

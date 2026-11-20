@@ -19,7 +19,7 @@ try:
     area(page, domain).click();open_level_options();page.locator('#exerciseLevelSelect').select_option('2')
     for kind in kinds:
      page.evaluate('''({age,domain,kind})=>{window.__task=ExecutedTasks.pool(age,domain,2).find(x=>x.execution.kind===kind);window.__executionRequest=null;}''',{'age':age,'domain':domain,'kind':kind})
-     page.locator('#executedMode').click();page.wait_for_function('()=>window.__executionRequest?.executed_only&&document.querySelector(".executed-area")');assert page.evaluate('__executionRequest.client_revision')==13
+     page.locator('#executedMode').click();page.wait_for_function('()=>window.__executionRequest?.executed_only&&document.querySelector(".executed-area")');assert page.evaluate('__executionRequest.client_revision')==17
      completed_before=page.evaluate('__completedCalls');
      if kind=='switch':assert page.locator('.executed-rule-intro').is_visible() and 'LIBRO → A' in page.locator('.executed-rule-intro').inner_text()
      page.locator('.executed-area').get_by_role('button',name='Empezar',exact=True).press('Enter')

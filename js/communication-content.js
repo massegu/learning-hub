@@ -163,6 +163,65 @@
     ...(age==='junior'?{juniorProfile:{route:age,level}}:age==='teen'?{teenReview:{version:3}}:{schoolProfile:{route:age,level}})};
   });
  }
+ // Closed, fictional interfaces. The age context and number of sources change
+ // independently from the reasoning operation required at each level.
+ const digitalContexts={
+  early:{project:'el dibujo de la clase',group:'Grupo de dibujos',object:'el plátano para la merienda',place:'la mesa azul',newPlace:'la mesa verde'},
+  junior:{project:'el taller de carteles',group:'Taller de carteles',object:'un rotulador',place:'la biblioteca',newPlace:'el aula 2'},
+  primary:{project:'la feria de ciencias',group:'Equipo de la feria',object:'el ordenador',place:'la sala de ciencias',newPlace:'el laboratorio'},
+  middle:{project:'la muestra de fotografía',group:'Equipo de fotografía',object:'el teléfono móvil',place:'el estudio',newPlace:'la sala de edición'},
+  teen:{project:'la jornada de voluntariado',group:'Equipo de voluntariado',object:'la chaqueta del equipo',place:'el punto de información',newPlace:'la entrada lateral'}
+ };
+ const digitalFamilies={message:'Conversaciones',post:'Publicaciones y comentarios',clip:'Vídeos cortos',story:'Historias y mensajes',search:'Búsquedas',notice:'Notificaciones y privacidad',app:'Agenda de equipo'};
+ function digitalPool(age,level=1,family=null){
+  const c=digitalContexts[age];
+  if(!c||![1,2,3].includes(level))return [];
+  const {project,group,object,place,newPlace}=c;
+  const towards=value=>value.startsWith('el ')?'al '+value.slice(3):'a '+value;
+  const caseRows=[
+   ['message','chat','Bandeja Brújula','confirm_receipt',[
+    [[['Equipo','Para '+project+', trae '+object+'. Confirma que leíste el mensaje.']],'¿Qué respuesta confirma el encargo?', 'Leí el aviso. Llevaré '+object+'.','No sé quién lo envió.','Ya cambié el lugar.'],
+    [[['Equipo','Trae '+object+' '+towards(place)+'.'],['Tu borrador','De acuerdo. Lo llevaré.'],['Estado','Borrador sin enviar']],'¿Qué falta para que el equipo reciba tu respuesta?','Enviar el borrador al equipo.','Abrir otra conversación.','Copiar el aviso a mis notas.'],
+    [[['Equipo · aviso anterior','Nos vemos en '+place+'.'],['Equipo · aviso actualizado','Ahora nos vemos en '+newPlace+'. Necesitamos el mismo material.'],['Otro grupo','Nuestra reunión sigue en '+place+'.']],'¿Qué confirmación envías al equipo?','Llevaré '+object+' '+towards(newPlace)+'.','Llevaré '+object+' '+towards(place)+'.','Iré al nuevo lugar sin material.']]],
+   ['post','social','Muro de grupos','privacy_audience',[
+    [[['Publicación','Actividad: '+project+'.'],['Comentario · Equipo','Por favor, confirma en privado antes de publicar mi foto.']],'¿Dónde conviene responder?','En un mensaje privado a la persona.','En un comentario público.','En el perfil de otra persona.'],
+    [[['Publicación en borrador','Incluye una imagen del equipo.'],['Comentario · Grupo','De acuerdo solo si la ve nuestro grupo.'],['Visibilidad','Ahora está marcada como pública.']],'¿Qué haces antes de publicar?','Selecciono acceso solo para el grupo.','Borro el nombre y dejo el acceso público.','Desactivo comentarios y publico.'],
+    [[['Borrador','La imagen muestra a tres integrantes.'],['Comentario · Grupo','Dos aceptan para el grupo. Una persona todavía no confirmó.'],['Configuración','La visibilidad ya está limitada al grupo.']],'¿Qué aviso respeta todas las condiciones?','Esperamos el permiso que falta antes de compartir.','Ya podemos publicar porque el acceso es privado.','Publicamos y luego pedimos el permiso.']]],
+   ['clip','video','Clips de taller','actionable_feedback',[
+    [[['00:02 · Subtítulo','Primero prepara '+object+'.'],['00:06 · Subtítulo','Lleva el material '+towards(place)+'.']],'¿Qué paso va primero?','Preparar '+object+'.','Llevarlo sin prepararlo.','Cambiar el lugar.'],
+    [[['00:02 · Subtítulo','Prepara '+object+'.'],['00:07 · Subtítulo','Guárdalo en esta caja.'],['Comentario','No se ve cuál es la caja.']],'¿Qué mejora responde al comentario?','Mostrar la caja junto a su etiqueta.','Cambiar el color del título.','Quitar el paso de la caja.'],
+    [[['00:02 · Subtítulo','Lleva el material '+towards(place)+'.'],['00:10 · Voz','El material se queda en casa.'],['Comentario fijado · Equipo','Hay que llevarlo '+towards(place)+'.']],'¿Qué edición elimina la contradicción?','Cambiar la voz para que indique llevar el material.','Eliminar los subtítulos y dejar la voz.','Añadir otro destino sin corregir la voz.']]],
+   ['story','story','Historias de grupo','summarize_action',[
+    [[['Historia · '+group,'Hoy vamos '+towards(place)+'.'],['Respuesta','¿Me dices dónde es?']],'¿Qué respondes según la historia?', 'En '+place+'.','En '+newPlace+'.','No indica el lugar.'],
+    [[['Historia anterior','Encuentro en '+place+'.'],['Historia nueva','Encuentro en '+newPlace+'.'],['Aviso','La historia anterior ya venció.']],'¿Qué información debes enviar ahora?','El encuentro es en '+newPlace+'.','El encuentro es en '+place+'.','Las dos ubicaciones son correctas.'],
+    [[['Historia · '+group,'El encuentro pasa '+towards(newPlace)+'.'],['Mensaje directo · otro grupo','Nuestro encuentro sigue en '+place+'.'],['Borrador','Todos cambiamos de lugar.']],'¿Cómo corriges el borrador?','Solo nuestro grupo cambia '+towards(newPlace)+'.','Todos seguimos en '+place+'.','Todos cambiamos '+towards(newPlace)+'.']]],
+   ['search','search','Búsqueda Lupa','verify_source',[
+    [[['Ficha oficial · '+project,'Incluye el lugar: '+place+'.'],['Publicidad','Descubre otras actividades.']],'¿Qué resultado te dice dónde queda tu actividad?','La ficha oficial.','La publicidad.','Ninguno.'],
+    [[['Agenda oficial · hoy','El encuentro es en '+newPlace+'.'],['Comentario · semana pasada','Creo que es en '+place+'.'],['Publicidad','Inscríbete a otra actividad.']],'¿Qué resultado usarías para informar del lugar?','La agenda oficial publicada hoy.','El comentario de la semana pasada.','La publicidad.'],
+    [[['Agenda oficial · ayer','Actividad prevista en '+place+'.'],['Aviso oficial · hoy','Cambio de lugar '+towards(newPlace)+'.'],['Conversación · hoy','Alguien sugiere que se ha cancelado.']],'¿Qué afirmación puedes verificar?','El aviso oficial de hoy indica el cambio de lugar.','La conversación confirma la cancelación.','La agenda de ayer es la única fuente válida.']]],
+   ['notice','settings','Centro de avisos','privacy_audience',[
+    [[['Solicitud de contacto','Persona desconocida.'],['Ajuste recomendado','Aceptar solo contactos conocidos.']],'¿Qué opción respeta el ajuste?', 'Dejar la solicitud sin aceptar.','Aceptar todas las solicitudes.','Enviar mi información para preguntar.'],
+    [[['Notificación','Un contacto pide compartir el álbum del grupo.'],['Privacidad del álbum','Solo integrantes.'],['Contacto','No pertenece al grupo.']],'¿Qué opción respeta la privacidad?','No comparto el álbum con ese contacto.','Abro el acceso a cualquiera con el enlace.','Le envío una captura del álbum.'],
+    [[['Notificación','Otra clase solicita ver la carpeta.'],['Permiso del grupo','Pueden ver los avisos. Las fotos son privadas.'],['Configuración actual','La carpeta mezcla avisos y fotos.']],'¿Qué cambio permite dar solo el acceso acordado?','Compartir los avisos por separado y mantener privadas las fotos.','Compartir la carpeta completa en modo lectura.','Ocultar los nombres de los archivos y compartir todo.']]],
+   ['app','editor','Agenda de equipo','confirm_receipt',[
+    [[['Tarea','Llevar '+object+' para '+project+'.'],['Estado','Pendiente.']],'¿Qué tarea figura en la agenda?','Llevar '+object+'.','Cambiar el lugar.','Borrar la agenda.'],
+    [[['Tarea','Dejar '+object+' en '+place+'.'],['Cambio · Equipo','El material debe quedar en '+newPlace+'.'],['Agenda','Cambio sin guardar.']],'¿Qué haces para que todos vean la ubicación actual?', 'Guardar el cambio '+towards(newPlace)+'.','Mantener el lugar anterior.','Guardar una copia que solo yo pueda ver.'],
+    [[['Agenda','Recoger el material en '+place+' y llevarlo '+towards(newPlace)+'.'],['Aviso de acceso','El acceso '+towards(newPlace)+' abre después de la recogida.'],['Nota','La hora de recogida se mantiene.']],'¿Qué instrucción resume el plan sin alterar el orden?','Recoger el material y llevarlo al nuevo lugar cuando abra.','Esperar a la apertura para recoger el material.','Llevar el material al lugar de recogida y darlo por entregado.']]]
+  ];
+  return caseRows.filter(([variant])=>!family||family===variant).map(([variant,materialType,label,operation,levels])=>{
+   const [sources,q,a,...wrong]=levels[level-1];
+   const rows=age==='early'?sources.map(([name,value])=>[name.replace(/^00:(\d+) · /,(_,second)=>'Momento '+Number(second)+' · '),value]):sources;
+   const id='communication-v3:'+age+':'+level+':'+variant;
+   return {id,contentKey:id,semanticKey:id,domain:'communication',level,type:'standard',responseType:'choice',requiresStimulus:true,
+    q,a,opts:[a,...wrong],stimulus:[{type:'table',label,rows:[['Fuente','Contenido'],...rows],presentation:'digitalInterface',materialType}],
+    topic:'Comunicación funcional · '+label,mechanic:'communication_'+variant,primaryConstruct:operation,
+    qualityDescriptor:{semanticFamily:'communication.'+operation,scenarioFamily:'digital.'+variant},
+    difficultyParameters:{sources:rows.length,update:level===3},
+    ...(age==='early'?{lexicalSenses:{banana:true}}:{}),
+    ...(age==='early'?{ageProfile:{id:'early',revision:1,context:'school',mechanic:'communication',family:'communication-digital-'+variant}}:
+    age==='junior'?{juniorProfile:{route:age,level}}:age==='teen'?{teenReview:{version:3}}:{schoolProfile:{route:age,level}})};
+  });
+ }
  function pool(age,level=1){
   const rank=ages.indexOf(age);if(rank<0||![1,2,3].includes(level))return [];
   const entries=age==='early'?earlyVariants.flat():cases[age];
@@ -175,9 +234,9 @@
   return [...original,...scenarioPool(age,level)];
  }
  function validate(item){
-  const age=item?.ageProfile?.id||item?.juniorProfile?.route||item?.schoolProfile?.route||(item?.teenReview?'teen':null),source=ages.includes(age)?pool(age,item?.level).find(entry=>entry.id===item?.contentKey||entry.id===item?.id):null;
+  const age=item?.ageProfile?.id||item?.juniorProfile?.route||item?.schoolProfile?.route||(item?.teenReview?'teen':null),source=ages.includes(age)?[...pool(age,item?.level),...digitalPool(age,item?.level)].find(entry=>entry.id===item?.contentKey||entry.id===item?.id):null;
   const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
-  if(source?.contentKey.startsWith('communication-v2:')){
+  if(/^communication-v[23]:/.test(source?.contentKey||'')){
    const regional=root.LocaleContent||(typeof require==='function'&&require('./locale-content'));
    const expected=item.localization?regional.localizeItem(source,item.localization.locale,item.domain):source;
    if(['domain','mechanic','primaryConstruct','type','responseType','q','a','stimulus','qualityDescriptor'].some(field=>!same(item[field],expected[field]))||
@@ -189,5 +248,5 @@
   if(!authored||(!unchanged&&(!item.localization||item.localization.domain!=='communication'||!item.localization.locale)))throw new Error('La actividad de comunicación no coincide con el banco revisado.');
   return true;
  }
- root.CommunicationContent={pool,validate};if(typeof module!=='undefined')module.exports=root.CommunicationContent;
+ root.CommunicationContent={pool,digitalPool,digitalFamilies,validate};if(typeof module!=='undefined')module.exports=root.CommunicationContent;
 })(typeof window==='undefined'?globalThis:window);
