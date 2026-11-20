@@ -186,6 +186,14 @@
   }
   API.openStripeCheckout=()=>openBilling('checkout');
   API.openBillingPortal=()=>openBilling('portal');
+  API.requestContent=async payload=>{
+    if(payload.kind!=='exercise')return invokeContent(payload);
+    const key=JSON.stringify([API.user?.id,API.localeRevision,payload]);
+    if(contentInFlight.has(key))return structuredClone(await contentInFlight.get(key));
+    const pending=invokeContent(payload);
+    contentInFlight.set(key,pending);
+    try{return structuredClone(await pending);}finally{contentInFlight.delete(key);}
+  };
   const contentInFlight=new Map();
   async function invokeContent(payload){
     const {data,error}=await client.functions.invoke('request-learning-content',{body:payload});
@@ -201,14 +209,6 @@
     failure.original=error;
     throw failure;
   }
-  API.requestContent=async payload=>{
-    if(payload.kind!=='exercise')return invokeContent(payload);
-    const key=JSON.stringify([API.user?.id,API.localeRevision,payload]);
-    if(contentInFlight.has(key))return structuredClone(await contentInFlight.get(key));
-    const pending=invokeContent(payload);
-    contentInFlight.set(key,pending);
-    try{return structuredClone(await pending);}finally{contentInFlight.delete(key);}
-  };
   API.contentErrorMessage=error=>{
     if(error?.code!=='CONTENT_DELIVERY_LIMIT'&&!/Daily content limit reached/i.test(error?.message||''))return null;
     const usage=error?.usage;

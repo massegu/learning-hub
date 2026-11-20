@@ -2284,7 +2284,7 @@
         `${count} ficha${count > 1 ? "s" : ""} creada${count > 1 ? "s" : ""}.`;
     } catch (e) {
       $("#docxStatus").textContent =
-        e?.message || "No se pudieron generar las fichas.";
+        API.contentErrorMessage(e)||e?.message||"No se pudieron generar las fichas.";
     } finally {generateButton.disabled=false;}
   };
   function hideGuidedBar() {
