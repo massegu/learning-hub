@@ -13,7 +13,9 @@ function service({url='https://other.invalid',qa='',id=qaId,status='trial',age='
   const records=new Map(used?[['exercise',used]]:[]);
   const writes=[];
   context.Deno.env.get=key=>({SUPABASE_URL:url,GLIAX_STAGING_QA_USER_IDS:qa}[key]);
-  context.createClient=()=>({auth:{getUser:async()=>({data:{user:{id}}})},from(table){
+  context.createClient=()=>({auth:{
+    getUser:async token=>token==='fixture'?{data:{user:{id}}}:{data:{user:null},error:{message:'Invalid test session'}}
+  },from(table){
     const filters={};
     let change,values;
     const result=()=>{
@@ -38,14 +40,71 @@ function service({url='https://other.invalid',qa='',id=qaId,status='trial',age='
       single:async()=>result(),maybeSingle:async()=>result(),then(resolve,reject){return Promise.resolve(result()).then(resolve,reject);}};
     return builder;
   }});
-  async function request(payload){
+  async function request(payload,token='fixture'){
     const response=await context.handler(new Request('https://offline.invalid',{method:'POST',
-      headers:{Authorization:'Bearer fixture','Content-Type':'application/json'},
+      headers:{...(token?{Authorization:'Bearer '+token}:{}),'Content-Type':'application/json'},
       body:JSON.stringify({profile_id:'fixture',level:2,client_revision:17,kind:'exercise',...payload})}));
     return {status:response.status,data:await response.json()};
   }
-  return {request,records,writes,account};
+  return {request,records,writes,account,context};
 }
+
+test('N-back runs through the handler at all levels and preserves the historical forced match rate',async()=>{
+  const h=service({age:'teen'});
+  const symbols=['🎧','📘','🍎','🚲','🎬','⚽'];
+  for(const [level,n,length] of [[1,1,10],[2,2,12],[3,2,14]]){
+    const draws=[0]; // Select N-back from the list after excluding the first two games.
+    const expected=Array.from({length},(_,i)=>{
+      const slot=i%symbols.length;
+      draws.push((slot+.5)/symbols.length);
+      return symbols[slot];
+    });
+    for(let i=n;i<length;i++){
+      const force=(i-n)%2===0;
+      draws.push(force?.34:.35);
+      if(force)expected[i]=expected[i-n];
+    }
+    h.context.Math.random=()=>{
+      assert.ok(draws.length,'Unexpected random draw');
+      return draws.shift();
+    };
+    const reply=await h.request({kind:'game',domain:'executive',level,exclude_types:['inhibition','spatialSequence']});
+    assert.equal(reply.status,200);
+    const [item]=reply.data.items;
+    assert.equal(item.type,'nback');
+    assert.equal(item.n,n);
+    assert.equal(item.level,level);
+    assert.equal(item.sequence.length,length);
+    assert.deepEqual(item.sequence,expected);
+    assert.equal(draws.length,0);
+    assert.equal(reply.data.usage.used,level);
+  }
+  assert.equal(h.records.get('game'),3);
+  assert.equal(h.records.has('exercise'),false);
+});
+
+test('other games retain their round counts and game requests require authentication',async()=>{
+  const h=service({age:'teen'});
+  for(const token of [null,'invalid']){
+    const r=await h.request({kind:'game'},token);
+    assert.equal(r.status,401);
+    assert.equal(h.writes.length,0);
+  }
+  for(const [slot,type,field,count] of [
+    [0,'inhibition','rounds',14],[1,'spatialSequence','sequence',6],[3,'ruleShift','rounds',10],[4,'stroop','rounds',9]
+  ]){
+    const remainder=h.context.Math.random;
+    h.context.Math.random=()=>{
+      h.context.Math.random=remainder;
+      return (slot+.25)/5;
+    };
+    const r=await h.request({kind:'game',level:2});
+    assert.equal(r.status,200);
+    assert.equal(r.data.items[0].type,type);
+    assert.equal(r.data.items[0][field].length,count);
+  }
+  assert.equal(h.records.get('game'),4);
+});
 
 test('a trial account can hit the shared exercise quota across areas, without blocking a worksheet catalogue',async()=>{
   const h=service({used:29});

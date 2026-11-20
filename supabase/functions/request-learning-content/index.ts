@@ -1384,7 +1384,10 @@ function cognitiveGame(age:string,level:number,excludeTypes:string[]=[]){
     const pool=["🎧","📘","🍎","🚲","🎬","⚽"];
     const length=level===1?10:level===2?12:14;
     const sequence=Array.from({length},()=>pick(pool));
-    for(let i=n;i<sequence.length;i++) if(Math.random()<(domain==='executive'?.25:.35)) sequence[i]=sequence[i-n];
+    // Preserve the original game-wide probability of forcing a match.
+    // Randomly sampled symbols can also match without this substitution.
+    const forcedMatchProbability=.35;
+    for(let i=n;i<sequence.length;i++) if(Math.random()<forcedMatchProbability) sequence[i]=sequence[i-n];
     return {id,level,type,topic:"Memoria de trabajo · "+n+"-back",q:"Indica si el símbolo actual es igual al de "+(n===1?"un paso":"dos pasos")+" atrás.",n,sequence};
   }
   if(type==="ruleShift"){
@@ -2432,6 +2435,13 @@ function worksheetTask(age:string, domain:string, level:number){
   return {...structuredClone(pick(pool)),sourceDomain:domain};
 }
 
+type WorksheetCandidate = {
+  item: Record<string,unknown> & {domain:string};
+  identity: string;
+  signature: string;
+};
+type WorksheetFamilyCount = {id:string;count:number};
+
 const paperCache=new Map<string,any>();
 function worksheetInventory(age:string,level:number,locale:string){
   const catalog=(globalThis as any).WorksheetCatalog;
@@ -2525,20 +2535,21 @@ async function configuredWorksheet(admin:any,userId:string,profileId:string,body
     if(error)return reply({error:'No se pudo consultar el historial de fichas.'},503);
     for(const row of data||[])seen.add(row.item_signature);
   }
-  const candidates=new Map();
-  for(const {id} of config.families){
-    const pool=shuffle(grouped.get(id)?.entries||[]);
-    pool.sort((a:any,b:any)=>Number(seen.has(a.signature))-Number(seen.has(b.signature)));
+  const requestedFamilies:WorksheetFamilyCount[]=config.families;
+  const candidates=new Map<string,WorksheetCandidate[]>();
+  for(const {id} of requestedFamilies){
+    const pool=shuffle<WorksheetCandidate>(grouped.get(id)?.entries||[]);
+    pool.sort((a,b)=>Number(seen.has(a.signature))-Number(seen.has(b.signature)));
     candidates.set(id,pool);
   }
-  const chosen=catalog.allocate(config.families,config.versions,candidates);
-  const shortages=config.families.flatMap(({id,count}:any)=>{
-    const required=count*config.versions,available=chosen.get(id).length;
-    return available<required?[{id,label:catalog.familyLabel(id),required,available}]:[];
+  const chosen:Map<string,WorksheetCandidate[]>=catalog.allocate(requestedFamilies,config.versions,candidates);
+  const shortages=requestedFamilies.flatMap(({id,count})=>{
+    const required=count*config.versions,available=chosen.get(id)?.length??0;
+    return available<required?[{id,label:String(catalog.familyLabel(id)),required,available}]:[];
   });
   if(shortages.length)return reply({shortages,error:shortages.map(({label,required,available})=>`${label}: disponibles ${available} de ${required} actividades distintas solicitadas para el paquete.`).join(' ')},422);
-  const versions=Array.from({length:config.versions},(_,index)=>config.families.flatMap(({id,count}:any)=>
-    chosen.get(id).slice(index*count,(index+1)*count)));
+  const versions=Array.from({length:config.versions},(_,index)=>requestedFamilies.flatMap(({id,count})=>
+    (chosen.get(id)??[]).slice(index*count,(index+1)*count)));
   const nextUsed=used+config.versions;
   const reservation=await reserveUsage(admin,userId,date,'worksheet',usage,config.versions);
   if(reservation)return reservation;
