@@ -20,7 +20,7 @@ from urllib.parse import urlsplit
 import zipfile
 
 from playwright.sync_api import expect, sync_playwright
-from browser_support import ROOT, workspace
+from browser_support import ROOT, area, workspace
 
 ORIGIN = 'https://gliax-staging.pages.dev'
 API = 'https://wejcfaralctolzxjbcil.supabase.co'
@@ -135,6 +135,10 @@ def site_test(page, dist, vendors, evidence, local, edge, headers):
     page.click('#authSignIn')
     expect(page.locator('#profileSelect option[value="teen"]')).to_have_count(1)
     workspace(page).locator('#profileSelect').select_option('teen')
+    area(page, 'teenMath').click()
+    page.locator('#mathProblemMode').press('Enter')
+    expect(page.locator('.math-sequence legend')).to_contain_text('Qué datos necesitas')
+    expect(page.get_by_role('button', name='Pedir ayuda')).to_be_visible()
 
     def download(selector, destination, suffix):
         with page.expect_download(timeout=60000) as pending:

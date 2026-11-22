@@ -333,3 +333,33 @@ test('R19 Edge delivers new response contracts and keeps other authenticated sel
  assert.equal(memory.status,200,JSON.stringify(memory.data));
  assert.equal(memory.data.items[0].execution.kind,'spatial');
 });
+
+test('R19.1 negotiates mathematical sequencing by version and preserves R18, R19 and quotas',async()=>{
+ const ages={junior:'division',primary:'division',middle:'middleMath',teen:'teenMath'};
+ for(const [age,domain] of Object.entries(ages)){
+  const fixture=service({age});
+  for(const level of [1,2,3]){
+   const selection={client_revision:19,domain,level,math_problem:true,math_problem_version:2,count:2};
+   const response=await fixture.request(selection);
+   assert.equal(response.status,200,JSON.stringify(response.data));
+   assert.equal(response.data.items.length,2);
+   for(const item of response.data.items){
+    assert.equal(item.mathVersion,2);
+    assert.equal(item.ageRoute,age);
+    assert.equal(item.level,level);
+    model.forDelivery(item,{age_band:age},domain);
+   }
+  }
+  assert.equal(fixture.records.get('exercise'),6);
+  for(const invalid of [{math_problem_version:3},{math_problem:false},{client_revision:18},{digital_only:true}]){
+   const response=await fixture.request({client_revision:19,domain,math_problem:true,math_problem_version:2,...invalid});
+   assert.equal(response.status,400);
+  }
+  assert.equal((await fixture.request({client_revision:19,domain,math_problem:true,math_problem_version:2},null)).status,401);
+  assert.equal(fixture.records.get('exercise'),6);
+  const v1=await fixture.request({client_revision:19,domain,math_problem:true});
+  assert.equal(v1.data.items[0].mathVersion,undefined);
+  assert.match(v1.data.items[0].id,/^math-problem-v1:/);
+  assert.equal((await fixture.request({client_revision:18,domain})).status,200);
+ }
+});

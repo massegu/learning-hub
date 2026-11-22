@@ -7,6 +7,7 @@ import threading
 
 from playwright.sync_api import expect, sync_playwright
 from browser_support import ROOT, area, workspace
+from browser_math_helpers import solve_math
 
 spec = importlib.util.spec_from_file_location('preview', ROOT / 'tools/review-preview.py')
 review = importlib.util.module_from_spec(spec)
@@ -66,28 +67,14 @@ def check_reading_aids(page):
 
 
 def check_math(page, item):
-    shell=page.locator('.math-problem-steps')
-    expect(shell).to_be_visible()
-    p=item['problem']
-    expect(shell.locator('legend')).to_contain_text('dato necesitas')
-    assert not shell.locator('input[inputmode=numeric]').count()
-    steps=[p['alternatives'][0],p['first'],p['intermediate'],p['last'],p['answer']]
-    for i,value in enumerate(steps):
-        if isinstance(value,int):
-            shell.locator('input[inputmode=numeric]').fill(str(value))
-        else:
-            shell.locator('input[type=radio]').evaluate_all('(options,value)=>options.find(o=>o.value===value).click()', value)
-        shell.get_by_role('button',name='Comprobar paso').press('Enter')
-        expect(shell.locator('[role=status]')).to_contain_text('respuesta es' if i==0 else 'Correcto')
-        shell.locator('.math-step-next').press('Enter')
-    expect(page.locator('#exerciseFeedback')).to_contain_text('4 de 5')
+    route=solve_math(page,item)
     expect(page.locator('#exerciseNext')).to_be_visible()
     page.wait_for_function('''()=>__profiles.find(p=>p.id==='primary').progress.history?.some(r=>
       typeof r.detail==='string'&&r.detail.includes('math_problem_steps'))''')
     record=page.evaluate('''()=>__profiles.find(p=>p.id==='primary').progress.history.find(r=>r.detail.includes('math_problem_steps'))''')
     metric=json.loads(record['detail'])
-    assert record['correct'] is None
-    assert list(metric['steps'].values())==[False,True,True,True,True]
+    assert record['correct'] is None and metric['definition_version']==2
+    assert metric['strategy']==route and metric['interpretation_correct'] is True
 
 
 def level(page, n):
@@ -227,8 +214,8 @@ with review.ReviewServer(('127.0.0.1',0),review.prepare()) as server:
             expect(page.locator('#exerciseHeading')).to_have_text('Matemáticas')
             assert not page.locator('[data-math-domain="geometry"]').count()
             page.locator('#mathProblemMode').press('Enter')
-            item=latest(page,'division',math_problem=True)
-            expect(page.locator('.math-bar-model')).to_be_visible()
+            item=latest(page,'division',math_problem=True,math_problem_version=2)
+            expect(page.locator('.math-sequence')).to_be_visible()
             page.locator('#exercise').screenshot(path=evidence/'problemas-escritorio.png')
             page.set_viewport_size({'width':390,'height':844})
             page.locator('#exercise').screenshot(path=evidence/'problemas-movil.png')
