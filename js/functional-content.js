@@ -368,7 +368,9 @@ function pool(age,domain,level=1){
  cache.set(key,unique);return structuredClone(unique);
 }
 function validate(item){
- const e=item?.qualityEvidence;if(!e||!ages.includes(e.age)||item.domain!==e.domain||item.level!==e.level)throw Error('Falta el contrato funcional revisado.');
+ const e=item?.qualityEvidence;
+ const integrated=e?.age==='primary'&&e.domain==='geometry'&&item.domain==='division'&&item.originalDomain==='geometry';
+ if(!e||!ages.includes(e.age)||(!integrated&&item.domain!==e.domain)||item.level!==e.level)throw Error('Falta el contrato funcional revisado.');
  const key=[e.age,e.domain,e.level].join(':');if(!cache.has(key))pool(e.age,e.domain,e.level);
  const canonical=cache.get(key)?.find(x=>x.contentKey===e.id);if(!canonical)throw Error('La familia funcional no está registrada.');
  const locale=root.LocaleContent||(typeof require==='function'&&require('./locale-content'));

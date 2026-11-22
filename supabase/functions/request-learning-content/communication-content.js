@@ -233,7 +233,7 @@
  };
  const languageDomain={early:'language',junior:'language',primary:'language',middle:'middleLanguage',teen:'teenLanguage'};
  const readingDomain={early:'reading',junior:'reading',primary:'reading',middle:'middleReading',teen:'literacy'};
- const resolveDomain=(area,age)=>area==='reading'?readingDomain[age]:area==='language'?languageDomain[age]:area;
+ const resolveDomain=(area,age,revision)=>area==='reading'?(revision>=19&&['primary','middle','teen'].includes(age)?'literacy':readingDomain[age]):area==='language'?languageDomain[age]:area;
  const digitalDomainLabel={communication:'Comunicación funcional',attention:'Atención',executive:'Funciones ejecutivas',reading:'Lectura y escritura',language:'Lenguaje',memory:'Memoria'};
  const revisedOperations={
   communication:'choose_intervention',attention:'select_relevant_signal',executive:'apply_or_update_constraints',
@@ -241,7 +241,41 @@
  };
  for(const [area,operation] of Object.entries(revisedOperations))quality.register('digital.'+operation,digitalDomainLabel[area],area==='memory'?'memoryLoad':'constraints');
 
- function transversalPool(age,level=1,domain=null,format=null){
+ function reviseDigital(item,type,area,age,level,context,variant){
+  const key=item.contentKey.replace(/^digital-v1:/,'digital-v2:');
+  const revised={...item,id:key,contentKey:key,semanticKey:key};
+  const adapt=(changes,operation,correction)=>{
+   const {a,opts,...rest}=revised;
+   return {...rest,...changes,primaryConstruct:operation,
+    qualityDescriptor:{...item.qualityDescriptor,semanticFamily:'digital.'+operation},
+    simulation:{...item.simulation,operation,response:changes.responseType,correction}};
+  };
+  if(type==='app'&&area==='executive'&&age!=='early'&&level===3&&variant==='original'){
+   const answer=['Recoger el material.','Esperar a que abra el nuevo lugar.','Llevar el material al nuevo lugar.'];
+   return adapt({type:'order',responseType:'order',q:'Ordena los pasos respetando la hora de recogida y la apertura.',
+    tokens:[answer[2],answer[0],answer[1]],answer,why:'La recogida va primero. La entrega se hace después de la apertura.'},'sequence_dependencies','ordered_exact');
+  }
+  if(type==='search'&&area==='reading'&&age!=='early'&&level===2&&variant==='original'){
+   const answer=context.newPlace.replace(/^(?:el|la) /,'');
+   return adapt({type:'digitalCompletion',responseType:'written',q:'Completa solo el nombre del lugar indicado en la agenda oficial de hoy.',
+    a:answer,sample:answer,why:'El nombre coincide con la agenda oficial publicada hoy.'},'extract_current_detail','normalized_exact');
+  }
+  if(type==='clip'&&area==='reading'&&age!=='early'&&level===3&&variant==='original'){
+   const rows=item.stimulus[0].rows.slice(1);
+   const options=rows.map(([name])=>name);
+   return adapt({type:'digitalContradiction',responseType:'multiple',q:'Marca las dos partes del vídeo que se contradicen.',
+    opts:options,answers:options.slice(0,2),why:'El subtítulo dice que hay que llevar el material. La voz dice que se queda en casa.'},
+    'compare_incompatible_sources','exact_set');
+  }
+  if(type==='message'&&area==='communication'&&age!=='early'&&level===3&&variant==='original'){
+   const [,second]=item.stimulus[0].rows.slice(1);
+   return adapt({type:'self',responseType:'written',discussionReview:true,q:'Escribe un mensaje al equipo. Confirma el encargo y menciona el lugar actualizado.',
+    sample:item.a,writingRubric:['Indica cuál es el lugar actualizado.','Confirma que llevarás el material que pide el equipo.'],
+    why:second[1]},'formulate_confirmation','professional_review');
+  }
+  return revised;
+ }
+ function transversalPool(age,level=1,domain=null,format=null,revision=18){
   if(!digitalContexts[age]||![1,2,3].includes(level))return [];
   const {project,place,newPlace,object}=digitalContexts[age];
   const base=digitalPool(age,level);
@@ -323,30 +357,36 @@
    stimulus:[{...message,rows:[['Fuente','Contenido'],['Encargo','Recoge '+object+' y déjalo en el lugar acordado.'],['Aviso nuevo','Ha cambiado el lugar, pero el encargo se mantiene.']]}],
    why:'El cambio afecta al lugar de entrega. La recogida sigue siendo necesaria.'
   },'plan']);
-  return entries.filter(([type,area])=>(!domain||resolveDomain(area,age)===domain)&&(!format||type===format)).map(([type,area,item,variant='original'])=>{
-   const domain=resolveDomain(area,age), id=['digital-v1',age,level,area,type,variant].join(':');
+  if(revision>=19){
+   // A video contradiction belongs with the comprehension of its sources.
+   for(const entry of entries)if(entry[0]==='clip'&&entry[1]==='language')entry[1]='reading';
+  }
+  return entries.filter(([type,area])=>(revision<19||area!=='language')&&(!domain||resolveDomain(area,age,revision)===domain)&&(!format||type===format)).map(([type,area,item,variant='original'])=>{
+   const domain=resolveDomain(area,age,revision), id=['digital-v1',age,level,area,type,variant].join(':');
    const operation=['original','intervention'].includes(variant)&&area==='communication'?item.primaryConstruct:revisedOperations[area];
    const mechanic={attention:'search',memory:'rememberPair',executive:'planning',language:'vocabulary',reading:'literal',communication:'communication'}[area];
-   return {...item,id,contentKey:id,semanticKey:id,domain,
+   const baseItem={...item,id,contentKey:id,semanticKey:id,domain,
     topic:digitalDomainLabel[area]+' · '+digitalFamilies[type],mechanic:'digital_'+area+'_'+type,
     primaryConstruct:operation,
     qualityDescriptor:{semanticFamily:area==='communication'?'communication.'+operation:'digital.'+operation,scenarioFamily:'digital.'+type},
     simulation:{format:type,operation,response:item.responseType,correction:'exact_choice',age,level},
     ...(age==='early'?{ageProfile:{...item.ageProfile,mechanic,family:'digital-'+area+'-'+type}}:{})
    };
+   return revision>=19?reviseDigital(baseItem,type,area,age,level,digitalContexts[age],variant):baseItem;
   });
  }
- const availableFormats=(age,level,domain)=>Object.keys(digitalFamilies).filter(format=>transversalPool(age,level,domain,format).length);
+ const availableFormats=(age,level,domain,revision=18)=>Object.keys(digitalFamilies).filter(format=>transversalPool(age,level,domain,format,revision).length);
  function validateTransversal(item){
   const [prefix,age]=String(item.contentKey||'').split(':');
-  const source=prefix==='digital-v1'&&transversalPool(age,item.level,item.domain).find(entry=>entry.contentKey===item.contentKey);
+  const revision=prefix==='digital-v2'?19:prefix==='digital-v1'?18:0;
+  const source=revision&&transversalPool(age,item.level,item.domain,null,revision).find(entry=>entry.contentKey===item.contentKey);
   if(!source)throw new Error('La simulación no pertenece al banco de esta área.');
   const regional=root.LocaleContent||(typeof require==='function'&&require('./locale-content'));
   const expected=item.localization?regional.localizeItem(source,item.localization.locale,item.domain):source;
-  for(const field of ['domain','q','a','stimulus','type','responseType','mechanic','simulation','memoryContent','memoryQuestion','answerEvidence','qualityDescriptor','primaryConstruct','why','revealMs']){
+  for(const field of ['domain','q','a','stimulus','type','responseType','mechanic','simulation','memoryContent','memoryQuestion','answerEvidence','qualityDescriptor','primaryConstruct','why','revealMs','answer','answers','tokens','sample','writingRubric','discussionReview']){
    if(JSON.stringify(item[field])!==JSON.stringify(expected[field]))throw new Error('La simulación no coincide con su fuente: '+field);
   }
-  if(JSON.stringify([...item.opts].sort())!==JSON.stringify([...expected.opts].sort()))throw new Error('Las opciones no corresponden a la pantalla.');
+  if(JSON.stringify([...(item.opts||[])].sort())!==JSON.stringify([...(expected.opts||[])].sort()))throw new Error('Las opciones no corresponden a la pantalla.');
   return true;
  }
  function pool(age,level=1){

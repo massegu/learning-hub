@@ -54,7 +54,7 @@
       if (!block || !early.stimulusTypes.includes(block.type)) throw new Error('Estímulo no permitido para 6-7.');
       const presentations={text:['model','newsClipping','poster','marquee'],list:['cards','count','sequence','routeMap','speedSearch','flanker'],table:['speedComparison','comparison','spatial','associations','memoryScene','pairScan','offerComparison','homeworkBoard']};
       const reviewedDigital=block.type==='table'&&block.presentation==='digitalInterface'&&(item.domain==='communication'&&
-        String(item.contentKey).startsWith('communication-v3:early:')||String(item.contentKey).startsWith('digital-v1:early:')&&root.CommunicationContent?.validateTransversal(item))&&
+        String(item.contentKey).startsWith('communication-v3:early:')||/^digital-v[12]:early:/.test(String(item.contentKey))&&root.CommunicationContent?.validateTransversal(item))&&
         ['chat','social','video','story','search','settings','editor'].includes(block.materialType);
       if(block.presentation && !reviewedDigital && !presentations[block.type].includes(block.presentation))throw new Error('Presentación no compatible con el estímulo.');
       if(block.presentation==='model' && !block.text?.startsWith('Modelo: '))throw new Error('El modelo no declara una referencia legible.');

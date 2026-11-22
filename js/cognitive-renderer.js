@@ -1,6 +1,6 @@
 (function(root){
 'use strict';
-function mount(item,{visual,area,onFinish}){
+function mount(item,{visual,area,onFinish,onSkip}){
  root.CognitiveFamilies.validate(item);const t=item.cognitiveTask;
  if(t.kind==='falling')return root.FallingWords.mount(item,{visual,area,onFinish});
  const wordMetrics=mode=>({schema:'gliax.exercise-metrics.v1',modality:'word_fit',definition_version:t.accepted?3:2,response_mode:mode,purpose:item.domain==='speedReasoning'?'lexical_selection':'lexical_search'});let stopped=false,finished=false,timer=null,round=0,trialOpen=false,response=[],trialStartedAt=0,ruleStats=[];
@@ -10,7 +10,7 @@ function mount(item,{visual,area,onFinish}){
  visual.replaceChildren(status);area.classList.add('cognitive-area');
  const picture=label=>{const el=n('div',undefined,'cognitive-picture');el.innerHTML=root.ActivityModel.visualLabel(label);return el;};
  const later=(fn,ms)=>{clearTimeout(timer);timer=setTimeout(()=>{if(!stopped&&!finished)fn();},ms);};
- function finish(value,metrics=null){if(stopped||finished)return;finished=true;trialOpen=false;clearTimeout(timer);area.querySelectorAll('button,input').forEach(el=>el.disabled=true);const ok=t.kind==='words'&&metrics?.response_mode==='selection'?root.CognitiveFamilies.gradeWordSelection(item,value):root.CognitiveFamilies.grade(item,value);paintAnswers(value);onFinish(ok,ok?(t.kind==='guidedWait'?'Intervalo finalizado.': 'Actividad completada correctamente.'):'Revisa las respuestas correctas, marcadas en verde.',metrics);}
+ function finish(value,metrics=null,verdict=null){if(stopped||finished)return;finished=true;trialOpen=false;clearTimeout(timer);area.querySelectorAll('button,input').forEach(el=>el.disabled=true);const ok=verdict?verdict.status==='correct':t.kind==='words'&&metrics?.response_mode==='selection'?root.CognitiveFamilies.gradeWordSelection(item,value):root.CognitiveFamilies.grade(item,value);paintAnswers(value);onFinish(ok,verdict?verdict.feedback:ok?(t.kind==='guidedWait'?'Intervalo finalizado.': 'Actividad completada correctamente.'):'Revisa las respuestas correctas, marcadas en verde.',metrics);}
  function paintAnswers(value){
   if(t.kind==='information'||t.kind==='contradiction'){
    const chosen=new Set(value),correct=new Set(t.answer);
@@ -64,12 +64,20 @@ function mount(item,{visual,area,onFinish}){
    form.append(label,input,submit);
    form.onsubmit=event=>{
     event.preventDefault();
-    const result=root.CognitiveFamilies.productionStatus(item,input.value);
-    if(result==='unreviewed'){
-     status.textContent='La palabra no está en el vocabulario revisado. Prueba otra. Este intento no se registra.';
+    const verdict=root.CognitiveFamilies.productionVerdict(item,input.value);
+    if(verdict.status==='unverifiable'){
+     status.textContent=verdict.feedback+'. Puedes revisarla con un profesional o probar otra palabra.';
+     if(!form.querySelector('.word-unverified-skip')){
+      const next=b('Continuar sin puntuar',()=>{
+       finished=true;
+       form.querySelectorAll('button,input').forEach(control=>control.disabled=true);
+       onSkip?.();
+      });
+      next.classList.add('word-unverified-skip');form.append(next);
+     }
      return;
     }
-    finish([input.value],wordMetrics('written'));
+    finish([input.value],{...wordMetrics('written'),definition_version:4,variant:t.cue?'semantic':'orthographic',scoring:'reviewed_three_way'},verdict);
     input.value='';
    };
   }

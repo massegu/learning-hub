@@ -3,6 +3,7 @@
 
   const areas={language:'Lenguaje',middleLanguage:'Lenguaje',teenLanguage:'Lenguaje',literacy:'Lectura y escritura',reading:'Lectura y escritura',middleReading:'Lectura y escritura',executive:'Funciones ejecutivas',memory:'Memoria',attention:'Atención',speedReasoning:'Velocidad de procesamiento',communication:'Comunicación funcional',applied:'Situaciones cotidianas',social:'Perspectivas y convivencia',division:'Matemáticas',middleMath:'Matemáticas',teenMath:'Matemáticas',geometry:'Matemáticas',english:'Inglés'};
   const activities={unpaired:'Busca el símbolo sin pareja',figures:'Figuras',objects:'Objetos',arrows:'Flechas',orientation:'Orientación',pictograms:'Pictogramas',characters:'Letras y números',mixed:'Series mixtas',category:'Categorías',key:'Clave de códigos',match:'Coincidencias',search:'Búsqueda visual',pairs:'Revisar parejas',flanker:'Ignorar distractores',translation:'Traducción de claves',crossedKeys:'Cruzar dos claves',rapidAgenda:'Agenda rápida',ruleChoice:'Cambiar de criterio',guided_wait:'Espera guiada',rule_application:'Actúa con reglas',symbol_rules:'Actúa con reglas',executed_executive_switch:'Adivina la regla',interaction_movement:'Movimiento y pausa',executed_memory_spatial:'Memoria espacial',executed_memory_serial:'Recuerdo en orden',executed_memory_update:'Actualizar el recuerdo',memory_sequence:'Recuerda secuencias',memory_spatial:'Recuerda posiciones',memory_photo:'Escenas cotidianas',memory_association:'Asociar nombre y objeto',plan_update:'Cambio de plan',planning_constraints:'Organizar con condiciones',word_fit:'La palabra que encaja',falling_words:'Palabras en caída',cognitive_deduction:'Descubre quién',cognitive_change:'Cambio de plan',cognitive_words:'La palabra que encaja',cognitive_information:'¿Qué necesitas saber?',cognitive_contradiction:'Encuentra la contradicción',attention_photo_differences:'Encuentra las diferencias',communication:'Comunicación funcional',communication_confirmReceipt:'Confirmar una recepción',communication_privacyAudience:'Elegir el destinatario',communication_repairMismatch:'Corregir un malentendido',communication_feedback:'Dar una indicación útil',communication_report:'Informar de una incidencia'};
+  activities.math_problem_steps='Resolución de problemas';
   const digitalFormats={message:'Conversaciones',post:'Publicaciones y comentarios',clip:'Vídeos cortos',story:'Historias y mensajes',search:'Búsquedas',notice:'Notificaciones y privacidad',app:'Agenda de equipo'};
   for(const area of ['attention','communication','executive','language','memory','reading']){
     for(const [format,name] of Object.entries(digitalFormats))activities['digital_'+area+'_'+format]=name;
@@ -48,6 +49,13 @@
       const result={correct:'acierto',error:'error',omitted:'sin respuesta'}[round.outcome]||'sin dato';
       return `Palabra ${i+1} (${result}), primera entrada ${first}, de entrada a confirmación ${submit}`;
     }));
+    if(m.modality==='math_problem_steps'&&m.steps){
+      const stages={intermediate_datum:'Dato intermedio',first_operation:'Primera operación',intermediate_calculation:'Cálculo intermedio',final_operation:'Operación final',final_answer:'Respuesta final'};
+      for(const [key,label] of Object.entries(stages)){
+        if(typeof m.steps[key]==='boolean')parts.push(label+' '+(m.steps[key]?'correcto':'por revisar'));
+      }
+      parts.push('Ayuda '+(m.hint_used?'consultada':'sin consulta adicional'));
+    }
     if(m.response_mode)parts.push(m.response_mode==='written'?'Respuesta escrita':'Selección de opciones');
     if(m.purpose==='lexical_selection')parts.push('Selección léxica sin cronómetro');
     if(m.pace)parts.push('Ritmo '+({slow:'tranquilo',standard:'normal',fast:'rápido'}[m.pace]||'sin dato'));

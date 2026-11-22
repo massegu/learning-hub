@@ -9,6 +9,13 @@
   const at=day=>new Date(day*dayMs);
   const signed=n=>n>0?'+'+n:String(n);
 
+  function comparisonKey(entry){
+    const family=entry.measure?.modality||entry.row.speedFamily||entry.row.detail;
+    const version=entry.measure?.definition_version??entry.row.speedRevision;
+    if(!Object.hasOwn(root.ProgressReport.activities,family)||!entry.row.level||version==null)return null;
+    return JSON.stringify([entry.area,family,entry.row.level,version,entry.measure?.purpose,entry.measure?.variant,entry.measure?.response_mode,entry.measure?.scoring]);
+  }
+
   function snapshot(report,{days=28,area='',now=Date.now()}={}){
     const end=dayOf(now), start=end-days+1;
     const dates=Array.from({length:days},(_,i)=>({day:start+i,count:0}));
@@ -30,9 +37,8 @@
       groups[group]++;
       if(group!=='scored')continue;
       if(entry.row.correct===true)correct++;
-      const familyCode=entry.measure?.modality||entry.row.speedFamily||entry.row.detail;
-      if(!Object.hasOwn(root.ProgressReport.activities,familyCode))continue;
-      const key=entry.area+'|'+familyCode+'|'+(entry.row.level||'')+'|'+(entry.measure?.definition_version??entry.row.speedRevision??'');
+      const key=comparisonKey(entry);
+      if(!key)continue;
       if(!families.has(key))families.set(key,{area:entry.area,name:entry.activity,level:entry.row.level,count:0,correct:0,previousCount:0,previousCorrect:0});
       const family=families.get(key);
       family.count++;
@@ -42,8 +48,7 @@
       if(entry.category!=='scored'||!entry.row.ts)continue;
       const day=dayOf(entry.row.ts);
       if(day<start-days||day>=start||!Number.isFinite(day))continue;
-      const familyCode=entry.measure?.modality||entry.row.speedFamily||entry.row.detail;
-      const family=families.get(entry.area+'|'+familyCode+'|'+(entry.row.level||'')+'|'+(entry.measure?.definition_version??entry.row.speedRevision??''));
+      const family=families.get(comparisonKey(entry));
       if(!family)continue;
       family.previousCount++;
       if(entry.row.correct===true)family.previousCorrect++;
@@ -86,7 +91,7 @@
     const weekCount=Math.ceil((dates.length+offset)/7);
     const blank='<span class="progress-calendar-blank"></span>';
     const intensity=blank.repeat(offset)+dates.map(({day,count})=>`<span data-intensity="${count?Math.ceil(count*4/max):0}" title="${fullDate.format(at(day))} · ${count}"></span>`).join('')+blank.repeat(weekCount*7-dates.length-offset);
-    const familyRows=model.families.map(f=>`<tr><th scope="row">${escape(f.name)}<small>${escape(f.area)}${f.level?` · nivel ${Number(f.level)}`:""}</small></th><td>${f.correct}/${f.count}</td><td>${f.previousCount?f.previousCorrect+'/'+f.previousCount:'—'}</td></tr>`).join('');
+    const familyRows=model.families.map(f=>`<tr><th scope="row">${escape(f.name)}<small>${escape(f.area)}${f.level?` · nivel ${Number(f.level)}`:""}</small></th><td>${f.correct}/${f.count}</td><td>${f.count>=3&&f.previousCount>=3?f.previousCorrect+'/'+f.previousCount:'Datos insuficientes'}</td></tr>`).join('');
     holder.innerHTML=`
       <div class="progress-filters"><label>Periodo <select id="progressPeriod">${[14,28,84].map(n=>`<option value="${n}"${days===n?' selected':''}>Últimos ${n} días</option>`).join('')}</select></label>
       <label>Área <select id="progressArea"><option value="">Todas las áreas</option>${model.areaNames.map(name=>`<option${area===name?' selected':''}>${escape(name)}</option>`).join('')}</select></label></div>
@@ -96,7 +101,7 @@
        ${kpi('Áreas trabajadas',model.areas,`${nonScored} prácticas sin puntuación`)}
       </div>
       <div class="progress-layout">
-       <article class="card progress-panel progress-volume">${heading('Actividad en el tiempo','Registros diarios · fechas en UTC')}
+       <article class="card progress-panel progress-volume">${heading('Actividad en el tiempo','Registros diarios en UTC. Miden frecuencia de práctica.')}
         ${completed?volumeChart(dates):'<p class="progress-empty">Todavía no hay actividad registrada en este periodo.</p>'}
         ${completed?counts:''}
         ${model.withoutDate?`<p class="progress-panel-subtitle">${model.withoutDate} registros sin fecha válida quedan disponibles en el informe histórico.</p>`:''}

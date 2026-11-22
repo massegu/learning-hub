@@ -4,7 +4,7 @@
   function mount(item,{visual,area,onFinish}){
     const task=item.cognitiveTask;
     visual.innerHTML=`
-      <p class="falling-instructions">Escribe la palabra completa para pasar a la siguiente. Puedes ajustar la velocidad o dejarla quieta.</p>
+      <p class="falling-instructions">Cuando escribas correctamente la palabra completa, pasarás automáticamente a la siguiente.</p>
       <div class="falling-lane" hidden><p class="falling-target"></p></div>
       <progress class="falling-time" aria-label="Avance del turno" hidden></progress>
       <p class="falling-status" role="status">Pulsa Empezar cuando estés preparado.</p>`;
@@ -73,6 +73,8 @@
         return;
       }
       phase='finished';
+      area.querySelector('.falling-settings').hidden=true;
+      toggle.disabled=true;field.disabled=true;confirm.disabled=true;
       target.textContent='';
       field.value='';
       form.hidden=true;

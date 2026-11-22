@@ -832,6 +832,88 @@ function validateMath(item){
  else throw new Error('Operación desconocida.');
  if(String(a)!==item.a)throw new Error('La respuesta matemática no coincide con la operación.');
 }
+const mathProblemDomains={junior:'division',primary:'division',middle:'middleMath',teen:'teenMath'};
+const problemOperations={add:'Sumar',subtract:'Restar',multiply:'Multiplicar',divide:'Dividir'};
+function mathProblem(age,level,index){
+ const domain=mathProblemDomains[age];
+ if(!domain||![1,2,3].includes(level)||!Number.isInteger(index)||index<0||index>=12)return null;
+ const v=Math.floor(index/2), variant=index%2, x=v+level;
+ let situation,datum,alternatives,intermediate,answer,first,last,unit,parts;
+ if(age==='junior'){
+  const a=9+x*2,b=6+x,extra=3+v;
+  unit='pegatinas';
+  if(variant===0){
+   situation=`Un grupo trae ${a} pegatinas y otro trae ${b}. Después usan ${extra} para un cartel. ¿Cuántas quedan?`;
+   datum='Las pegatinas que reunieron';alternatives=['Las pegatinas de cada persona','Los carteles que prepararon'];
+   intermediate=a+b;answer=intermediate-extra;first='add';last='subtract';parts=[['Primer grupo',a],['Segundo grupo',b]];
+  }else{
+   situation=`En el taller hay ${a} pegatinas en una caja. En otra hay ${extra} más que en la primera. ¿Cuántas hay entre las dos cajas?`;
+   datum='Las pegatinas de la segunda caja';alternatives=['Las que sobran después del taller','Cuántas pegatinas hay en cada sobre'];
+   intermediate=a+extra;answer=a+intermediate;first='add';last='add';parts=[['Primera caja',a],['Diferencia',extra]];
+  }
+ }else if(age==='primary'){
+  const boxes=6+x,each=4+level,teams=3+level;
+  unit='tarjetas';
+  if(variant===0){
+   const remainder=2+v;
+   situation=`Hay ${boxes} cajas con ${each} tarjetas en cada una. Se reservan ${remainder} para la mesa de recepción. ¿Cuántas se pueden repartir?`;
+   datum='El total antes de separar la reserva';alternatives=['Las tarjetas que ya están en recepción','Las tarjetas por equipo'];
+   intermediate=boxes*each;answer=intermediate-remainder;first='multiply';last='subtract';parts=[['Tarjetas por caja',each]];
+  }else{
+   const used=teams*(2+v), remaining=teams*(level+5), total=used+remaining;
+   situation=`Había ${total} tarjetas. Se usaron ${used} en una demostración. Reparte las restantes por igual entre ${teams} equipos. ¿Cuántas recibe cada equipo?`;
+   datum='Las tarjetas que quedan tras la demostración';alternatives=['Las tarjetas ya usadas por equipo','Las tarjetas que había por equipo al principio'];
+   intermediate=remaining;answer=remaining/teams;first='subtract';last='divide';parts=[['Tarjetas usadas',used],['Tarjetas restantes',null]];
+  }
+ }else if(age==='middle'){
+  const groups=3+level, kits=groups*(5+x),factor=2+v;
+  if(variant===0){
+   const total=20*(x+6), rate=[10,15,25][level-1];
+   unit='plazas';
+   situation=`Un taller dispone de ${total} plazas. Se reserva el ${rate} % para otro turno. ¿Cuántas plazas quedan para el primer turno?`;
+   datum='El número de plazas reservadas';alternatives=['El porcentaje del turno que empieza primero','Las plazas entre todos los grupos'];
+   intermediate=total*rate/100;answer=total-intermediate;first='multiply';last='subtract';parts=[['Total de plazas',total],['Porción reservada',null]];
+  }else{
+   unit='kits';
+   situation=`En ${groups} talleres iguales se usan en total ${kits} kits. Para otro centro se preparan ${factor} talleres con el mismo consumo por taller. ¿Cuántos kits necesita el otro centro?`;
+   datum='Los kits que se usan en un taller';alternatives=['Los kits que sobran entre los dos centros','El total de talleres entre los centros'];
+   intermediate=kits/groups;answer=intermediate*factor;first='divide';last='multiply';parts=[['Kits en un taller',null]];
+  }
+ }else{
+  const stock=10*(x+8), per=[5,8,10][level-1], reserve=3+x, cost=3+level;
+  if(variant===0){
+   const budget=30*(x+5), shipping=12+level*4, quantity=12+v;
+   unit='unidades de presupuesto';
+   situation=`Para una feria se dispone de un presupuesto de ${budget} unidades. Se comprarán ${quantity} kits de ${cost} unidades cada uno y se pagarán ${shipping} unidades de envío. ¿Qué saldo quedará?`;
+   datum='El coste total, incluido el envío';alternatives=['El coste de envío por persona','El número de kits que sobrarán'];
+   intermediate=quantity*cost+shipping;answer=budget-intermediate;first='multiply_add';last='subtract';parts=[['Coste de los kits',null],['Envío',shipping]];
+  }else{
+   const total=stock*per;
+   unit='lotes';
+   situation=`Se han recibido ${total} piezas. Cada lote se arma con ${per} piezas y hay que dejar ${reserve} lotes para los talleres internos. ¿Cuántos lotes se pueden enviar a otros centros?`;
+   datum='El total de lotes que se pueden armar';alternatives=['El número de piezas de un solo lote','El número de centros que harán pedidos'];
+   intermediate=stock;answer=stock-reserve;first='divide';last='subtract';parts=[['Piezas por lote',per]];
+  }
+ }
+ const id=['math-problem-v1',age,level,index].join(':');
+ const problem={index,unit,parts,support:['full','partial','independent'][level-1],datum,alternatives,first,last,intermediate,answer};
+ return {id,contentKey:id,domain,level,type:'mathProblem',responseType:'staged',requiresStimulus:true,printable:'interactive-only',topic:'Resolución de problemas',
+  q:'Resuelve el problema paso a paso.',stimulus:[T(situation)],problem,ageRoute:age,primaryConstruct:'mathematicalProblemSolving',
+  mechanic:'math_problem_steps',qualityDescriptor:{semanticFamily:'math.problem_steps',scenarioFamily:`math.${age}.${variant}`},
+  difficultyProfile:{level,operations:first==='multiply_add'?3:2}};
+}
+function mathProblemPool(age,domain,level){
+ return mathProblemDomains[age]===domain?Array.from({length:12},(_,i)=>mathProblem(age,level,i)).filter(Boolean):[];
+}
+function validateMathProblem(item,age=item?.ageRoute){
+ const canonical=mathProblem(age,item?.level,item?.problem?.index);
+ if(!canonical)throw Error('Problema, nivel o edad no válidos.');
+ const locale=root.LocaleContent||(typeof require==='function'&&require('./locale-content'));
+ const expected=item.localization?locale.localizeItem(canonical,item.localization.locale,item.domain):canonical;
+ for(const field of ['contentKey','domain','type','q','stimulus','problem','primaryConstruct','responseType','mechanic','ageRoute','qualityDescriptor'])
+  if(JSON.stringify(item[field])!==JSON.stringify(expected[field]))throw Error('El problema o su solución no coinciden: '+field);
+ return true;
+}
 const academicCache=new Map(),academicGroups=new Map();
 function academic(age,domain,level,focus){
  const math=['division','middleMath','teenMath'].includes(domain),grammar=['language','middleLanguage','teenLanguage'].includes(domain)&&focus==='grammar';
@@ -1118,6 +1200,6 @@ function migrate(progress={},age){
   levels:{...progress.levels,executive:1,speedReasoning:1},_levelCheckpoints:{...progress._levelCheckpoints,executive:{attempt:progress.totalAttempts||0},speedReasoning:{attempt:progress.totalAttempts||0}}};
 }
 function speedSummary(history=[]){const rows=history.filter(x=>x.subject==='speedReasoning'&&x.timingValid&&Number.isFinite(x.responseMs));const correct=rows.filter(x=>x.correct).map(x=>x.responseMs).sort((a,b)=>a-b);return {attempts:rows.length,accuracy:rows.length?Math.round(rows.filter(x=>x.correct).length*100/rows.length):null,medianMs:correct.length?correct.length%2?correct[(correct.length-1)/2]:(correct[correct.length/2-1]+correct[correct.length/2])/2:null};}
-const api={roomSpeedPool,validateRoomSpeed,processingChallenges,practice,social,validateSocial,academic,generateAcademic,validateMath,validateSpeed,validatePlan,memoryCategories,validateSelectiveRecall,validateReview,vocabulary,interactivePool,generateInteractive,validateInteraction,pool,generate,supports,visible,migrate,speedSummary,registerReasoning,registerWriting,spatialPositions};root.Curriculum=api;
+const api={mathProblemPool,validateMathProblem,mathProblemDomains,problemOperations,roomSpeedPool,validateRoomSpeed,processingChallenges,practice,social,validateSocial,academic,generateAcademic,validateMath,validateSpeed,validatePlan,memoryCategories,validateSelectiveRecall,validateReview,vocabulary,interactivePool,generateInteractive,validateInteraction,pool,generate,supports,visible,migrate,speedSummary,registerReasoning,registerWriting,spatialPositions};root.Curriculum=api;
 if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);

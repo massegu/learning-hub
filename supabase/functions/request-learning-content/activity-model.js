@@ -114,7 +114,7 @@
   }
   function printable(item, profile) {
     if(item?.interactiveOnly)fail('actividad disponible solo en pantalla.');
-    if(String(item?.contentKey||'').startsWith('digital-v1:'))(root.CommunicationContent||(typeof require==='function'&&require('./communication-content'))).validateTransversal(item);
+    if(/^digital-v[12]:/.test(String(item?.contentKey||'')))(root.CommunicationContent||(typeof require==='function'&&require('./communication-content'))).validateTransversal(item);
     else if(item?.domain==='communication')(root.CommunicationContent||(typeof require==='function'&&require('./communication-content'))).validate(item);
     if(item?.type==='cognitiveTask'||String(item?.contentKey||'').startsWith('cognitive-v'))return (root.CognitiveFamilies||(typeof require==='function'&&require('./cognitive-families'))).printable(item,profile?.progress?.ageRoute||profile?.age_band);
     if(item?.type==='executed'||String(item?.contentKey||'').startsWith('executed-v')){
@@ -199,7 +199,7 @@
     return { question, stimulus:printableStimulus, options:options.map(String), tokens, writingRubric:item.writingRubric||[], responseType:item.type === 'order' || item.memoryResponse === 'order' ? 'order' : options.length ? 'choice' : 'written' };
   }
   function validateEvidence(item,stimulus){
-    if(String(item.contentKey||'').startsWith('digital-v1:'))return; // Exact source and response checked in printable().
+    if(/^digital-v[12]:/.test(String(item.contentKey||'')))return; // Exact source and response checked in printable().
     if(item.qualityEvidence||/^functional_/.test(item.mechanic||'')||String(item.contentKey||'').startsWith('functional-v1:')){(root.FunctionalContent||(typeof require==='function'&&require('./functional-content'))).validate(item);return;}
     if(item.languageFocus==='spelling'){
       const e=item.languageEvidence,block=stimulus[e?.block];
@@ -306,10 +306,16 @@
     return versions.map(items => items.map(item => printable(item, profile)));
   }
   function forDelivery(item, profile, domain) {
+    if(item?.type==='mathProblem'){
+      if(domain&&domain!==item.domain)fail('El área no coincide.');
+      const curriculum=root.Curriculum||(typeof require==='function'&&require('./curriculum'));
+      curriculum.validateMathProblem(item,profile?.progress?.ageRoute||profile?.age_band||item.ageRoute);
+      return item;
+    }
     if(item?.type==='cognitiveTask'||String(item?.contentKey||'').startsWith('cognitive-v')){if(domain&&domain!==item.domain)fail('El área no coincide.');(root.CognitiveFamilies||(typeof require==='function'&&require('./cognitive-families'))).validate(item,profile?.progress?.ageRoute||profile?.age_band);return item;}
     if(item?.type==='executed'||String(item?.contentKey||'').startsWith('executed-v')){if(domain&&domain!==item.domain)fail('El área no coincide.');printable(item,profile);return item;}
     (root.LocaleContent||(typeof require==='function'&&require('./locale-content'))).validateOptions(item);
-    if(String(item?.contentKey||'').startsWith('digital-v1:')){
+    if(/^digital-v[12]:/.test(String(item?.contentKey||''))){
       if(domain&&item.domain!==domain)fail('El área de la simulación no coincide.');
       const age=profile?.progress?.ageRoute||profile?.age_band;
       if(age&&item.simulation?.age!==age)fail('La franja de la simulación no coincide.');
@@ -374,14 +380,25 @@
         return `<section class="homework-board" aria-label="${escape(block.label||'Pizarra de deberes')}"><div class="homework-board-heading"><span aria-hidden="true">✎</span><strong>${escape(block.label||'Pizarra de deberes')}</strong></div><div class="homework-board-scroll" role="region" tabindex="0" aria-label="Tareas anotadas en la pizarra"><table><caption class="sr-only">Área y tarea anotada</caption><thead><tr><th scope="col">Área</th><th scope="col">Tarea</th></tr></thead><tbody>${block.rows.map(([area,task])=>`<tr><th scope="row"><span class="homework-area-icon">${icons?.svgForArea(area)||''}</span><span>${escape(area)}</span></th><td>${escape(task)}</td></tr>`).join('')}</tbody></table></div></section>`;
       }
       if(block.type==='table'&&block.presentation==='digitalInterface'){
-        const labels={chat:'Mensajería',social:'Publicaciones y comentarios',video:'Clip vertical',story:'Historias',search:'Resultados de búsqueda',settings:'Notificaciones y privacidad',editor:'Espacio de edición',game:'Registro de partida'};
-        const material=block.materialType;
-        const rows=block.rows.slice(1).map(([name,value])=>`<div><dt>${escape(name)}</dt><dd>${escape(value)}</dd></div>`).join('');
-        const usePhone=['chat','social','video','story','settings'].includes(material);
-        const content=material==='video'
-          ?`<div class="digital-clip-frame" aria-hidden="true"><span>▶</span></div><details open><summary>Subtítulos y comentarios</summary><dl>${rows}</dl></details>`
-          :`<dl>${rows}</dl>`;
-        return `<section class="digital-stimulus digital-${escape(material)}${usePhone?' digital-phone':''}" aria-label="${escape(block.label)}"><header><strong>${escape(block.label)}</strong><small>${escape(labels[material]||'Pantalla')} · simulación</small></header>${content}</section>`;
+        const view=block.materialType;
+        const label=escape(block.label);
+        const rows=block.rows.slice(1).map(([name,value])=>[escape(name),escape(value)]);
+        const entries=render=>rows.map(render).join('');
+        const pair=([name,value])=>`<dt>${name}</dt><dd>${value}</dd>`;
+        const header=content=>`<header>${content}<strong>${label}</strong></header>`;
+        const initials='<span class="digital-avatar" aria-hidden="true"></span>';
+        const layout={
+          chat:()=>header(initials)+`<ol class="message-thread">${entries(row=>`<li><dl>${pair(row)}</dl></li>`)}</ol>`,
+          social:()=>header('')+`<div class="social-feed">${entries((row,i)=>`<article class="${i?'feed-reply':'feed-post'}">${initials}<dl>${pair(row)}</dl></article>`)}</div>`,
+          video:()=>header('')+`<div class="digital-clip-frame"><p class="clip-caption">${rows[0]?.[0]||''}<br>${rows[0]?.[1]||''}</p></div><details open><summary>Subtítulos y comentarios</summary><dl>${entries((row,i)=>i?`<div>${pair(row)}</div>`:'')}</dl></details>`,
+          story:()=>header('')+`<ol class="story-timeline">${entries(row=>`<li><dl>${pair(row)}</dl></li>`)}</ol>`,
+          search:()=>header('')+`<div class="search-field"><span aria-hidden="true">⌕</span> Resultados</div><ol class="search-results">${entries(([source,snippet])=>`<li><h4>${source}</h4><p>${snippet}</p></li>`)}</ol>`,
+          settings:()=>header('')+`<dl class="settings-log">${entries(row=>`<div>${pair(row)}</div>`)}</dl>`,
+          editor:()=>header('')+`<table class="team-agenda"><thead><tr><th scope="col">Entrada</th><th scope="col">Detalle</th></tr></thead><tbody>${entries(([name,value])=>`<tr><th scope="row">${name}</th><td>${value}</td></tr>`)}</tbody></table>`,
+          game:()=>header('')+`<dl class="settings-log">${entries(row=>`<div>${pair(row)}</div>`)}</dl>`
+        };
+        const phone=['chat','social','video','story','settings'].includes(view);
+        return `<section class="digital-stimulus digital-${escape(view)}${phone?' digital-phone':''}" aria-label="${label}">${layout[view]?.()||header('')}</section>`;
       }
       if(block.type==='table'&&block.presentation==='everydayMaterial'){
         const heading=everydayMaterials[block.materialType],rows=block.rows,head=rows[0],body=rows.slice(1);
@@ -427,11 +444,11 @@
       }
       if(options.structured){
         const label=block.label?`<p class="stimulus-caption">${escape(block.label)}</p>`:'';
-        if(block.type==='text')return block.presentation==='newsClipping'?`<article class="news-clipping"><header><span class="news-masthead">${escape(block.dateline||'RECORTE DE NOTICIA · EJEMPLO')}</span><h3>${escape(block.headline||'Noticias de la comunidad')}</h3><span class="news-section">Actualidad · Lectura</span></header><p class="stimulus-paragraph">${escape(block.text)}</p><footer>Material ficticio para practicar la comprensión lectora.</footer></article>`:`${label}<p class="stimulus-paragraph">${escape(block.text)}</p>`;
+        if(block.type==='text')return block.presentation==='newsClipping'?`<article class="news-clipping"><header><span class="news-masthead">${escape(block.dateline||'RECORTE DE NOTICIA · EJEMPLO')}</span><h3>${escape(block.headline||'Noticias de la comunidad')}</h3><span class="news-section">Actualidad · Lectura</span></header><p class="stimulus-paragraph">${escape(block.text)}</p><footer>Material ficticio para practicar la comprensión lectora.</footer></article>`:`${label}<p class="stimulus-paragraph"${options.readerText&&!block.presentation?' data-reader-text':''}>${escape(block.text)}</p>`;
         if(block.type==='list')return `${label}<ul class="structured-stimulus-list">${block.items.map(x=>`<li>${escape(x)}</li>`).join('')}</ul>`;
         return `${label}${block.rows[0].length>3?'<p class="table-scroll-hint">Desliza la tabla para ver todas las columnas.</p>':''}<div class="stimulus-table-scroll" tabindex="0" role="region" aria-label="Tabla de datos"><table class="structured-stimulus-table">${block.rows.map((row,i)=>`<tr>${row.map(x=>i===0&&block.header===true?`<th scope="col">${escape(x)}</th>`:`<td>${escape(x)}</td>`).join('')}</tr>`).join('')}</table></div>`;
       }
-      if (block.type === 'text') return block.presentation==='newsClipping'?`<article class="news-clipping"><header><span class="news-masthead">${escape(block.dateline||'RECORTE DE NOTICIA · EJEMPLO')}</span><h3>${escape(block.headline||'Noticias de la comunidad')}</h3><span class="news-section">Actualidad · Lectura</span></header><p>${escape(block.text)}</p><footer>Material ficticio para practicar la comprensión lectora.</footer></article>`:`<p>${escape(block.text)}</p>`;
+      if (block.type === 'text') return block.presentation==='newsClipping'?`<article class="news-clipping"><header><span class="news-masthead">${escape(block.dateline||'RECORTE DE NOTICIA · EJEMPLO')}</span><h3>${escape(block.headline||'Noticias de la comunidad')}</h3><span class="news-section">Actualidad · Lectura</span></header><p>${escape(block.text)}</p><footer>Material ficticio para practicar la comprensión lectora.</footer></article>`:`<p${options.readerText&&!block.presentation?' data-reader-text':''}>${escape(block.text)}</p>`;
       if (block.type === 'list') return `<ul>${block.items.map(x => `<li>${escape(x)}</li>`).join('')}</ul>`;
       return `<table>${block.rows.map(row => `<tr>${row.map(x => `<td>${escape(x)}</td>`).join('')}</tr>`).join('')}</table>`;
     }).join('');

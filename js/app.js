@@ -153,7 +153,7 @@
     state = null,
     subject = null,
     mode = "grammar",
-    documentOnly = false, digitalOnly = false, digitalFamily = "",
+    mathProblems=false,documentOnly = false, digitalOnly = false, digitalFamily = "",
     photoOnly = false,
     memoryAudioOnly = false,
     interactionOnly = false,
@@ -457,7 +457,7 @@
     const selected = new Set();
     const opts = shuffle(it.opts || []);
     $("#exerciseOptions").innerHTML =
-      `<div class="multi-select-grid">${opts.map((o) => `<button class="option-btn multi-option" data-value="${escapeHtml(o)}" aria-label="${escapeHtml(o)}" aria-pressed="false">${it.memoryResponse==='multiple'?window.ActivityModel.visualLabel(o,{...it.lexicalSenses,memory:subject==='memory'}):escapeHtml(o)}</button>`).join("")}</div><div class="multi-actions"><span id="multiCount" role="status">${(['multiSelect','documentReview','photoDifference'].includes(it.type)||it.memoryResponse==='multiple')?'0 seleccionadas':`0/${(it.answers || []).length} seleccionados`}</span><button id="multiCheck" class="primary-btn" ${(['multiSelect','documentReview','photoDifference'].includes(it.type)||it.memoryResponse==='multiple')?'disabled':''}>Comprobar selección</button></div>`;
+      `<div class="multi-select-grid">${opts.map((o) => `<button class="option-btn multi-option" data-value="${escapeHtml(o)}" aria-label="${escapeHtml(o)}" aria-pressed="false">${it.memoryResponse==='multiple'?window.ActivityModel.visualLabel(o,{...it.lexicalSenses,memory:subject==='memory'}):escapeHtml(o)}</button>`).join("")}</div><div class="multi-actions"><span id="multiCount" role="status">${(['multiSelect','documentReview','photoDifference','digitalContradiction'].includes(it.type)||it.memoryResponse==='multiple')?'0 seleccionadas':`0/${(it.answers || []).length} seleccionados`}</span><button id="multiCheck" class="primary-btn" ${(['multiSelect','documentReview','photoDifference','digitalContradiction'].includes(it.type)||it.memoryResponse==='multiple')?'disabled':''}>Comprobar selección</button></div>`;
     $$("#exerciseOptions .multi-option").forEach(
       (b) =>
         (b.onclick = () => {
@@ -470,8 +470,8 @@
             b.classList.add("selected");
           }
           b.setAttribute('aria-pressed',String(selected.has(v)));
-          $("#multiCount").textContent = (['multiSelect','documentReview','photoDifference'].includes(it.type)||it.memoryResponse==='multiple')?`${selected.size} ${selected.size===1?'seleccionada':'seleccionadas'}`:`${selected.size}/${(it.answers || []).length} seleccionados`;
-          if((['multiSelect','documentReview','photoDifference'].includes(it.type)||it.memoryResponse==='multiple'))$('#multiCheck').disabled=!selected.size;
+          $("#multiCount").textContent = (['multiSelect','documentReview','photoDifference','digitalContradiction'].includes(it.type)||it.memoryResponse==='multiple')?`${selected.size} ${selected.size===1?'seleccionada':'seleccionadas'}`:`${selected.size}/${(it.answers || []).length} seleccionados`;
+          if((['multiSelect','documentReview','photoDifference','digitalContradiction'].includes(it.type)||it.memoryResponse==='multiple'))$('#multiCheck').disabled=!selected.size;
         }),
     );
     $("#multiCheck").onclick = () => {
@@ -487,8 +487,8 @@
       $("#multiCheck").disabled = true;
       showFeedback(
         ok,
-        saveResult(subject, ok, it.id, it.type),
-        (['multiSelect','documentReview','photoDifference'].includes(it.type)||it.memoryResponse==='multiple')?it.why:ok
+        saveResult(subject, ok, it.id, it.simulation?JSON.stringify(digitalMetrics(it)):it.type),
+        (['multiSelect','documentReview','photoDifference','digitalContradiction'].includes(it.type)||it.memoryResponse==='multiple')?it.why:ok
           ? "Has reconocido correctamente todos los elementos."
           : "Revisa los elementos marcados en verde.",
       );
@@ -733,7 +733,7 @@
   }
   function exerciseMetrics(row){try{const metrics=typeof row?.detail==='string'?JSON.parse(row.detail||'null'):row?.detail;return metrics?.schema==='gliax.exercise-metrics.v1'?metrics:null;}catch{return null;}}
   function isGuidedWaitResult(row){return exerciseMetrics(row)?.modality==='guided_wait';}
-  function isPracticeResult(row){return ['guided_wait','falling_words','communication_supervised'].includes(exerciseMetrics(row)?.modality);}
+  function isPracticeResult(row){return ['guided_wait','falling_words','communication_supervised','math_problem_steps'].includes(exerciseMetrics(row)?.modality);}
   function resultHistoryKey(row){
     if(row?.clientAttemptId||row?.client_attempt_id)return `attempt:${row.clientAttemptId||row.client_attempt_id}`;
     // Older rows predate attempt UUIDs. A field fingerprint avoids duplicating
@@ -1102,7 +1102,7 @@
     $("#independentSessionBtn").textContent=independent?"Terminar sesión independiente":"Empezar sesión independiente";
     $("#independentSessionStatus").textContent=independent?"Los resultados de esta sesión no se guardan. El uso se contabiliza por cuenta. Al terminar o recargar se descartan.":"Seguimiento individual: los resultados se guardan en este perfil.";
     $("#deleteProfileBtn").disabled=independent;$("#profilePrivacyBtn").disabled=independent;
-    digitalOnly=false;digitalFamily="";photoOnly = false;memoryAudioOnly=false;roomSpeedOnly=false;speedUnpairedOnly=false;executedOnly=false;executedFamily='';comparisonIndex=0;miraOpen=false;cognitiveOnly=false;cognitiveFamily='';
+    mathProblems=false;digitalOnly=false;digitalFamily="";photoOnly = false;memoryAudioOnly=false;roomSpeedOnly=false;speedUnpairedOnly=false;executedOnly=false;executedFamily='';comparisonIndex=0;miraOpen=false;cognitiveOnly=false;cognitiveFamily='';
     guidedSession=null;
     hideGuidedBar();
     $('#appShell').classList.toggle('early-experience',Boolean(window.ContentPolicy.forProfile(p)));
@@ -1228,7 +1228,7 @@
   }
   function setupExercise() {
     if(profile?.id&&!profile._sessionOnly){try{localStorage.setItem(`lh_v16_last_subject_${profile.id}`,subject);}catch{}}
-    if(configuredSubject!==null&&configuredSubject!==subject){miraOpen=false;digitalOnly=false;digitalFamily="";documentOnly=false;photoOnly=false;memoryAudioOnly=false;interactionOnly=false;interactionKind=subject==='attention'?'room':'symbols';roomSpeedOnly=false;speedUnpairedOnly=false;cognitiveOnly=false;cognitiveFamily='';executedOnly=false;executedFamily='';}
+    if(configuredSubject!==null&&configuredSubject!==subject){mathProblems=false;miraOpen=false;digitalOnly=false;digitalFamily="";documentOnly=false;photoOnly=false;memoryAudioOnly=false;interactionOnly=false;interactionKind=subject==='attention'?'room':'symbols';roomSpeedOnly=false;speedUnpairedOnly=false;cognitiveOnly=false;cognitiveFamily='';executedOnly=false;executedFamily='';}
     configuredSubject=subject;
     if(guidedSession?.randomFamilies){
       const family=guidedSession.randomFamilies[guidedSession.index];
@@ -1245,9 +1245,11 @@
     $("#exerciseHeading").textContent = areaGroupFor(subject)==='math'?'Matemáticas':m.name;
     if(areaGroupFor(subject)==='math')$("#exercisePill").textContent='MATEMÁTICAS';
     $("#exerciseDescription").textContent = m.desc;
-    const mathSwitch=$('#mathDomainSwitch');
-    mathSwitch.classList.toggle('hidden',areaGroupFor(subject)!=='math'||!ageData().subjects.includes('geometry')||Boolean(guidedSession));
-    mathSwitch.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.mathDomain===subject)));
+    const mathMode=$('#mathProblemMode');
+    const isMathWithProblems=window.Curriculum.mathProblemDomains[window.AgeStages.route(profile)]===subject&&!guidedSession;
+    if(!isMathWithProblems)mathProblems=false;
+    mathMode.classList.toggle('hidden',!isMathWithProblems);
+    mathMode.setAttribute('aria-pressed',String(mathProblems));
     if (window.ContentPolicy.forProfile(profile)) {
       $('#exerciseHeading').textContent=window.EarlyJourney.areas[subject].title;
       const descriptions = {
@@ -1361,7 +1363,7 @@
     $$('#documentModeSwitch [data-documents]').forEach(b=>b.setAttribute('aria-pressed',String(!cognitiveOnly&&!interactionOnly&&!photoOnly&&(executedOnly?(b.dataset.documents==='false'&&['compare','plan'].includes(executedFamily)):(b.dataset.documents==='true')===documentOnly))));
     $('#attentionPhotos').setAttribute('aria-pressed',String(photoOnly&&subject==='attention'));
     const digitalMode=$('#digitalModeButton');
-    const digitalFormats=window.CommunicationContent.availableFormats(route,state.levels[subject]||1,subject);
+    const digitalFormats=window.CommunicationContent.availableFormats(route,state.levels[subject]||1,subject,19);
     if(!digitalFormats.length)digitalOnly=false;
     if(!digitalFormats.includes(digitalFamily))digitalFamily='';
     digitalMode.classList.toggle('hidden',!digitalFormats.length);
@@ -1382,10 +1384,7 @@
     renderSchoolTaskGuide();
     newExercise();
   }
-  $('#mathDomainSwitch').onclick=event=>{
-    const key=event.target.closest('button')?.dataset.mathDomain;
-    if(key&&ageData().subjects.includes(key)){subject=key;setupExercise();}
-  };
+  $('#mathProblemMode').onclick=()=>{mathProblems=!mathProblems;setupExercise();};
   const digitalSelect=$('#digitalFamilySelect');
   digitalSelect.onchange=()=>{digitalFamily=digitalSelect.value;setupExercise();};
   $('#digitalModeButton').onclick=()=>{
@@ -1501,7 +1500,7 @@
     const localeRevision = API.localeRevision;
     const res = await API.requestContent({
       ...payload,
-      client_revision:payload.kind==='exercise'?18:payload.kind==='worksheet'&&!payload.cognitive_only?16:payload.cognitive_family==='words'||payload.domain==='communication'?15:payload.cognitive_family==='falling'?14:13,
+      client_revision:payload.kind==='exercise'?19:payload.kind==='worksheet'&&!payload.cognitive_only?16:payload.cognitive_family==='words'||payload.domain==='communication'?15:payload.cognitive_family==='falling'?14:13,
       ...(targetProfile._sessionOnly?{session_only:true}:{}),
       profile_id: targetProfile.id,
       locale,
@@ -1534,6 +1533,7 @@
     return selected;
   }
   async function requestOne(kind, domain = subject, extra = {}) {
+    const wantMathProblems=kind==='exercise'&&mathProblems;
     const comparison=kind==='exercise'&&executedOnly&&executedFamily==='compare';
     const formats=window.ExecutedTasks.comparisonFormats;
     const startIndex=comparisonIndex;
@@ -1545,6 +1545,7 @@
       ...(kind==='exercise'&&['attention','executive'].includes(domain)&&window.DocumentLibrary?.supports(window.AgeStages.route(profile),domain)?{documents_only:documentOnly}:{}),
       kind,
       domain,
+      ...(wantMathProblems?{math_problem:true}:{}),
       ...(kind==='exercise'&&digitalOnly?{digital_only:true,...(digitalFamily?{digital_family:digitalFamily}:{})}:{}),
       ...(kind==='exercise'&&domain==='speedReasoning'?{room_speed_only:roomSpeedOnly}:{}),
       ...(kind==='exercise'&&domain==='speedReasoning'&&speedUnpairedOnly?{speed_mechanic:'unpaired'}:{}),
@@ -1561,6 +1562,7 @@
       $('#dailyUsageExplanation').textContent=`Tu cuota es de ${res.usage.limit} ${kind==='worksheet'?'fichas':kind==='game'?'juegos':'ejercicios'} al día. El contador registra contenido entregado, aunque no se complete. Se comparte entre perfiles, áreas y variantes de la cuenta para ese tipo de contenido.`;
     }
     const item=res?.items?.[0]||null;
+    if(wantMathProblems&&item?.type!=='mathProblem')throw Error('No se recibió un problema paso a paso.');
     if(comparison&&comparisonIndex===startIndex&&item?.execution?.format===comparisonFormat)comparisonIndex++;
     if(kind==='exercise'&&domain==='memory'&&!digitalOnly&&!executedOnly&&!memoryAudioOnly&&item){
       if(photoOnly!==Boolean(item.photoTask?.kind==='recall'))throw new Error('La actividad de memoria recibida pertenece a otra modalidad.');
@@ -1676,8 +1678,14 @@
       const isWordFit=it.cognitiveTask.kind==='words'&&!it.cognitiveTask.cue;
       $('#exercisePrompt').textContent=isWordFit
         ?window.CognitiveFamilies.wordResponseMode(it)==='selection'?'Selecciona las palabras que cumplen todas las condiciones.':'Escribe una palabra que cumpla todas las condiciones.'
-        :it.q;
-      stopExecuted=window.CognitiveRenderer.mount(it,{visual:$('#exerciseVisual'),area:$('#exerciseOptions'),onFinish:(ok,why,metrics)=>{if(currentItem!==it)return;const detail=metrics?JSON.stringify(metrics):it.mechanic||it.semanticFamily;const practice=['guided_wait','falling_words'].includes(metrics?.modality);const pts=saveResult(subject,practice?null:ok,it.id,detail,{excludeFromPerformance:practice,level:it.level});showFeedback(ok,pts,why);}});
+        :it.cognitiveTask.kind==='falling'?'Escribe cada palabra tal como aparece':it.q;
+      stopExecuted=window.CognitiveRenderer.mount(it,{visual:$('#exerciseVisual'),area:$('#exerciseOptions'),
+        onSkip:()=>{
+          if(currentItem!==it)return;
+          if(guidedSession?.mission){newExercise();return;}
+          showFeedback(null,0,'Respuesta sin verificar. Puedes continuar.');
+        },
+        onFinish:(ok,why,metrics)=>{if(currentItem!==it)return;const detail=metrics?JSON.stringify(metrics):it.mechanic||it.semanticFamily;const practice=['guided_wait','falling_words'].includes(metrics?.modality);const pts=saveResult(subject,practice?null:ok,it.id,detail,{excludeFromPerformance:practice,level:it.level});showFeedback(ok,pts,why);}});
       if(it.printable!=='interactive-only'){
         const exportButton=document.createElement('button');exportButton.id='printCognitive';exportButton.className='secondary-btn';exportButton.textContent='Descargar esta actividad en Word';
         exportButton.onclick=async()=>{exportButton.disabled=true;const exportProfile=profile;try{
@@ -1696,9 +1704,10 @@
     if (it.angle !== undefined)
       $("#exerciseVisual").innerHTML =
         `<div class="angle-box"><strong>${it.angle}°</strong></div>`;
+    const readingAid=['reading','middleReading','literacy'].includes(subject)&&mode!=='writing';
     if (it.title && it.text)
       $("#exerciseVisual").innerHTML =
-        `<div class="reading-passage"><h4>${escapeHtml(it.title)}</h4><p>${escapeHtml(it.text)}</p></div>`;
+        `<div class="reading-passage"><h4>${escapeHtml(it.title)}</h4><p${readingAid?' data-reader-text':''}>${escapeHtml(it.text)}</p></div>`;
     if (it.type === "visualSearch" && Array.isArray(it.grid))
       $("#exerciseVisual").innerHTML =
         `<div class="symbol-grid">${it.grid.map((x) => `<span>${escapeHtml(x)}</span>`).join("")}</div>`;
@@ -1722,16 +1731,38 @@
     const scenarioShown=it.stimulus?.some(block=>block.type==='text'&&block.text?.trim()===scenario);
     if (it.stimulus?.length)
       $("#exerciseVisual").innerHTML =
-        `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus,{heading:it.topic||it.theme,rubric:it.writingRubric,illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:!window.ContentPolicy.forProfile(profile),senses:it.lexicalSenses})}</div>`;
+        `<div class="reading-passage">${window.ActivityModel.interactiveStimulus(it.stimulus,{heading:it.topic||it.theme,rubric:it.writingRubric,readerText:readingAid,illustrated:Boolean(window.ContentPolicy.forProfile(profile)),structured:!window.ContentPolicy.forProfile(profile),senses:it.lexicalSenses})}</div>`;
     if (scenario&&!scenarioShown)
       $("#exerciseVisual").insertAdjacentHTML(it.stimulus?.length?'afterbegin':'beforeend',
         `<div class="scenario-card"><span class="scenario-label">Situación</span><p>${escapeHtml(scenario)}</p></div>`);
-    if(['reading','middleReading','literacy'].includes(subject)&&mode!=='writing'&&$('#exerciseVisual').querySelector('.reading-passage')&&window.ReaderAssist)stopReaderAssist=window.ReaderAssist.mount($('#exerciseVisual'));
+    if(readingAid&&$('#exerciseVisual').querySelector('[data-reader-text]')&&window.ReaderAssist)stopReaderAssist=window.ReaderAssist.mount($('#exerciseVisual'));
     $("#exercisePrompt").textContent = it.q || "Actividad";
+    if(it.type==='mathProblem'){
+      stopExecuted=window.MathProblemRenderer.mount(it,{visual:$('#exerciseVisual'),area:$('#exerciseOptions'),onFinish:(_ok,why,metrics)=>{
+        if(currentItem!==it)return;
+        saveResult(subject,null,it.id,JSON.stringify(metrics),{excludeFromPerformance:true,level:it.level});
+        showFeedback(null,0,why);
+      }});
+      return;
+    }
+    if(it.type==='digitalCompletion'){
+      const form=document.createElement('form'),input=document.createElement('input'),label=document.createElement('label'),button=document.createElement('button');
+      input.type='text';input.required=true;input.maxLength=80;input.id='digitalCompletion';
+      label.htmlFor=input.id;label.textContent='Completa el dato';
+      button.textContent='Comprobar';button.className='primary-btn';form.append(label,input,button);
+      form.onsubmit=event=>{
+        event.preventDefault();if(input.disabled)return;
+        const normalized=value=>value.trim().normalize('NFC').toLocaleLowerCase('es');
+        const ok=normalized(input.value)===normalized(it.a);input.disabled=true;
+        showFeedback(ok,saveResult(subject,ok,it.id,JSON.stringify(digitalMetrics(it))),ok?it.why:`El dato del resultado vigente es «${it.a}».`);
+      };
+      $('#exerciseOptions').append(form);
+      return;
+    }
     if(it.roomSpeedTask){renderRoomSpeed(it);return;}
     if(it.interactionTask){renderInteractiveExercise(it);return;}
     if(it.speedTask){renderSpeedExercise(it);return;}
-    if(['multiSelect','documentReview','photoDifference'].includes(it.type)){renderMultiSelect(it);return;}
+    if(['multiSelect','documentReview','photoDifference','digitalContradiction'].includes(it.type)){renderMultiSelect(it);return;}
     if (it.type === "memoryReveal" || it.type === "memoryMulti") {
       renderMemoryExercise(it);
       return;
@@ -1756,6 +1787,10 @@
       return;
     }
     renderOptions(it);
+  }
+  function digitalMetrics(item){
+    return {schema:'gliax.exercise-metrics.v1',modality:item.mechanic,definition_version:2,
+      variant:item.simulation.operation,response_mode:item.responseType,scoring:item.simulation.correction};
   }
   function renderOptions(it) {
     $('#exerciseOptions').classList.remove('structured-options');
@@ -1784,7 +1819,7 @@
         associations:currentItem.memoryContent.length,exposure_ms:currentItem.revealMs
       }) : currentItem.spatialGridRevision?JSON.stringify({schema:'gliax.exercise-metrics.v1',
         modality:'memory_spatial',definition_version:currentItem.spatialGridRevision
-      }) : currentItem.mechanic || currentItem.type || "standard",
+      }) : currentItem.simulation&&String(currentItem.contentKey).startsWith('digital-v2:')?JSON.stringify(digitalMetrics(currentItem)) : currentItem.mechanic || currentItem.type || "standard",
     );
     showFeedback(correct, pts, currentItem.why);
     if(currentItem.speedTask){
@@ -1848,7 +1883,7 @@
           picked.every((x, i) => x === expected[i]);
         showFeedback(
           ok,
-          saveResult(subject, ok, it.id, it.memoryResponse==='order'?'memory_sequence':it.activityRevision===2
+          saveResult(subject, ok, it.id, it.simulation?JSON.stringify(digitalMetrics(it)):it.memoryResponse==='order'?'memory_sequence':it.activityRevision===2
             ?JSON.stringify({schema:'gliax.exercise-metrics.v1',modality:'planning_constraints',definition_version:2,content_key:it.contentKey})
             :'planning'),
           ok
@@ -1952,7 +1987,7 @@
       (correct
         ? `Correcto · +${pts} puntos`
         : `No esta vez. Respuesta: ${currentItem.a || "revisa el modelo"}`);
-    f.className = "feedback " + (['guidedWait','falling'].includes(currentItem?.cognitiveTask?.kind)?'practice':correct ? "ok" : "bad");
+    f.className = "feedback " + (correct===null||['guidedWait','falling'].includes(currentItem?.cognitiveTask?.kind)?'practice':correct ? "ok" : "bad");
     if(subject==='memory'&&currentItem?.type!=='executed'&&(Array.isArray(currentItem?.answer)||Array.isArray(currentItem?.sequence))){
       const expected=currentItem.answer||currentItem.sequence,solution=document.createElement('div');solution.className='memory-solution';
       solution.innerHTML='<h4>Secuencia correcta</h4>'+window.ActivityModel.interactiveStimulus([{type:'list',presentation:'sequence',items:expected.map(String)}],{senses:{...currentItem.lexicalSenses,iconProfile:profile}});f.append(solution);
@@ -2132,7 +2167,7 @@
     const suggestionCopy={open:['ÚLTIMA ÁREA ABIERTA','Abre el área de nuevo; el ejercicio comienza desde el inicio.','Volver a '],answered:['ÚLTIMA ÁREA RESPONDIDA','Continúa en el área de tu respuesta más reciente.','Continuar en '],new:['ENTRENAMIENTO','Empieza por un área o prepara una sesión supervisada.','Empezar por ']}[suggestionKind];
     landing.innerHTML=`<div class="redesign-continue"><div><span class="redesign-kicker">${suggestionCopy[0]}</span><strong>${escapeHtml(subjectLabel(suggested))}</strong><span>${suggestionCopy[1]}</span></div><button type="button" class="primary-btn" data-redesign-area="${escapeHtml(suggested)}">${suggestionCopy[2]}${escapeHtml(subjectLabel(suggested))} →</button></div><div class="redesign-heading"><h3>Áreas disponibles</h3><span>${sorted.length} áreas para este perfil</span></div>${areaSections}${journeyMarkup}`;
     landing.querySelectorAll('[data-redesign-area]').forEach(button=>button.addEventListener('click',()=>{
-      guidedSession=null;hideGuidedBar();subject=button.dataset.redesignArea;switchSection('exercise');setupExercise();
+      guidedSession=null;hideGuidedBar();subject=button.dataset.redesignArea==='geometry'?'division':button.dataset.redesignArea;switchSection('exercise');setupExercise();
     }));
     landing.querySelectorAll('[data-unified-mission]').forEach(button=>button.addEventListener('click',()=>{
       const {kind,id}=button.dataset.unifiedMission==='early'?{kind:'early',id:button.dataset.missionId}:{kind:'school',id:button.dataset.missionId};
@@ -2179,7 +2214,7 @@
       ? `Precisión reciente: ${Math.round(rec.acc * 100)}%.`
       : "Todavía no hay resultados suficientes.";
     $("#recommendedBtn").dataset.subject = rec.n
-      ? rec.s
+      ? rec.s==='geometry'?'division':rec.s
       : ageData().subjects[0];
   }
   $("#recommendedBtn").onclick = () => {
@@ -2263,10 +2298,7 @@
     renderSpeedProgress();
     const recent=report.sessions.slice(-12).map(row=>({...row,attempts:row.count}));
     if(!recent.length){$('#sessionEvolution').innerHTML='<p class="muted">Completa algunos ejercicios para ver aquí tu evolución.</p>';return;}
-    const maxAttempts=Math.max(2,...recent.map(row=>row.attempts));
-    const points=recent.map((row,i)=>({x:recent.length===1?350:60+i*580/(recent.length-1),y:200-160*row.attempts/maxAttempts,accuracy:Math.round(100*row.correct/row.attempts),...row}));
-    const path=points.map((p,i)=>`${i?'L':'M'}${p.x},${p.y}`).join(' ');
-    $('#sessionEvolution').innerHTML=`<div class="progress-chart-summary"><strong>${recent.reduce((n,r)=>n+r.attempts,0)} ejercicios</strong><span>en ${recent.length} ${recent.length===1?'sesión reciente':'sesiones recientes'}</span></div><svg class="evolution-chart" viewBox="0 0 700 250" role="img" aria-label="Número de ejercicios por sesión. La tabla recoge las fechas, los ejercicios y sus aciertos."><defs><linearGradient id="progressFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4C5BDD" stop-opacity=".18"/><stop offset="100%" stop-color="#4C5BDD" stop-opacity=".015"/></linearGradient></defs>${[0,Math.floor(maxAttempts/2),maxAttempts].map(n=>`<g><path class="chart-grid" d="M60 ${200-n*160/maxAttempts}H650"/><text class="chart-axis-label" x="46" y="${205-n*160/maxAttempts}" text-anchor="end">${n}</text></g>`).join('')}<path d="${path}L${points.at(-1).x},200L${points[0].x},200Z" fill="url(#progressFill)"/><path class="chart-line" d="${path}"/>${points.map((p,i)=>`<g><circle class="chart-point" cx="${p.x}" cy="${p.y}" r="7"><title>Sesión ${i+1} · ${escapeHtml(sessionDateLabel(p.date))}: ${p.attempts} ejercicios</title></circle><circle class="chart-point-core" cx="${p.x}" cy="${p.y}" r="2.5"/><text class="chart-session-label" x="${p.x}" y="230" text-anchor="middle">${i+1}</text></g>`).join('')}</svg><p class="session-evolution-note">La tabla conserva los aciertos de cada sesión. La gráfica compara el volumen de práctica.</p><details class="progress-chart-data"><summary>Ver los datos exactos por sesión</summary><table><thead><tr><th scope="col">Sesión</th><th scope="col">Fecha y hora</th><th scope="col">Ejercicios</th><th scope="col">Aciertos</th><th scope="col">Precisión</th></tr></thead><tbody>${points.map((p,i)=>`<tr><th scope="row">${i+1}</th><td>${escapeHtml(sessionDateLabel(p.date))}</td><td>${p.attempts}</td><td>${p.correct}</td><td>${p.accuracy}%</td></tr>`).join('')}</tbody></table></details>`;
+    $('#sessionEvolution').innerHTML=`<div class="progress-data-table"><table><caption class="sr-only">Últimas sesiones con ejercicios puntuables</caption><thead><tr><th scope="col">Fecha y hora</th><th scope="col">Ejercicios</th><th scope="col">Aciertos</th><th scope="col">Precisión</th></tr></thead><tbody>${recent.map(row=>`<tr><th scope="row">${escapeHtml(sessionDateLabel(row.date))}</th><td>${row.attempts}</td><td>${row.correct}</td><td>${row.precision}%</td></tr>`).join('')}</tbody></table></div>`;
   }
   function downloadReport(blob,name){
     const link=document.createElement('a');link.href=URL.createObjectURL(blob);
@@ -2392,7 +2424,7 @@
       .join("");
     const update = () => {
       const n = Number($("#sessionActivityCount").value);
-      const selected = expandMath($$("#sessionDomainOptions input:checked").map(x=>x.value));
+      const selected = $$("#sessionDomainOptions input:checked").map(x=>x.value);
       const plan = [];
       for (let i = 0; i < n; i++)
         if (selected.length) plan.push(selected[i % selected.length]);
@@ -2408,7 +2440,7 @@
   }
   function startGuidedSession() {
     const n = Number($("#sessionActivityCount").value);
-    const selected = expandMath($$("#sessionDomainOptions input:checked").map(x=>x.value));
+    const selected = $$("#sessionDomainOptions input:checked").map(x=>x.value);
     if (!selected.length) return alert("Selecciona al menos un área.");
     const plan = [];
     for (let i = 0; i < n; i++) plan.push(selected[i % selected.length]);

@@ -288,7 +288,45 @@ function pool(age,domain,level=1,family=null,revision=1){
 }
 function validate(item,age=item?.ageRoute){const parts=String(item?.contentKey||'').split(':'),canonical=pool(age,item?.domain,item?.level,parts[4],parts[0]==='cognitive-v3'?3:parts[0]==='cognitive-v2'?2:1).find(x=>x.contentKey===item.contentKey);if(!canonical)throw Error('Familia o edad no registrada.');const locale=root.LocaleContent||(typeof require==='function'&&require('./locale-content')),expected=item.localization?locale.localizeItem(canonical,item.localization.locale,item.domain):canonical;for(const field of Object.keys(canonical))if(JSON.stringify(item[field])!==JSON.stringify(expected[field]))throw Error('La actividad o su respuesta han cambiado: '+field);return true;}
 function grade(item,response){validate(item);const t=item.cognitiveTask;if(t.kind==='falling')return false;if(!Array.isArray(response)||response.some(x=>typeof x!=='string'))return false;if(t.kind==='words')return response.length===1&&wordFits(response[0],t);const answer=t.answer;if(new Set(response).size!==response.length&&!t.ordered)return false;return JSON.stringify(t.ordered?response:[...response].sort())===JSON.stringify(t.ordered?answer:[...answer].sort());}
-function productionStatus(item,word){validate(item);const task=item.cognitiveTask,w=norm(word);if(wordFits(word,task))return 'correct';const vocabulary=task.accepted?[...Object.values(lexicalContexts),...Object.values(paperLexicalContexts)].flatMap(entries=>entries.flatMap(([,levels])=>levels.flatMap(([,answers])=>answers))):Object.values(lexicon).flat();return vocabulary.some(x=>norm(x)===w)?'incorrect':'unreviewed';}
+// Only classify semantic alternatives and counterexamples with a reviewed explanation.
+const semanticReviews=[
+ {cue:lexicalContexts.primary[1][1][0][0],accept:['cinta de medir','regla graduada','flexómetro'],
+  explanation:'Tiene una escala para medir el largo del cartón.',
+  reject:[[['tijeras','cúter','lija'],'Esta herramienta no permite medir el largo.']]},
+ {cue:lexicalContexts.primary[3][1][0][0],accept:['gorrión','mirlo','jilguero'],
+  explanation:'Es un ave que vuela y puede anidar en árboles.',
+  reject:[[['pingüino','avestruz'],'Es un ave que no puede volar.'],[['pez','delfín','ballena'],'Es un animal acuático que no vuela ni anida en árboles.']]},
+ {cue:lexicalContexts.primary[3][1][1][0],accept:['marsopa','manatí','foca','nutria marina'],
+  explanation:'Es un mamífero acuático que respira aire y alimenta a sus crías con leche.',
+  reject:[[['trucha','sardina','tiburón'],'Es un pez y no alimenta a sus crías con leche.']]}
+];
+function productionVerdict(item,word){
+ validate(item);
+ const task=item.cognitiveTask,w=norm(word),c=task.constraints;
+ if(task.accepted){
+  const review=semanticReviews.find(entry=>entry.cue===task.cue);
+  if(wordFits(w,task)||review?.accept.some(value=>norm(value)===w))
+   return {status:'correct',feedback:review?.explanation||'La palabra expresa lo que se necesita en esta situación.'};
+  const counterexample=review?.reject.find(([words])=>words.some(value=>norm(value)===w));
+  if(counterexample)return {status:'incorrect',feedback:counterexample[1]};
+ }else{
+  const category=Object.entries(lexicon).find(([,words])=>words.some(value=>norm(value)===w))?.[0];
+  if(category){
+   const labels={animales:'un animal',alimentos:'un alimento',herramientas:'una herramienta',acciones:'una acción'};
+   if(category!==c.category)return {status:'incorrect',feedback:'La consigna pide '+labels[c.category]+'.'};
+   const unmet=[
+    [c.starts&&!w.startsWith(c.starts),'Debe empezar por «'+c.starts+'».'],
+    [c.contains&&!w.includes(c.contains),'Debe contener «'+c.contains+'».'],
+    [c.excludes&&w.includes(c.excludes),'No debe contener «'+c.excludes+'».'],
+    [c.suffix&&!w.endsWith(c.suffix),'Debe terminar en «'+c.suffix+'».'],
+    [c.minLength&&w.length<c.minLength,'Debe tener al menos '+c.minLength+' letras.']
+   ].find(([missing])=>missing);
+   return unmet?{status:'incorrect',feedback:unmet[1]}:{status:'correct',feedback:'Es '+labels[c.category]+' y cumple todas las condiciones.'};
+  }
+ }
+ return {status:'unverifiable',feedback:'No puedo comprobar esta palabra automáticamente'};
+}
+const productionStatus=(item,word)=>productionVerdict(item,word).status;
 function paperEligible(item){
  if(!item||item.interactiveOnly||item.audioMemory||item.roomSpeedTask||item.interactionTask||item.printable==='interactive-only')return false;
  if((item.sourceDomain||item.domain)==='english'&&item.requiresStimulus!==false&&!item.stimulus?.length&&!item.scenario&&!item.text)return false;
@@ -339,5 +377,5 @@ function matchesTranscription(prompt,value){
  const normalize=word=>String(word).trim().normalize('NFC').toLocaleLowerCase('es');
  return normalize(prompt)===normalize(value);
 }
-const api={pool,validate,grade,printable,productionStatus,definitions,lexicon,wordFits,wordResponseMode,wordChoices,gradeWordSelection,matchesTranscription,paperEligible};root.CognitiveFamilies=api;if(typeof module!=='undefined')module.exports=api;
+const api={pool,validate,grade,printable,productionStatus,productionVerdict,definitions,lexicon,wordFits,wordResponseMode,wordChoices,gradeWordSelection,matchesTranscription,paperEligible};root.CognitiveFamilies=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);
