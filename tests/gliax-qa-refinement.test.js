@@ -73,8 +73,8 @@ test('dashboard keeps comparable groups and retains both Math identifiers',()=>{
  const history=[
   row('division','18','calculation',true),
   row('geometry','19','geometry',false),
-  row('memory','19','executed_memory_spatial',true),
-  row('memory','06','executed_memory_spatial',false),
+  row('memory','19',metric('executed_memory_spatial'),true),
+  row('memory','06',metric('executed_memory_spatial'),false),
   row('memory','04','executed_memory_spatial',false,1),
   row('speedReasoning','18',metric('falling_words'),null),
   row('executive','18',metric('guided_wait'),null),

@@ -81,10 +81,9 @@ try:
     page.wait_for_function('()=>document.querySelector("#progressSaveStatus").textContent.includes("guardados")')
     page.locator('#exerciseReturnHome').click()
     workspace(page).locator('#navMenu [data-section="progress"]').click()
-    page.wait_for_function('()=>document.querySelector("#sessionEvolution").querySelector("svg.evolution-chart")')
-    assert page.locator('#sessionEvolution .progress-chart-data table tbody tr').count()>0
-    page.locator('#sessionEvolution .progress-chart-data > summary').click()
-    row=page.locator('#sessionEvolution .progress-chart-data table tbody tr').first.inner_text()
+    page.wait_for_function('()=>document.querySelector("#sessionEvolution").querySelector("table")')
+    assert page.locator('#sessionEvolution table tbody tr').count()>0
+    row=page.locator('#sessionEvolution table tbody tr').first.inner_text()
     assert '1' in row and '100%' in row,row
     page.locator('#progressArea').select_option('Atención')
     accuracy=page.locator('.progress-kpi').nth(1)

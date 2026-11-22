@@ -20,7 +20,7 @@ test('word choice is available only for the two youngest stages in levels 1 and 
         assert.equal(families.gradeWordSelection(item,[...correct,'respuesta ajena']),false);
       }else assert.deepEqual(choices,[]);
       assert.equal(families.productionStatus(item,item.cognitiveTask.answer[0].toUpperCase()),'correct');
-      assert.equal(families.productionStatus(item,'texto sin revisar zz'),'unreviewed');
+      assert.equal(families.productionStatus(item,'texto sin revisar zz'),'unverifiable');
     }
   }
 });

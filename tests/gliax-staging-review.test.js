@@ -273,3 +273,63 @@ test('transversal selector runs the real handler with separate formats and opera
   assert.equal(h.records.get('exercise'),6);
  }
 });
+
+test('R19 authenticated problems use standard quota, preserve R18 geometry and reject stale R19 selectors before charging',async()=>{
+ const h=service({age:'primary',locale:'es_es'});
+ const bad=await h.request({client_revision:19,domain:'language',digital_only:true,digital_family:'message'});
+ assert.equal(bad.status,400);
+ const badGeometry=await h.request({client_revision:19,domain:'geometry'});
+ assert.equal(badGeometry.status,400);
+ assert.equal(h.records.get('exercise'),undefined);
+ const rejected=await h.request({client_revision:19,domain:'division',math_problem:true},null);
+ assert.equal(rejected.status,401);
+ assert.equal(h.records.get('exercise'),undefined);
+ const problem=await h.request({client_revision:19,domain:'division',math_problem:true,level:2});
+ assert.equal(problem.status,200,JSON.stringify(problem.data));
+ assert.equal(problem.data.items[0].type,'mathProblem');
+ assert.equal(problem.data.usage.limit,30);
+ assert.equal(problem.data.usage.used,1);
+ model.forDelivery(problem.data.items[0],{age_band:'primary'},'division');
+ const geo=await h.request({client_revision:18,domain:'geometry'});
+ assert.equal(geo.status,200,JSON.stringify(geo.data));
+ const original=await h.request({client_revision:18,domain:'language',digital_only:true,digital_family:'message'});
+ assert.equal(original.status,200,JSON.stringify(original.data));
+ assert.match(original.data.items[0].contentKey,/^digital-v1:/);
+ const early=service({age:'early'});
+ assert.equal((await early.request({client_revision:19,domain:'division',math_problem:true})).status,400);
+ assert.deepEqual(early.writes,[]);
+});
+
+test('R19 real Edge interleaves geometric content in Mathematics and routes map tasks to Executive',async()=>{
+ const math=service({age:'primary',locale:'es_es'});
+ const mixed=await math.request({client_revision:19,domain:'division',level:2,count:10});
+ assert.equal(mixed.status,200,JSON.stringify(mixed.data));
+ const moved=mixed.data.items.filter(it=>it.originalDomain==='geometry');
+ assert.ok(moved.length>0);
+ assert.ok(moved.every(it=>it.id&&it.domain==='division'&&it.mechanic!=='map_position'));
+ moved.forEach(item=>model.forDelivery(item,{age_band:'primary'},'division'));
+ const legacy=service({age:'primary',locale:'es_es'});
+ const executive=await legacy.request({client_revision:19,domain:'executive',level:2,count:10});
+ assert.equal(executive.status,200,JSON.stringify(executive.data));
+ const orientation=executive.data.items.find(it=>it.originalDomain==='geometry');
+ assert.ok(orientation);
+ assert.equal(orientation.mechanic,'map_position');
+ assert.match(orientation.contentKey,/^primary-v1:geometry:/);
+});
+
+test('R19 Edge delivers new response contracts and keeps other authenticated selectors available',async()=>{
+ const h=service({age:'teen',locale:'es_mx',url:staging,qa:qaId});
+ const selections=[['literacy','clip',3,'digitalContradiction'],['literacy','search',2,'digitalCompletion'],
+  ['executive','app',3,'order'],['communication','message',3,'self']];
+ for(const [domain,format,level,type] of selections){
+  const response=await h.request({client_revision:19,domain,digital_only:true,digital_family:format,level,count:format==='search'?2:1});
+  assert.equal(response.status,200,format+' '+JSON.stringify(response.data));
+  const item=response.data.items.find(item=>item.type===type);
+  assert.ok(item,response.data.items.map(item=>item.type));
+  model.forDelivery(item,{age_band:'teen'},domain);
+  assert.equal(response.data.usage.limit,1200);
+ }
+ const memory=await h.request({client_revision:19,domain:'memory',executed_only:true,executed_family:'spatial'});
+ assert.equal(memory.status,200,JSON.stringify(memory.data));
+ assert.equal(memory.data.items[0].execution.kind,'spatial');
+});

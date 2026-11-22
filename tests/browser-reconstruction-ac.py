@@ -64,7 +64,14 @@ try:
             options.locator('#exerciseLevelSelect').select_option(str(level))
 
         area(page, 'literacy').click()
-        page.get_by_text('Ayudas para leer', exact=True).wait_for()
+        reading_aids = page.get_by_text('Ayudas para leer', exact=True)
+        for _ in range(12):
+            page.wait_for_function('()=>window.__ac && document.querySelector("#exerciseVisual .reading-passage")')
+            if reading_aids.is_visible():
+                break
+            page.evaluate('window.__ac=null')
+            page.locator('#languageModeSwitch [data-mode="grammar"]').click()
+        reading_aids.wait_for()
         assert 'Verdana' in page.locator('#exerciseVisual').evaluate('(element)=>getComputedStyle(element).fontFamily')
         page.locator('.reader-assist').get_by_role('button', name='Más espacio').click()
         assert page.locator('.reader-assist').get_by_role('button', name='Más espacio').get_attribute('aria-pressed') == 'true'
@@ -217,7 +224,7 @@ try:
         page.locator('#cognitiveWord').fill('ejemplo sin revisar')
         before = page.evaluate('__acResults.length')
         page.locator('#cognitiveWord').press('Enter')
-        assert 'no está' in page.locator('.cognitive-status').inner_text()
+        assert 'No puedo comprobar esta palabra automáticamente' in page.locator('.cognitive-status').inner_text()
         assert page.evaluate('__acResults.length') == before
         page.locator('#cognitiveWord').fill(term.upper())
         page.locator('#cognitiveWord').press('Enter')
@@ -233,7 +240,7 @@ try:
         area(page, 'speedReasoning').click()
         page.locator('#fallingWordsMode').click()
         page.wait_for_selector('.falling-settings')
-        assert page.evaluate('__requests.at(-1).client_revision') == 18
+        assert page.evaluate('__requests.at(-1).client_revision') == 19
         page.get_by_label('Velocidad', exact=True).select_option('slow')
         page.get_by_label('Palabras quietas').check()
         start()

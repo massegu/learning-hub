@@ -56,7 +56,7 @@ try:
   assert 'formato anterior' in chart.locator('[data-revision="2"]').inner_text()
   failed=chart.locator('[data-family=search]');assert failed.get_attribute('data-median-ms')=='';assert failed.locator('svg rect').count()==1;assert '0% de aciertos' in failed.inner_text()
   recent=chart.locator('[data-family=characters]');assert recent.get_attribute('data-median-ms')=='15500';assert '20 respuestas medidas' in recent.inner_text()
-  assert page.locator('#sessionEvolution .evolution-chart').count()==1
+  assert page.locator('#sessionEvolution svg').count()==0;assert page.locator('#sessionEvolution table').is_visible()
   cards=page.locator('.progress-kpis')
   assert cards.bounding_box()['height']<400,cards.bounding_box()
   assert cards.locator('.progress-kpi').count()==3

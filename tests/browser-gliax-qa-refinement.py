@@ -191,9 +191,10 @@ with sync_playwright() as p:
             expect(page.locator('.redesign-area-card[data-area="geometry"]')).to_have_count(0)
             area(page,'division').click()
             expect(page.locator('#exerciseHeading')).to_have_text('Matemáticas')
-            page.locator('#mathDomainSwitch [data-math-domain="geometry"]').click()
-            geometry=check_latest(page,domain='geometry')
-            assert geometry['domain']=='geometry'
+            assert not page.locator('[data-math-domain="geometry"]').count()
+            page.locator('#mathProblemMode').click()
+            problem=check_latest(page,domain='division',math_problem=True)
+            assert problem['type']=='mathProblem'
             expect(page.locator('#exerciseHeading')).to_have_text('Matemáticas')
             assert not errors, errors
         finally:

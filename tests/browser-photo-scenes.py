@@ -16,7 +16,7 @@ try:
    page.locator('#exerciseLevelSelect').select_option(str(value))
   area(page, 'memory').click();page.locator('#photoModeSwitch [data-photos=true]').click();page.wait_for_selector('#showMemoryPhoto')
   assert page.evaluate('__requests.at(-1).photos_only') is True
-  assert page.evaluate('__requests.at(-1).client_revision')==18
+  assert page.evaluate('__requests.at(-1).client_revision')==19
   assert 'Entregas hoy:' in page.locator('#usageHint').inner_text()
   assert page.locator('.everyday-photo img').count()==0
   memory=page.evaluate('__current');assert memory['photoTask']['kind']=='recall'

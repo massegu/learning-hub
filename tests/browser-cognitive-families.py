@@ -16,7 +16,7 @@ try:
    if not options.evaluate('(element)=>element.open'):options.locator('summary').click()
   for age in ['early','junior','primary','middle','teen']:
    workspace(page).locator('#profileSelect').select_option(age);reading_domain={'middle':'literacy','primary':'literacy','teen':'literacy'}.get(age,'reading');wait_for_area(page, reading_domain);area(page, reading_domain).click();assert not page.locator('#cognitiveMode').is_visible();area(page, 'executive').click()
-   page.locator('#cognitiveFamilyModes [data-cognitive-family]').first.click();page.wait_for_function('()=>window.__current?.type==="cognitiveTask"&&document.querySelector(".cognitive-area")')
+   page.locator('#cognitiveFamilyModes [data-cognitive-family="rules"]').click();page.wait_for_function('()=>window.__current?.cognitiveTask?.kind==="rules"&&document.querySelector(".cognitive-area")')
    for level in [1,2,3]:
     for kind in ['rules','wait','words','deduction','change','information','contradiction']:
      family_domain=({'middle':'middleLanguage','teen':'teenLanguage'}.get(age,'language') if kind=='words' else 'attention' if kind=='contradiction' else 'executive')
@@ -29,7 +29,7 @@ try:
      page.wait_for_function('({kind,level})=>window.__current?.type==="cognitiveTask"&&__current.level===level&&(kind==="wait"?__current.cognitiveTask.kind==="guidedWait":__current.cognitiveTask.kind===kind)&&document.querySelector(".cognitive-area")',arg={'kind':kind,'level':level})
      item=page.evaluate('__current');task=item['cognitiveTask'];before=page.evaluate('__saves')
      if kind=='rules' and level==1 and age!='early':assert 'Adivina la regla' in page.locator('#exercisePrompt').inner_text()
-     assert page.evaluate('__lastPayload.client_revision')==18
+     assert page.evaluate('__lastPayload.client_revision')==19
      assert page.locator('#printCognitive').count()==(0 if kind in ['rules','wait'] else 1)
      page.locator('.cognitive-area').get_by_role('button',name='Empezar espera' if kind=='wait' else 'Empezar',exact=True).press('Enter')
      if kind=='wait':
@@ -75,7 +75,10 @@ try:
        for word in valid:page.locator('.cognitive-word-choice input').filter(visible=True).evaluate_all('(fields,word)=>fields.find(field=>field.value===word).click()',word)
        page.get_by_role('button',name='Comprobar selección').click()
       else:
-       page.locator('#cognitiveWord').fill('inexistente xyz');page.get_by_role('button',name='Comprobar palabra',exact=True).click();assert 'no se registra' in page.locator('.cognitive-status').inner_text();assert page.evaluate('__saves')==before
+       page.locator('#cognitiveWord').fill('inexistente xyz')
+       page.get_by_role('button',name='Comprobar palabra',exact=True).click()
+       assert 'No puedo comprobar esta palabra automáticamente' in page.locator('.cognitive-status').inner_text()
+       assert page.evaluate('__saves')==before
        page.locator('#cognitiveWord').fill(task['answer'][0].upper());page.get_by_role('button',name='Comprobar palabra',exact=True).click()
      elif kind=='deduction':
       for _ in range(len(task['clues'])-1):page.locator('.cognitive-area').get_by_role('button',name='Ver siguiente pista',exact=True).click()

@@ -37,7 +37,7 @@ test('solutions derive independently from clues, facts, constraints, dependencie
   if(t.kind==='guidedWait')answer=t.answer;
   if(t.kind==='words'){
    const valid=t.options.filter(word=>families.wordFits(word,t));assert.equal(valid.length,1);answer=[valid[0]];
-   assert.equal(families.productionStatus(it,'palabra inventada xyz'),'unreviewed');assert.equal(families.productionStatus(it,valid[0].toUpperCase()),'correct');
+   assert.equal(families.productionStatus(it,'palabra inventada xyz'),'unverifiable');assert.equal(families.productionStatus(it,valid[0].toUpperCase()),'correct');
    assert.ok(Object.values(families.lexicon).flat().some(w=>families.productionStatus(it,w)==='incorrect'));
   }
   if(t.kind==='deduction'){
