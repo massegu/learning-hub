@@ -1545,7 +1545,7 @@
       ...(kind==='exercise'&&['attention','executive'].includes(domain)&&window.DocumentLibrary?.supports(window.AgeStages.route(profile),domain)?{documents_only:documentOnly}:{}),
       kind,
       domain,
-      ...(wantMathProblems?{math_problem:true}:{}),
+      ...(wantMathProblems?{math_problem:true,math_problem_version:2}:{}),
       ...(kind==='exercise'&&digitalOnly?{digital_only:true,...(digitalFamily?{digital_family:digitalFamily}:{})}:{}),
       ...(kind==='exercise'&&domain==='speedReasoning'?{room_speed_only:roomSpeedOnly}:{}),
       ...(kind==='exercise'&&domain==='speedReasoning'&&speedUnpairedOnly?{speed_mechanic:'unpaired'}:{}),
@@ -1562,7 +1562,7 @@
       $('#dailyUsageExplanation').textContent=`Tu cuota es de ${res.usage.limit} ${kind==='worksheet'?'fichas':kind==='game'?'juegos':'ejercicios'} al día. El contador registra contenido entregado, aunque no se complete. Se comparte entre perfiles, áreas y variantes de la cuenta para ese tipo de contenido.`;
     }
     const item=res?.items?.[0]||null;
-    if(wantMathProblems&&item?.type!=='mathProblem')throw Error('No se recibió un problema paso a paso.');
+    if(wantMathProblems&&(item?.type!=='mathProblem'||item.mathVersion!==2))throw Error('Esta versión de Resolución de problemas necesita una actualización del servicio.');
     if(comparison&&comparisonIndex===startIndex&&item?.execution?.format===comparisonFormat)comparisonIndex++;
     if(kind==='exercise'&&domain==='memory'&&!digitalOnly&&!executedOnly&&!memoryAudioOnly&&item){
       if(photoOnly!==Boolean(item.photoTask?.kind==='recall'))throw new Error('La actividad de memoria recibida pertenece a otra modalidad.');

@@ -3591,3 +3591,53 @@ body {
 .math-counters div>span {display:flex;flex-wrap:wrap;gap:4px;max-width:13rem}
 .math-counters i {width:.75rem;height:.75rem;border-radius:50%;background:#368475}
 .falling-settings[hidden] {display:none}
+
+/* Sequenced problem solving, scoped to R19.1 Mathematics. */
+.math-sequence {--math-accent:#175c52;--math-line:#c3d9d2}
+.math-problem-steps.math-sequence {max-width:46rem}
+.math-sequence .math-step-position {margin:.4rem 0 .8rem;color:var(--math-accent);font-size:1.03rem}
+.math-sequence [tabindex="-1"]:focus-visible {outline:2px solid var(--math-accent);outline-offset:3px}
+.math-sequence .math-actions {display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-top:.35rem}
+.math-sequence button {min-height:44px}
+.math-sequence input[type="checkbox"] {width:1.1em;height:1.1em;flex:0 0 auto}
+.math-sequence input[type="text"] {max-width:min(100%,15rem)}
+.math-sequence input,.math-sequence select {min-height:44px}
+.math-sequence select {width:100%;min-width:0;max-width:100%;padding:.55rem;color:#20352f;background:white;border:1px solid #729289;border-radius:.45rem}
+.math-sequence label:has(input[type="text"]) {flex-wrap:wrap}
+.math-sequence .math-expression {font-weight:750;font-size:1.35rem;letter-spacing:.025em}
+.math-input-unit {margin-inline:.45rem}
+.math-operation-builder {display:grid;grid-template-columns:minmax(0,1fr) minmax(7rem,.6fr) minmax(0,1fr);gap:.5rem}
+.math-free {margin:.65rem 0;padding:.55rem .65rem;border:1px solid var(--math-line);border-radius:.5rem}
+.math-free button {margin-inline:.5rem}
+.math-step-feedback:not(:empty) {padding:.65rem .8rem;background:#edf5f2;color:#204840;border-inline-start:3px solid #317365}
+.math-notes,.math-model {max-width:46rem;margin:.6rem auto;text-align:start}
+.math-notes details,.math-model {padding:.65rem .9rem;background:#f2f8f6;border:1px solid #c3d9d2;border-radius:.7rem}
+.math-notes dl {display:grid;grid-template-columns:minmax(0,1fr) max-content;gap:.35rem .75rem;margin:.6rem 0 0}
+.math-notes dd {margin:0;font-weight:700}
+.math-notes summary,.math-free summary {font-weight:720;cursor:pointer}
+.math-model h4 {margin:.1rem 0;color:#18594e}
+.math-model p {margin:.3rem 0 .55rem}
+.math-model small {display:block;margin-top:.4rem}
+.math-model table {width:100%;border-collapse:collapse}
+.math-model th,.math-model td {padding:.35rem;text-align:start;border-bottom:1px solid #c3d9d2;overflow-wrap:anywhere}
+.math-model caption {font-weight:700;text-align:start}
+.math-diagram-bar {display:flex;flex-wrap:wrap;gap:4px}
+.math-diagram-bar .math-bar {flex:1 1 0;min-width:min(100%,8rem)}
+.math-diagram-bar .math-whole {flex:1 1 100%;background:#266b5f;color:white}
+.math-diagram-bar .math-whole.unknown {background:#f7fcfa;color:#16574d}
+.math-equal-groups {display:flex;gap:4px;flex-wrap:wrap;margin:.45rem 0}
+.math-equal-groups span {display:grid;place-items:center;min-width:2.25rem;min-height:2.1rem;background:#d2eae4;border:1px solid #75a497}
+.math-fraction-bar {height:1.4rem;background:#dceee7;border:1px solid #57887c}
+.math-fraction-bar span {display:block;height:100%;background:#327d70}
+.math-data-graph {display:grid;gap:.25rem;padding-inline-start:.2rem;border-inline-start:2px solid #456d65;margin:.5rem 0}
+.math-data-graph span {display:block;height:.75rem;background:#327d70}
+.math-relation {font-weight:700}
+@media(max-width:620px){
+  .math-operation-builder {grid-template-columns:1fr}
+  .math-sequence .math-actions {gap:.35rem}
+  .math-notes dl {grid-template-columns:minmax(0,1fr) minmax(0,auto)}
+  .math-notes dd {overflow-wrap:anywhere}
+}
+.math-graph-row {display:grid;grid-template-columns:minmax(4.5rem,auto) minmax(3rem,1fr) auto;align-items:center;gap:.4rem}
+.math-graph-row small {margin:0}
+.math-graph-track {border-inline-start:1px solid #456d65;background:#e0eee9}

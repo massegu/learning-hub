@@ -16,6 +16,7 @@ await import("./functional-content.js");
 await import("./communication-content.js");
 await import("./cognitive-families.js");
 await import("./executed-tasks.js");
+await import("./math-sequencing.js");
 await import("./curriculum.js");
 await import("./data/primary.js");
 await import("./data/middle.js");
@@ -2638,6 +2639,9 @@ Deno.serve(async (req:Request)=>{
   const curriculum=(globalThis as any).Curriculum;
   if(r19&&kind==='exercise'&&body.domain==='geometry')return usageReply({error:'Estas actividades están integradas en Matemáticas.'},400);
   const mathProblems=body.math_problem===true;
+  const mathProblemVersion=body.math_problem_version??1;
+  if(body.math_problem_version!==undefined&&(!mathProblems||![1,2].includes(body.math_problem_version)))
+    return usageReply({error:"Versión de Resolución de problemas no compatible."},400);
   if(body.math_problem!==undefined&&(typeof body.math_problem!=='boolean'||
     mathProblems&&(!r19||kind!=='exercise'||curriculum.mathProblemDomains[age]!==body.domain||
       body.cognitive_only||body.executed_only||body.interaction_only||body.digital_only||body.photos_only||body.documents_only)))
@@ -2803,7 +2807,7 @@ Deno.serve(async (req:Request)=>{
       return regionalCandidate(item,locale,domain,age);
     };
     if(mathProblems){
-      const bank=curriculum.mathProblemPool(age,domain,level).map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
+      const bank=curriculum.mathProblemPool(age,domain,level,mathProblemVersion).map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);
       items=generatedItems(domain,n,recentEntries,()=>null,bank);
     }else if(digital){
       const bank=digitalCandidates.map((it:any)=>regionalCandidate(it,locale,domain,age)).filter(Boolean);

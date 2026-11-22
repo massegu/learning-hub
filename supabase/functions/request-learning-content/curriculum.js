@@ -902,10 +902,13 @@ function mathProblem(age,level,index){
   mechanic:'math_problem_steps',qualityDescriptor:{semanticFamily:'math.problem_steps',scenarioFamily:`math.${age}.${variant}`},
   difficultyProfile:{level,operations:first==='multiply_add'?3:2}};
 }
-function mathProblemPool(age,domain,level){
+function mathProblemPool(age,domain,level,version=1){
+ if(version===2)return mathSequencing().pool(age,domain,level);
  return mathProblemDomains[age]===domain?Array.from({length:12},(_,i)=>mathProblem(age,level,i)).filter(Boolean):[];
 }
+const mathSequencing=()=>root.MathSequencing||(typeof require==='function'&&require('./math-sequencing'));
 function validateMathProblem(item,age=item?.ageRoute){
+ if(item?.mathVersion===2)return mathSequencing().validate(item,age);
  const canonical=mathProblem(age,item?.level,item?.problem?.index);
  if(!canonical)throw Error('Problema, nivel o edad no válidos.');
  const locale=root.LocaleContent||(typeof require==='function'&&require('./locale-content'));

@@ -22,7 +22,7 @@
     const rows=history.map(row=>{
       const measure=metrics(row);
       const modality=measure?.modality;
-      const category=modality==='guided_wait'?'wait':modality==='rule_application'||row.detail==='symbol_rules'?'rules':typeof row.correct==='boolean'?'scored':'practice';
+      const category=modality==='math_problem_steps'&&measure.definition_version===2?'practice':modality==='guided_wait'?'wait':modality==='rule_application'||row.detail==='symbol_rules'?'rules':typeof row.correct==='boolean'?'scored':'practice';
       const ruleFamily=modality==='rule_application'&&(measure.variant==='infer_rule'||/^cognitive-v\d[^:]*:[^:]+:executive:\d+:rules:/.test(row.itemId||''));
       return {row,measure,category,area:areas[row.speedFamily?'speedReasoning':row.subject]||'Otra área',activity:(ruleFamily?'Adivina la regla':activities[modality||row.speedFamily||row.detail])||areas[row.subject]||'Actividad histórica'};
     });
@@ -49,6 +49,17 @@
       const result={correct:'acierto',error:'error',omitted:'sin respuesta'}[round.outcome]||'sin dato';
       return `Palabra ${i+1} (${result}), primera entrada ${first}, de entrada a confirmación ${submit}`;
     }));
+    if(m.modality==='math_problem_steps'&&m.definition_version===2&&Array.isArray(m.operations)){
+      const labels={add:'suma',subtract:'resta',multiply:'multiplicación',divide:'división'};
+      parts.push(m.family,'Estrategia '+String(m.strategy||'').replaceAll('_',' '),
+        'Operaciones elegidas sin apoyo '+m.unassisted_selections+'/'+m.operations.length,
+        'Cálculos correctos sin apoyo '+m.unassisted_calculations+'/'+m.operations.length,
+        'Interpretación '+(m.interpretation_correct?'correcta':m.interpretation?.guided?'guiada':'por revisar'),
+        m.support_used?'Con apoyo consultado':'Sin apoyo consultado');
+      for(const op of m.operations)parts.push('Paso '+op.position+' ('+(labels[op.operation]||'operación')+')'+
+        ' · '+op.selection_attempts+' intentos de elección · '+op.calculation_attempts+' intentos de cálculo'+
+        (op.guided?' · guiado':''));
+    }
     if(m.modality==='math_problem_steps'&&m.steps){
       const stages={intermediate_datum:'Dato intermedio',first_operation:'Primera operación',intermediate_calculation:'Cálculo intermedio',final_operation:'Operación final',final_answer:'Respuesta final'};
       for(const [key,label] of Object.entries(stages)){
