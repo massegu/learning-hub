@@ -164,6 +164,7 @@
     counter = 0,
     requestGeneration = 0,
     guidedSession = null;
+  let r192Family = "", r192Turn = 0;
   const API = window.LearningAPI;
   const worksheetBuilder=window.WorksheetBuilder.mount($('#paperConfigurator'),{getProfile:()=>profile,api:API});
   const supportEmail=String(window.LH_CONFIG?.supportEmail||'').trim();
@@ -1091,6 +1092,7 @@
   }
   function activateProfile(id,independent=false) {
     stopMemoryCountdown();
+    r192Family="";r192Turn=0;
     progressSaveRevision++;resultSaveRevision++;setProgressSaveStatus('');
     if(independent)setPendingResultHomeStatus();
     $('#privacyDialog').close();privacyTarget=null;
@@ -1197,7 +1199,7 @@
     homework: "Fichas para casa",
   };
   function switchSection(id) {
-    if(id!=='exercise'){stopMemoryCountdown();interactionOnly=false;}
+    if(id!=='exercise'){stopMemoryCountdown();interactionOnly=false;r192Family='';r192Turn=0;}
     $$(".section").forEach((s) => s.classList.remove("active-section"));
     $("#" + id).classList.add("active-section");
     $('#appShell').classList.toggle('exercise-focus',id==='exercise');
@@ -1373,6 +1375,22 @@
     digitalSelect.value=digitalFamily;
     syncLanguageModeButtons();
     $('#wordFitMode').setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily==='words'));
+    const r192Controls=$('#r192Modalities');
+    const localModes=guidedSession?[]:window.GliaxR192Practice.available(subject,route,state.levels[subject]||1);
+    if(!localModes.some(([key])=>key===r192Family)){r192Family='';r192Turn=0;}
+    r192Controls.classList.toggle('hidden',!localModes.length);
+    const localButtons=r192Controls.querySelector('.mode-switch');
+    const focusedMode=localButtons.contains(document.activeElement)?document.activeElement.dataset.r192Family:null;
+    localButtons.replaceChildren(...localModes.map(([key,activity])=>{
+      const button=document.createElement('button');
+      button.type='button';
+      button.className='modality-button';
+      button.dataset.r192Family=key;
+      button.textContent=activity.label;
+      button.setAttribute('aria-pressed',String(key===r192Family));
+      return button;
+    }));
+    if(focusedMode)localButtons.querySelector(`[data-r192-family="${focusedMode}"]`)?.focus();
     const hasAvailableModality=$$('#exerciseModalities button').some(button=>{
       const hiddenAncestor=button.closest('.hidden');
       return !hiddenAncestor||hiddenAncestor.id==='exerciseModalities';
@@ -1394,8 +1412,16 @@
     setupExercise();
   };
   $('#exerciseModalities').addEventListener('click',event=>{
-    if(event.target.closest('button:not(#digitalModeButton)'))digitalOnly=false;
+    const button=event.target.closest('button');
+    if(button&&!button.dataset.r192Family){r192Family='';r192Turn=0;}
+    if(button&&button.id!=='digitalModeButton')digitalOnly=false;
   },true);
+  $('#r192Modalities').addEventListener('click',event=>{
+    const button=event.target.closest('[data-r192-family]');
+    if(!button)return;
+    r192Family=button.dataset.r192Family;r192Turn=0;
+    setupExercise();
+  });
   $('#documentModeSwitch').addEventListener('click',event=>{
     const button=event.target.closest('button[data-documents],#attentionPhotos');
     if(!button)return;
@@ -1609,6 +1635,21 @@
     if(window.ContentPolicy.forProfile(profile))$('#exerciseNext').textContent='Siguiente →';
     setLoading(true);
     try {
+      if(r192Family){
+        const practice=window.GliaxR192Practice;
+        const item=practice.getItem(r192Family,window.AgeStages.route(profile),state.levels[subject]||1,r192Turn);
+        if(!item)throw new Error('Esta práctica no está disponible en este nivel.');
+        counter++;
+        $("#exerciseCounter").textContent=`Ejercicio ${counter}`;
+        const mode=practice.available(subject,item.ageBand,item.level).find(([key])=>key===r192Family)[1];
+        $("#exerciseTopic").textContent=mode.label;
+        $("#exerciseTopic").classList.remove('hidden');
+        stopExecuted=practice.mount(item,{
+          prompt:$("#exercisePrompt"),visual:$("#exerciseVisual"),area:$("#exerciseOptions"),
+          feedback:$("#exerciseFeedback"),next:$("#exerciseNext"),retry:()=>newExercise()
+        });
+        return;
+      }
       const item = await requestOne("exercise");
       if (profile !== requestedProfile || subject !== requestedSubject || generation !== requestGeneration) return;
       currentItem = item;
@@ -2000,6 +2041,7 @@
     }
   }
   $("#exerciseNext").onclick = () => {
+    if(r192Family){r192Turn++;newExercise();return;}
     if (guidedSession) {
       advanceGuidedSession();
     } else newExercise();
