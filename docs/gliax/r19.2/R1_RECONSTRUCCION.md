@@ -15,3 +15,7 @@ CP01–CP15 conservan las combinaciones de edad y nivel del documento maestro. C
 ## Encuentra la contradicción
 
 EC01–EC15 distinguen incumplimiento, cumplimiento, afirmaciones incompatibles, compatibilidad, actualización temporal e información insuficiente. EC10 admite las dos lecturas previstas. En N2 y N3 se pide la evidencia además de la relación. Los totales y diferencias de los conflictos inferidos se calculan al corregir y quedan fuera de las opciones, con apoyo visual de cantidades para EC01 y EC06.
+
+## ¿Qué necesitas saber?
+
+IN01–IN15 incluyen pregunta abierta, pista opcional y alternativas. IN-06 complete-data conserva el contexto de IN06 y aporta un trayecto de 20 minutos para probar el caso de datos completos exigido por la especificación. Se aceptan expresiones completas revisadas y se distinguen respuestas suficientes, parciales, insuficientes, no interpretables y ausentes. La respuesta espontánea es de solo lectura tras el primer intento o la primera ayuda y vive en la sesión en memoria. El resumen y el evento excluyen el texto; la elección asistida queda diferenciada del intento espontáneo. El modo oral supervisado está indicado para edades tempranas, pendiente de implementación en interfaz.

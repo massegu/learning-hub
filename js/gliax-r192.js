@@ -4,7 +4,7 @@
   const contentVersion = 'r19.2-r1';
   const gradingVersion = 'r19.2-r1.1';
   const ageBands = ['early', 'junior', 'primary', 'middle', 'teen'];
-  const statuses = ['correct', 'incorrect', 'partial', 'uninterpretable', 'pending_review'];
+  const statuses = ['correct', 'incorrect', 'partial', 'uninterpretable', 'pending_review', 'no_response'];
   const supportLevels = ['spontaneous', 'hint', 'options'];
   const modes = [
     'single_choice', 'multi_valid_choice', 'sequence_constraints', 'constraint_solver',
