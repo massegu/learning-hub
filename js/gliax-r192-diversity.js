@@ -8,6 +8,8 @@
   const goal = typeof module !== 'undefined' ? require('./gliax-r192-goal-change') : root.GliaxR192GoalChange;
   const supervision = typeof module !== 'undefined' ? require('./gliax-r192-supervision') : root.GliaxR192Supervision;
 
+  const variants = typeof module !== 'undefined' ? require('./gliax-r192-rule-variants') : root.GliaxR192RuleVariants;
+
   const ages = Object.freeze(['early', 'junior', 'primary', 'middle', 'teen']);
   const levels = Object.freeze([1, 2, 3]);
   const families = Object.freeze(['CP', 'EC', 'IN', 'AR', 'planning', 'constraints', 'goal-change', 'supervision']);
@@ -80,6 +82,7 @@
     const items = create
       ? create({ageBand, level, seed})
       : (referenceSlots.get([family, ageBand, level].join(':')) ?? []).map(id => bank.getCase(id, seed));
+    if (family === 'AR') items.push(...items.flatMap(variants.expandRules));
     return items.map(item => ({...describe(item), item}));
   }
 
