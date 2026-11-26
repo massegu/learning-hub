@@ -31,14 +31,14 @@
     const selector = root.GliaxR192Selector.createSelector(sessionSeed, {prioritizeStructuralDiversity: true});
     const turns = new Map();
 
-    function next(family, area, ageBand, level) {
+    function next(family, area, ageBand, level, adaptiveWeight) {
       if (!available(area, ageBand, level).some(([key]) => key === family)) return null;
       const query = {family, ageBand, level};
       const slot = [family, ageBand, level].join(':');
       const turn = turns.get(slot) ?? 0;
       const seedForRound = root.GliaxR192Selector.presentationSeed(sessionSeed, query, turn);
       const pool = candidates({...query, seed: seedForRound});
-      const selection = selector.next(query, pool);
+      const selection = selector.next(query, pool, adaptiveWeight);
       if (!selection) return null;
       turns.set(slot, turn + 1);
       selection.item.interactiveOnly = true;
@@ -194,7 +194,7 @@
     validSubmit(area, () => selected() ? {choice: selected(), evidence: evidence()} : undefined, finish);
   }
 
-  function renderInformation(item, {area}, publish) {
+  function renderInformation(item, {area, assist}, publish) {
     const round = root.GliaxR192IN.startInformation(item);
     const open = node('div', '', 'r192-open');
     const label = node('label', 'Escribe tu respuesta');
@@ -213,6 +213,7 @@
     const options = node('div');
     const hints = button('Necesito una pista', () => {
       hint.textContent = round.showHint(draft.value);
+      assist?.('hint');
       hint.hidden = false;
       hints.disabled = true;
       if (!open.hidden) {
@@ -222,14 +223,15 @@
     });
     const choicesButton = button('Ver alternativas', () => {
       const assisted = round.showOptions(draft.value);
+      assist?.('options');
       draft.value = '';
       open.hidden = true;
       choicesButton.disabled = true;
       validSubmit(options, choices(options, 'Elige una opción con ayuda', assisted),
-        id => publish(round.submitChoice(id), round.summary().event.support));
+        id => publish(round.submitChoice(id), round.summary().event.support, round.summary().initial));
       options.querySelector('input').focus();
     });
-    const check = button('Comprobar', () => publish(round.submitOpen(draft.value), round.summary().event.support), 'primary-btn');
+    const check = button('Comprobar', () => publish(round.submitOpen(draft.value), round.summary().event.support, round.summary().initial), 'primary-btn');
     open.append(check);
     if (item.presentation.supervisedOralAvailable) {
       area.append(node('p', 'También puedes responder en voz alta y pedir a la persona que te acompaña que escriba tu respuesta.'));
@@ -341,12 +343,21 @@
     area.dataset.level = String(item.level);
     feedback.setAttribute('role', 'status');
     feedback.className = 'feedback';
-    const note = node('p', 'Práctica en memoria. El resultado no se guarda y la actividad solo está disponible en pantalla.', 'muted r192-note');
+    const note = node('p', ui.observe ? 'Práctica registrada al continuar. La actividad está disponible en pantalla.' :
+      'Práctica en memoria. El resultado no se guarda y la actividad solo está disponible en pantalla.', 'muted r192-note');
     visual.append(note);
     if (item.singleCase) visual.append(node('p', 'En este nivel hay un único caso de esta modalidad.', 'muted r192-note'));
     const repeat = button('Repetir', retry);
     repeat.hidden = true;
-    function publish(result, support) {
+    const started = performance.now();
+    let interrupted = document.hidden;
+    function visibilityChanged() { interrupted = true; }
+    if (ui.observe) document.addEventListener('visibilitychange', visibilityChanged);
+    const initialStatus = {sufficient:'correct', insufficient:'incorrect', partial:'partial',
+      uninterpretable:'uninterpretable', no_response:'no_response'};
+    function publish(result, support, initial) {
+      const time = !interrupted && !['AR','IN'].includes(item.family) ? Math.round(performance.now()-started) : null;
+      ui.observe?.(result.status, support, time, initialStatus[initial]);
       const help = {spontaneous: 'Respuesta espontánea.', hint: 'Respuesta con pista.', options: 'Respuesta con alternativas.'};
       const score = item.family === 'AR' && result.metrics
         ? result.metrics.correct + ' de ' + result.metrics.scored + ' estímulos correctos.'
@@ -377,6 +388,7 @@
     area.append(repeat);
     prompt.focus();
     return () => {
+      if (ui.observe) document.removeEventListener('visibilitychange', visibilityChanged);
       area.replaceChildren();
       visual.replaceChildren();
       feedback.textContent = '';

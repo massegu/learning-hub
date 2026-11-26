@@ -60,7 +60,7 @@
     if (typeof seed !== 'string' && !Number.isSafeInteger(seed)) throw new TypeError('Invalid selection seed');
     const sessions = new Map();
 
-    function next(query, candidates) {
+    function next(query, candidates, adaptiveWeight = () => 1) {
       const key = slotKey(query);
       if (!key) return null;
       const {family, ageBand, level} = query;
@@ -90,10 +90,11 @@
         if (!groups.has(entry.structure)) groups.set(entry.structure, []);
         groups.get(entry.structure).push(entry);
       }
+      const factor = entry => Math.max(0.88, Math.min(1.25, Number(adaptiveWeight(entry)) || 1));
       const group = weighted([...groups.values()], entries =>
-        entries.reduce((sum, entry) => sum + weightFor(entry, state.recent, groupFields), 0) / entries.length,
+        entries.reduce((sum, entry) => sum + weightFor(entry, state.recent, groupFields) * factor(entry), 0) / entries.length,
       unit(seed, key + ':structure', state.turn));
-      const selected = weighted(group, entry => weightFor(entry, state.recent, caseFields),
+      const selected = weighted(group, entry => weightFor(entry, state.recent, caseFields) * factor(entry),
         unit(seed, key + ':case', state.turn));
       const record = Object.fromEntries(fields.map(field => [field, selected[field]]));
       state.recent = [record, ...state.recent].slice(0, windowSize);

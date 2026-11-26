@@ -6,7 +6,7 @@ before(async()=>{db=new PGlite();await db.exec(`create role anon;create role aut
  create schema private;
  create table accounts(user_id uuid primary key);insert into accounts values('${A}'),('${B}');
  create table learner_profiles(id uuid primary key,account_id uuid references accounts(user_id),name text,age_band text,locale text,progress jsonb default '{}');
- create table exercise_results(id uuid primary key default gen_random_uuid(),profile_id uuid references learner_profiles(id),correct bool);
+ create table exercise_results(id uuid primary key default gen_random_uuid(),profile_id uuid references learner_profiles(id),correct bool,detail text);
  create table private.content_delivery_log(id bigint generated always as identity primary key,user_id uuid,profile_id uuid references learner_profiles(id) on delete cascade,content_id uuid,kind text,delivered_at timestamptz default now());
  create table content_seen(id uuid primary key default gen_random_uuid(),profile_id uuid,user_id uuid,item_signature text);
  insert into learner_profiles values('${P}','${A}','P-1','primary','es_es','{"interactiveObservations":[{"kind":"room","description":"private free text","report":"described"}]}'),('${Q}','${B}','P-2','teen','es_es','{}');
@@ -133,4 +133,24 @@ test('result attempt keys are nullable for history, unique per profile, non-over
  await db.exec('reset role');
  rows=(await db.query('select profile_id,correct from exercise_results where client_attempt_id=$1 order by profile_id',[ATTEMPT])).rows;
  assert.deepEqual(rows,[{profile_id:Q,correct:true},{profile_id:NEW_PROFILE,correct:false}],'the same UUID may be used independently across different profiles');
+});
+
+
+test('R19.3 observations recover under the owning account and stay isolated through RLS', async()=>{
+ const event=JSON.stringify({schema:'gliax.r193-observation.v1',family:'EC',mechanism:'source-comparison',first:'correct',final:'correct',attempts:1,aids:[]});
+ const profile='f76f4273-2680-4222-8948-ab7ba1305124';
+ await db.exec('reset role');
+ await db.query('insert into learner_profiles(id,account_id,name,age_band) values($1,$2,$3,$4)',[profile,A,'P-F76F4273','primary']);
+ const attempt='ac83a543-39f0-4229-875c-93fb3285e127';
+ const put='insert into exercise_results(profile_id,correct,client_attempt_id,detail) values($1,null,$2,$3) on conflict(profile_id,client_attempt_id) do nothing';
+ await as(A);
+ await db.query(put,[profile,attempt,event]);
+ await db.query(put,[profile,attempt,event]);
+ await db.exec('reset role');
+ await as(B);
+ assert.deepEqual((await db.query('select detail from exercise_results where profile_id=$1 and client_attempt_id=$2',[profile,attempt])).rows,[]);
+ await assert.rejects(db.query(put,[profile,attempt,event]),/row-level security/);
+ await db.exec('reset role');
+ await as(A);
+ assert.deepEqual((await db.query('select correct,detail from exercise_results where client_attempt_id=$1',[attempt])).rows,[{correct:null,detail:event}]);
 });

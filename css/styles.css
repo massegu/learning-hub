@@ -3761,3 +3761,7 @@ body {
   .r193-app-workspace {grid-template-columns:1fr}
   .r193-app-reading {border-inline-start:0;border-block-start:1px solid var(--app-line)}
 }
+
+#r193ProfessionalControl {padding:.45rem .75rem}
+#r193ProfessionalControl label {display:flex;align-items:center;gap:.55rem}
+#r193Recommendation {margin:.35rem 0 0;font-size:.9rem}

@@ -1,0 +1,14 @@
+# Seguimiento longitudinal R19.3
+
+**Implementación local pendiente de integración alojada.** La observación al continuar usa `exercise_results`, la clave idempotente `(profile_id, client_attempt_id)` y el mecanismo existente de recuperación de intentos. Se habilita explícitamente con `r193Longitudinal=true` solo si tanto GLIAX como el destino Supabase usan loopback. Las sesiones independientes y los recorridos alojados quedan fuera de este piloto. El catálogo real de Supabase Staging rechazó la consulta de solo lectura con HTTP 403.
+
+La fila se registra sin puntuación histórica y sus detalles versionados incluyen familia, mecanismo, estructura, edad, nivel, versiones, respuesta inicial y final categóricas, intentos, ayudas y tiempo si fue interpretable. Los cambios de visibilidad, tiempos fuera de rango, ayudas y repeticiones invalidan el tiempo. Las familias IN y AR requieren una revisión propia de comparabilidad temporal. No se guardan las palabras de una respuesta abierta. La reconciliación mantiene estas observaciones fuera del historial clásico y de su cálculo de puntos. El almacenamiento y el borrado conservan el contrato existente de privacidad del perfil.
+
+La adaptación utiliza observaciones de los últimos 90 días y compara versiones, edad y nivel. Una respuesta no interpretable se excluye de la tasa inicial. La ponderación varía entre 0,88 y 1,25 tras el filtro de diversidad. Las recomendaciones exigen al menos 8 observaciones calificables, 3 sesiones y 3 estructuras. El nivel fijado por el profesional se mantiene hasta que este lo cambie. Puede desactivar la adaptación conservando observaciones. Las recomendaciones de práctica se abstienen cuando falta evidencia y no se traducen en conclusiones clínicas.
+
+## Evidencia
+
+- Con 12 observaciones por perfil y la misma edad y nivel, el historial de alta precisión sugirió probar el nivel 3 con supervisión. El historial de dificultad recomendó refuerzo en el nivel 2.
+- A igualdad de banco sintético y semilla, el perfil con dificultad recibió 232 de 1.000 ejercicios del mecanismo objetivo. El otro recibió 213. Ambas secuencias mantuvieron la restricción contra repeticiones consecutivas de mecanismo y estructura en ese banco.
+- Chromium con Auth y persistencia simulados recorrió la aplicación real, guardó una práctica de A, reabrió el perfil y recuperó recomendaciones diferentes para A y B. Probó apagar y reactivar la adaptación. PGlite comprobó las migraciones versionadas, relectura con el propietario, idempotencia y rechazo de lectura e inserción entre cuentas.
+- Para habilitarlo fuera de loopback, un operador autorizado debe comprobar el tipo y restricciones de `detail`, la nulabilidad de `correct`, la clave idempotente, las políticas efectivas y la exportación y supresión de observaciones. Después debe validar recuperación en otro dispositivo con cuentas ficticias y aprobación de Staging. No se ejecutó ni se presupone una migración alojada.

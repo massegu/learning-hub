@@ -165,13 +165,58 @@
     requestGeneration = 0,
     guidedSession = null;
   const digitalRotation = window.GliaxR193Digital.createRotation();
+  const longitudinal = window.GliaxR193Longitudinal;
+  let observations = new Map(), observationDraft = null, observationsReady = null;
+  let observationOwner = Symbol();
+  const canRecordObservation = () => longitudinal.enabled() && Boolean(profile?.id && API.user?.id) &&
+    !profile._sessionOnly && !API.isIndependent(profile.id);
+  const usesAdaptation = () => canRecordObservation() && profile.progress?.r193Adaptive !== false;
+
+  function finishObservation() {
+    const draft = observationDraft;
+    observationDraft = null;
+    if (!draft || !canRecordObservation() || draft.owner !== observationOwner) return null;
+    const detail = draft.measurement.summary();
+    if (!detail) return null;
+    const row = {clientAttemptId:API.createAttemptId(), ts:new Date().toISOString(),
+      subject:draft.subject, level:detail.level, correct:null, points:0, itemId:draft.itemId,
+      sessionId:state.session.id, sessionStartedAt:state.session.startedAt, detail:JSON.stringify(detail)};
+    return API.saveResult(profile.id,row).then(saved=>{
+      if (saved && draft.owner === observationOwner) observations.set(row.clientAttemptId,row);
+    }).catch(()=>{
+      if (draft.owner === observationOwner) {
+        setPendingResultHomeStatus('La observación de práctica sigue pendiente de confirmación.','error',true);
+      }
+    });
+  }
+
+  function refreshRecommendation(item) {
+    const recommendation = $('#r193Recommendation');
+    if (!usesAdaptation() || !item) {
+      recommendation.textContent = '';
+      return;
+    }
+    const measures = longitudinal.analyze(observations.values(),item,item.gradingVersion).family;
+    const proposed = longitudinal.recommend(measures,item.level);
+    const messages = {
+      insufficient:'Aún faltan observaciones comparables para recomendar un cambio.',
+      'supervised-step':'Puedes probar el nivel '+proposed.level+' con acompañamiento.',
+      reinforce:'Conviene reforzar este mecanismo dentro del nivel actual.',
+      maintain:'Los resultados disponibles apoyan mantener el nivel actual.'
+    };
+    recommendation.textContent = messages[proposed.reason] + ' Observaciones válidas: '+proposed.observations+'.';
+  }
   let r192Family = '', r192Session = null, r192Round = null;
   function resetR192Practice(keepSelectionHistory = false) {
     r192Family = '';
     if (!keepSelectionHistory) {
       r192Session = null;
       digitalRotation.clear();
+      observationOwner = Symbol();
+      observations = new Map();
+      observationsReady = null;
     }
+    observationDraft = null;
     r192Round = null;
   }
   const API = window.LearningAPI;
@@ -708,7 +753,7 @@
       ...s,
       scores: { ...b.scores, ...(s.scores || {}) },
       levels: { ...b.levels, ...(s.levels || {}) },
-      history: s.history || [],
+      history: (Array.isArray(s.history)?s.history:[]).filter(row=>!longitudinal.isObservation(row)),
       sessions: s.sessions || [],
       session: b.session,
       streak: 0,
@@ -775,7 +820,12 @@
       const rows=await API.listResults(profileId);
       if(profile?.id!==profileId||profile._sessionOnly||API.isIndependent?.(profileId)||API.user?.id!==userId)return false;
       if($('#pendingResultStatus')?.textContent.startsWith('No se pudieron consultar los resultados guardados'))setPendingResultHomeStatus();
-      const merged=mergeConfirmedResultHistory(state.history,rows);
+      const original = [];
+      for (const row of rows) {
+        if (!longitudinal.isObservation(row)) original.push(row);
+        else if (canRecordObservation() && row.clientAttemptId) observations.set(row.clientAttemptId,row);
+      }
+      const merged=mergeConfirmedResultHistory(state.history,original);
       if(!merged.added)return true;
       // exercise_results is the durable record of confirmed attempts. Reconcile
       // only the history cache; aggregate points, streaks, totals and levels are
@@ -1140,7 +1190,7 @@
     buildSessionBuilder();
     switchSection("home");
     updateGlobalUI();
-    if(!independent)recoverConfirmedResults(id);
+    if(!independent)observationsReady=recoverConfirmedResults(id);
   }
   $('#workspaceMenu').onclick=()=>{const open=$('#appShell').classList.toggle('mobile-nav-open');$('#workspaceMenu').setAttribute('aria-expanded',String(open));};
   $('#prepareSessionBtn').onclick=()=>switchSection('sessionBuilder');
@@ -1209,7 +1259,7 @@
     homework: "Fichas para casa",
   };
   function switchSection(id) {
-    if(id!=='exercise'){stopMemoryCountdown();interactionOnly=false;resetR192Practice(true);}
+    if(id!=='exercise'){finishObservation();stopMemoryCountdown();interactionOnly=false;resetR192Practice(true);}
     $$(".section").forEach((s) => s.classList.remove("active-section"));
     $("#" + id).classList.add("active-section");
     $('#appShell').classList.toggle('exercise-focus',id==='exercise');
@@ -1385,6 +1435,8 @@
     const localModes=guidedSession?[]:window.GliaxR192Practice.available(subject,route,state.levels[subject]||1);
     if(!localModes.some(([key])=>key===r192Family)){r192Family='';r192Round=null;}
     $('#r192NewRound').classList.toggle('hidden',!r192Family);
+    $('#r193ProfessionalControl').classList.toggle('hidden',!r192Family||!canRecordObservation());
+    $('#r193Adaptive').checked = usesAdaptation();
     r192Controls.classList.toggle('hidden',!localModes.length);
     const localButtons=r192Controls.querySelector('.mode-switch');
     const focusedMode=localButtons.contains(document.activeElement)?document.activeElement.dataset.r192Family:null;
@@ -1429,6 +1481,12 @@
     r192Family=button.dataset.r192Family;
     setupExercise();
   });
+  $('#r193Adaptive').onchange=event=>{
+    if (!canRecordObservation()) return;
+    profile.progress.r193Adaptive=event.target.checked;
+    persist(false);
+    refreshRecommendation(r192Round);
+  };
   $('#r192NewRound').onclick=()=>{if(r192Family){r192Round=null;newExercise();}};
   $('#documentModeSwitch').addEventListener('click',event=>{
     const button=event.target.closest('button[data-documents],#attentionPhotos');
@@ -1618,6 +1676,7 @@
     return item;
   }
   async function newExercise() {
+    const pendingObservation=finishObservation();
     // A save from the previous card may still be resolving. Invalidate its UI
     // callback so it cannot display a stale success over a failed new load.
     progressSaveRevision++;resultSaveRevision++;
@@ -1655,11 +1714,24 @@
     setLoading(true);
     try {
       if(r192Family){
+        if (canRecordObservation()) {
+          await observationsReady;
+          await pendingObservation;
+          if (profile!==requestedProfile || subject!==requestedSubject || generation!==requestGeneration) return;
+        }
         const practice=window.GliaxR192Practice;
         const age=window.AgeStages.route(profile),level=state.levels[subject]||1;
         r192Session??=practice.createSession();
         if(!r192Round||r192Round.family!==r192Family||r192Round.ageBand!==age||r192Round.level!==level){
-          r192Round=r192Session.next(r192Family,subject,age,level);
+          const byVersion=new Map();
+          const factor=usesAdaptation()?entry=>{
+            const version=entry.item.contentVersion+':'+entry.item.gradingVersion;
+            if (!byVersion.has(version)) {
+              byVersion.set(version,longitudinal.analyze(observations.values(),{...entry,contentVersion:entry.item.contentVersion},entry.item.gradingVersion).mechanisms);
+            }
+            return longitudinal.weight(byVersion.get(version).get(entry.mechanism));
+          }:undefined;
+          r192Round=r192Session.next(r192Family,subject,age,level,factor);
         }
         const item=r192Round;
         if(!item)throw new Error('Esta práctica no está disponible en este nivel.');
@@ -1668,9 +1740,16 @@
         const mode=practice.available(subject,item.ageBand,item.level).find(([key])=>key===r192Family)[1];
         $("#exerciseTopic").textContent=mode.label;
         $("#exerciseTopic").classList.remove('hidden');
+        let measurement;
+        if (canRecordObservation()) {
+          measurement=longitudinal.createDraft(item,window.GliaxR192Diversity.describe(item));
+          observationDraft={owner:observationOwner,measurement,subject,itemId:item.id};
+        }
+        refreshRecommendation(item);
         stopExecuted=practice.mount(item,{
           prompt:$("#exercisePrompt"),visual:$("#exerciseVisual"),area:$("#exerciseOptions"),
-          feedback:$("#exerciseFeedback"),next:$("#exerciseNext"),profile,retry:()=>newExercise()
+          feedback:$("#exerciseFeedback"),next:$("#exerciseNext"),profile,retry:()=>newExercise(),
+          observe:measurement?.observe,assist:measurement?.assist
         });
         return;
       }
@@ -2671,6 +2750,7 @@
     }
   };
   $("#signOutBtn").onclick = async () => {
+    await finishObservation();
     await API.signOut();
     profile = null;
     showAuth("Sesión cerrada.");
