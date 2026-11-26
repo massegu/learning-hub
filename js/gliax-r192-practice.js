@@ -3,11 +3,12 @@
 
   const modes = {
     CP: {label: 'Cambio de plan', area: 'executive'},
-    EC: {label: 'Encuentra la contradicción', area: 'attention'}
+    EC: {label: 'Encuentra la contradicción', area: 'attention'},
+    IN: {label: '¿Qué necesitas saber?', area: 'executive'}
   };
   const bands = ['early', 'junior', 'primary', 'middle', 'teen'];
   const enabled = () => root.LH_CONFIG?.staging === true ||
-    (['localhost', '127.0.0.1', '[::1]'].includes(root.location.hostname) && root.LH_CONFIG?.r192Practice === true);
+    (['localhost', '127.0.0.1', '[::1]'].includes(root.location?.hostname) && root.LH_CONFIG?.r192Practice === true);
 
   function available(area, age, level) {
     return enabled() && bands.includes(age) && [1, 2, 3].includes(level)
@@ -17,7 +18,9 @@
 
   function getItem(family, age, level, turn) {
     if (!available(modes[family]?.area, age, level).some(([key]) => key === family)) return null;
-    const id = family + String(bands.indexOf(age) * 3 + level).padStart(2, '0');
+    const id = family === 'IN' && age === 'junior' && level === 3 && turn % 2 === 1
+      ? 'IN-06 complete-data'
+      : family + String(bands.indexOf(age) * 3 + level).padStart(2, '0');
     const seed = 'practice:' + age + ':' + level + ':' + turn;
     return root.GliaxR192Bank.getCase(id, seed);
   }
@@ -134,6 +137,46 @@
     validSubmit(area, () => selected() ? {choice: selected(), evidence: evidence()} : undefined, finish);
   }
 
+  function renderInformation(item, {area}, publish) {
+    const round = root.GliaxR192IN.startInformation(item);
+    const open = node('div', '', 'r192-open');
+    const label = node('label', 'Escribe tu respuesta');
+    const draft = node('textarea');
+    draft.id = 'r192-open-answer';
+    draft.rows = 3;
+    draft.maxLength = 500;
+    draft.autocomplete = 'off';
+    draft.spellcheck = false;
+    label.htmlFor = draft.id;
+    open.append(label, draft);
+    const hint = node('p');
+    hint.setAttribute('role', 'status');
+    hint.hidden = true;
+    const options = node('div');
+    const hints = button('Necesito una pista', () => {
+      hint.textContent = round.showHint(draft.value);
+      hint.hidden = false;
+      hints.disabled = true;
+    });
+    const choicesButton = button('Ver alternativas', () => {
+      const assisted = round.showOptions(draft.value);
+      draft.value = '';
+      open.hidden = true;
+      choicesButton.disabled = true;
+      validSubmit(options, choices(options, 'Elige una opción con ayuda', assisted),
+        id => publish(round.submitChoice(id), round.summary().event.support));
+      options.querySelector('input').focus();
+    });
+    const check = button('Comprobar', () => publish(round.submitOpen(draft.value), round.summary().event.support), 'primary-btn');
+    open.append(check);
+    if (item.presentation.supervisedOralAvailable) {
+      area.append(node('p', 'También puedes responder en voz alta y pedir a la persona que te acompaña que escriba tu respuesta.'));
+    }
+    const help = node('div', '', 'r192-help');
+    help.append(hints, choicesButton);
+    area.append(open, help, hint, options);
+  }
+
   const messages = {
     correct: 'Bien. Tu respuesta cumple las condiciones.',
     incorrect: 'Revisa la situación y las condiciones antes de volver a intentarlo.',
@@ -155,21 +198,27 @@
     feedback.className = 'feedback';
     const note = node('p', 'Práctica en memoria. El resultado no se guarda y la actividad solo está disponible en pantalla.', 'muted r192-note');
     visual.append(note);
-    function finish(response) {
-      const result = root.GliaxR192Bank.gradeCase(item, response);
-      feedback.textContent = messages[result.status];
+    const repeat = button('Repetir', retry);
+    repeat.hidden = true;
+    function publish(result, support) {
+      const help = {spontaneous: 'Respuesta espontánea.', hint: 'Respuesta con pista.', options: 'Respuesta con alternativas.'};
+      feedback.textContent = [messages[result.status], help[support]].filter(Boolean).join(' ');
       feedback.className = 'feedback ' + ({correct: 'ok', incorrect: 'bad'}[result.status] ?? 'practice');
       feedback.dataset.status = result.status;
+      if (result.status === 'no_response') return;
       next.textContent = 'Siguiente →';
       next.classList.remove('hidden');
-      if (result.status === 'no_response') return;
+      repeat.hidden = false;
+      if (item.family === 'IN' && result.status !== 'correct') return;
       [...area.querySelectorAll('button, input, textarea'), ...visual.querySelectorAll('input')].forEach(control => {control.disabled = true;});
-      area.append(button('Repetir', retry));
+      repeat.disabled = false;
       next.focus();
     }
-
+    const finish = response => publish(root.GliaxR192Bank.gradeCase(item, response));
     if (item.family === 'CP') renderPlan(item, ui, finish);
     else if (item.family === 'EC') renderSources(item, ui, finish);
+    else if (item.family === 'IN') renderInformation(item, ui, publish);
+    area.append(repeat);
     return () => {
       area.replaceChildren();
       visual.replaceChildren();

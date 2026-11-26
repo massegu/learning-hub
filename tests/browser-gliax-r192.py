@@ -82,6 +82,51 @@ def cp_ec(page):
     assert_width(page)
 
 
+def information(page):
+    choose_profile(page, 'early')
+    area(page, 'executive').click()
+    set_level(page, 2)
+    open_mode(page, 'IN', 'IN02')
+    draft = page.get_by_role('textbox', name='Escribe tu respuesta')
+    expect(page.locator('#exerciseOptions')).to_contain_text('responder en voz alta')
+    expect(page.get_by_role('radio')).to_have_count(0)
+    initial = page.evaluate('({requests:__requests.length,saves:__saved.length,results:localStorage.getItem("__mock_exercise_results")})')
+    draft.fill('Niños')
+    page.get_by_role('button', name='Comprobar', exact=True).press('Enter')
+    expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status', 'partial')
+    expect(page.locator('#exerciseFeedback')).to_contain_text('espontánea')
+    page.get_by_role('button', name='Necesito una pista').press('Enter')
+    expect(page.locator('#exerciseOptions')).to_contain_text('qué dos grupos puedes comparar')
+    draft.fill('texto sintético sin interpretación')
+    page.get_by_role('button', name='Comprobar', exact=True).press('Enter')
+    expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status', 'uninterpretable')
+    expect(page.locator('#exerciseFeedback')).to_contain_text('con pista')
+    page.get_by_role('button', name='Ver alternativas').press('Enter')
+    expect(draft).not_to_be_visible()
+    page.get_by_role('radio', name='Niños y pinceles', exact=True).check()
+    page.get_by_role('button', name='Comprobar', exact=True).press('Enter')
+    expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status', 'correct')
+    expect(page.locator('#exerciseFeedback')).to_contain_text('con alternativas')
+    assert page.evaluate('({requests:__requests.length,saves:__saved.length,results:localStorage.getItem("__mock_exercise_results")})') == initial
+    area(page, 'attention').click()
+    expect(page.locator('#r192-open-answer')).to_have_count(0)
+    assert page.evaluate('!JSON.stringify(localStorage).includes("texto sintético")')
+
+    choose_profile(page, 'junior')
+    area(page, 'executive').click()
+    set_level(page, 3)
+    open_mode(page, 'IN', 'IN06')
+    page.get_by_role('textbox', name='Escribe tu respuesta').fill('Depende del tiempo de viaje')
+    page.get_by_role('button', name='Comprobar', exact=True).click()
+    expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status', 'correct')
+    page.locator('#exerciseNext').press('Enter')
+    expect(page.locator('#exerciseOptions')).to_have_attribute('data-case', 'IN-06 complete-data')
+    page.get_by_role('textbox', name='Escribe tu respuesta').fill('Sí, llego a las 16:50')
+    page.get_by_role('button', name='Comprobar', exact=True).click()
+    expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status', 'correct')
+    assert_width(page)
+
+
 def main():
     handler = functools.partial(QuietHandler, directory=str(ROOT))
     server = http.server.ThreadingHTTPServer(('127.0.0.1', 0), handler)
@@ -108,12 +153,13 @@ def main():
             page.route('**/*', intercept)
             page.goto(url, wait_until='networkidle')
             cp_ec(page)
+            information(page)
             assert not errors, errors
             browser.close()
     finally:
         server.shutdown()
         server.server_close()
-    print('PASS: CP/EC, teclado, alternativas, secuencias, inviabilidad, evidencia y pantalla móvil')
+    print('PASS: CP/EC/IN, teclado, evidencia, ayudas, privacidad y pantalla móvil')
 
 
 if __name__ == '__main__':

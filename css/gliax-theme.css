@@ -245,3 +245,8 @@
 .r192-quantity { display: flex; flex-wrap: wrap; gap: .65rem; margin-inline: 0; }
 .r192-quantity figcaption { flex-basis: 100%; }
 .r192-quantity span { border: 1px solid currentColor; padding: .25rem .5rem; border-radius: .35rem; }
+.r192-open { display: grid; gap: .55rem; inline-size: min(100%, 44rem); }
+.r192-open[hidden], .r192-response [hidden] { display: none; }
+.r192-open textarea { inline-size: 100%; max-inline-size: 100%; font: inherit; }
+.r192-open button { justify-self: start; }
+.r192-help { display: flex; flex-wrap: wrap; gap: .55rem; }
