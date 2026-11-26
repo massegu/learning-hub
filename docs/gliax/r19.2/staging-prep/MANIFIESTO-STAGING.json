@@ -1,0 +1,19 @@
+{
+  "commit": "52a08e76db7b6ab6440f5398fcf6539168a210ef",
+  "project": "wejcfaralctolzxjbcil",
+  "pages_project": "gliax-staging",
+  "pages": {
+    "file": "GLIAX-R19.2-R5-Pages-Staging.zip",
+    "sha256": "9de32357e6485b26b2d881cb72e7182413ef7f7d8ceee9735fb48f262220ed8f",
+    "files": 376,
+    "manifest": "GLIAX-R19.2-R5-Pages-Staging.files.sha256",
+    "manifest_sha256": "830f2760dcc7ff153b92ef6bcec124b2ad3f24bdad2f2fab3a963e297a8b3f16"
+  },
+  "edge": {
+    "file": "GLIAX-R19.2-R5-Edge-Staging.zip",
+    "sha256": "551a26c186d436cd88273542c7aa098f85da8ac4994a3fd373fc72a07339e70a",
+    "files": 29,
+    "manifest": "GLIAX-R19.2-R5-Edge-Staging.files.sha256",
+    "manifest_sha256": "9faa964ed6857bc97bc6f8b8c3c1f09fce5f2385fa02abe7d3412c9f439e9f15"
+  }
+}
