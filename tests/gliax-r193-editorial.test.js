@@ -40,7 +40,7 @@ test('the extended bank adds exact slot coverage without changing the R19.2 refe
 
 
 test('the balanced pilot covers eight families with alternative plans and rule signals',()=>{
- const newCases=bank.ids().map(id=>bank.get(id,5));
+ const newCases=bank.ids().map(id=>bank.get(id,5)).filter(item=>!item.planEditorial);
  assert.equal(newCases.length,12);
  assert.equal(new Set(newCases.map(item=>item.family)).size,8);
  assert.equal(new Set(newCases.map(item=>item.cognitiveFingerprint)).size,12);

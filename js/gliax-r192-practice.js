@@ -195,6 +195,24 @@
     validSubmit(area, () => selected() ? {choice: selected(), evidence: evidence()} : undefined, finish);
   }
 
+  function renderEditorialPlan(item, {visual,area}, finish) {
+    const {context,previous,observed,rules,steps}=item.presentation;
+    visual.append(node('h4',context));
+    if (previous) visual.append(node('p','Plan anterior: '+previous));
+    if (observed) visual.append(node('p','Plan propuesto: '+observed));
+    if (observed) {
+      validSubmit(area,choices(area,'Condiciones que incumple',rules,true),finish);
+      return;
+    }
+    const list=node('ul');
+    for (const [index,rule] of rules.entries()) {
+      const label=previous&&index===rules.length-1?'Condición nueva. '+rule.label:rule.label;
+      list.append(node('li',label));
+    }
+    visual.append(list);
+    validSubmit(area,order(area,steps),finish);
+  }
+
   function renderEditorialInformation(item, {area, assist}, publish) {
     const label=node('label','Escribe el dato que falta');
     const input=node('textarea');
@@ -384,7 +402,7 @@
       const score = item.family === 'AR' && result.metrics
         ? result.metrics.correct + ' de ' + result.metrics.scored + ' estímulos correctos.'
         : '';
-      const editorialFeedback = item.editorial && result.status === 'correct' ? item.presentation.feedback : null;
+      const editorialFeedback = result.feedback ?? (item.editorial && result.status === 'correct' ? item.presentation.feedback : null);
       const advice = editorialFeedback ?? (result.status === 'incorrect' ? retryGuidance[item.family] :
         result.status === 'partial' && item.family === 'IN' ? 'Tu respuesta aporta una parte. ¿Qué falta para poder decidir?' :
         messages[result.status]);
@@ -403,7 +421,8 @@
     }
     const grade = item.editorial ? root.GliaxR193Editorial.grade : modes[item.family].grade ?? root.GliaxR192Bank.gradeCase;
     const finish = response => publish(grade(item, response));
-    if (item.editorial && item.family==='IN') renderEditorialInformation(item,ui,publish);
+    if (item.planEditorial) renderEditorialPlan(item,ui,finish);
+    else if (item.editorial && item.family==='IN') renderEditorialInformation(item,ui,publish);
     else if (item.editorial && item.family!=='AR') renderSources(item,ui,finish);
     else if (item.family === 'CP') renderPlan(item, ui, finish);
     else if (item.family === 'EC') renderSources(item, ui, finish);

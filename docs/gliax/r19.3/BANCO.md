@@ -42,3 +42,11 @@ Se distinguieron las modalidades históricas de ordenar instrucciones y responde
 | Feedback, 10 % | Cada caso explica la condición decisiva. Las pruebas de navegador revisaron EC y los dos órdenes válidos de Planificación. | Observar si las explicaciones permiten enmendar una respuesta autónomamente. |
 
 La muestra prioriza celdas pequeñas y mecanismos identificables. La revisión documental no asigna una puntuación pedagógica global ni valida clínicamente el banco. La ampliación restante conserva sus objetivos por familia y requiere lotes con soluciones, distractores y feedback revisados.
+
+## Lote 1. Orden y revisión de condiciones
+
+54 casos nuevos, 18 por familia en Cambio de plan, Planificación y Supervisión. Todas las edades y niveles están representados. El validador normaliza las soluciones bajo renombrado de pasos y excluye estructuras equivalentes. Cada condición aporta una restricción propia. Se descartan ejercicios cuyo espacio de soluciones puede explicarse solo con precedencias ordinarias.
+
+En Planificación se aceptan todos los órdenes válidos. Cambio de plan parte de un orden que cumplía las condiciones anteriores e incumple exactamente la condición nueva. Supervisión exige marcar el conjunto exacto de incumplimientos. Hay requisitos de posición, consecutividad, separación y precedencia. Los contextos ilustran acciones paralelas realizables por separado. En 6–7 hay cuatro acciones y en edades posteriores puede haber cinco.
+
+La prueba independiente enumeró todos los órdenes para cada caso. El navegador seleccionó un caso del lote desde el selector y lo corrigió mediante sus controles reales. La incorporación técnica no reemplaza una revisión con usuarios. Total acumulado tras este lote: 66 de 500.

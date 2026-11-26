@@ -22,6 +22,8 @@ def choose_profile(page, age):
 
 def open_mode(page, family, item_id=None):
     page.locator(f'[data-r192-family="{family}"]').press('Enter')
+    if item_id and current_case(page) != item_id:
+        new_round_until(page, '__r4Round.id === ' + repr(item_id))
     item_id = item_id or page.evaluate('__r4Round.id')
     expect(page.locator('#exerciseOptions')).to_have_attribute('data-case', item_id)
 
@@ -107,6 +109,8 @@ def cp_ec(page):
     page.get_by_role('button', name='Comprobar', exact=True).click()
     expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status', 'correct')
     set_level(page, 3)
+    if current_case(page) != 'CP12':
+        new_round_until(page, "__r4Round.id === 'CP12'")
     expect(page.locator('#exerciseOptions')).to_have_attribute('data-case', 'CP12')
     page.get_by_role('radio', name='Ninguna de estas opciones').check()
     page.get_by_role('button', name='Comprobar', exact=True).click()
@@ -251,6 +255,8 @@ def executive(page):
     area(page, 'executive').click()
     set_level(page, 2)
     open_mode(page, 'planning')
+    if page.evaluate('!!__r4Round.planEditorial'):
+        new_round_until(page, '!__r4Round.editorial')
     boundary = page.evaluate('({requests:__requests.length,saves:__saved.length,results:localStorage.getItem("__mock_exercise_results")})')
     item = page.evaluate("__r4Round")
     assert item['interactiveOnly']
@@ -284,11 +290,11 @@ def executive(page):
     expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status', 'correct')
 
     open_mode(page, 'supervision')
-    new_round_until(page, '__r4Round.answers.length === 0')
+    new_round_until(page, '__r4Round.answers?.length === 0')
     page.get_by_role('button', name='Comprobar', exact=True).click()
     expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status', 'correct')
     page.locator('#exerciseNext').click()
-    new_round_until(page, '__r4Round.answers.length > 0')
+    new_round_until(page, '__r4Round.answers?.length > 0')
     rows = page.evaluate('__r4Round.answers')
     for row in rows:
         page.get_by_role('checkbox', name=row, exact=True).check()
@@ -323,6 +329,33 @@ def editorial_planning(page):
         expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status','correct')
         expect(page.locator('#exerciseFeedback')).to_contain_text('en cualquier orden')
         page.get_by_role('button', name='Repetir', exact=True).press('Enter')
+
+
+def editorial_order_lot(page):
+    choose_profile(page, 'early')
+    area(page, 'executive').click()
+    set_level(page, 1)
+    open_mode(page, 'planning')
+    if '-B1-' not in current_case(page):
+        new_round_until(page, '__r4Round.planEditorial')
+    expected=page.evaluate('''()=>{
+      const item=__r4Round;
+      const {steps}=item.presentation;
+      function orders(first,rest){
+        if(!rest.length)return [first];
+        return rest.flatMap(x=>orders([...first,x],rest.filter(y=>y!==x)));
+      }
+      const accepted=orders([],steps.map(info=>info.id)).find(ids=>GliaxR193Editorial.grade(item,ids).gradedCorrect);
+      return accepted.map(id=>steps.find(info=>info.id===id).label);
+    }''')
+    for index, label in enumerate(expected):
+        current=page.locator('.r192-order li span').all_text_contents().index(label)
+        for _ in range(current-index):
+            page.get_by_role('button',name='Subir '+label,exact=True).press('Enter')
+    page.get_by_role('button',name='Comprobar',exact=True).press('Enter')
+    expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status','correct')
+    expect(page.locator('#exerciseFeedback')).to_contain_text('El orden cumple')
+    assert_width(page)
 
 
 def inventory(page):
@@ -421,6 +454,7 @@ def main():
             page.set_viewport_size({"width": 390, "height": 844})
             executive(page)
             editorial_planning(page)
+            editorial_order_lot(page)
             legacy_reports(page)
             page.evaluate('window.LH_CONFIG.r192Practice = false')
             area(page, 'executive').click()
