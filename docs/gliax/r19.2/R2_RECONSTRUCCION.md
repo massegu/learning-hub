@@ -17,3 +17,17 @@ Se reutilizan los paquetes, proyectos y duraciones de R19.1. Cambiar los límite
 ## Cambio de objetivo y prioridades
 
 Los encuentros de R19.1 conservan las prioridades «preparar a tiempo» y «comunicar el aplazamiento». Los cuatro contextos históricos comparten una huella por criterio y no se cuentan como cuatro mecanismos al generar. N3 utiliza los modelos CP documentados para conservar requisitos, resolver incompatibilidades o justificar una decisión, en lugar de repetir el mismo criterio de N2 con otra etiqueta. CP08 mantiene ambas reasignaciones, CP12 admite ausencia de solución y CP15 deriva a revisión cuando el argumento no puede verificarse.
+
+## Supervisión y revisión
+
+Para 6–7 se reutilizan las situaciones de reparación del currículo. N1 elige una reparación y N2–N3 revisan dos o tres propuestas. Para las cuatro bandas restantes se adaptaron los dos primeros contextos documentados de cada banda con equivalencias revisadas. Cada fila se corrige por su significado explícito, con comparaciones de igualdad y cotas cuando procede. Las propuestas compatibles tienen una formulación distinta de la condición original. Los planes sin errores exigen una selección vacía válida. Se conservan los otros contextos en R19.1 hasta poder revisar editorialmente sus equivalencias.
+
+## Checkpoints
+
+| Bloque | SHA remoto | Pruebas al publicar |
+|---|---|---|
+| Planificación y dependencias | `d1234ec949abace4066b5097c8cebb8a8c7405ad` | 5 de planificación y registro R1 |
+| Restricciones de recursos y tiempo | `326974b70f83f95727c99621550d12e3e0848c81` | 5 de restricciones y planificación |
+| Cambio de objetivo y prioridades | `221a7fae35aa487f355ff1726eef400dca7ecf2e` | 5 de cambio de objetivo y CP |
+
+La auditoría propone un catálogo amplio de doce contextos por franja y familia para el banco completo. En R2 se preserva la cobertura de mecanismos documentados. La cobertura editorial de ese catálogo sigue pendiente y las reordenaciones, cambios de cifras y variantes de escenario no se computan como mecanismos nuevos.
