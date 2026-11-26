@@ -11,5 +11,12 @@ Base R4 comprobada en GitHub `ad874bb3c0b209a723031640408f408125366f2c`. La prá
 | P2 | Implementación | Un envío vacío de IN podía ocupar el primer intento. Se captura el primer texto interpretable o no interpretable que se introduzca, y el uso previo de ayuda sigue siendo distinguible. |
 | P2 | Edición | Se admiten fórmulas claras adicionales de IN01, IN03 e IN04. La negación o una formulación no revisada se mantiene sin calificación automática. |
 | P2 | Edición | El generador de prioridades transcribía la respuesta en el contexto. El momento de la recogida permite inferir la prioridad sin indicar la opción. |
+| P2 | Interfaz | Comprobar sin selección no indicaba qué faltaba. Se avisa en una región de estado y se mueve el foco al primer control aplicable sin calificar el intento. |
+| P2 | Accesibilidad | La pista desactivaba el control enfocado y los cambios de ronda podían dejar el foco fuera de la tarjeta. Se devuelve el foco a la entrada con una descripción de la pista, se enfoca la consigna al abrir una ronda y se asocia el feedback con Siguiente. |
+| P2 | Feedback | Una respuesta incorrecta recibe una instrucción breve específica de la familia después de responder. IN distingue una respuesta parcial de una que no puede interpretar. |
 
 La revisión de criterios afecta solo a seis casos y se identifica como `r19.2-r1.2` en esos casos. Las modalidades históricas conservan sus contratos y métricas.
+
+### Bloqueo de Staging identificado por lectura
+
+La Edge v5 de Staging está `ACTIVE` con JWT obligatorio. El inventario de su exportación ESZIP 2.3 consultada mediante Management API carece de `math-sequencing.js`. El módulo compilado de entrada carece del parámetro `math_problem_version` y no implementa el contrato v2 de Resolución de problemas. El frontend exige ese contrato. El worker Edge de R19.1 del repositorio sí lo implementa. Una publicación del frontend por sí sola dejaría ese recorrido sin soporte. La comprobación no ejecutó la función alojada y no consumió cuota.

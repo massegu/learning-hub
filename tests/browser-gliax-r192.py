@@ -58,10 +58,37 @@ def cp_ec(page):
     expect(page.locator('#exerciseOptions')).to_have_attribute('data-level', '2')
     initial_requests = page.evaluate('__requests.length')
     initial_saves = page.evaluate('__saved.length')
+    expect(page.locator('#exercisePrompt')).to_be_focused()
+    page.get_by_role('button', name='Comprobar', exact=True).press('Enter')
+    expect(page.locator('.r192-validation')).to_have_text('Elige una opción antes de comprobar.')
+    expect(page.locator('.r192-validation')).to_have_attribute('role', 'status')
+    expect(page.get_by_role('radio').first).to_be_focused()
+    visual = page.locator('.r192-choice').first.evaluate(r'''label => {
+      const rgb = color => color.match(/[\d.]+/g).map(Number);
+      function background(element) {
+        const layers = [];
+        for (let node = element; node; node = node.parentElement) {
+          layers.unshift(rgb(getComputedStyle(node).backgroundColor));
+        }
+        return layers.reduce((below, layer) =>
+          below.map((value, channel) => layer[channel] * (layer[3] ?? 1) + value * (1-(layer[3] ?? 1))), [255,255,255]);
+      }
+      const luminance = channels => channels.slice(0,3)
+        .map(n => n/255).map(c => c <= .04045 ? c/12.92 : ((c+.055)/1.055)**2.4)
+        .reduce((sum,c,i) => sum + c*[.2126,.7152,.0722][i],0);
+      const contrast = (a,b) => (Math.max(a,b)+.05)/(Math.min(a,b)+.05);
+      const color = luminance(rgb(getComputedStyle(label).color));
+      const backdrop = luminance(background(label));
+      const style = getComputedStyle(label);
+      return [contrast(color,backdrop), contrast(luminance(rgb(style.outlineColor)),backdrop),
+        parseFloat(style.outlineWidth), style.outlineStyle];
+    }''')
+    assert visual[0] >= 4.5 and visual[1] >= 3 and visual[2] >= 2 and visual[3] == 'solid', visual
     for name in ['Ana prepara imágenes. Revisamos al terminar texto e imágenes', 'Leo prepara imágenes. Revisamos al terminar texto e imágenes']:
         page.get_by_role('radio', name=name).press('Space')
         page.get_by_role('button', name='Comprobar', exact=True).press('Enter')
         expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status', 'correct')
+        expect(page.locator('#exerciseNext')).to_have_attribute('aria-describedby', 'exerciseFeedback')
         page.get_by_role('button', name='Repetir', exact=True).press('Enter')
         expect(page.locator('#exerciseOptions')).to_have_attribute('data-case', 'CP08')
     assert page.evaluate('__requests.length') == initial_requests
@@ -118,6 +145,8 @@ def information(page):
     expect(page.locator('#exerciseFeedback')).to_contain_text('espontánea')
     page.get_by_role('button', name='Necesito una pista').press('Enter')
     expect(page.locator('#exerciseOptions')).to_contain_text('qué dos grupos puedes comparar')
+    expect(draft).to_be_focused()
+    expect(draft).to_have_attribute('aria-describedby', 'r192-open-hint')
     draft.fill('texto sintético sin interpretación')
     page.get_by_role('button', name='Comprobar', exact=True).press('Enter')
     expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status', 'uninterpretable')
@@ -226,6 +255,13 @@ def executive(page):
     open_mode(page, 'constraints')
     new_round_until(page, "__r4Round.id.endsWith('-several')")
     expect(page.locator('#exerciseVisual table')).to_contain_text('Piezas incluidas')
+    table_context = page.get_by_role('region', name='Material para resolver el ejercicio')
+    expect(table_context).to_have_attribute('tabindex', '0')
+    assert table_context.evaluate("(element) => ['auto', 'scroll'].includes(getComputedStyle(element).overflowX)")
+    saved_viewport = page.viewport_size
+    page.set_viewport_size({'width': 320, 'height': 780})
+    assert_width(page)
+    page.set_viewport_size(saved_viewport)
     alternate = page.evaluate('''() => __r4Round.opts.find(option => option !== __r4Round.a &&
       GliaxR192Constraints.gradeConstraints(__r4Round, option).gradedCorrect)''')
     page.get_by_role('radio', name=alternate, exact=True).check()
@@ -315,6 +351,7 @@ def main():
             browser = playwright.chromium.launch(executable_path=os.environ.get('CHROMIUM_EXECUTABLE', '/usr/bin/chromium'), args=['--no-sandbox'])
             page = browser.new_page(viewport={'width': 1440, 'height': 1000})
             errors = []
+            unexpected_service_requests = []
             page.on('pageerror', lambda error: errors.append(str(error)))
 
             def intercept(route):
@@ -328,6 +365,8 @@ def main():
                 elif address.startswith(url):
                     route.continue_()
                 else:
+                    if route.request.resource_type in ('fetch', 'xhr', 'websocket'):
+                        unexpected_service_requests.append(address)
                     route.abort()
 
             page.route('**/*', intercept)
@@ -357,6 +396,7 @@ def main():
             expect(page.locator('#r192Modalities')).not_to_be_visible()
             expect(page.locator('#documentModeSwitch [data-documents=false]')).to_be_visible()
             assert not errors, errors
+            assert not unexpected_service_requests, unexpected_service_requests
             browser.close()
     finally:
         server.shutdown()

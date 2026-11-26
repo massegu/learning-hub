@@ -109,10 +109,19 @@
   }
 
   function validSubmit(area, getResponse, finish) {
+    const validation = node('p', '', 'r192-validation');
+    validation.setAttribute('role', 'status');
+    area.querySelectorAll('input').forEach(input => input.addEventListener('change', () => {validation.textContent = '';}));
     area.append(button('Comprobar', () => {
       const response = getResponse();
-      if (response !== undefined) finish(response);
-    }, 'primary-btn'));
+      if (response === undefined) {
+        validation.textContent = 'Elige una opción antes de comprobar.';
+        area.querySelector('input:not(:disabled)')?.focus();
+        return;
+      }
+      validation.textContent = '';
+      finish(response);
+    }, 'primary-btn'), validation);
   }
 
   function renderPlan(item, {visual, area}, finish) {
@@ -198,6 +207,7 @@
     label.htmlFor = draft.id;
     open.append(label, draft);
     const hint = node('p');
+    hint.id = 'r192-open-hint';
     hint.setAttribute('role', 'status');
     hint.hidden = true;
     const options = node('div');
@@ -205,6 +215,10 @@
       hint.textContent = round.showHint(draft.value);
       hint.hidden = false;
       hints.disabled = true;
+      if (!open.hidden) {
+        draft.setAttribute('aria-describedby', hint.id);
+        draft.focus();
+      } else options.querySelector('input').focus();
     });
     const choicesButton = button('Ver alternativas', () => {
       const assisted = round.showOptions(draft.value);
@@ -232,6 +246,17 @@
     uninterpretable: 'No hemos podido interpretar la respuesta. Puedes intentarlo de nuevo.',
     pending_review: 'Esta respuesta necesita revisión. Puedes completar o explicar mejor tu decisión.',
     no_response: 'Todavía falta tu respuesta.'
+  };
+
+  const retryGuidance = {
+    CP: 'Comprueba si tu plan mantiene el objetivo y cumple todas las condiciones.',
+    EC: 'Compara a qué se refiere cada fuente, en qué momento y qué afirma.',
+    IN: 'Revisa qué dato necesitas para poder decidir.',
+    AR: 'Repasa la regla y fíjate en cuándo cambia o cuándo se aplica una excepción.',
+    planning: 'Comprueba qué necesita cada paso antes de empezar.',
+    constraints: 'Comprueba cada límite por separado antes de decidir.',
+    'goal-change': 'Comprueba qué tarea ayuda al objetivo que está vigente.',
+    supervision: 'Compara cada requisito con lo que propone el plan.'
   };
 
   function renderRuleAction(item, {visual, area}, finish) {
@@ -308,6 +333,7 @@
     const section = area.closest('#exercise');
     const title = item.presentation.prompt ?? item.presentation.q;
     prompt.textContent = title;
+    prompt.tabIndex = -1;
     area.classList.add('r192-response');
     section?.classList.add('r192-active');
     area.dataset.case = item.id;
@@ -325,11 +351,15 @@
       const score = item.family === 'AR' && result.metrics
         ? result.metrics.correct + ' de ' + result.metrics.scored + ' estímulos correctos.'
         : '';
-      feedback.textContent = [messages[result.status], help[support], score].filter(Boolean).join(' ');
+      const advice = result.status === 'incorrect' ? retryGuidance[item.family] :
+        result.status === 'partial' && item.family === 'IN' ? 'Tu respuesta aporta una parte. ¿Qué falta para poder decidir?' :
+        messages[result.status];
+      feedback.textContent = [advice, help[support], score].filter(Boolean).join(' ');
       feedback.className = 'feedback ' + ({correct: 'ok', incorrect: 'bad'}[result.status] ?? 'practice');
       feedback.dataset.status = result.status;
       if (result.status === 'no_response') return;
       next.textContent = 'Siguiente →';
+      next.setAttribute('aria-describedby', feedback.id);
       next.classList.remove('hidden');
       repeat.hidden = false;
       if (item.family === 'IN' && result.status !== 'correct') return;
@@ -345,11 +375,14 @@
     else if (item.family === 'AR') renderRuleAction(item, ui, finish);
     else renderExecutive(item, ui, finish);
     area.append(repeat);
+    prompt.focus();
     return () => {
       area.replaceChildren();
       visual.replaceChildren();
       feedback.textContent = '';
       feedback.removeAttribute('role');
+      prompt.removeAttribute('tabindex');
+      next.removeAttribute('aria-describedby');
       delete feedback.dataset.status;
       delete area.dataset.case;
       delete area.dataset.age;

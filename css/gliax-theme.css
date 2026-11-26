@@ -266,3 +266,5 @@
 .r192-active .exercise-account-usage { display: none; }
 .r192-modalities .mode-switch { flex-wrap: wrap; gap: .45rem; }
 .r192-modalities button { max-inline-size: 100%; white-space: normal; overflow-wrap: anywhere; }
+.r192-validation { margin: 0; }
+.r192-validation:empty { height: 0; }
