@@ -165,9 +165,9 @@
     requestGeneration = 0,
     guidedSession = null;
   let r192Family = '', r192Session = null, r192Round = null;
-  function resetR192Practice() {
+  function resetR192Practice(keepSelectionHistory = false) {
     r192Family = '';
-    r192Session = null;
+    if (!keepSelectionHistory) r192Session = null;
     r192Round = null;
   }
   const API = window.LearningAPI;
@@ -1205,7 +1205,7 @@
     homework: "Fichas para casa",
   };
   function switchSection(id) {
-    if(id!=='exercise'){stopMemoryCountdown();interactionOnly=false;resetR192Practice();}
+    if(id!=='exercise'){stopMemoryCountdown();interactionOnly=false;resetR192Practice(true);}
     $$(".section").forEach((s) => s.classList.remove("active-section"));
     $("#" + id).classList.add("active-section");
     $('#appShell').classList.toggle('exercise-focus',id==='exercise');

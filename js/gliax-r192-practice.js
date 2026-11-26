@@ -28,7 +28,7 @@
 
   function createSession(seed) {
     const sessionSeed = seed ?? Array.from(root.crypto.getRandomValues(new Uint32Array(2))).join('-');
-    const selector = root.GliaxR192Selector.createSelector(sessionSeed);
+    const selector = root.GliaxR192Selector.createSelector(sessionSeed, {prioritizeStructuralDiversity: true});
     const turns = new Map();
 
     function next(family, area, ageBand, level) {

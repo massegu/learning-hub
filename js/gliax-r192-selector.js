@@ -46,7 +46,17 @@
     return values.at(-1);
   }
 
-  function createSelector(seed) {
+  function avoidImmediateStructure(entries, previous) {
+    if (!previous) return entries;
+    const differentStructure = entries.filter(entry => entry.structure !== previous.structure);
+    const byStructure = differentStructure.length ? differentStructure : entries;
+    const differentMechanism = byStructure.filter(entry => entry.mechanism !== previous.mechanism);
+    const byMechanism = differentMechanism.length ? differentMechanism : byStructure;
+    const differentContext = byMechanism.filter(entry => entry.context !== previous.context);
+    return differentContext.length ? differentContext : byMechanism;
+  }
+
+  function createSelector(seed, {prioritizeStructuralDiversity = false} = {}) {
     if (typeof seed !== 'string' && !Number.isSafeInteger(seed)) throw new TypeError('Invalid selection seed');
     const sessions = new Map();
 
@@ -68,10 +78,15 @@
       const alternatives = different.length ? different : all;
       const noncyclic = all.length >= 3 ? alternatives.filter(entry =>
         !repeatsCycle(entry, state.recent, 2) && !repeatsCycle(entry, state.recent, 3)) : alternatives;
-      const eligible = noncyclic.length ? noncyclic : alternatives;
+      const eligible = prioritizeStructuralDiversity
+        ? avoidImmediateStructure(alternatives, state.recent[0])
+        : alternatives;
+      const noncyclicSet = new Set(noncyclic);
+      const diverseNoncyclic = eligible.filter(entry => noncyclicSet.has(entry));
+      const selectionPool = diverseNoncyclic.length ? diverseNoncyclic : eligible;
 
       const groups = new Map();
-      for (const entry of eligible) {
+      for (const entry of selectionPool) {
         if (!groups.has(entry.structure)) groups.set(entry.structure, []);
         groups.get(entry.structure).push(entry);
       }
