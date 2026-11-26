@@ -1,0 +1,11 @@
+# GLIAX R19.2 · Reconstrucción R2
+
+Base R1 verificada en GitHub `c271efe8741473806e52c4270fcc37fd3cf6a037`.
+
+El maestro recuperado numera como «Fase 3» la respuesta abierta de IN. La auditoría identifica por separado los defectos de los generadores ejecutivos de R19.1 y pide corregir los atajos, la posición fija y la exclusión de soluciones equivalentes. Para R2 se toman esos requisitos, las situaciones y reglas del currículo R19.1 y los modelos de referencia de R1. No apareció una especificación histórica separada que fijara recuentos, un banco exacto o reglas adicionales para este trabajo. Los umbrales de diversidad siguen abiertos en el maestro.
+
+## Planificación y dependencias
+
+Los contextos y acciones proceden de `executive_dependencies`. Las reglas de precedencia se muestran en orden sembrado sin numerar el orden de la solución. 6–7 N3 retoma un plan con un paso ya hecho según el mecanismo de reanudación de R19.1. CP11 y CP14 reutilizan las restricciones R1 y admiten todos los órdenes viables. Se puede comprobar la inviabilidad de un grafo con prerrequisitos incompatibles. El campo legado `answer` contiene un ejemplo para consumidores que esperan ese formato. Para corregir R2 se debe usar el evaluador que admite alternativas.
+
+R2 tiene identidades y versiones propias y usa las huellas, la semilla y los estados de R1. Los eventos solo contienen la identidad del ejercicio, las versiones, la ayuda y el resultado categórico. No escriben en almacenamiento. Los generadores se prueban mediante módulos independientes y no se incorporan en esta fase a la entrega, al historial, a la navegación ni a la selección adaptativa.
