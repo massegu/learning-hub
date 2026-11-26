@@ -55,9 +55,10 @@ with review.ReviewServer(('127.0.0.1', 0), review.prepare()) as server:
                     if index:
                         page.locator('#exerciseOptions .option-btn').first.click()
                         page.locator('#exerciseNext').click()
-                    screen = page.locator(f'#exerciseVisual .digital-{view}')
+                    selector = {'search':'.r193-search', 'editor':'.r193-calendar'}.get(view, f'.digital-{view}')
+                    screen = page.locator(f'#exerciseVisual {selector}')
                     expect(screen).to_be_visible()
-                    expect(screen.locator('dt, .search-results h4, .team-agenda tbody th').first).to_be_visible()
+                    expect(screen.locator('dt, .r193-hit h4, .r193-calendar-days button').first).to_be_visible()
                     expect(page.locator('#exerciseOptions button')).to_have_count(3)
                     assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
                     if view == 'video':

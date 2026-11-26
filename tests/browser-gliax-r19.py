@@ -163,30 +163,40 @@ with review.ReviewServer(('127.0.0.1',0),review.prepare()) as server:
             assert contrast()>=4.5
             assert not page.locator('#digitalFamilySelect').count()
             for index,(fmt,layout) in enumerate([('message','.message-thread'),('post','.social-feed'),('clip','.digital-clip-frame'),
-                               ('story','.story-timeline'),('search','.search-results'),('notice','.settings-log'),('app','.team-agenda')]):
+                               ('story','.story-timeline'),('search','.r193-hits'),('notice','.settings-log'),('app','.r193-calendar-grid')]):
                 if index:
                     page.locator('#exerciseOptions .option-btn').first.click()
                     page.locator('#exerciseNext').press('Enter')
                 item=latest(page,'communication',digital_family=fmt)
                 assert item['contentKey'].startswith('digital-v2:')
-                screen=page.locator('#exerciseVisual .digital-stimulus')
+                screen=page.locator('#exerciseVisual .digital-stimulus, #exerciseVisual .r193-app')
                 expect(screen.locator(layout)).to_be_visible()
                 assert 'simulación' not in screen.inner_text().lower()
                 if fmt=='search':
                     field=screen.get_by_role('searchbox',name='Buscar en estos resultados')
-                    before=screen.locator('.search-results li').count()
+                    initial=screen.locator('.r193-hit').count()
                     field.fill('no-contiene-este-texto')
-                    expect(screen.get_by_role('status')).to_contain_text('Sin coincidencias')
-                    assert screen.locator('.search-results li:visible').count()==0
+                    field.press('Enter')
+                    expect(screen.get_by_role('status')).to_have_text('Sin coincidencias')
+                    assert screen.locator('.r193-hit').count()==0
                     field.fill('')
-                    assert screen.locator('.search-results li:visible').count()==before
+                    assert screen.locator('.r193-hit').count()==initial
+                    screen.get_by_role('button',name='Oficiales',exact=True).click()
+                    assert screen.locator('.r193-hit').count()<initial
+                    screen.get_by_role('button',name='Todas las fuentes',exact=True).click()
+                    first_result=screen.locator('.r193-result-link').first
+                    first_result.press('Enter')
+                    expect(first_result).to_have_attribute('aria-expanded','true')
+                    expect(screen.get_by_role('complementary',name='Vista de la fuente')).to_be_focused()
                 if fmt=='app':
-                    entry=screen.locator('.team-agenda button').first
+                    expect(screen.get_by_role('button',name='Mié 20 de mayo de 2026')).to_have_attribute('aria-pressed','true')
+                    screen.get_by_role('button',name='Semana siguiente').press('Enter')
+                    expect(screen.locator('.r193-event')).to_have_count(0)
+                    screen.get_by_role('button',name='Semana anterior').press('Enter')
+                    entry=screen.locator('.r193-event').first
                     entry.press('Enter')
-                    expect(entry).to_have_attribute('aria-expanded','true')
-                    expect(screen.locator('.r193-agenda-detail')).to_be_visible()
-                    entry.press('Enter')
-                    expect(screen.locator('.r193-agenda-detail')).to_be_hidden()
+                    expect(entry).to_have_attribute('aria-pressed','true')
+                    expect(screen.get_by_role('region',name='Detalle del evento')).to_contain_text('09:15')
                 if fmt=='clip':
                     summary=screen.get_by_text('Subtítulos y comentarios',exact=True)
                     summary.press('Enter');expect(screen.locator('details')).not_to_have_attribute('open','')
@@ -200,6 +210,10 @@ with review.ReviewServer(('127.0.0.1',0),review.prepare()) as server:
             area(page,'executive').click()
             level(page,3)
             order=digital_format(page,'executive','app','order')
+            agenda=page.get_by_role('region',name='Agenda de equipo')
+            for i, (title, detail) in enumerate(order['stimulus'][0]['rows'][1:]):
+                agenda.locator('.r193-event').nth(i).press('Enter')
+                expect(agenda.get_by_role('region',name='Detalle del evento')).to_contain_text(detail)
             for value in order['answer']:
                 page.locator('.word-token').filter(has_text=value).click()
             page.locator('#orderCheck').press('Enter')
@@ -216,6 +230,10 @@ with review.ReviewServer(('127.0.0.1',0),review.prepare()) as server:
             area(page,'literacy').click()
             level(page,2)
             completion=digital_format(page,'literacy','search','digitalCompletion')
+            search=page.get_by_role('region',name='Lupa')
+            search.get_by_role('button',name='Oficiales',exact=True).press('Enter')
+            search.locator('.r193-result-link').first.press('Enter')
+            expect(search.get_by_role('complementary',name='Vista de la fuente')).to_contain_text(completion['a'])
             page.locator('#digitalCompletion').fill(completion['a'].upper())
             page.get_by_role('button',name='Comprobar',exact=True).press('Enter')
             expect(page.locator('#exerciseFeedback')).to_contain_text('agenda oficial')

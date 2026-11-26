@@ -1797,7 +1797,7 @@
     if (scenario&&!scenarioShown)
       $("#exerciseVisual").insertAdjacentHTML(it.stimulus?.length?'afterbegin':'beforeend',
         `<div class="scenario-card"><span class="scenario-label">Situación</span><p>${escapeHtml(scenario)}</p></div>`);
-    if (it.simulation) window.GliaxR193Digital.mount($('#exerciseVisual'));
+    if (it.simulation) window.GliaxR193Digital.mount($('#exerciseVisual'),it);
     if(readingAid&&$('#exerciseVisual').querySelector('[data-reader-text]')&&window.ReaderAssist)stopReaderAssist=window.ReaderAssist.mount($('#exerciseVisual'));
     $("#exercisePrompt").textContent = it.q || "Actividad";
     if(it.type==='mathProblem'){

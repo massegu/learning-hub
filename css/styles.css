@@ -3641,24 +3641,81 @@ body {
 .math-graph-row small {margin:0}
 .math-graph-track {border-inline-start:1px solid #456d65;background:#e0eee9}
 
-/* The exercise source stays available while inspecting a result or agenda entry. */
-.digital-search .search-field:has(input) {
-  display: block;
-  border-radius: .6rem;
-  background: #f3f8f6;
+/* GLIAX exercise apps */
+.r193-app {
+  --app-ink:#173a39;--app-muted:#435f5e;--app-line:#c9ded8;--app-tint:#e8f3ee;--app-accent:#166458;
+  color:var(--app-ink);background:#fbfdfb;border:1px solid var(--app-line);border-radius:14px;
+  overflow:hidden;text-align:start;max-width:60rem;margin-inline:auto;
 }
-.digital-search .search-field label {display:grid;gap:.35rem;padding:.3rem 0;color:#244e53;font-weight:700}
-.digital-search .search-field input {
-  width:100%;min-height:44px;min-width:0;padding:.45rem .6rem;font:inherit;
-  border:1px solid #6d978e;border-radius:.35rem;background:#fff;color:#213144;
+.r193-app * {box-sizing:border-box}
+.r193-app button,.r193-app input {font:inherit}
+.r193-app button {cursor:pointer}
+.r193-app button:focus-visible,.r193-app input:focus-visible,.r193-source-detail:focus-visible {outline:3px solid #0d5f53;outline-offset:2px}
+.r193-app-bar {
+  display:flex;align-items:center;gap:.65rem;padding:.7rem 1rem;border-bottom:1px solid var(--app-line);
+  background:#ecf6f1;font-weight:780;line-height:1.3;
 }
-.digital-search .r193-search-status {margin:.55rem 1rem 0;color:#30505a}
-.digital-search .search-results [hidden] {display:none}
-.digital-editor .team-agenda button {
-  width:100%;min-height:44px;padding:.35rem .45rem;text-align:start;font:inherit;font-weight:700;
-  color:#174e4a;background:#edf5f2;border:1px solid #a4c6bd;border-radius:.35rem;overflow-wrap:anywhere;
+.r193-app-mark {display:grid;place-items:center;width:2rem;height:2rem;border-radius:.55rem;background:#17675a;color:#fff;font-size:1.2rem;line-height:1}
+.r193-app-caption {margin-inline-start:auto;color:var(--app-muted);font-size:.78rem;font-weight:600}
+.r193-calendar-nav {display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;padding:.7rem 1rem}
+.r193-calendar-nav h3 {margin:0 auto 0 0;font-size:1.1rem;font-weight:800}
+.r193-icon-btn,.r193-secondary,.r193-filter {min-height:44px;padding:.38rem .75rem;border:1px solid var(--app-line);border-radius:.55rem;background:#fff;color:var(--app-ink);font-weight:720}
+.r193-icon-btn {min-width:44px;font-size:1.25rem!important}
+.r193-calendar-days {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));margin-inline-start:3.3rem;border-block:1px solid var(--app-line)}
+.r193-day {display:grid;justify-items:center;align-content:center;min-height:48px;gap:.14rem;background:#fbfdfb;border:0;color:var(--app-ink);padding:.1rem}
+.r193-day span {font-size:.72rem;color:var(--app-muted)}
+.r193-day strong {font-size:.95rem}
+.r193-day[aria-pressed=true] {background:var(--app-tint);box-shadow:inset 0 -3px var(--app-accent)}
+.r193-calendar-grid {display:grid;grid-template-columns:3.3rem repeat(7,minmax(0,1fr));border-block-end:1px solid var(--app-line)}
+.r193-calendar-column,.r193-calendar-times {display:grid;grid-template-rows:repeat(5,minmax(50px,auto));min-width:0;border-inline-start:1px solid var(--app-line)}
+.r193-calendar-column[data-selected=true] {background:#f2f8f4}
+.r193-calendar-column {
+  background-image:linear-gradient(to bottom,var(--app-line) 1px,transparent 1px);
+  background-size:100% 20%;
 }
-.digital-editor .team-agenda button[aria-expanded=true] {background:#244e53;color:#fff}
-.r193-agenda-detail {margin:.75rem;padding:.75rem;background:#edf5f2;border-inline-start:3px solid #1a655c;overflow-wrap:anywhere}
-.r193-agenda-detail p {margin:.3rem 0 0}
-.digital-search input:focus-visible,.digital-editor button:focus-visible {outline:2px solid #174e4a;outline-offset:2px}
+.r193-calendar-times {border:0}
+.r193-calendar-times span {padding:.35rem .35rem;color:var(--app-muted);font-size:.72rem;font-variant-numeric:tabular-nums}
+.r193-event-slot {display:flex;align-items:center;min-width:0;grid-column:1;padding:.08rem .18rem}
+.r193-event-slot[data-row="0"] {grid-row:1}
+.r193-event-slot[data-row="1"] {grid-row:2}
+.r193-event-slot[data-row="2"] {grid-row:3}
+.r193-event-slot[data-row="3"] {grid-row:4}
+.r193-event-slot[data-row="4"] {grid-row:5}
+.r193-event {
+  width:100%;min-height:44px;border:0;border-inline-start:3px solid var(--app-accent);border-radius:.35rem;
+  color:var(--app-ink);background:#deefe5;padding:.2rem .3rem;text-align:start;overflow-wrap:anywhere;font-size:.75rem!important;font-weight:760;
+}
+.r193-event[aria-pressed=true] {background:#166458;color:#fff}
+.r193-event-time {display:block;font-size:.68rem;font-weight:660;font-variant-numeric:tabular-nums}
+.r193-empty {margin:.6rem;color:var(--app-muted);font-size:.87rem}
+.r193-event-detail,.r193-source-detail {padding:.8rem 1rem;background:#f3f8f5;min-width:0}
+.r193-app h4 {margin:.25rem 0;font-size:1rem}
+.r193-app p {overflow-wrap:anywhere}
+.r193-event-detail p,.r193-source-detail p,.r193-hit p {margin:.25rem 0;line-height:1.4}
+.r193-query {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.45rem;padding:.8rem 1rem .5rem}
+.r193-query input {width:100%;min-width:0;min-height:44px;border:1px solid #688d83;border-radius:.55rem;padding:.45rem .7rem;color:var(--app-ink);background:#fff}
+.r193-primary {min-height:44px;border:0;border-radius:.55rem;background:#166458;color:#fff;font-weight:760;padding:.45rem .85rem}
+.r193-filters {display:flex;flex-wrap:wrap;gap:.35rem;padding:0 1rem .7rem;border-bottom:1px solid var(--app-line)}
+.r193-filter {font-size:.86rem!important}
+.r193-filter[aria-pressed=true] {background:#deefe5;border-color:#689388}
+.r193-search-body {display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}
+.r193-hit-list {padding:.65rem 1rem;min-width:0}
+.r193-source-detail {border-inline-start:1px solid var(--app-line)}
+.r193-source-meta {color:var(--app-muted);font-size:.78rem;font-weight:660}
+.r193-hits {list-style:none;margin:0;padding:0}
+.r193-hit {padding:.5rem 0;border-bottom:1px solid var(--app-line)}
+.r193-hit:last-child {border:0}
+.r193-result-link {
+  min-height:44px;text-align:start;padding:.2rem 0;background:none;color:#14594e;border:0;
+  font-weight:750;text-decoration:underline;text-underline-offset:.2em;overflow-wrap:anywhere;
+}
+.r193-result-link[aria-expanded=true] {color:#173a39}
+@media (max-width:650px) {
+  .r193-calendar-nav h3 {flex-basis:100%;font-size:.94rem;line-height:1.3}
+  .r193-calendar-nav .r193-secondary {padding-inline:.5rem;font-size:.83rem}
+  .r193-calendar-days {margin-inline-start:0}
+  .r193-calendar-grid {grid-template-columns:3.3rem minmax(0,1fr)}
+  .r193-calendar-column[data-selected=false] {display:none}
+  .r193-search-body {grid-template-columns:1fr}
+  .r193-source-detail {border-inline-start:0;border-block-start:1px solid var(--app-line)}
+}
