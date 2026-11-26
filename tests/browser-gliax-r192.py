@@ -20,9 +20,24 @@ def choose_profile(page, age):
     workspace(page).locator('#profileSelect').select_option(age)
 
 
-def open_mode(page, family, item_id):
+def open_mode(page, family, item_id=None):
     page.locator(f'[data-r192-family="{family}"]').press('Enter')
+    item_id = item_id or page.evaluate('__r4Round.id')
     expect(page.locator('#exerciseOptions')).to_have_attribute('data-case', item_id)
+
+
+def current_case(page):
+    return page.locator('#exerciseOptions').get_attribute('data-case')
+
+
+def new_round_until(page, expression, limit=50):
+    for _ in range(limit):
+        if page.evaluate(expression):
+            return
+        before = current_case(page)
+        page.locator('#r192NewRound').press('Enter')
+        assert current_case(page) != before
+    raise AssertionError('The expected case was never selected: ' + expression)
 
 
 def assert_width(page):
@@ -121,15 +136,18 @@ def information(page):
     choose_profile(page, 'junior')
     area(page, 'executive').click()
     set_level(page, 3)
-    open_mode(page, 'IN', 'IN06')
-    page.get_by_role('textbox', name='Escribe tu respuesta').fill('Depende del tiempo de viaje')
-    page.get_by_role('button', name='Comprobar', exact=True).click()
-    expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status', 'correct')
-    page.locator('#exerciseNext').press('Enter')
-    expect(page.locator('#exerciseOptions')).to_have_attribute('data-case', 'IN-06 complete-data')
-    page.get_by_role('textbox', name='Escribe tu respuesta').fill('Sí, llego a las 16:50')
-    page.get_by_role('button', name='Comprobar', exact=True).click()
-    expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status', 'correct')
+    open_mode(page, 'IN')
+    answers = {'IN06': 'Depende del tiempo de viaje', 'IN-06 complete-data': 'Sí, llego a las 16:50'}
+    first = current_case(page)
+    for index in range(2):
+        item = current_case(page)
+        if index:
+            assert item != first
+        page.get_by_role('textbox', name='Escribe tu respuesta').fill(answers[item])
+        page.get_by_role('button', name='Comprobar', exact=True).click()
+        expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status', 'correct')
+        if not index:
+            page.locator('#exerciseNext').press('Enter')
     assert_width(page)
 
 
@@ -140,25 +158,47 @@ def rules(page):
     choose_profile(page, 'junior')
     area(page, 'executive').click()
     set_level(page, 2)
-    open_mode(page, 'AR', 'AR08')
-    label = page.locator('.r192-rule-label')
-    expect(label).to_have_text('círculo')
-    page.get_by_role('button', name='Responder', exact=True).press('Enter')
-    expect(page.get_by_role('button', name='Responder', exact=True)).to_have_attribute('aria-pressed', 'true')
-    page.get_by_role('button', name='Siguiente estímulo').press('Enter')
-    expect(label).to_have_text('triángulo')
-    page.get_by_role('button', name='Siguiente estímulo').press('Enter')
-    expect(page.locator('.r192-rule-card')).to_have_attribute('data-event', 'signal')
-    expect(page.get_by_role('button', name='Responder', exact=True)).to_have_count(0)
-    expect(page.locator('#exerciseFeedback')).to_be_empty()
-    page.get_by_role('button', name='Continuar', exact=True).press('Enter')
-    expect(label).to_have_text('círculo')
-    page.get_by_role('button', name='Siguiente estímulo').press('Enter')
-    expect(label).to_have_text('triángulo')
-    page.get_by_role('button', name='Responder', exact=True).press('Enter')
-    page.get_by_role('button', name='Siguiente estímulo').press('Enter')
-    expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status', 'correct')
-    expect(page.locator('#exerciseFeedback')).to_contain_text('4 de 4 estímulos')
+    open_mode(page, 'AR')
+    schedules = {
+        'AR08': [('círculo', True), ('triángulo', False), None, ('círculo', False), ('triángulo', True)],
+        'AR08-r4-1': [('triángulo', False), ('círculo', True), ('círculo', True), None, ('círculo', False), ('triángulo', True)],
+        'AR08-r4-2': [('círculo', True), ('triángulo', False), None, ('triángulo', True), ('círculo', False), ('círculo', False)],
+    }
+
+    def solve():
+        sequence = schedules[current_case(page)]
+        for event in sequence:
+            if event is None:
+                expect(page.locator('.r192-rule-card')).to_have_attribute('data-event', 'signal')
+                expect(page.get_by_role('button', name='Responder', exact=True)).to_have_count(0)
+                expect(page.locator('#exerciseFeedback')).to_be_empty()
+                page.get_by_role('button', name='Continuar', exact=True).press('Enter')
+            else:
+                label, act = event
+                expect(page.locator('.r192-rule-label')).to_have_text(label)
+                if act:
+                    respond = page.get_by_role('button', name='Responder', exact=True)
+                    respond.press('Enter')
+                    expect(respond).to_have_attribute('aria-pressed', 'true')
+                page.get_by_role('button', name='Siguiente estímulo').press('Enter')
+        expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status', 'correct')
+        scored = len(sequence) - 1
+        expect(page.locator('#exerciseFeedback')).to_contain_text(f'{scored} de {scored} estímulos')
+
+    first = current_case(page)
+    before = page.evaluate('({n:__r4Selections, surface:__r4Round.surfaceFingerprint})')
+    solve()
+    page.get_by_role('button', name='Repetir', exact=True).press('Enter')
+    assert current_case(page) == first
+    assert page.evaluate('({n:__r4Selections, surface:__r4Round.surfaceFingerprint})') == before
+    page.locator('#r192NewRound').press('Enter')
+    second = current_case(page)
+    assert second != first
+    assert page.evaluate('__r4Selections') == before['n'] + 1
+    solve()
+    page.locator('#exerciseNext').press('Enter')
+    assert current_case(page) != second
+    assert page.evaluate('__r4Selections') == before['n'] + 2
     assert_width(page)
 
 
@@ -166,9 +206,9 @@ def executive(page):
     choose_profile(page, 'primary')
     area(page, 'executive').click()
     set_level(page, 2)
-    open_mode(page, 'planning', 'r192-planning-primary-2-dependency-1')
+    open_mode(page, 'planning')
     boundary = page.evaluate('({requests:__requests.length,saves:__saved.length,results:localStorage.getItem("__mock_exercise_results")})')
-    item = page.evaluate("GliaxR192Practice.getItem('planning', 'primary', 2, 0)")
+    item = page.evaluate("__r4Round")
     assert item['interactiveOnly']
     assert page.evaluate("""item => {
         if (WorksheetCatalog.staticPaper(item)) return false;
@@ -183,31 +223,35 @@ def executive(page):
     expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status', 'correct')
     expect(page.locator('#printCognitive')).to_have_count(0)
 
-    open_mode(page, 'constraints', 'r192-constraints-primary-2-resources-1-2-several')
+    open_mode(page, 'constraints')
+    new_round_until(page, "__r4Round.id.endsWith('-several')")
     expect(page.locator('#exerciseVisual table')).to_contain_text('Piezas incluidas')
-    assert page.evaluate("GliaxR192Practice.getItem('constraints','primary',2,0).a") == 'A'
-    page.get_by_role('radio', name='B', exact=True).check()
+    alternate = page.evaluate('''() => __r4Round.opts.find(option => option !== __r4Round.a &&
+      GliaxR192Constraints.gradeConstraints(__r4Round, option).gradedCorrect)''')
+    page.get_by_role('radio', name=alternate, exact=True).check()
     page.get_by_role('button', name='Comprobar', exact=True).click()
     expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status', 'correct')
 
-    open_mode(page, 'supervision', 'r192-supervision-primary-2-review-1-0')
+    open_mode(page, 'supervision')
+    new_round_until(page, '__r4Round.answers.length === 0')
     page.get_by_role('button', name='Comprobar', exact=True).click()
     expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status', 'correct')
     page.locator('#exerciseNext').click()
-    expect(page.locator('#exerciseOptions')).to_have_attribute('data-case', 'r192-supervision-primary-2-review-0-2')
-    rows = page.evaluate("GliaxR192Practice.getItem('supervision','primary',2,1).answers")
+    new_round_until(page, '__r4Round.answers.length > 0')
+    rows = page.evaluate('__r4Round.answers')
     for row in rows:
         page.get_by_role('checkbox', name=row, exact=True).check()
     page.get_by_role('button', name='Comprobar', exact=True).click()
     expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status', 'correct')
     assert_width(page)
 
-    open_mode(page, 'goal-change', 'r192-goal-change-primary-2-cp08')
+    open_mode(page, 'goal-change')
+    new_round_until(page, '__r4Round.sourceId === "CP08"')
     page.get_by_role('radio', name='Leo prepara imágenes. Revisamos al terminar texto e imágenes').check()
     page.get_by_role('button', name='Comprobar', exact=True).press('Enter')
     expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status', 'correct')
     page.locator('#exerciseNext').press('Enter')
-    expect(page.locator('#exerciseOptions')).to_have_attribute('data-case', 'r192-goal-change-primary-2-priority-1')
+    assert page.evaluate('__r4Round.answerModel.kind') == 'priority'
     page.get_by_role('radio', name='Enviar el cambio de hora a quienes asisten').check()
     page.get_by_role('button', name='Comprobar', exact=True).press('Enter')
     expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status', 'correct')
@@ -218,21 +262,19 @@ def executive(page):
 def inventory(page):
     assert page.evaluate('''() => {
       const ids = new Set();
-      for (const age of ['early','junior','primary','middle','teen']) {
+      for (const ageBand of ['early','junior','primary','middle','teen']) {
         for (const level of [1,2,3]) {
           for (const family of ['CP','EC','IN','AR']) {
-            const item = GliaxR192Practice.getItem(family, age, level, 0);
-            if (family === 'AR' && age === 'early') {
-              if (item) return false;
-            } else {
-              if (item.ageBand !== age || item.level !== level || !item.interactiveOnly) return false;
+            const entries = GliaxR192Diversity.candidates({family,ageBand,level,seed:0});
+            if (family === 'AR' && ageBand === 'early' && entries.length) return false;
+            for (const {item} of entries) {
+              if (item.ageBand !== ageBand || item.level !== level) return false;
               ids.add(item.id);
             }
           }
         }
       }
-      ids.add(GliaxR192Practice.getItem('IN','junior',3,1).id);
-      return ids.size === 58 && GliaxR192Bank.getCaseIds().every(id => ids.has(id));
+      return ids.size === 82 && GliaxR192Bank.getCaseIds().every(id => ids.has(id));
     }''')
 
 
@@ -290,6 +332,17 @@ def main():
 
             page.route('**/*', intercept)
             page.goto(url, wait_until='networkidle')
+            page.evaluate('''() => {
+              const createSession = GliaxR192Practice.createSession;
+              window.__r4Selections = 0;
+              GliaxR192Practice.createSession = () => {
+                const session = createSession('browser-r4');
+                return {next(...args) {
+                  window.__r4Selections++;
+                  return window.__r4Round = session.next(...args);
+                }};
+              };
+            }''')
             inventory(page)
             cp_ec(page)
             information(page)
@@ -308,7 +361,7 @@ def main():
     finally:
         server.shutdown()
         server.server_close()
-    print('PASS: cuatro familias R1 y cuatro generadores R2, teclado, privacidad, escritorio/móvil y CSV/XLSX históricos')
+    print('PASS: R1/R2 por edad y nivel, Repetir/Siguiente/Nueva ronda, teclado, privacidad, móvil y CSV/XLSX históricos')
 
 
 if __name__ == '__main__':

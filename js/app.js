@@ -164,7 +164,12 @@
     counter = 0,
     requestGeneration = 0,
     guidedSession = null;
-  let r192Family = "", r192Turn = 0;
+  let r192Family = '', r192Session = null, r192Round = null;
+  function resetR192Practice() {
+    r192Family = '';
+    r192Session = null;
+    r192Round = null;
+  }
   const API = window.LearningAPI;
   const worksheetBuilder=window.WorksheetBuilder.mount($('#paperConfigurator'),{getProfile:()=>profile,api:API});
   const supportEmail=String(window.LH_CONFIG?.supportEmail||'').trim();
@@ -966,6 +971,7 @@
   }
   function showAuth(msg = "") {
     stopMemoryCountdown();
+    resetR192Practice();
     $('#privacyDialog').close();privacyTarget=null;API.setIndependent(null);
     $("#authGate").classList.remove("hidden");
     $("#authGate").scrollTop=0;window.scrollTo(0,0);
@@ -1092,7 +1098,7 @@
   }
   function activateProfile(id,independent=false) {
     stopMemoryCountdown();
-    r192Family="";r192Turn=0;
+    resetR192Practice();
     progressSaveRevision++;resultSaveRevision++;setProgressSaveStatus('');
     if(independent)setPendingResultHomeStatus();
     $('#privacyDialog').close();privacyTarget=null;
@@ -1199,7 +1205,7 @@
     homework: "Fichas para casa",
   };
   function switchSection(id) {
-    if(id!=='exercise'){stopMemoryCountdown();interactionOnly=false;r192Family='';r192Turn=0;}
+    if(id!=='exercise'){stopMemoryCountdown();interactionOnly=false;resetR192Practice();}
     $$(".section").forEach((s) => s.classList.remove("active-section"));
     $("#" + id).classList.add("active-section");
     $('#appShell').classList.toggle('exercise-focus',id==='exercise');
@@ -1377,7 +1383,8 @@
     $('#wordFitMode').setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily==='words'));
     const r192Controls=$('#r192Modalities');
     const localModes=guidedSession?[]:window.GliaxR192Practice.available(subject,route,state.levels[subject]||1);
-    if(!localModes.some(([key])=>key===r192Family)){r192Family='';r192Turn=0;}
+    if(!localModes.some(([key])=>key===r192Family)){r192Family='';r192Round=null;}
+    $('#r192NewRound').classList.toggle('hidden',!r192Family);
     r192Controls.classList.toggle('hidden',!localModes.length);
     const localButtons=r192Controls.querySelector('.mode-switch');
     const focusedMode=localButtons.contains(document.activeElement)?document.activeElement.dataset.r192Family:null;
@@ -1414,15 +1421,17 @@
   };
   $('#exerciseModalities').addEventListener('click',event=>{
     const button=event.target.closest('button');
-    if(button&&!button.dataset.r192Family){r192Family='';r192Turn=0;}
+    if(button&&!button.dataset.r192Family&&button.id!=='r192NewRound'){r192Family='';r192Round=null;}
     if(button&&button.id!=='digitalModeButton')digitalOnly=false;
   },true);
   $('#r192Modalities').addEventListener('click',event=>{
     const button=event.target.closest('[data-r192-family]');
     if(!button)return;
-    r192Family=button.dataset.r192Family;r192Turn=0;
+    if(r192Family!==button.dataset.r192Family)r192Round=null;
+    r192Family=button.dataset.r192Family;
     setupExercise();
   });
+  $('#r192NewRound').onclick=()=>{if(r192Family){r192Round=null;newExercise();}};
   $('#documentModeSwitch').addEventListener('click',event=>{
     const button=event.target.closest('button[data-documents],#attentionPhotos');
     if(!button)return;
@@ -1638,7 +1647,12 @@
     try {
       if(r192Family){
         const practice=window.GliaxR192Practice;
-        const item=practice.getItem(r192Family,window.AgeStages.route(profile),state.levels[subject]||1,r192Turn);
+        const age=window.AgeStages.route(profile),level=state.levels[subject]||1;
+        r192Session??=practice.createSession();
+        if(!r192Round||r192Round.family!==r192Family||r192Round.ageBand!==age||r192Round.level!==level){
+          r192Round=r192Session.next(r192Family,subject,age,level);
+        }
+        const item=r192Round;
         if(!item)throw new Error('Esta práctica no está disponible en este nivel.');
         counter++;
         $("#exerciseCounter").textContent=`Ejercicio ${counter}`;
@@ -2042,7 +2056,7 @@
     }
   }
   $("#exerciseNext").onclick = () => {
-    if(r192Family){r192Turn++;newExercise();return;}
+    if(r192Family){r192Round=null;newExercise();return;}
     if (guidedSession) {
       advanceGuidedSession();
     } else newExercise();

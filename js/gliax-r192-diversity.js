@@ -59,10 +59,22 @@
     return [model.mode, Boolean(model.equivalents?.partial.length), Boolean(model.components)];
   }
 
+  const planMechanisms = {
+    substitution: 'reallocation', capacity: 'reallocation', setting: 'reallocation',
+    availability: 'reallocation', delegation: 'reallocation',
+    'retain-requirements': 'requirement-retention',
+    reschedule: 'time-window', 'fixed-window': 'time-window', deadline: 'time-window',
+    reorder: 'precedence', dependencies: 'precedence', 'dependencies-schedule': 'precedence',
+    'unknown-policy': 'verify-unknown', infeasibility: 'joint-feasibility',
+    'reasoned-decision': 'reasoned-decision'
+  };
+
   function mechanismOf(item) {
     const model = item.answerModel;
+    if (item.family === 'CP') return planMechanisms[item.mechanic] ?? item.mechanic;
+    if (item.family === 'EC' && ['format', 'requirement'].includes(model.facts.kind)) return 'compliance';
     if (item.family === 'planning') return model.completed.length ? 'resume-precedence' : 'precedence';
-    if (model.kind === 'reference') return bank.getCase(model.referenceId, 0).mechanic;
+    if (model.kind === 'reference') return mechanismOf(bank.getCase(model.referenceId, 0));
     if (model.kind && Object.hasOwn(pools, item.family)) return model.kind;
     return item.mechanic;
   }
@@ -76,13 +88,13 @@
     };
   }
 
-  function candidates({family, ageBand, level, seed}) {
+  function candidates({family, ageBand, level, seed, includeVariants = true}) {
     if (!families.includes(family) || !ages.includes(ageBand) || !levels.includes(level)) return [];
     const create = Object.hasOwn(pools, family) ? pools[family] : null;
     const items = create
       ? create({ageBand, level, seed})
       : (referenceSlots.get([family, ageBand, level].join(':')) ?? []).map(id => bank.getCase(id, seed));
-    if (family === 'AR') items.push(...items.flatMap(variants.expandRules));
+    if (family === 'AR' && includeVariants) items.push(...items.flatMap(variants.expandRules));
     return items.map(item => ({...describe(item), item}));
   }
 

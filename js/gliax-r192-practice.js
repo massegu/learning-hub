@@ -5,36 +5,48 @@
     CP: {label: 'Cambio de plan', area: 'executive'},
     EC: {label: 'Encuentra la contradicción', area: 'attention'},
     IN: {label: '¿Qué necesitas saber?', area: 'executive'},
-    AR: {label: 'Actúa con reglas', area: 'executive', supports: age => age !== 'early'},
+    AR: {label: 'Actúa con reglas', area: 'executive', supports: age => age !== 'early',
+      grade: root.GliaxR192AR.gradeRuleAction},
     planning: {label: 'Planificación', area: 'executive',
-      generate: root.GliaxR192Planning.generatePlanning, grade: root.GliaxR192Planning.gradePlanning},
+      grade: root.GliaxR192Planning.gradePlanning},
     constraints: {label: 'Recursos y tiempo', area: 'executive', supports: age => age !== 'early',
-      generate: root.GliaxR192Constraints.generateConstraints, grade: root.GliaxR192Constraints.gradeConstraints},
+      grade: root.GliaxR192Constraints.gradeConstraints},
     'goal-change': {label: 'Cambio de objetivo', area: 'executive',
-      generate: root.GliaxR192GoalChange.generateGoalChange, grade: root.GliaxR192GoalChange.gradeGoalChange},
+      grade: root.GliaxR192GoalChange.gradeGoalChange},
     supervision: {label: 'Supervisión', area: 'executive',
-      generate: root.GliaxR192Supervision.generateSupervision, grade: root.GliaxR192Supervision.gradeSupervision}
+      grade: root.GliaxR192Supervision.gradeSupervision}
   };
-  const bands = ['early', 'junior', 'primary', 'middle', 'teen'];
+  const {ages, levels, candidates} = root.GliaxR192Diversity;
   const enabled = () => root.LH_CONFIG?.staging === true ||
     (['localhost', '127.0.0.1', '[::1]'].includes(root.location?.hostname) && root.LH_CONFIG?.r192Practice === true);
 
   function available(area, age, level) {
-    return enabled() && bands.includes(age) && [1, 2, 3].includes(level)
+    return enabled() && ages.includes(age) && levels.includes(level)
       ? Object.entries(modes).filter(([, mode]) => mode.area === area && (!mode.supports || mode.supports(age)))
       : [];
   }
 
-  function getItem(family, age, level, turn) {
-    if (!available(modes[family]?.area, age, level).some(([key]) => key === family)) return null;
-    const id = family === 'IN' && age === 'junior' && level === 3 && turn % 2 === 1
-      ? 'IN-06 complete-data'
-      : family + String(bands.indexOf(age) * 3 + level + (family === 'AR' ? 3 : 0)).padStart(2, '0');
-    const seed = 'practice:' + age + ':' + level + ':' + turn;
-    const mode = modes[family];
-    const item = mode.generate ? mode.generate({ageBand: age, level, seed}) : root.GliaxR192Bank.getCase(id, seed);
-    if (item) item.interactiveOnly = true;
-    return item;
+  function createSession(seed) {
+    const sessionSeed = seed ?? Array.from(root.crypto.getRandomValues(new Uint32Array(2))).join('-');
+    const selector = root.GliaxR192Selector.createSelector(sessionSeed);
+    const turns = new Map();
+
+    function next(family, area, ageBand, level) {
+      if (!available(area, ageBand, level).some(([key]) => key === family)) return null;
+      const query = {family, ageBand, level};
+      const slot = [family, ageBand, level].join(':');
+      const turn = turns.get(slot) ?? 0;
+      const seedForRound = root.GliaxR192Selector.presentationSeed(sessionSeed, query, turn);
+      const pool = candidates({...query, seed: seedForRound});
+      const selection = selector.next(query, pool);
+      if (!selection) return null;
+      turns.set(slot, turn + 1);
+      selection.item.interactiveOnly = true;
+      selection.item.singleCase = pool.length === 1;
+      return selection.item;
+    }
+
+    return {next};
   }
 
   function node(tag, text, className) {
@@ -305,6 +317,7 @@
     feedback.className = 'feedback';
     const note = node('p', 'Práctica en memoria. El resultado no se guarda y la actividad solo está disponible en pantalla.', 'muted r192-note');
     visual.append(note);
+    if (item.singleCase) visual.append(node('p', 'En este nivel hay un único caso de esta modalidad.', 'muted r192-note'));
     const repeat = button('Repetir', retry);
     repeat.hidden = true;
     function publish(result, support) {
@@ -347,5 +360,5 @@
     };
   }
 
-  root.GliaxR192Practice = {available, getItem, mount};
+  root.GliaxR192Practice = {available, createSession, mount};
 })(globalThis);

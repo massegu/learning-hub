@@ -1,8 +1,9 @@
 'use strict';
 
 const {candidates} = require('../js/gliax-r192-diversity');
-const {createSelector} = require('../js/gliax-r192-selector');
+const {createSelector, presentationSeed} = require('../js/gliax-r192-selector');
 const {gradeCase} = require('../js/gliax-r192-bank');
+const {gradeConstraints} = require('../js/gliax-r192-constraints');
 
 const queries = [
   {family: 'CP', ageBand: 'early', level: 1},
@@ -26,10 +27,12 @@ for (const query of queries) {
   let cycles2 = 0;
   let cycles3 = 0;
   for (let run = 0; run < runs; run++) {
-    const selector = createSelector('run:' + run);
+    const seed = 'run:' + run;
+    const selector = createSelector(seed);
     const history = [];
     for (let round = 0; round < rounds; round++) {
-      const entry = selector.next(query, pool);
+      const roundPool = candidates({...query, seed: presentationSeed(seed, query, round)});
+      const entry = selector.next(query, roundPool);
       if (!entry) continue;
       const previous = history.at(-1);
       if (entry.id === previous?.id) sameId++;
@@ -46,11 +49,15 @@ for (const query of queries) {
       counts.set(entry.id, (counts.get(entry.id) ?? 0) + 1);
       mechanisms[entry.mechanism] = (mechanisms[entry.mechanism] ?? 0) + 1;
       structures[entry.structure] = (structures[entry.structure] ?? 0) + 1;
-      if (query.family === 'CP') {
-        const item = candidates({...query, seed: 'run:' + run + ':turn:' + round}).find(candidate => candidate.id === entry.id).item;
-        item.presentation.options.forEach((option, position) => {
-          if (gradeCase(item, option.id).gradedCorrect) distributionByPosition[position] = (distributionByPosition[position] ?? 0) + 1;
-        });
+      const {item} = entry;
+      const options = query.family === 'CP' ? item.presentation.options?.map(option => option.id) : item.opts;
+      const grade = query.family === 'CP' ? gradeCase : query.family === 'constraints' ? gradeConstraints : null;
+      if (options && grade) {
+        const valid = options.map((option, position) => grade(item, option).gradedCorrect ? position : -1).filter(position => position >= 0);
+        if (valid.length === 1) {
+          const positions = distributionByPosition[options.length] ??= {};
+          positions[valid[0]] = (positions[valid[0]] ?? 0) + 1;
+        }
       }
     }
   }

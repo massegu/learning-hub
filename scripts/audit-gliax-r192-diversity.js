@@ -2,6 +2,7 @@
 
 const {ages, levels, families, candidates, summarize} = require('../js/gliax-r192-diversity');
 const inventorySeed = 'r4-inventory';
+const includeVariants = !process.argv.includes('--reference-only');
 const matrix = [];
 const ageTotals = [];
 for (const ageBand of ages) {
@@ -9,7 +10,7 @@ for (const ageBand of ages) {
   for (const level of levels) {
     const row = {ageBand, level};
     for (const family of families) {
-      const entries = candidates({ageBand, level, family, seed: inventorySeed});
+      const entries = candidates({ageBand, level, family, seed: inventorySeed, includeVariants});
       byFamily[family].push(...entries);
       row[family] = summarize(entries);
     }

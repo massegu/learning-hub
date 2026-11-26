@@ -15,6 +15,10 @@
       ? [family, ageBand, level].join(':') : null;
   }
 
+  function presentationSeed(seed, query, turn) {
+    return fingerprint([seed, slotKey(query), 'presentation', turn]);
+  }
+
   function repeatsCycle(entry, recent, length) {
     if (recent.length < 2 * length - 1 || entry.id !== recent[length - 1].id) return false;
     return recent.slice(0, length - 1).every((previous, index) => previous.id === recent[index + length].id);
@@ -90,7 +94,7 @@
     return {next, recent};
   }
 
-  const api = {createSelector, windowSize, penalties};
+  const api = {createSelector, presentationSeed, windowSize, penalties};
   root.GliaxR192Selector = api;
   if (typeof module !== 'undefined') module.exports = api;
 })(globalThis);
