@@ -19,3 +19,7 @@ EC01–EC15 distinguen incumplimiento, cumplimiento, afirmaciones incompatibles,
 ## ¿Qué necesitas saber?
 
 IN01–IN15 incluyen pregunta abierta, pista opcional y alternativas. IN-06 complete-data conserva el contexto de IN06 y aporta un trayecto de 20 minutos para probar el caso de datos completos exigido por la especificación. Se aceptan expresiones completas revisadas y se distinguen respuestas suficientes, parciales, insuficientes, no interpretables y ausentes. La respuesta espontánea es de solo lectura tras el primer intento o la primera ayuda y vive en la sesión en memoria. El resumen y el evento excluyen el texto; la elección asistida queda diferenciada del intento espontáneo. El modo oral supervisado está indicado para edades tempranas, pendiente de implementación en interfaz.
+
+## Actúa con reglas
+
+AR07–AR18 separan señales y ensayos y evalúan seis mecánicas a partir de reglas, criterios activos, inversión y veto. Las señales no se puntúan, incluso si se les asigna una respuesta. Las métricas de espera y comisión solo aparecen si el caso realmente exige actuar y abstenerse. AR se reserva a partir de 8 años. Las secuencias de referencia permanecen fijas y se preservan como material de auditoría, incluida la alternancia corta prescrita en AR07. En las configuraciones con ejemplos incompletos se explicitaron secuencias mínimas que respetan las reglas y los estímulos documentados. La generación de secuencias nuevas con controles de patrón se deja para la fase posterior.
