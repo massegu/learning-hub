@@ -30,6 +30,14 @@
     return hash.toString(16).padStart(16, '0');
   }
 
+  function visibleContent(value) {
+    if (Array.isArray(value)) return value.map(visibleContent);
+    if (value === null || typeof value !== 'object') return value;
+    return Object.fromEntries(Object.entries(value)
+      .filter(([key]) => key !== 'id')
+      .map(([key, entry]) => [key, visibleContent(entry)]));
+  }
+
   function shuffled(values, seed, channel) {
     const result = [...values];
     let state = BigInt('0x' + fingerprint([seed, channel]));
@@ -59,13 +67,11 @@
 
     const presentation = structuredClone(surface);
     if (presentation.options) presentation.options = shuffled(presentation.options, seed, id + ':options');
-    const {options, ...visible} = presentation;
-    if (options) visible.options = options.map(({label}) => label);
     return {
       id, family, ageBand, level, mechanic, construct, seed, contentVersion, gradingVersion,
       presentation, answerModel: structuredClone(answerModel),
       cognitiveFingerprint: fingerprint([family, mechanic, construct, structure]),
-      surfaceFingerprint: fingerprint(visible)
+      surfaceFingerprint: fingerprint(visibleContent(presentation))
     };
   }
 

@@ -35,6 +35,10 @@ test('stable seeds, choice IDs and fingerprints index visible and cognitive cont
   assert.notEqual(changed.surfaceFingerprint, first.surfaceFingerprint);
   assert.equal(changed.cognitiveFingerprint, first.cognitiveFingerprint);
 
+  const withRows = {...template, surface: {rows: [{id: 'row-1', text: 'Mismo estímulo'}]}};
+  const renamedRow = {...withRows, surface: {rows: [{id: 'row-a', text: 'Mismo estímulo'}]}};
+  assert.equal(createItem(withRows, 1).surfaceFingerprint, createItem(renamedRow, 1).surfaceFingerprint);
+
   copy.structure.constraints.push('keep-original-goal');
   assert.notEqual(createItem(copy, 'synthetic:1').cognitiveFingerprint, first.cognitiveFingerprint);
   assert.equal(fingerprint({a: 'e\u0301', b: 1}), fingerprint({b: 1, a: 'é'}));
