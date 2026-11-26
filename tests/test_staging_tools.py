@@ -23,7 +23,7 @@ def manifest():
             'publishable_key':'sb_publishable_synthetic_local_test_only', 'billing_enabled':False,
             'qa_emails':['qa-a@example.invalid','qa-b@example.invalid'],
             'production_web_origins':['https://operational.example.invalid'],
-            'source_commit':'d8a29ef7940906226cefad101621aa4ac277675b',
+            'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
             'sql_sha256':{name:common.digest((ROOT/'supabase/baselines'/name).read_bytes()) for name in common.SQL_FILES},
             'sdk_sha256':common.digest(SDK.read_bytes()) if SDK.exists() else '0'*64}
 
