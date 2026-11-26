@@ -262,3 +262,7 @@
 .r192-rule-picture svg { inline-size: 4rem; block-size: 4rem; }
 .r192-rule-controls { display: flex; flex-wrap: wrap; gap: .55rem; }
 .r192-rule-controls [aria-pressed="true"] { outline: 2px solid currentColor; outline-offset: -2px; font-weight: 700; }
+.r192-context { max-inline-size: 100%; overflow-x: auto; }
+.r192-active .exercise-account-usage { display: none; }
+.r192-modalities .mode-switch { flex-wrap: wrap; gap: .45rem; }
+.r192-modalities button { max-inline-size: 100%; white-space: normal; overflow-wrap: anywhere; }

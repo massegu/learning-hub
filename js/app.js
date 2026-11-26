@@ -1390,6 +1390,7 @@
       button.setAttribute('aria-pressed',String(key===r192Family));
       return button;
     }));
+    if(r192Family)$$('#exerciseModalities .activity-toolbar [aria-pressed]').forEach(button=>button.setAttribute('aria-pressed','false'));
     if(focusedMode)localButtons.querySelector(`[data-r192-family="${focusedMode}"]`)?.focus();
     const hasAvailableModality=$$('#exerciseModalities button').some(button=>{
       const hiddenAncestor=button.closest('.hidden');
@@ -1646,7 +1647,7 @@
         $("#exerciseTopic").classList.remove('hidden');
         stopExecuted=practice.mount(item,{
           prompt:$("#exercisePrompt"),visual:$("#exerciseVisual"),area:$("#exerciseOptions"),
-          feedback:$("#exerciseFeedback"),next:$("#exerciseNext"),retry:()=>newExercise()
+          feedback:$("#exerciseFeedback"),next:$("#exerciseNext"),profile,retry:()=>newExercise()
         });
         return;
       }

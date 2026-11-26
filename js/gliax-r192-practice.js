@@ -5,7 +5,15 @@
     CP: {label: 'Cambio de plan', area: 'executive'},
     EC: {label: 'Encuentra la contradicción', area: 'attention'},
     IN: {label: '¿Qué necesitas saber?', area: 'executive'},
-    AR: {label: 'Actúa con reglas', area: 'executive', supports: age => age !== 'early'}
+    AR: {label: 'Actúa con reglas', area: 'executive', supports: age => age !== 'early'},
+    planning: {label: 'Planificación', area: 'executive',
+      generate: root.GliaxR192Planning.generatePlanning, grade: root.GliaxR192Planning.gradePlanning},
+    constraints: {label: 'Recursos y tiempo', area: 'executive', supports: age => age !== 'early',
+      generate: root.GliaxR192Constraints.generateConstraints, grade: root.GliaxR192Constraints.gradeConstraints},
+    'goal-change': {label: 'Cambio de objetivo', area: 'executive',
+      generate: root.GliaxR192GoalChange.generateGoalChange, grade: root.GliaxR192GoalChange.gradeGoalChange},
+    supervision: {label: 'Supervisión', area: 'executive',
+      generate: root.GliaxR192Supervision.generateSupervision, grade: root.GliaxR192Supervision.gradeSupervision}
   };
   const bands = ['early', 'junior', 'primary', 'middle', 'teen'];
   const enabled = () => root.LH_CONFIG?.staging === true ||
@@ -23,7 +31,10 @@
       ? 'IN-06 complete-data'
       : family + String(bands.indexOf(age) * 3 + level + (family === 'AR' ? 3 : 0)).padStart(2, '0');
     const seed = 'practice:' + age + ':' + level + ':' + turn;
-    return root.GliaxR192Bank.getCase(id, seed);
+    const mode = modes[family];
+    const item = mode.generate ? mode.generate({ageBand: age, level, seed}) : root.GliaxR192Bank.getCase(id, seed);
+    if (item) item.interactiveOnly = true;
+    return item;
   }
 
   function node(tag, text, className) {
@@ -100,16 +111,40 @@
       visual.append(list);
     }
     if (steps) return validSubmit(area, order(area, steps), finish);
-    if (item.answerModel.mode === 'reasoned_decision') {
-      const selected = choices(area, 'Tu decisión', options);
-      const reasons = choices(area, '¿Qué condiciones respaldan tu decisión?', [
-        {id: 'attendance-unconfirmed', label: 'Aún no se sabe quién asistirá'},
-        {id: 'accept-availability-risk', label: 'Aceptamos que quizá se agoten las plazas'},
-        {id: 'cancellation-worth-cost', label: 'Pagar más compensa si necesitamos cancelar'}
-      ], true);
-      return validSubmit(area, () => selected() ? {choice: selected(), components: reasons()} : undefined, finish);
-    }
+    if (item.answerModel.mode === 'reasoned_decision') return renderReasoned(area, options, finish);
     return validSubmit(area, choices(area, 'Tu respuesta', options), finish);
+  }
+
+  function renderReasoned(area, options, finish) {
+    const selected = choices(area, 'Tu decisión', options);
+    const reasons = choices(area, '¿Qué condiciones respaldan tu decisión?', [
+      {id: 'attendance-unconfirmed', label: 'Aún no se sabe quién asistirá'},
+      {id: 'accept-availability-risk', label: 'Aceptamos que quizá se agoten las plazas'},
+      {id: 'cancellation-worth-cost', label: 'Pagar más compensa si necesitamos cancelar'}
+    ], true);
+    validSubmit(area, () => selected() ? {choice: selected(), components: reasons()} : undefined, finish);
+  }
+
+  function renderExecutive(item, {visual, area, profile}, finish) {
+    if (item.presentation.stimulus) {
+      const context = node('div', '', 'r192-context');
+      context.innerHTML = root.ActivityModel.interactiveStimulus(item.presentation.stimulus, {iconProfile: profile});
+      if (context.querySelector('table')) {
+        context.tabIndex = 0;
+        context.setAttribute('role', 'region');
+        context.setAttribute('aria-label', 'Material para resolver el ejercicio');
+      }
+      visual.append(context);
+    }
+    if (item.responseType === 'order') {
+      return validSubmit(area, order(area, item.tokens.map(label => ({id: label, label}))), finish);
+    }
+    if (item.answerModel.mode === 'reasoned_decision') {
+      return renderReasoned(area, item.answerModel.options, finish);
+    }
+    const multiple = item.responseType === 'multiple';
+    const options = item.opts.map(label => ({id: label, label}));
+    validSubmit(area, choices(area, multiple ? 'Marca los apartados' : 'Tu respuesta', options, multiple), finish);
   }
 
   function renderSources(item, {visual, area}, finish) {
@@ -258,9 +293,11 @@
 
   function mount(item, ui) {
     const {area, visual, prompt, feedback, next, retry} = ui;
+    const section = area.closest('#exercise');
     const title = item.presentation.prompt ?? item.presentation.q;
     prompt.textContent = title;
     area.classList.add('r192-response');
+    section?.classList.add('r192-active');
     area.dataset.case = item.id;
     area.dataset.age = item.ageBand;
     area.dataset.level = String(item.level);
@@ -287,11 +324,13 @@
       repeat.disabled = false;
       next.focus();
     }
-    const finish = response => publish(root.GliaxR192Bank.gradeCase(item, response));
+    const grade = modes[item.family].grade ?? root.GliaxR192Bank.gradeCase;
+    const finish = response => publish(grade(item, response));
     if (item.family === 'CP') renderPlan(item, ui, finish);
     else if (item.family === 'EC') renderSources(item, ui, finish);
     else if (item.family === 'IN') renderInformation(item, ui, publish);
     else if (item.family === 'AR') renderRuleAction(item, ui, finish);
+    else renderExecutive(item, ui, finish);
     area.append(repeat);
     return () => {
       area.replaceChildren();
@@ -303,6 +342,7 @@
       delete area.dataset.age;
       delete area.dataset.level;
       area.classList.remove('r192-response');
+      section?.classList.remove('r192-active');
       next.classList.add('hidden');
     };
   }
