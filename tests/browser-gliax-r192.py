@@ -127,6 +127,35 @@ def information(page):
     assert_width(page)
 
 
+def rules(page):
+    choose_profile(page, 'early')
+    area(page, 'executive').click()
+    expect(page.locator('[data-r192-family="AR"]')).to_have_count(0)
+    choose_profile(page, 'junior')
+    area(page, 'executive').click()
+    set_level(page, 2)
+    open_mode(page, 'AR', 'AR08')
+    label = page.locator('.r192-rule-label')
+    expect(label).to_have_text('círculo')
+    page.get_by_role('button', name='Responder', exact=True).press('Enter')
+    expect(page.get_by_role('button', name='Responder', exact=True)).to_have_attribute('aria-pressed', 'true')
+    page.get_by_role('button', name='Siguiente estímulo').press('Enter')
+    expect(label).to_have_text('triángulo')
+    page.get_by_role('button', name='Siguiente estímulo').press('Enter')
+    expect(page.locator('.r192-rule-card')).to_have_attribute('data-event', 'signal')
+    expect(page.get_by_role('button', name='Responder', exact=True)).to_have_count(0)
+    expect(page.locator('#exerciseFeedback')).to_be_empty()
+    page.get_by_role('button', name='Continuar', exact=True).press('Enter')
+    expect(label).to_have_text('círculo')
+    page.get_by_role('button', name='Siguiente estímulo').press('Enter')
+    expect(label).to_have_text('triángulo')
+    page.get_by_role('button', name='Responder', exact=True).press('Enter')
+    page.get_by_role('button', name='Siguiente estímulo').press('Enter')
+    expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status', 'correct')
+    expect(page.locator('#exerciseFeedback')).to_contain_text('4 de 4 estímulos')
+    assert_width(page)
+
+
 def main():
     handler = functools.partial(QuietHandler, directory=str(ROOT))
     server = http.server.ThreadingHTTPServer(('127.0.0.1', 0), handler)
@@ -154,12 +183,13 @@ def main():
             page.goto(url, wait_until='networkidle')
             cp_ec(page)
             information(page)
+            rules(page)
             assert not errors, errors
             browser.close()
     finally:
         server.shutdown()
         server.server_close()
-    print('PASS: CP/EC/IN, teclado, evidencia, ayudas, privacidad y pantalla móvil')
+    print('PASS: CP/EC/IN/AR, teclado, ayudas, señales, privacidad y pantalla móvil')
 
 
 if __name__ == '__main__':

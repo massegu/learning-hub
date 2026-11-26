@@ -250,3 +250,15 @@
 .r192-open textarea { inline-size: 100%; max-inline-size: 100%; font: inherit; }
 .r192-open button { justify-self: start; }
 .r192-help { display: flex; flex-wrap: wrap; gap: .55rem; }
+.r192-rule-card { display: grid; justify-items: center; gap: .45rem; padding: 1rem; border: 1px solid currentColor; border-radius: .6rem; }
+.r192-rule-card[data-event="signal"] { border-style: dashed; }
+.r192-rule-label { margin-block: .25rem; font-weight: 650; text-align: center; }
+.r192-rule-glyph { position: relative; display: inline-grid; place-items: center; min-inline-size: 5rem; min-block-size: 5rem; font-size: 3rem; line-height: 1; }
+.r192-rule-glyph[data-color="rojo"] { color: #a82a37; }
+.r192-rule-glyph[data-color="azul"] { color: #2552a5; }
+.r192-rule-border { border: .3rem solid #222; border-radius: .4rem; }
+.r192-rule-letter { position: absolute; color: #fff; font-size: 1.1rem; }
+.r192-rule-picture { display: flex; align-items: center; justify-content: center; gap: .35rem; font-size: 2rem; }
+.r192-rule-picture svg { inline-size: 4rem; block-size: 4rem; }
+.r192-rule-controls { display: flex; flex-wrap: wrap; gap: .55rem; }
+.r192-rule-controls [aria-pressed="true"] { outline: 2px solid currentColor; outline-offset: -2px; font-weight: 700; }

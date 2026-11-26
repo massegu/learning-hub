@@ -4,7 +4,8 @@
   const modes = {
     CP: {label: 'Cambio de plan', area: 'executive'},
     EC: {label: 'Encuentra la contradicción', area: 'attention'},
-    IN: {label: '¿Qué necesitas saber?', area: 'executive'}
+    IN: {label: '¿Qué necesitas saber?', area: 'executive'},
+    AR: {label: 'Actúa con reglas', area: 'executive', supports: age => age !== 'early'}
   };
   const bands = ['early', 'junior', 'primary', 'middle', 'teen'];
   const enabled = () => root.LH_CONFIG?.staging === true ||
@@ -20,7 +21,7 @@
     if (!available(modes[family]?.area, age, level).some(([key]) => key === family)) return null;
     const id = family === 'IN' && age === 'junior' && level === 3 && turn % 2 === 1
       ? 'IN-06 complete-data'
-      : family + String(bands.indexOf(age) * 3 + level).padStart(2, '0');
+      : family + String(bands.indexOf(age) * 3 + level + (family === 'AR' ? 3 : 0)).padStart(2, '0');
     const seed = 'practice:' + age + ':' + level + ':' + turn;
     return root.GliaxR192Bank.getCase(id, seed);
   }
@@ -186,6 +187,75 @@
     no_response: 'Todavía falta tu respuesta.'
   };
 
+  function renderRuleAction(item, {visual, area}, finish) {
+    const {events} = item.presentation;
+    const {rule, measuresWithholding} = item.answerModel;
+    const actions = [...new Set(Object.values(rule.maps).flatMap(map => Object.values(map)))].filter(action => action !== 'wait');
+    const responses = Object.create(null);
+    const card = node('div', '', 'r192-rule-card');
+    const controls = node('div', '', 'r192-rule-controls');
+    visual.append(card);
+    area.append(controls);
+    if (measuresWithholding) {
+      area.prepend(node('p', 'Cuando la regla pida esperar, continúa sin marcar una respuesta.'));
+    }
+    let index = 0;
+    function advance() {
+      index++;
+      if (index === events.length) {
+        controls.replaceChildren();
+        finish(responses);
+      } else render(true);
+    }
+
+    function render(focus) {
+      const event = events[index];
+      const signal = event.type === 'signal';
+      card.dataset.event = signal ? 'signal' : 'trial';
+      const label = node('p', event.label, 'r192-rule-label');
+      label.tabIndex = -1;
+      card.replaceChildren();
+      controls.replaceChildren();
+      if (signal) {
+        card.append(node('strong', 'Señal de regla'), label);
+        controls.append(button('Continuar', advance, 'primary-btn'));
+      } else {
+        const {form, color, name, border, star, letter} = event.stimulus;
+        if (form) {
+          const glyph = node('span', ({círculo: '●', cuadrado: '■', triángulo: '▲'})[form], 'r192-rule-glyph');
+          glyph.setAttribute('aria-hidden', 'true');
+          if (color) glyph.dataset.color = color;
+          if (border) glyph.classList.add('r192-rule-border');
+          if (letter) glyph.append(node('span', letter, 'r192-rule-letter'));
+          card.append(glyph);
+        } else if (name) {
+          const picture = node('span', '', 'r192-rule-picture');
+          picture.setAttribute('aria-hidden', 'true');
+          picture.innerHTML = root.ActivityModel.visualLabel(name);
+          if (star) picture.append(node('span', '★'));
+          card.append(picture);
+        }
+        card.append(label);
+        let selected = null;
+        const choices = actions.map(action => {
+          const control = button(action === 'act' ? 'Responder' : action, () => {
+            selected = selected === action ? null : action;
+            choices.forEach(({key, control}) => control.setAttribute('aria-pressed', String(key === selected)));
+          });
+          control.setAttribute('aria-pressed', 'false');
+          return {key: action, control};
+        });
+        controls.append(...choices.map(({control}) => control), button('Siguiente estímulo', () => {
+          responses[event.id] = selected;
+          advance();
+        }, 'primary-btn'));
+      }
+      if (focus) label.focus();
+    }
+
+    render(false);
+  }
+
   function mount(item, ui) {
     const {area, visual, prompt, feedback, next, retry} = ui;
     const title = item.presentation.prompt ?? item.presentation.q;
@@ -202,7 +272,10 @@
     repeat.hidden = true;
     function publish(result, support) {
       const help = {spontaneous: 'Respuesta espontánea.', hint: 'Respuesta con pista.', options: 'Respuesta con alternativas.'};
-      feedback.textContent = [messages[result.status], help[support]].filter(Boolean).join(' ');
+      const score = item.family === 'AR' && result.metrics
+        ? result.metrics.correct + ' de ' + result.metrics.scored + ' estímulos correctos.'
+        : '';
+      feedback.textContent = [messages[result.status], help[support], score].filter(Boolean).join(' ');
       feedback.className = 'feedback ' + ({correct: 'ok', incorrect: 'bad'}[result.status] ?? 'practice');
       feedback.dataset.status = result.status;
       if (result.status === 'no_response') return;
@@ -218,6 +291,7 @@
     if (item.family === 'CP') renderPlan(item, ui, finish);
     else if (item.family === 'EC') renderSources(item, ui, finish);
     else if (item.family === 'IN') renderInformation(item, ui, publish);
+    else if (item.family === 'AR') renderRuleAction(item, ui, finish);
     area.append(repeat);
     return () => {
       area.replaceChildren();
