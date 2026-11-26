@@ -154,3 +154,17 @@ test('R19.3 observations recover under the owning account and stay isolated thro
  await as(A);
  assert.deepEqual((await db.query('select correct,detail from exercise_results where client_attempt_id=$1',[attempt])).rows,[{correct:null,detail:event}]);
 });
+
+
+test('the hosted preflight is a read-only catalog query on the local privacy schema',async()=>{
+ await db.exec('reset role; set default_transaction_read_only = on;');
+ try {
+  const results=await db.exec(fs.readFileSync('supabase/diagnostics/r193-longitudinal-preflight.sql','utf8'));
+  const grants=results.at(-1).rows.find(row=>row.relname==='exercise_results');
+  assert.equal(grants.relrowsecurity,true);
+  assert.equal(grants.authenticated_insert,true);
+  assert.equal(grants.anonymous_insert,false);
+ } finally {
+  await db.exec('set default_transaction_read_only = off;');
+ }
+});

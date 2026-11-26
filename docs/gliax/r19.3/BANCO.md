@@ -29,3 +29,16 @@ Se conservaron las metas por familia. Cambio de plan 1/60, Encuentra la contradi
 ## Correcciones asociadas
 
 Se distinguieron las modalidades históricas de ordenar instrucciones y responder a símbolos de las modalidades R19.2. El flujo visual de comparación usa estímulos gráficos en A y B. El contrato de Edge para comparaciones en palabras sigue disponible para clientes anteriores. Los controles de Matemáticas por pasos conservan un área táctil de 44 px y se adaptan al contenido.
+
+## Revisión de la muestra
+
+| Criterio de la rúbrica | Evidencia de la muestra | Comprobación pendiente |
+| --- | --- | --- |
+| Validez cognitiva, 25 % | Regla o solver separado de las opciones, fuentes canónicas, registro de alternativas válidas y estados parciales. | Observación de estrategias espontáneas y comprensión del objetivo. |
+| Gradación, 20 % | Dependencias de dos pasos en 6–7, intersección de tres fuentes en edades intermedias, doble restricción o paridad en 16–18. | Comparar recorridos de la misma edad en los tres niveles. |
+| Adecuación por edad, 20 % | Los casos tempranos usan acciones concretas y frases cortas. IN admite respuestas parciales y no interpretables. | Revisar el vocabulario y formato oral con profesionales. |
+| Ausencia de atajos, 15 % | Orden sembrado de opciones. No se usa la posición como corrección. EC necesita comparar las fuentes en niveles 2 y 3. | Revisar pistas semánticas de los distractores en pruebas con usuarios. |
+| Distractores, 10 % | Los distractores representan omisión de un dato, restricción incumplida o una inferencia no sostenida. | Verificar si producen los errores previstos en cada franja. |
+| Feedback, 10 % | Cada caso explica la condición decisiva. Las pruebas de navegador revisaron EC y los dos órdenes válidos de Planificación. | Observar si las explicaciones permiten enmendar una respuesta autónomamente. |
+
+La muestra prioriza celdas pequeñas y mecanismos identificables. La revisión documental no asigna una puntuación pedagógica global ni valida clínicamente el banco. La ampliación restante conserva sus objetivos por familia y requiere lotes con soluciones, distractores y feedback revisados.
