@@ -19,7 +19,8 @@ test('the registry contains exactly 58 cases with coherent versions, distinct su
     assert.deepEqual(item, bank.getCase(id, 'reference'));
     assert.equal(item.cognitiveFingerprint, bank.getCase(id, 'another-seed').cognitiveFingerprint);
     assert.equal(item.contentVersion, 'r19.2-r1');
-    assert.equal(item.gradingVersion, 'r19.2-r1.1');
+    const reviewed = ['EC02', 'EC08', 'EC11', 'IN01', 'IN03', 'IN04'].includes(id);
+    assert.equal(item.gradingVersion, reviewed ? 'r19.2-r1.2' : 'r19.2-r1.1');
     assert.match(item.surfaceFingerprint, /^[a-f0-9]{16}$/);
     assert.match(item.cognitiveFingerprint, /^[a-f0-9]{16}$/);
     assert.equal(Object.hasOwn(item.presentation, 'answerModel'), false);

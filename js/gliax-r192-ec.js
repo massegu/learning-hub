@@ -11,7 +11,7 @@
       options(['violated', 'met', 'unknown'], ['Falta un lápiz', 'Están todos los lápices', 'No sabemos cuántos hay'])],
     ['¿Dicen lo mismo las dos notas del juego de hoy?', ['El juego empieza a las 11:00.', 'El juego empieza a las 12:00.'], relation('same', 'same', [660, 720]),
       options(['direct_conflict', 'compatible', 'update_over_time'], ['Dan dos horas distintas para el mismo juego', 'Dan la misma hora para el juego', 'Una nota cambia la hora anterior']),
-      'Las dos notas siguen vigentes.'],
+      'Hoy valen las dos notas.'],
     ['¿Pueden ser verdad las dos notas?', ['La botella azul está llena.', 'La botella roja está vacía.'], relation('different', 'same', ['full', 'empty']),
       options(['compatible', 'direct_conflict', 'insufficient_evidence'], ['Sí, hablan de dos botellas', 'No, hablan de una sola botella', 'No sabemos de qué botella habla cada nota']),
       'Las botellas están en la misma mesa.'],
@@ -26,14 +26,14 @@
     ['¿El plan de entrega respeta la instrucción?', ['Piden entregar únicamente un PDF.', 'El grupo enviará la presentación sin convertir.'], {kind: 'format', expected: 'PDF', actual: 'presentation'},
       options(['violated', 'met', 'unknown'], ['No respeta el formato de entrega', 'Sí, cualquier presentación sirve', 'Depende de quién envíe el fichero'])],
     ['¿Cómo se relacionan estas notas sobre el entrenamiento?', ['El día habitual es el miércoles.', 'Esta semana pasa al jueves.'], relation('same', 'different', ['wed', 'thu'], {updated: true}),
-      options(['update_over_time', 'direct_conflict', 'insufficient_evidence'], ['La segunda concreta una excepción para esta semana', 'Las dos fijan días incompatibles para esta semana', 'Falta saber si hablan del mismo entrenamiento']),
+      options(['update_over_time', 'direct_conflict', 'insufficient_evidence'], ['La nota de esta semana cambia el día habitual', 'Las dos fijan días incompatibles para esta semana', 'Falta saber si hablan del mismo entrenamiento']),
       'El entrenamiento es del mismo grupo.'],
     ['¿Qué puedes concluir al comparar los informes?', ['Informe A: 100 ml.', 'Informe B: 150 ml.'], relation('unknown', 'same', [100, 150]),
       options(['insufficient_evidence', 'direct_conflict', 'update_over_time'], ['Falta saber si se refieren a la misma prueba', 'Los dos informes se contradicen', 'El segundo actualiza necesariamente al primero']),
       'Los dos informes usan mililitros.'],
     ['¿Qué relación hay entre la confirmación y el cobro para el mismo pedido y las mismas condiciones?', ['La confirmación dice «envío gratis».', 'El cobro incluye 4 € de envío.'], relation('same', 'same', [0, 4], {alsoCompliance: true}),
       options(['direct_conflict', 'violated', 'compatible'], ['La confirmación y el cargo no coinciden', 'El cobro incumple la condición de envío', 'El cargo es compatible con el envío gratuito'])],
-    ['¿Qué significa el segundo mensaje sobre el encuentro?', ['Lunes: nos reunimos el sábado.', 'Miércoles: finalmente nos reunimos el domingo.'], relation('same', 'different', ['sat', 'sun'], {updated: true}),
+    ['¿Qué significa el mensaje del miércoles sobre el encuentro?', ['Lunes: nos reunimos el sábado.', 'Miércoles: finalmente nos reunimos el domingo.'], relation('same', 'different', ['sat', 'sun'], {updated: true}),
       options(['update_over_time', 'direct_conflict', 'compatible'], ['Actualiza la fecha anterior', 'Deja dos fechas vigentes e incompatibles', 'Describe otro encuentro distinto']),
       'Ambos mensajes son del mismo grupo.'],
     ['¿Pueden entrar todos a la vez sin superar el aforo?', ['Aforo máximo: 20 personas, incluidos acompañantes.', 'Han confirmado 18 alumnos y 5 acompañantes.'], limit('maximum', 20, [18, 5], 'inference'),
@@ -69,6 +69,8 @@
     return {classification: 'constraint_mismatch', fulfilled, difference};
   }
 
+  const casesWithSupportingContext = new Set(['EC02', 'EC08', 'EC11']);
+
   function getContradiction(id, seed) {
     if (typeof id !== 'string' || !/^EC(?:0[1-9]|1[0-5])$/.test(id)) throw new RangeError('Unknown EC case');
     const index = Number(id.slice(2)) - 1;
@@ -82,7 +84,8 @@
     return createItem({
       id, ageBand: ages[Math.floor(index / 3)], level, mechanic: facts.kind, construct: 'consistencyChecking',
       surface, structure: {kind: facts.kind, subject: facts.subject ?? null, window: facts.window ?? null, operation: facts.operation ?? null, updated: Boolean(facts.updated)},
-      answerModel: {mode: 'source_relation', facts, evidenceIds: ['source-a', 'source-b']}
+      answerModel: {mode: 'source_relation', facts, evidenceIds: ['source-a', 'source-b'],
+        optionalEvidenceIds: casesWithSupportingContext.has(id) ? ['context'] : []}
     }, seed);
   }
 
@@ -93,7 +96,9 @@
     const correct = response?.choice === key || (model.facts.alsoCompliance && response?.choice === 'violated');
     if (!correct) return {...outcome('incorrect'), ...relation};
     const evidence = response.evidence;
-    const sufficient = Array.isArray(evidence) && evidence.length === model.evidenceIds.length && model.evidenceIds.every(id => evidence.includes(id));
+    const allowed = [...model.evidenceIds, ...(model.optionalEvidenceIds ?? [])];
+    const sufficient = Array.isArray(evidence) && new Set(evidence).size === evidence.length &&
+      model.evidenceIds.every(id => evidence.includes(id)) && evidence.every(id => allowed.includes(id));
     return {...outcome(item.presentation.evidenceRequired && !sufficient ? 'partial' : 'correct'), ...relation};
   }
 

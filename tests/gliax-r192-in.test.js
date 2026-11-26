@@ -65,3 +65,17 @@ test('help preserves the first answer in memory without sharing it in response e
   assert.equal(withDraft.summary().initial, 'partial');
   assert.equal(withDraft.submitChoice('other-1').status, 'partial');
 });
+
+test('empty submission leaves the first real response available and reviewed equivalents stay spontaneous', () => {
+  const session = startInformation(getInformation('IN03', 0));
+  assert.equal(session.submitOpen('   ').status, 'no_response');
+  assert.equal(session.initialResponse(), undefined);
+  assert.equal(session.submitOpen('¿Está abierto?').status, 'correct');
+  assert.equal(session.initialResponse(), '¿Está abierto?');
+  session.showHint();
+  assert.equal(session.summary().initial, 'sufficient');
+  assert.equal(session.summary().event.support, 'spontaneous');
+  assert.equal(session.summary().event.gradingVersion, 'r19.2-r1.2');
+  assert.equal(gradeOpenInformation(getInformation('IN04', 0), 'A qué hora salgo y cuánto tardo en llegar').status, 'correct');
+  assert.equal(gradeOpenInformation(getInformation('IN03', 0), 'No está abierto').status, 'uninterpretable');
+});

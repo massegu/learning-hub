@@ -43,3 +43,11 @@ test('documented alternate plans, infeasibility and justified decisions keep the
   assert.equal(gradeGoalChange(cp15, {choice: 'wait', components: ['attendance-unconfirmed', 'accept-availability-risk']}).gradedCorrect, true);
   assert.deepEqual(gradeGoalChange(cp15, 'Quizá esperar.'), {status: 'pending_review'});
 });
+
+test('priority requires relating the message to the start rather than matching a stated wait instruction', () => {
+  const item = goalChangePool({ageBand: 'junior', level: 1, seed: 5}).find(candidate => candidate.answerModel.kind === 'priority');
+  assert.doesNotMatch(item.stimulus[1].text, /mensajes pueden esperar/i);
+  assert.match(item.stimulus[1].text, /cuando acabe el encuentro/);
+  assert.equal(gradeGoalChange(item, 'Contestar el mensaje sobre la recogida').gradedCorrect, true);
+  assert.equal(gradeGoalChange(item, 'materials').gradedCorrect, false);
+});

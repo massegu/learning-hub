@@ -2,7 +2,8 @@
   'use strict';
 
   const contentVersion = 'r19.2-r1';
-  const gradingVersion = 'r19.2-r1.1';
+  const reviewedGrades = new Set(['EC02', 'EC08', 'EC11', 'IN01', 'IN03', 'IN04']);
+  const gradeVersionFor = id => reviewedGrades.has(id) ? 'r19.2-r1.2' : 'r19.2-r1.1';
   const ageBands = ['early', 'junior', 'primary', 'middle', 'teen'];
   const statuses = ['correct', 'incorrect', 'partial', 'uninterpretable', 'pending_review', 'no_response'];
   const supportLevels = ['spontaneous', 'hint', 'options'];
@@ -68,7 +69,7 @@
     const presentation = structuredClone(surface);
     if (presentation.options) presentation.options = shuffled(presentation.options, seed, id + ':options');
     return {
-      id, family, ageBand, level, mechanic, construct, seed, contentVersion, gradingVersion,
+      id, family, ageBand, level, mechanic, construct, seed, contentVersion, gradingVersion: gradeVersionFor(id),
       presentation, answerModel: structuredClone(answerModel),
       cognitiveFingerprint: fingerprint([family, mechanic, construct, structure]),
       surfaceFingerprint: fingerprint(visibleContent(presentation))
@@ -90,6 +91,7 @@
   }
 
   function responseEvent(item, result, support) {
+    const gradingVersion = gradeVersionFor(item.id);
     if (!validateId(item.id) || item.contentVersion !== contentVersion ||
         item.gradingVersion !== gradingVersion || !supportLevels.includes(support)) {
       throw new TypeError('Invalid R19.2 response event');

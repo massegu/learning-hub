@@ -10,7 +10,7 @@
       ['Guardar los coches'], [['empty', 'Usar la caja vacía', [true]], ['full', 'Usar la caja llena', [false]], ['out', 'Dejar los coches fuera', [false]]], ['available-space']],
     ['retain-requirements', 'Lleva zapatillas y colores. La mochila está rota y hay una bolsa grande. ¿Qué haces?',
       ['Llevar zapatillas', 'Llevar colores'], [['both', 'Poner los dos en la bolsa', [true, true]], ['shoes', 'Poner solo las zapatillas en la bolsa', [true, false]], ['colors', 'Poner solo los colores en la bolsa', [false, true]]], ['retain-first', 'retain-second']],
-    ['reschedule', 'Harías los deberes tras entrenar. Hoy acabarás tarde, pero tienes tiempo antes de salir. ¿Cuándo haces los deberes?',
+    ['reschedule', 'Harías los deberes tras entrenar. Hoy acabarás tan tarde que después no habrá tiempo para hacerlos. Antes de salir sí tienes tiempo. ¿Cuándo haces los deberes?',
       ['Hacer los deberes hoy', 'Mantener el entrenamiento'], [['before', 'Antes de ir a entrenar', [true, true]], ['after', 'Después, como estaba previsto', [false, true]], ['skip', 'Durante el entrenamiento, faltando a él', [true, false]]], ['available-time', 'retain-activity']],
     ['setting', 'Ibas a jugar con el grupo en el jardín, pero llueve. Dentro hay una mesa libre, cartas y lápices. ¿Qué juego eligen?',
       ['Jugar con el grupo', 'Jugar dentro'], [['cards', 'Una partida de cartas en la mesa', [true, true]], ['garden', 'El mismo juego en el jardín', [true, false]], ['drawing', 'Dibujar cada cual por su lado', [false, true]]], ['shared-activity', 'indoor']],
@@ -33,7 +33,7 @@
         ['walk', 'A pie: 18:05, 0 €', 18 * 60 + 5, 0]]}],
     ['deadline', 'Presenta la solicitud antes de las 20:00. Falta una firma y la persona que firma se va a las 18:30. ¿Qué haces?',
       ['Conseguir la firma a tiempo', 'Enviar la solicitud firmada a tiempo'], [['signed', 'Conseguir la firma antes de las 18:30 y enviar antes de las 20:00', [true, true]], ['late', 'Ir a firmar a las 19:00 y luego enviar', [false, false]], ['unsigned', 'Enviar antes de las 20:00 sin la firma', [false, false]]], ['signer-window', 'signed-before-deadline']],
-    ['dependencies-schedule', 'Presentas el jueves y el examen es el viernes. El ensayo con tu compañero solo puede ser el martes y requiere las diapositivas hechas. Ordena las acciones y sitúa el ensayo el martes.',
+    ['dependencies-schedule', 'Presentas el jueves y el examen es el viernes. El ensayo con tu compañero solo puede ser el martes. Preparad las diapositivas antes del martes y estudia para el examen después del ensayo. Ordena las acciones.',
       {steps: [['slides', 'Preparar diapositivas'], ['start-tuesday', 'Empieza el martes'], ['rehearse', 'Ensayo con el compañero'], ['end-tuesday', 'Termina el martes'], ['present', 'Presentación del jueves'], ['study', 'Estudiar para el examen'], ['exam', 'Examen del viernes']], before: [['slides', 'start-tuesday'], ['start-tuesday', 'rehearse'], ['rehearse', 'end-tuesday'], ['end-tuesday', 'present'], ['present', 'exam'], ['rehearse', 'study'], ['study', 'exam']]}],
     ['reasoned-decision', 'La asistencia a la reserva grupal aún no se ha confirmado. La reserva normal no es reembolsable. La cancelable cuesta 20 € más y cabe en el presupuesto. ¿Qué harías y bajo qué condición?',
       {components: {flexible: ['attendance-unconfirmed', 'cancellation-worth-cost'], wait: ['attendance-unconfirmed', 'accept-availability-risk']}}]

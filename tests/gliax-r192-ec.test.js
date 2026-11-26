@@ -42,3 +42,19 @@ test('EC keeps compliance, temporal updates, uncertainty and real disagreement d
     assert.equal(gradeContradiction(item, {choice: 'inferred_conflict'}).status, 'incorrect');
   }
 });
+
+test('shuffled EC updates use dates or scope and permit relevant supporting context', () => {
+  const evidence = ['source-a', 'source-b', 'context'];
+  for (const [id, choice] of [['EC02', 'direct_conflict'], ['EC08', 'update_over_time'], ['EC11', 'update_over_time']]) {
+    for (let seed = 0; seed < 15; seed++) {
+      const item = getContradiction(id, seed);
+      assert.doesNotMatch(item.presentation.prompt, /segund[oa] (?:nota|mensaje)/i);
+      assert.doesNotMatch(item.presentation.options.find(option => option.id === choice).label, /la segunda/i);
+      assert.equal(gradeContradiction(item, {choice, evidence}).status, 'correct');
+      assert.equal(gradeContradiction(item, {choice, evidence: ['source-a', 'context']}).status, 'partial');
+      assert.equal(gradeContradiction(item, {choice, evidence: [...evidence, 'invented']}).status, 'partial');
+    }
+  }
+  const ec09 = getContradiction('EC09', 0);
+  assert.equal(gradeContradiction(ec09, {choice: 'direct_conflict', evidence}).status, 'incorrect');
+});

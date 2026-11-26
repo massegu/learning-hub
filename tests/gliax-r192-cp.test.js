@@ -60,3 +60,14 @@ test('CP12 recalculates infeasibility and CP15 gives both reasoned choices a pat
   assert.deepEqual(gradeChangePlan(cp15, 'Quiero esperar.'), {status: 'pending_review'});
   assert.deepEqual(gradeChangePlan(cp15, {choice: 'wait', components: ['attendance-unconfirmed']}), {status: 'pending_review'});
 });
+
+test('CP04 and CP14 expose the timing requirements used by the corrector', () => {
+  const cp04 = getChangePlan('CP04', 0);
+  assert.match(cp04.presentation.prompt, /después no habrá tiempo/);
+  assert.equal(gradeChangePlan(cp04, 'after').gradedCorrect, false);
+  const cp14 = getChangePlan('CP14', 19);
+  assert.match(cp14.presentation.prompt, /diapositivas antes del martes/);
+  assert.match(cp14.presentation.prompt, /estudia para el examen después del ensayo/);
+  assert.equal(gradeChangePlan(cp14, ['study', 'slides', 'start-tuesday', 'rehearse', 'end-tuesday', 'present', 'exam']).gradedCorrect, false);
+  assert.equal(gradeChangePlan(cp14, ['slides', 'start-tuesday', 'rehearse', 'end-tuesday', 'study', 'present', 'exam']).gradedCorrect, true);
+});

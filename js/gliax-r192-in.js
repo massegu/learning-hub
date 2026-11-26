@@ -6,17 +6,17 @@
   const cases = [
     ['Hay tres manzanas, una por niño. ¿Qué necesitas saber para ver si llegan para todos?',
       'Piensa en las personas que van a comer.',
-      [['Número de niños', 'Cuántos niños hay', 'Cuántos niños recibirán manzana'], ['Número de platos'], ['Si están lavadas']]],
+      [['Número de niños', 'Cuántos niños hay', 'Cuántos niños recibirán manzana', 'Cuántos niños van a comer'], ['Número de platos'], ['Si están lavadas']]],
     ['Cada niño necesita un pincel. ¿Qué tienes que contar para ver si hay suficientes?',
       'Piensa en qué dos grupos puedes comparar.',
       [['Niños y pinceles', 'Cuántos niños y cuántos pinceles hay'], ['Niños y botes'], ['Pinceles y mesas']],
       ['Niños', 'Pinceles', 'Cuántos niños hay', 'Cuántos pinceles hay']],
     ['Pueden ir al patio si está abierto y no llueve. Hoy no llueve. ¿Qué falta comprobar?',
       'Ya sabes si se cumple una de las dos condiciones.',
-      [['Si el patio está abierto ahora', 'Si está abierto ahora', 'Está abierto el patio'], ['Si abrirá mañana'], ['Si hay otros niños']]],
+      [['Si el patio está abierto ahora', 'Si está abierto ahora', 'Está abierto el patio', 'Está abierto'], ['Si abrirá mañana'], ['Si hay otros niños']]],
     ['La biblioteca cierra a las 18:00. ¿Qué falta saber para decidir si llegas antes de que cierre?',
       'Compara el cierre con el momento en que estarías allí.',
-      [['La hora de llegada', 'Hora de llegada', 'A qué hora llego', 'Cuándo llegaría'], ['Hora de salida de casa'], ['Duración de la visita']]],
+      [['La hora de llegada', 'Hora de llegada', 'A qué hora llego', 'Cuándo llegaría', 'A qué hora salgo y cuánto tardo en llegar'], ['Hora de salida de casa'], ['Duración de la visita']]],
     ['Hay cinco amigos y cuatro entradas. ¿Qué debes comprobar para que todos puedan entrar?',
       'Piensa en lo que necesita cada persona.',
       [['Una entrada por amigo', 'Que cada persona tenga entrada', 'Falta una entrada'], ['Que haya cinco asientos libres'], ['Que puedan sentarse juntos']]],
@@ -132,8 +132,9 @@
     const seen = new Set();
 
     function submitOpen(text) {
-      if (initial === undefined && support === 'spontaneous') initial = typeof text === 'string' ? text : '';
       result = gradeOpenInformation(item, text);
+      if (initial === undefined && support === 'spontaneous' && typeof text === 'string' &&
+          result.classification !== 'no_response') initial = text;
       submittedSupport = support;
       return result;
     }

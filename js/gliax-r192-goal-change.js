@@ -12,7 +12,7 @@
       {id: 'review', label: 'Revisar las instrucciones del encuentro', advances: ['start-on-time']},
       changed
         ? {id: 'notify', label: 'Enviar el cambio de hora a quienes asisten', advances: ['update-attendees']}
-        : {id: 'inbox', label: 'Contestar los mensajes sin plazo', advances: []}
+        : {id: 'inbox', label: 'Contestar el mensaje sobre la recogida', advances: []}
     ];
   }
 
@@ -34,7 +34,7 @@
       core.text(context),
       core.text(changed
         ? 'El encuentro se ha aplazado. Las personas convocadas todavía cuentan con la hora anterior. Puedes empezar una sola tarea ahora.'
-        : 'El encuentro empieza pronto. Para empezar a tiempo hacen falta el material y las instrucciones revisadas. Los mensajes pueden esperar.')
+        : 'El encuentro empieza pronto. Para empezar a tiempo hacen falta el material y las instrucciones revisadas. Hay un mensaje sobre cómo recoger el material cuando acabe el encuentro.')
     ];
     const opts = shuffled(options, request.seed, key + ':options').map(option => option.label);
     const solution = options.filter(option => matchesPriority(option, model));
