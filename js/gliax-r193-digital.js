@@ -3,6 +3,7 @@
 
   function createRotation() {
     const slots = new Map();
+    const presentations = new Map();
     let revision = 0;
     return {
       peek(slot, formats) {
@@ -14,8 +15,17 @@
       confirm(choice) {
         if (choice.revision === revision && slots.get(choice.slot) === choice.previous) slots.set(choice.slot, choice.format);
       },
+      present(slot, item) {
+        const allowed = compatiblePresentations(item);
+        const key = [slot, item.simulation.format, item.simulation.operation].join(':');
+        const previous = presentations.get(key);
+        const choice = allowed.find(mode => mode !== previous) ?? allowed[0];
+        presentations.set(key, choice);
+        return choice;
+      },
       clear() {
         slots.clear();
+        presentations.clear();
         revision++;
       }
     };
@@ -48,14 +58,15 @@
     const panel = el('section', 'r193-app r193-' + kind);
     panel.setAttribute('aria-label',name);
     const toolbar = el('header','r193-app-bar');
-    const mark = el('span','r193-app-mark',kind==='calendar'?'◫':'⌕');
+    const icons={calendar:'◫',search:'⌕',chat:'••',mail:'✉',files:'▱',form:'▤',booking:'◷'};
+    const mark = el('span','r193-app-mark',icons[kind]);
     mark.setAttribute('aria-hidden','true');
     toolbar.append(mark,el('strong','',name),el('span','r193-app-caption',caption));
     panel.append(toolbar);
     return panel;
   }
 
-  function calendar(rows) {
+  function calendar(rows, interactive = true) {
     const panel = shell('calendar', 'Agenda de equipo', 'Calendario');
     const navigation = el('div','r193-calendar-nav');
     const date = el('h3','','');
@@ -74,7 +85,8 @@
       day = scheduledDay;
       draw();
     });
-    navigation.append(date,before,after,reset);
+    navigation.append(date);
+    if (interactive) navigation.append(before,after,reset);
     const days = el('div','r193-calendar-days');
     days.setAttribute('role','group');
     days.setAttribute('aria-label','Días de la semana');
@@ -100,23 +112,29 @@
       date.textContent = firstDay+' – '+dateLabel.format(monday+6*dayMs);
       days.replaceChildren();
       grid.replaceChildren();
-      inspector.replaceChildren(el('p','r193-empty','Abre un evento para leer sus detalles.'));
+      if (interactive) inspector.replaceChildren(el('p','r193-empty','Abre un evento para leer sus detalles.'));
+      else inspector.replaceChildren(...eventLabels.map(entry=>{
+        const row=el('p','');
+        row.append(el('strong','',entry.hour+' · '+entry.title+' '), document.createTextNode(entry.body));
+        return row;
+      }));
       const times = el('div','r193-calendar-times');
       hours.forEach(hour=>times.append(el('span','',hour)));
       grid.append(times);
       for (let i=0;i<7;i++) {
         const timestamp = monday+i*dayMs;
-        const pick = button('','r193-day',() => {day=i; draw(i);});
+        const pick = interactive ? button('','r193-day',() => {day=i; draw(i);}) : el('span','r193-day');
         pick.setAttribute('aria-label',dayName[i]+' '+dateLabel.format(timestamp));
-        pick.setAttribute('aria-pressed',String(day===i));
+        if (interactive) pick.setAttribute('aria-pressed',String(day===i));
+        else if (day===i) pick.setAttribute('aria-current','date');
         pick.append(el('span','',dayName[i]),el('strong','',String(new Date(timestamp).getUTCDate())));
         days.append(pick);
         const column = el('div','r193-calendar-column');
         column.dataset.selected = String(day===i);
         if (week===0 && i===scheduledDay) {
           for (const [index, entry] of eventLabels.entries()) {
-            const node=eventButton(entry);
-            node.setAttribute('aria-pressed','false');
+            const node=interactive?eventButton(entry):el('span','r193-event',entry.title);
+            if (interactive) node.setAttribute('aria-pressed','false');
             node.prepend(el('span','r193-event-time',entry.hour));
             const slot = el('div','r193-event-slot');
             slot.dataset.row = String(Math.min(index,4));
@@ -220,17 +238,202 @@
     return panel;
   }
 
+  function compatiblePresentations(item) {
+    if (item.type === 'memoryReveal' || item.type === 'memoryMulti') return ['static'];
+    if (item.simulation.requiresAction || item.simulation.operation === 'sequence_dependencies') return ['interactive'];
+    if (['app','search','message','mail','files','form','booking'].includes(item.simulation.format)) {
+      return ['interactive','static'];
+    }
+    return ['static'];
+  }
+
+  function staticSource(kind, name, caption, rows) {
+    const panel = shell(kind, name, caption);
+    const list = el('ol','r193-static-list');
+    for (const [title, body] of rows) {
+      const entry = el('li','');
+      entry.append(el('strong','',title),el('p','',body));
+      list.append(entry);
+    }
+    panel.append(list);
+    return panel;
+  }
+
+  function staticSearch(rows) {
+    const panel = staticSource('search','Lupa','Buscador',rows);
+    const list = panel.querySelector('.r193-static-list');
+    panel.querySelector('header').after(el('p','r193-static-query',rows.length+' resultados'));
+    list.classList.add('r193-hits');
+    return panel;
+  }
+
+  function openEntries(kind, name, caption, rows, attachments) {
+    const panel = shell(kind,name,caption);
+    const workspace = el('div','r193-app-workspace');
+    const reading = el('article','r193-app-reading');
+    reading.setAttribute('aria-live','polite');
+    reading.append(el('p','r193-empty','Elige una entrada para leerla.'));
+    const index = el('div','r193-app-index');
+    const title = el('h4','',kind==='mail'?'Bandeja de entrada':kind==='files'?'Carpetas':'Disponibilidad');
+    index.append(title);
+    const entries = [];
+    for (const [label,text] of rows) {
+      const separator=kind==='mail'?' · ':' / ';
+      const split=label.indexOf(separator);
+      const group=split>0?label.slice(0,split):'';
+      const subject=split>0?label.slice(split+separator.length):label;
+      const parent=el('div','r193-index-entry');
+      const open = button(subject,'r193-open-entry',() => {
+        entries.forEach(entry=>entry.control.setAttribute('aria-pressed',String(entry.control===open)));
+        reading.replaceChildren(el('p','r193-source-meta',group),el('h4','',subject),el('p','',text));
+        const attachment=text.match(/Adjuntos: ([^ ]+\.(?:pdf|ods))\b/i);
+        if (kind==='mail' && attachment && Object.hasOwn(attachments ?? {}, attachment[1])) {
+          const name=attachment[1];
+          const reveal=el('details','r193-attachment');
+          reveal.append(el('summary','',name),el('p','',attachments[name]));
+          reading.append(reveal);
+        }
+      });
+      open.setAttribute('aria-pressed','false');
+      parent.append(el('p','r193-source-meta',group),open);
+      index.append(parent);
+      entries.push({parent,control:open,group,text});
+    }
+    if (kind==='files' || kind==='booking') {
+      const filters = el('div','r193-filters');
+      const values=kind==='files'?[...new Set(entries.map(entry=>entry.group))]:['Libre','En espera','Confirmad'];
+      function choice(value,label) {
+        const option=button(label,'r193-filter',()=>{
+          [...filters.children].forEach(control=>control.setAttribute('aria-pressed',String(control===option)));
+          let available=0;
+          for (const entry of entries) {
+            entry.parent.hidden = value!=='' && !(kind==='files'?entry.group===value:entry.text.startsWith(value));
+            entry.control.setAttribute('aria-pressed','false');
+            if (!entry.parent.hidden) available++;
+          }
+          reading.replaceChildren(el('p','r193-empty',available?'Elige una entrada para leerla.':'Sin entradas para este filtro.'));
+        });
+        option.setAttribute('aria-pressed',String(value===''));
+        return option;
+      }
+      filters.append(choice('','Todas'));
+      values.filter(value=>kind==='files'||entries.some(entry=>entry.text.startsWith(value)))
+        .forEach(value=>filters.append(choice(value,value==='Confirmad'?'Confirmadas':value)));
+      index.insertBefore(filters,title.nextSibling);
+    }
+    workspace.append(index,reading);
+    panel.append(workspace);
+    return panel;
+  }
+
+  function formScreen(block, rows, operation, interactive) {
+    if (!interactive) return staticSource('form',block.label,'Formulario',rows);
+    const panel=shell('form',block.label,'Formulario');
+    const form=el('form','r193-form-content');
+    form.noValidate=true;
+    const fields=el('div','r193-fields');
+    const result=el('p','r193-form-status');
+    result.setAttribute('role','status');
+    const field=el('label','r193-form-field',rows[1][0]);
+    const description=el('span','r193-source-meta',rows[1][1]);
+    description.id='r193-field-description';
+    const numeric=operation==='validate_numeric_boundary';
+    const control=el(numeric?'input':'select');
+    control.setAttribute('aria-describedby',description.id);
+    control.required=true;
+    if (numeric) {
+      control.type='number';control.min='1';control.max='3';control.step='1';control.value='5';
+    } else {
+      for (const day of ['','Lunes','Martes']) {
+        const opt=el('option','',day||'Elige un día');
+        opt.value=day;
+        control.append(opt);
+      }
+    }
+    field.append(description,control);
+    for (const [index,[label,value]] of rows.entries()) {
+      if (index===1) fields.append(field);
+      else {
+        const row=el('div','r193-form-field');
+        row.append(el('strong','',label),el('span','r193-source-meta',value));
+        fields.append(row);
+      }
+    }
+    const submit=el('button','r193-primary','Revisar formulario');
+    submit.type='submit';
+    form.addEventListener('submit', event=>{
+      event.preventDefault();
+      const ok=control.checkValidity();
+      control.setAttribute('aria-invalid',String(!ok));
+      result.textContent=ok?'Los campos obligatorios están listos.':
+        numeric?'Indica entre 1 y 3 unidades.':'Elige el día del taller.';
+      if (!ok) control.focus();
+    });
+    control.addEventListener('input',()=>{
+      control.removeAttribute('aria-invalid');
+      result.textContent='';
+    });
+    form.append(fields,submit,result);
+    panel.append(form);
+    return panel;
+  }
+
+  function thread(rows, interactive) {
+    const panel=staticSource('chat','Conversación','Mensajes',rows);
+    const list=panel.querySelector('ol');
+    list.classList.add('r193-thread');
+    [...list.children].forEach((message,index)=>message.append(el('time','r193-source-meta','09:'+String(10+index*5))));
+
+    if (!interactive) return panel;
+    const form=el('form','r193-query');
+    form.setAttribute('role','search');
+    const input=el('input');
+    input.type='search';
+    input.placeholder='Buscar mensajes';
+    input.setAttribute('aria-label','Buscar mensajes');
+    const submit=el('button','r193-primary','Buscar');
+    submit.type='submit';
+    const feedback=el('p','r193-search-count');
+    feedback.setAttribute('role','status');
+    function filter() {
+      let count=0;
+      for (const entry of list.children) {
+        entry.hidden=!searchable(entry.textContent).includes(searchable(input.value.trim()));
+        if (!entry.hidden) count++;
+      }
+      feedback.textContent=count?count+' mensajes':'Sin coincidencias';
+    }
+    form.addEventListener('submit',event=>{event.preventDefault();filter();});
+    input.addEventListener('input',()=>{if (!input.value)filter();});
+    form.append(input,submit);
+    list.before(form,feedback);
+    return panel;
+  }
+
   function mount(container, item) {
     const block = item.stimulus?.find(entry=>entry.presentation==='digitalInterface');
     if (!block || block.rows.length<2) return;
     const original = container.querySelector('.digital-stimulus');
     if (!original) return;
     const rows = block.rows.slice(1);
-    if (block.materialType==='editor') original.replaceWith(calendar(rows));
-    if (block.materialType==='search') original.replaceWith(search(rows));
+    const interactive = item.screenPresentation !== 'static';
+    const format = item.simulation.format;
+    let next;
+    if (format==='app') next=calendar(rows,interactive);
+    if (format==='search') next=interactive?search(rows):staticSearch(rows);
+    if (format==='message' && !['memoryReveal','memoryMulti'].includes(item.type)) next=thread(rows,interactive);
+    if (['mail','files','booking'].includes(format)) {
+      const caption={mail:'Correo',files:'Archivos',booking:'Reservas'}[format];
+      next=interactive?openEntries(format,block.label,caption,rows,block.attachments):staticSource(format,block.label,caption,rows);
+    }
+    if (format==='form') next=formScreen(block,rows,item.simulation.operation,interactive);
+    if (next) {
+      next.dataset.presentation = interactive?'interactive':'static';
+      original.replaceWith(next);
+    }
   }
 
-  const api = {createRotation, mount};
+  const api = {createRotation, compatiblePresentations, mount};
   root.GliaxR193Digital = api;
   if (typeof module !== 'undefined') module.exports = api;
 })(globalThis);

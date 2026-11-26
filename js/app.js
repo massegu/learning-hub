@@ -1375,7 +1375,7 @@
     $$('#documentModeSwitch [data-documents]').forEach(b=>b.setAttribute('aria-pressed',String(!cognitiveOnly&&!interactionOnly&&!photoOnly&&(executedOnly?(b.dataset.documents==='false'&&['compare','plan'].includes(executedFamily)):(b.dataset.documents==='true')===documentOnly))));
     $('#attentionPhotos').setAttribute('aria-pressed',String(photoOnly&&subject==='attention'));
     const digitalMode=$('#digitalModeButton');
-    const digitalFormats=window.CommunicationContent.availableFormats(route,state.levels[subject]||1,subject,19);
+    const digitalFormats=window.CommunicationContent.availableFormats(route,state.levels[subject]||1,subject,20);
     if(!digitalFormats.length)digitalOnly=false;
     digitalMode.classList.toggle('hidden',!digitalFormats.length);
     digitalMode.setAttribute('aria-pressed',String(digitalOnly));
@@ -1534,7 +1534,7 @@
     const localeRevision = API.localeRevision;
     const res = await API.requestContent({
       ...payload,
-      client_revision:payload.kind==='exercise'?19:payload.kind==='worksheet'&&!payload.cognitive_only?16:payload.cognitive_family==='words'||payload.domain==='communication'?15:payload.cognitive_family==='falling'?14:13,
+      client_revision:payload.kind==='exercise'?(payload.digital_only?20:19):payload.kind==='worksheet'&&!payload.cognitive_only?16:payload.cognitive_family==='words'||payload.domain==='communication'?15:payload.cognitive_family==='falling'?14:13,
       ...(targetProfile._sessionOnly?{session_only:true}:{}),
       profile_id: targetProfile.id,
       locale,
@@ -1576,7 +1576,7 @@
     const age = window.AgeStages.route(profile);
     const level = state.levels[domain] || 1;
     const slot = [age, domain, level].join(':');
-    const formatsForSlot = launchingDigital ? window.CommunicationContent.availableFormats(age,level,domain,19) : [];
+    const formatsForSlot = launchingDigital ? window.CommunicationContent.availableFormats(age,level,domain,20) : [];
     const digitalChoice = launchingDigital ? digitalRotation.peek(slot, formatsForSlot) : null;
     const digitalGeneration = requestGeneration;
     const res = await requestForProfile({
@@ -1603,7 +1603,10 @@
       $('#dailyUsageExplanation').textContent=`Tu cuota es de ${res.usage.limit} ${kind==='worksheet'?'fichas':kind==='game'?'juegos':'ejercicios'} al día. El contador registra contenido entregado, aunque no se complete. Se comparte entre perfiles, áreas y variantes de la cuenta para ese tipo de contenido.`;
     }
     const item=res?.items?.[0]||null;
-    if (digitalChoice && item?.simulation?.format === digitalChoice.format && requestGeneration === digitalGeneration) digitalRotation.confirm(digitalChoice);
+    if (digitalChoice && item?.simulation?.format === digitalChoice.format && requestGeneration === digitalGeneration) {
+      digitalRotation.confirm(digitalChoice);
+      item.screenPresentation = digitalRotation.present(slot, item);
+    }
     if(wantMathProblems&&(item?.type!=='mathProblem'||item.mathVersion!==2))throw Error('Esta versión de Resolución de problemas necesita una actualización del servicio.');
     if(comparison&&comparisonIndex===startIndex&&item?.execution?.format===comparisonFormat)comparisonIndex++;
     if(kind==='exercise'&&domain==='memory'&&!digitalOnly&&!executedOnly&&!memoryAudioOnly&&item){
@@ -1882,7 +1885,7 @@
         associations:currentItem.memoryContent.length,exposure_ms:currentItem.revealMs
       }) : currentItem.spatialGridRevision?JSON.stringify({schema:'gliax.exercise-metrics.v1',
         modality:'memory_spatial',definition_version:currentItem.spatialGridRevision
-      }) : currentItem.simulation&&String(currentItem.contentKey).startsWith('digital-v2:')?JSON.stringify(digitalMetrics(currentItem)) : currentItem.mechanic || currentItem.type || "standard",
+      }) : currentItem.simulation&&/^digital-v[23]:/.test(String(currentItem.contentKey))?JSON.stringify(digitalMetrics(currentItem)) : currentItem.mechanic || currentItem.type || "standard",
     );
     showFeedback(correct, pts, currentItem.why);
     if(currentItem.speedTask){

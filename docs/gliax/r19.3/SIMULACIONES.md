@@ -22,3 +22,21 @@ Las fechas y franjas en Agenda son un encuadre ficticio común. Los enunciados y
 | --- | --- | --- |
 | Agenda | [Captura](capturas/agenda-escritorio.png) | [Captura](capturas/agenda-movil.png) |
 | Lupa | [Captura](capturas/buscador-escritorio.png) | [Captura](capturas/buscador-movil.png) |
+
+## Variantes estáticas e interactivas
+
+La revisión posterior a los primeros prototipos añade una vista semanal de solo lectura para Agenda, resultados completos para Buscador y conversaciones con remitente y hora para Mensajería. Las versiones interactivas permiten explorar eventos, consultar fuentes y localizar mensajes. Correo incorpora bandeja y vista del adjunto, Archivos permite abrir y filtrar carpetas, Formularios valida un campo del ejercicio y Reservas filtra por estado y muestra las condiciones de cada opción. Las interfaces usan datos ficticios y respetan la identidad de GLIAX. Las vistas de correo y archivos se organizan en dos paneles en escritorio y en una columna en móvil.
+
+Ocho casos digitales nuevos tienen operaciones distintas y se sirven mediante el contrato Edge 20 en los tramos y niveles para los que se redactaron. El catálogo 19 conserva sus casos. La selección evita repetir aplicación dentro de una celda cuando hay otra opción disponible. Ajusta la presentación según el caso y la exposición reciente por operación. Las tareas de recuerdo usan una vista estática y las acciones requeridas conservan presentación interactiva. El profesional mantiene el control del nivel. Quedan fuera de esta medición la diversidad de caso dentro de todas las aplicaciones, la adaptación longitudinal de simulaciones y la cobertura editorial de celdas sin casos nuevos. Estos ocho casos digitales cuentan por separado de la meta de las ocho familias cognitivas y ejecutivas.
+
+El recorrido local autenticado por el simulador de Edge ejercitó la rotación hasta entregar Correo. Se probaron también los controles de las siete aplicaciones con el catálogo local y su presentación en ambas anchuras. Ninguna solicitud del navegador salió del entorno de prueba.
+
+| Aplicación | Estática escritorio | Estática móvil | Interactiva escritorio | Interactiva móvil |
+| --- | --- | --- | --- | --- |
+| Agenda | [Ver](capturas-ampliacion/calendar-static-1440.png) | [Ver](capturas-ampliacion/calendar-static-390.png) | [Ver](capturas-ampliacion/calendar-interactive-1440.png) | [Ver](capturas-ampliacion/calendar-interactive-390.png) |
+| Buscador | [Ver](capturas-ampliacion/search-static-1440.png) | [Ver](capturas-ampliacion/search-static-390.png) | [Ver](capturas-ampliacion/search-interactive-1440.png) | [Ver](capturas-ampliacion/search-interactive-390.png) |
+| Mensajería | [Ver](capturas-ampliacion/chat-static-1440.png) | [Ver](capturas-ampliacion/chat-static-390.png) | [Ver](capturas-ampliacion/chat-interactive-1440.png) | [Ver](capturas-ampliacion/chat-interactive-390.png) |
+| Correo | [Ver](capturas-ampliacion/mail-static-1440.png) | [Ver](capturas-ampliacion/mail-static-390.png) | [Ver](capturas-ampliacion/mail-interactive-1440.png) | [Ver](capturas-ampliacion/mail-interactive-390.png) |
+| Archivos | [Ver](capturas-ampliacion/files-static-1440.png) | [Ver](capturas-ampliacion/files-static-390.png) | [Ver](capturas-ampliacion/files-interactive-1440.png) | [Ver](capturas-ampliacion/files-interactive-390.png) |
+| Formularios | [Ver](capturas-ampliacion/form-static-1440.png) | [Ver](capturas-ampliacion/form-static-390.png) | [Ver](capturas-ampliacion/form-interactive-1440.png) | [Ver](capturas-ampliacion/form-interactive-390.png) |
+| Reservas | [Ver](capturas-ampliacion/booking-static-1440.png) | [Ver](capturas-ampliacion/booking-static-390.png) | [Ver](capturas-ampliacion/booking-interactive-1440.png) | [Ver](capturas-ampliacion/booking-interactive-390.png) |

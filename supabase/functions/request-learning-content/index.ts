@@ -1024,7 +1024,7 @@ function validateItem(item:any):boolean{
   if(item?.type==='mathProblem'){
     try{return (globalThis as any).Curriculum.validateMathProblem(item);}catch(_){return false;}
   }
-  if(/^digital-v[12]:/.test(String(item?.contentKey||''))){
+  if(/^digital-v[123]:/.test(String(item?.contentKey||''))){
     try{(globalThis as any).CommunicationContent.validateTransversal(item);}catch(_){return false;}
   }else if(item?.domain==='communication'){try{(globalThis as any).CommunicationContent.validate(item);}catch(_){return false;}}
   if(item?.type==="executed"||String(item?.contentKey||"").startsWith("executed-v")){try{(globalThis as any).ExecutedTasks.validate(item);return true;}catch(_){return false;}}
@@ -2604,7 +2604,7 @@ Deno.serve(async (req:Request)=>{
   const requestedDomains=kind==="worksheet" ? (Array.isArray(body.domains)&&body.domains.length?body.domains:(globalThis as any).Curriculum.visible(SUBJECTS[age]||[],age)) : [body.domain];
   if(!SUBJECTS[age] || !Number.isInteger(level) || (kind!=="game" && (!Array.isArray(requestedDomains)||!requestedDomains.length||requestedDomains.some((d:any)=>!SUBJECTS[age].includes(d)))))
     return new Response(JSON.stringify({error:"Área o nivel no permitido para este perfil."}),{status:400,headers:{...corsHeaders,"Content-Type":"application/json"}});
-  if(body.client_revision!==undefined&&![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+  if(body.client_revision!==undefined&&![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20].includes(body.client_revision))return new Response(JSON.stringify({error:'Versión de la aplicación no compatible. Actualiza la página.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.memory_audio_only!==undefined&&(typeof body.memory_audio_only!=='boolean'||body.memory_audio_only&&(kind!=='exercise'||body.domain!=='memory'||body.photos_only||body.interaction_only||body.documents_only||body.executed_only||body.cognitive_only)))return new Response(JSON.stringify({error:'Modalidad de memoria auditiva no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.memory_audio_only&&Number(body.client_revision||1)<12)return new Response(JSON.stringify({error:'Actualiza la página para abrir la memoria auditiva.'}),{status:409,headers:{...corsHeaders,'Content-Type':'application/json'}});
   if(body.speed_mechanic!==undefined&&(!(kind==='exercise'&&body.domain==='speedReasoning'&&body.speed_mechanic==='unpaired')||body.room_speed_only||body.photos_only||body.documents_only||body.interaction_only||body.cognitive_only||body.executed_only))return new Response(JSON.stringify({error:'Mecánica de velocidad no válida.'}),{status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -2635,7 +2635,7 @@ Deno.serve(async (req:Request)=>{
     : (Number(body.client_revision||1)>=15?2:1);
   if(Number(body.client_revision)>=18&&body.cognitive_family==='falling'&&body.domain!=='speedReasoning')
     return usageReply({error:'Palabras en caída pertenece a Velocidad de procesamiento.'},400);
-  const r19=body.client_revision===19;
+  const r19=Number(body.client_revision)>=19;
   const curriculum=(globalThis as any).Curriculum;
   if(r19&&kind==='exercise'&&body.domain==='geometry')return usageReply({error:'Estas actividades están integradas en Matemáticas.'},400);
   const mathProblems=body.math_problem===true;
@@ -2674,7 +2674,7 @@ Deno.serve(async (req:Request)=>{
     return usageReply({error:"Simulación digital no disponible para esta petición."},400);
   if(body.digital_family!==undefined&&(!digital||typeof body.digital_family!=="string"||!Object.hasOwn(communication.digitalFamilies,body.digital_family)))
     return usageReply({error:"Formato digital no válido."},400);
-  const digitalCandidates=digital?(transversal?communication.transversalPool(age,level,body.domain,body.digital_family,r19?19:18):
+  const digitalCandidates=digital?(transversal?communication.transversalPool(age,level,body.domain,body.digital_family,Number(body.client_revision)>=20?20:r19?19:18):
     communication.digitalPool(age,level,body.digital_family)):[];
   if(digital&&!digitalCandidates.length)return usageReply({error:"Este formato no está disponible para el área, edad y nivel indicados."},400);
   const requestedCount=Number(body.count ?? 1);

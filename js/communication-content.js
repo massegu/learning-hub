@@ -172,7 +172,7 @@
   middle:{project:'la muestra de fotografía',group:'Equipo de fotografía',object:'el teléfono móvil',place:'el estudio',newPlace:'la sala de edición'},
   teen:{project:'la jornada de voluntariado',group:'Equipo de voluntariado',object:'la chaqueta del equipo',place:'el punto de información',newPlace:'la entrada lateral'}
  };
- const digitalFamilies={message:'Conversaciones',post:'Publicaciones y comentarios',clip:'Vídeos cortos',story:'Historias y mensajes',search:'Búsquedas',notice:'Notificaciones y privacidad',app:'Agenda de equipo'};
+ const digitalFamilies={message:'Conversaciones',post:'Publicaciones y comentarios',clip:'Vídeos cortos',story:'Historias y mensajes',search:'Búsquedas',notice:'Notificaciones y privacidad',app:'Agenda de equipo',mail:'Correo',files:'Archivos',form:'Formularios',booking:'Reservas'};
  function digitalPool(age,level=1,family=null){
   const c=digitalContexts[age];
   if(!c||![1,2,3].includes(level))return [];
@@ -275,6 +275,47 @@
   }
   return revised;
  }
+ const r193Cases=[
+  {key:'attachment-permission',format:'mail',age:'junior',level:2,title:'Correo de la clase',operation:'verify_attachment_permission',
+   rows:[['Equipo · Plano del jardín','Para el grupo. Adjuntos: Plano.pdf. El plano se puede enviar al grupo.'],['Lucía · Lista de participantes','Para quien organiza. Adjuntos: Lista.ods. La lista se comparte solo con quien organiza.'],['Biblioteca · Horario','Para el grupo. Adjuntos: Horario.pdf. El horario es de otra actividad.']],
+   attachments:{'Plano.pdf':'El jardín está junto a la puerta norte del patio. Sigue la senda al final del muro.','Lista.ods':'Hoja de participantes. Consulta reservada a la persona organizadora.','Horario.pdf':'Horas de apertura de la biblioteca para la actividad de lectura.'},
+   q:'¿Qué adjunto puedes enviar al grupo para que encuentre el jardín?',a:'Plano.pdf',wrong:['Lista.ods','Horario.pdf'],why:'Plano.pdf indica cómo encontrar el jardín y su permiso incluye al grupo.'},
+  {key:'changed-recipient',format:'mail',age:'teen',level:3,title:'Correo de proyectos',operation:'reconcile_receiver_update',
+   rows:[['Coordinación · Entrega inicial','Para el equipo. El informe iba a entregarse al buzón de coordinación.'],['Coordinación · Cambio de destino','Para quienes entregan. El responsable es Archivo. Adjuntos: Formato.pdf. El plazo se mantiene el viernes.'],['Difusión · Copia pública','Para difusión. Solo se publica el resumen una vez aprobado.']],
+   attachments:{'Formato.pdf':'Portada, resumen y anexo técnico. Usa este orden para la copia que recibe Archivo.'},
+   q:'¿Qué envío cumple el aviso actualizado?',a:'El informe a Archivo el viernes.',wrong:['El informe al buzón de coordinación el viernes.','El informe a Difusión para publicarlo el viernes.'],why:'El segundo mensaje cambia el destinatario a Archivo y mantiene el plazo.'},
+  {key:'latest-ready',format:'files',age:'primary',level:2,title:'Archivos del taller',operation:'select_latest_approved',
+   rows:[['Entregas / Puente.pdf','PDF · 12 de mayo · Aprobado.'],['Borradores / Puente.pdf','PDF · 14 de mayo · Todavía en revisión.'],['Entregas / Plano.ods','ODS · 15 de mayo · Solo cálculos.']],
+   q:'¿Qué archivo se puede entregar como informe del puente?',a:'Entregas / Puente.pdf',wrong:['Borradores / Puente.pdf','Entregas / Plano.ods'],why:'El PDF del 12 de mayo está aprobado. El PDF posterior sigue en revisión y la hoja de cálculo no es el informe.'},
+  {key:'share-subset',format:'files',age:'middle',level:3,title:'Archivos de la exposición',operation:'separate_public_and_private',
+   rows:[['Compartido / Cartel.pdf','PDF · 6 de junio · Público.'],['Proyecto / Programa.pdf','PDF · 8 de junio · Autorizado para compartir.'],['Proyecto / Contactos.ods','ODS · 9 de junio · Acceso solo del equipo.']],
+   q:'¿Cómo compartes el programa sin dar acceso a los contactos?',a:'Compartir solo Programa.pdf.',wrong:['Compartir toda la carpeta Proyecto.','Compartir Contactos.ods y mover el cartel.'],why:'Compartir un solo documento mantiene privado el archivo de contactos.'},
+  {key:'complete-required',format:'form',age:'early',level:2,title:'Inscripción al taller',operation:'distinguish_required_optional',
+   rows:[['Nombre del equipo','Obligatorio · Equipo Azul'],['Día del taller','Obligatorio · Falta elegir el día'],['Dibujo del equipo','Opcional · Sin dibujo']],
+   q:'¿Qué falta para poder enviar el formulario?',a:'Elegir el día.',wrong:['Hacer un dibujo.','Cambiar el nombre del equipo.'],why:'El día es obligatorio y está vacío. El dibujo es opcional.'},
+  {key:'capacity-check',format:'form',age:'middle',level:2,title:'Solicitud de préstamo',operation:'validate_numeric_boundary',
+   rows:[['Artículo','Obligatorio · Microscopio'],['Unidades','Obligatorio · Ahora indica 5. Se admiten de 1 a 3.'],['Recogida','Obligatorio · Martes']],
+   q:'¿Qué corrección permite enviar esta solicitud sin cambiar el día?',a:'Indicar 3 unidades.',wrong:['Cambiar la recogida al miércoles.','Indicar 0 unidades.'],why:'3 está dentro del intervalo permitido. La recogida del martes ya es válida.'},
+  {key:'accessible-slot',format:'booking',age:'primary',level:3,title:'Reserva de salas',operation:'combine_availability_and_access',
+   rows:[['Lunes 16:00 · Sala Norte','Libre · Solo se accede por escaleras.'],['Lunes 17:00 · Sala Patio','Ocupada · Acceso sin escaleras.'],['Martes 16:00 · Sala Patio','Libre · Acceso sin escaleras.']],
+   q:'El grupo necesita una sala libre a las 16:00 sin subir escaleras. ¿Cuál reserva?',a:'Martes 16:00 · Sala Patio',wrong:['Lunes 16:00 · Sala Norte','Lunes 17:00 · Sala Patio'],why:'La sala Patio del martes reúne las tres condiciones: disponibilidad, hora y acceso.'},
+  {key:'cancel-only',format:'booking',age:'teen',level:2,title:'Reserva de equipos',operation:'retain_confirmed_linked_booking',
+   rows:[['Jueves 15:00 · Proyector','Confirmado · Puedes cambiar la hora hasta el miércoles.'],['Jueves 16:00 · Micrófono','En espera · El equipo ya ha conseguido otro.'],['Jueves 17:00 · Sala','Confirmada · Se debe conservar.']],
+   q:'¿Qué cambio elimina únicamente la reserva que ya no hace falta?',a:'Cancelar solo la espera del micrófono.',wrong:['Cancelar la sala confirmada.','Cancelar el proyector y el micrófono.'],why:'Solo ha dejado de hacer falta el micrófono. La sala y el proyector se mantienen.'}
+ ];
+ function r193Digital(age,level,domain,format){
+  if(domain&&domain!=='communication')return [];
+  return r193Cases.filter(c=>c.age===age&&c.level===level&&(!format||c.format===format)).map(c=>{
+   const id=['digital-v3',age,level,'communication',c.format,c.key].join(':');
+   return {id,contentKey:id,semanticKey:id,domain:'communication',level,type:'standard',responseType:'choice',requiresStimulus:true,
+    q:c.q,a:c.a,opts:[c.a,...c.wrong],why:c.why,topic:c.title,mechanic:'digital_communication_'+c.format,primaryConstruct:c.operation,
+    qualityDescriptor:{semanticFamily:'digital.'+c.operation,scenarioFamily:'digital.'+c.format},
+    stimulus:[{type:'table',label:c.title,rows:[['Entrada','Detalle'],...c.rows],presentation:'digitalInterface',materialType:'editor',...(c.attachments?{attachments:c.attachments}:{})}],
+    simulation:{format:c.format,operation:c.operation,response:'choice',correction:'exact_choice',age,level},
+    ...(age==='early'?{ageProfile:{id:'early',revision:1,context:'school',mechanic:'communication',family:'communication-form'}}:
+      age==='junior'?{juniorProfile:{route:age,level}}:age==='teen'?{teenReview:{version:3}}:{schoolProfile:{route:age,level}})};
+  });
+ }
  function transversalPool(age,level=1,domain=null,format=null,revision=18){
   if(!digitalContexts[age]||![1,2,3].includes(level))return [];
   const {project,place,newPlace,object}=digitalContexts[age];
@@ -361,7 +402,7 @@
    // A video contradiction belongs with the comprehension of its sources.
    for(const entry of entries)if(entry[0]==='clip'&&entry[1]==='language')entry[1]='reading';
   }
-  return entries.filter(([type,area])=>(revision<19||area!=='language')&&(!domain||resolveDomain(area,age,revision)===domain)&&(!format||type===format)).map(([type,area,item,variant='original'])=>{
+  const legacy = entries.filter(([type,area])=>(revision<19||area!=='language')&&(!domain||resolveDomain(area,age,revision)===domain)&&(!format||type===format)).map(([type,area,item,variant='original'])=>{
    const domain=resolveDomain(area,age,revision), id=['digital-v1',age,level,area,type,variant].join(':');
    const operation=['original','intervention'].includes(variant)&&area==='communication'?item.primaryConstruct:revisedOperations[area];
    const mechanic={attention:'search',memory:'rememberPair',executive:'planning',language:'vocabulary',reading:'literal',communication:'communication'}[area];
@@ -374,11 +415,12 @@
    };
    return revision>=19?reviseDigital(baseItem,type,area,age,level,digitalContexts[age],variant):baseItem;
   });
+  return revision>=20?[...legacy,...r193Digital(age,level,domain,format)]:legacy;
  }
  const availableFormats=(age,level,domain,revision=18)=>Object.keys(digitalFamilies).filter(format=>transversalPool(age,level,domain,format,revision).length);
  function validateTransversal(item){
   const [prefix,age]=String(item.contentKey||'').split(':');
-  const revision=prefix==='digital-v2'?19:prefix==='digital-v1'?18:0;
+  const revision=prefix==='digital-v3'?20:prefix==='digital-v2'?19:prefix==='digital-v1'?18:0;
   const source=revision&&transversalPool(age,item.level,item.domain,null,revision).find(entry=>entry.contentKey===item.contentKey);
   if(!source)throw new Error('La simulación no pertenece al banco de esta área.');
   const regional=root.LocaleContent||(typeof require==='function'&&require('./locale-content'));

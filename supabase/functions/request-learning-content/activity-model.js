@@ -114,7 +114,7 @@
   }
   function printable(item, profile) {
     if(item?.interactiveOnly)fail('actividad disponible solo en pantalla.');
-    if(/^digital-v[12]:/.test(String(item?.contentKey||'')))(root.CommunicationContent||(typeof require==='function'&&require('./communication-content'))).validateTransversal(item);
+    if(/^digital-v[123]:/.test(String(item?.contentKey||'')))(root.CommunicationContent||(typeof require==='function'&&require('./communication-content'))).validateTransversal(item);
     else if(item?.domain==='communication')(root.CommunicationContent||(typeof require==='function'&&require('./communication-content'))).validate(item);
     if(item?.type==='cognitiveTask'||String(item?.contentKey||'').startsWith('cognitive-v'))return (root.CognitiveFamilies||(typeof require==='function'&&require('./cognitive-families'))).printable(item,profile?.progress?.ageRoute||profile?.age_band);
     if(item?.type==='executed'||String(item?.contentKey||'').startsWith('executed-v')){
@@ -199,7 +199,7 @@
     return { question, stimulus:printableStimulus, options:options.map(String), tokens, writingRubric:item.writingRubric||[], responseType:item.type === 'order' || item.memoryResponse === 'order' ? 'order' : options.length ? 'choice' : 'written' };
   }
   function validateEvidence(item,stimulus){
-    if(/^digital-v[12]:/.test(String(item.contentKey||'')))return; // Exact source and response checked in printable().
+    if(/^digital-v[123]:/.test(String(item.contentKey||'')))return; // Exact source and response checked in printable().
     if(item.qualityEvidence||/^functional_/.test(item.mechanic||'')||String(item.contentKey||'').startsWith('functional-v1:')){(root.FunctionalContent||(typeof require==='function'&&require('./functional-content'))).validate(item);return;}
     if(item.languageFocus==='spelling'){
       const e=item.languageEvidence,block=stimulus[e?.block];
@@ -315,7 +315,7 @@
     if(item?.type==='cognitiveTask'||String(item?.contentKey||'').startsWith('cognitive-v')){if(domain&&domain!==item.domain)fail('El área no coincide.');(root.CognitiveFamilies||(typeof require==='function'&&require('./cognitive-families'))).validate(item,profile?.progress?.ageRoute||profile?.age_band);return item;}
     if(item?.type==='executed'||String(item?.contentKey||'').startsWith('executed-v')){if(domain&&domain!==item.domain)fail('El área no coincide.');printable(item,profile);return item;}
     (root.LocaleContent||(typeof require==='function'&&require('./locale-content'))).validateOptions(item);
-    if(/^digital-v[12]:/.test(String(item?.contentKey||''))){
+    if(/^digital-v[123]:/.test(String(item?.contentKey||''))){
       if(domain&&item.domain!==domain)fail('El área de la simulación no coincide.');
       const age=profile?.progress?.ageRoute||profile?.age_band;
       if(age&&item.simulation?.age!==age)fail('La franja de la simulación no coincide.');

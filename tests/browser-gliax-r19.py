@@ -162,7 +162,7 @@ with review.ReviewServer(('127.0.0.1',0),review.prepare()) as server:
             expect(digital_button).to_have_attribute('aria-pressed','true')
             assert contrast()>=4.5
             assert not page.locator('#digitalFamilySelect').count()
-            for index,(fmt,layout) in enumerate([('message','.message-thread'),('post','.social-feed'),('clip','.digital-clip-frame'),
+            for index,(fmt,layout) in enumerate([('message','.r193-thread'),('post','.social-feed'),('clip','.digital-clip-frame'),
                                ('story','.story-timeline'),('search','.r193-hits'),('notice','.settings-log'),('app','.r193-calendar-grid')]):
                 if index:
                     page.locator('#exerciseOptions .option-btn').first.click()
