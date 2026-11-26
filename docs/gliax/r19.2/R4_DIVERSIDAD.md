@@ -36,3 +36,11 @@ Total por edad, deduplicado entre los tres niveles.
 | primary | 3/3/3/3/3/3 | 3/3/3/3/3/2 | 3/3/3/2/2/2 | 3/3/3/3/3/3 | 12/12/4/3/3/1 | 144/144/4/5/16/2 | 11/11/7/5/5/4 | 12/12/2/3/6/1 |
 | middle | 3/3/3/3/3/3 | 3/3/3/3/3/2 | 3/3/3/2/2/2 | 3/3/2/3/3/3 | 13/13/5/4/4/1 | 144/144/4/5/16/2 | 10/10/6/4/4/3 | 12/12/2/6/12/1 |
 | teen | 3/3/3/3/3/3 | 3/3/3/3/3/2 | 3/3/3/3/3/3 | 3/3/1/3/3/3 | 13/13/5/4/4/1 | 144/144/4/5/16/2 | 10/10/6/4/4/3 | 12/12/2/3/6/1 |
+
+## Selector ponderado
+
+El selector filtra por familia, edad y nivel y agrupa por la huella cognitiva de R1/R2. Primero sortea una estructura y luego un candidato de esa estructura. Usa el peso medio de cada grupo para que añadir variantes cosméticas no aumente por su número la probabilidad de la estructura. Los desempates y el orden de presentación tienen semillas independientes. El estado de una combinación no afecta a otra.
+
+Se reconstruyeron estos coeficientes de penalización: candidato 8, estructura 6, contexto 3, mecanismo 2, huella visible 2 y restricciones 1. Las 12 selecciones más recientes contribuyen con decaimiento `0,7^distancia`. Cada dimensión divide el peso por `1 + coeficiente × exposición`. Estructura, restricciones, mecanismo y contexto operan al elegir grupo. Contexto, caso y estímulo operan al elegir dentro del grupo. Los coeficientes están sujetos a revisión pedagógica.
+
+Se excluye el caso inmediato si hay otro. Con al menos tres IDs se evitan los patrones ABAB y ABCABC cuando queda una alternativa. Un banco vacío devuelve ausencia de actividad. Un banco unitario vuelve a ofrecer el mismo caso y uno de dos alterna cuando ambos siguen disponibles. El registro de selección contiene solo ID de caso, contexto, mecanismo y huellas. No usa respuestas, puntuaciones, perfiles ni diagnósticos.
