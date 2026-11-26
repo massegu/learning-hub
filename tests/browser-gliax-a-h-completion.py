@@ -49,18 +49,18 @@ with review.ReviewServer(('127.0.0.1', 0), review.prepare()) as server:
             workspace(page).locator('#profileSelect').select_option('primary')
             area(page, 'attention').click()
             page.get_by_role('button', name='Busca y compara', exact=True).click()
-            for format, icons in [('icons', (True,True)), ('words',(False,False)), ('mixed',(True,False))]:
-                page.wait_for_function('(format)=>checkedItem?.execution?.format===format', arg=format)
+            for turn in range(2):
+                page.wait_for_function('()=>checkedItem?.execution?.format==="icons"')
                 start()
-                for region, present in zip(('#exerciseVisual', '#exerciseOptions'), icons):
-                    assert bool(page.locator(region+' .executed-grid svg').count()) == present
-                save('comparar-'+format, '#exercise')
+                for region in ('#exerciseVisual', '#exerciseOptions'):
+                    assert page.locator(region+' .executed-grid svg').count()>0
+                save(f'comparar-iconos-{turn+1}', '#exercise')
                 answer = page.evaluate('checkedItem.execution.answer')
                 for i in answer:
                     page.locator('#exerciseOptions .executed-cell').nth(int(i)).click()
                 page.get_by_role('button', name='Comprobar', exact=True).click()
                 expect(page.locator('#exerciseFeedback')).to_have_class('feedback ok')
-                if format != 'mixed':
+                if turn == 0:
                     page.locator('#exerciseNext').click()
 
             page.locator('#attentionPhotos').click()

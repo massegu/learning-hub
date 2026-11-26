@@ -37,12 +37,13 @@
       const slot = [family, ageBand, level].join(':');
       const turn = turns.get(slot) ?? 0;
       const seedForRound = root.GliaxR192Selector.presentationSeed(sessionSeed, query, turn);
-      const pool = candidates({...query, seed: seedForRound});
+      const pool = candidates({...query, seed: seedForRound, includeEditorial:true});
       const selection = selector.next(query, pool, adaptiveWeight);
       if (!selection) return null;
       turns.set(slot, turn + 1);
       selection.item.interactiveOnly = true;
       selection.item.singleCase = pool.length === 1;
+      selection.item.caseCount = pool.length;
       return selection.item;
     }
 
@@ -347,6 +348,7 @@
       'Práctica en memoria. El resultado no se guarda y la actividad solo está disponible en pantalla.', 'muted r192-note');
     visual.append(note);
     if (item.singleCase) visual.append(node('p', 'En este nivel hay un único caso de esta modalidad.', 'muted r192-note'));
+    else if (item.caseCount===2) visual.append(node('p', 'Esta modalidad ofrece dos casos en este nivel.', 'muted r192-note'));
     const repeat = button('Repetir', retry);
     repeat.hidden = true;
     const started = performance.now();
@@ -362,9 +364,10 @@
       const score = item.family === 'AR' && result.metrics
         ? result.metrics.correct + ' de ' + result.metrics.scored + ' estímulos correctos.'
         : '';
-      const advice = result.status === 'incorrect' ? retryGuidance[item.family] :
+      const editorialFeedback = item.editorial && result.status === 'correct' ? item.presentation.feedback : null;
+      const advice = editorialFeedback ?? (result.status === 'incorrect' ? retryGuidance[item.family] :
         result.status === 'partial' && item.family === 'IN' ? 'Tu respuesta aporta una parte. ¿Qué falta para poder decidir?' :
-        messages[result.status];
+        messages[result.status]);
       feedback.textContent = [advice, help[support], score].filter(Boolean).join(' ');
       feedback.className = 'feedback ' + ({correct: 'ok', incorrect: 'bad'}[result.status] ?? 'practice');
       feedback.dataset.status = result.status;
@@ -378,7 +381,7 @@
       repeat.disabled = false;
       next.focus();
     }
-    const grade = modes[item.family].grade ?? root.GliaxR192Bank.gradeCase;
+    const grade = item.editorial ? root.GliaxR193Editorial.grade : modes[item.family].grade ?? root.GliaxR192Bank.gradeCase;
     const finish = response => publish(grade(item, response));
     if (item.family === 'CP') renderPlan(item, ui, finish);
     else if (item.family === 'EC') renderSources(item, ui, finish);

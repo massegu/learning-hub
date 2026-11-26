@@ -93,7 +93,7 @@ function mount(item,{visual,area,onFinish,iconProfile}){
   else{area.append(button('A',()=>respond('A',true)),button('B',()=>respond('B',true)));}
   area.append(button('Reiniciar sin registrar',()=>ready('Intento detenido. Puedes volver a empezar.')));
  }
- function start(){clearTimeout(timer);response=[];observations=[];round=0;area.replaceChildren();visual.replaceChildren(message);message.textContent=({serial:'Observa la secuencia. Después se ocultará.',update:'Memoriza la secuencia. Después aparecerá un cambio.',spatial:'Observa dónde está el modelo; ignora los otros objetos.',follow:'Sigue el modelo visible y pulsa los objetos en ese orden.',cancel:'Compara cada objeto con los modelos.',compare:'Revisa la misma posición en A y en B.',plan:'Completa los requisitos antes de pasar al siguiente paso.'})[task.kind]||(task.kind==='switch'?'Aplica la regla inicial.':'Sigue la regla de la tarjeta.');
+ function start(){clearTimeout(timer);response=[];observations=[];round=0;area.replaceChildren();visual.replaceChildren(message);message.textContent=({serial:'Observa la secuencia. Después se ocultará.',update:'Memoriza la secuencia. Después aparecerá un cambio.',spatial:'Observa dónde está el modelo; ignora los otros objetos.',follow:'Sigue el modelo visible y pulsa los objetos en ese orden.',cancel:'Compara cada objeto con los modelos.',compare:'0 casillas marcadas.',plan:'Completa los requisitos antes de pasar al siguiente paso.'})[task.kind]||(task.kind==='switch'?'Aplica la regla inicial.':'Sigue la regla de la tarjeta.');
   if(['switch','inhibit'].includes(task.kind)){trials();return;}
   if(task.kind==='plan'){
    if(task.choices){

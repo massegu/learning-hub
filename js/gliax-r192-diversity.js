@@ -2,6 +2,7 @@
   'use strict';
 
   const common = typeof module !== 'undefined' ? require('./gliax-r192') : root.GliaxR192;
+  const editorial = typeof module !== 'undefined' ? require('./gliax-r193-editorial') : root.GliaxR193Editorial;
   const bank = typeof module !== 'undefined' ? require('./gliax-r192-bank') : root.GliaxR192Bank;
   const planning = typeof module !== 'undefined' ? require('./gliax-r192-planning') : root.GliaxR192Planning;
   const constraints = typeof module !== 'undefined' ? require('./gliax-r192-constraints') : root.GliaxR192Constraints;
@@ -33,7 +34,7 @@
       if (stimuli.some(stimulus => stimulus.letter)) return 'shapes-colors-letters';
       return stimuli.some(stimulus => stimulus.color) ? 'shapes-colors' : 'shapes';
     }
-    const source = item.sourceId ?? item.id;
+    const source = item.mechanismContext ?? item.sourceId ?? item.id;
     const project = source.match(/-(?:resources|time)-(\d+)-\d+$/);
     if (project) return 'project-' + project[1];
     return source.replace(/^curriculum-v2-[a-z]+-executive-\d-/, '').replace(/(priority-\d+)-\d+$/, '$1');
@@ -88,13 +89,14 @@
     };
   }
 
-  function candidates({family, ageBand, level, seed, includeVariants = true}) {
+  function candidates({family, ageBand, level, seed, includeVariants = true, includeEditorial = false}) {
     if (!families.includes(family) || !ages.includes(ageBand) || !levels.includes(level)) return [];
     const create = Object.hasOwn(pools, family) ? pools[family] : null;
     const items = create
       ? create({ageBand, level, seed})
       : (referenceSlots.get([family, ageBand, level].join(':')) ?? []).map(id => bank.getCase(id, seed));
     if (family === 'AR' && includeVariants) items.push(...items.flatMap(variants.expandRules));
+    if (includeEditorial) items.push(...editorial.pool({family,ageBand,level,seed}));
     return items.map(item => ({...describe(item), item}));
   }
 

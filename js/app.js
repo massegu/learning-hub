@@ -1164,7 +1164,7 @@
     $("#independentSessionBtn").textContent=independent?"Terminar sesión independiente":"Empezar sesión independiente";
     $("#independentSessionStatus").textContent=independent?"Los resultados de esta sesión no se guardan. El uso se contabiliza por cuenta. Al terminar o recargar se descartan.":"Seguimiento individual: los resultados se guardan en este perfil.";
     $("#deleteProfileBtn").disabled=independent;$("#profilePrivacyBtn").disabled=independent;
-    mathProblems=false;digitalOnly=false;photoOnly = false;memoryAudioOnly=false;roomSpeedOnly=false;speedUnpairedOnly=false;executedOnly=false;executedFamily='';comparisonIndex=0;miraOpen=false;cognitiveOnly=false;cognitiveFamily='';
+    mathProblems=false;digitalOnly=false;photoOnly = false;memoryAudioOnly=false;roomSpeedOnly=false;speedUnpairedOnly=false;executedOnly=false;executedFamily='';miraOpen=false;cognitiveOnly=false;cognitiveFamily='';
     guidedSession=null;
     hideGuidedBar();
     $('#appShell').classList.toggle('early-experience',Boolean(window.ContentPolicy.forProfile(p)));
@@ -1433,6 +1433,11 @@
     $('#wordFitMode').setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily==='words'));
     const r192Controls=$('#r192Modalities');
     const localModes=guidedSession?[]:window.GliaxR192Practice.available(subject,route,state.levels[subject]||1);
+    if (subject==='executive' && localModes.some(([key])=>key==='planning')) {
+      $('#documentModeSwitch [data-documents=false]').textContent='Ordenar instrucciones';
+    }
+    $('#miraChoices [data-interaction-kind="symbols"]').textContent=
+      localModes.some(([key])=>key==='AR')?'Responder a símbolos':'Actúa con reglas';
     if(!localModes.some(([key])=>key===r192Family)){r192Family='';r192Round=null;}
     $('#r192NewRound').classList.toggle('hidden',!r192Family);
     $('#r193ProfessionalControl').classList.toggle('hidden',!r192Family||!canRecordObservation());
@@ -1627,9 +1632,7 @@
   async function requestOne(kind, domain = subject, extra = {}) {
     const wantMathProblems=kind==='exercise'&&mathProblems;
     const comparison=kind==='exercise'&&executedOnly&&executedFamily==='compare';
-    const formats=window.ExecutedTasks.comparisonFormats;
-    const startIndex=comparisonIndex;
-    const comparisonFormat=comparison?formats[startIndex%formats.length]:null;
+    const comparisonFormat=comparison?'icons':null;
     const launchingDigital = kind === 'exercise' && digitalOnly;
     const age = window.AgeStages.route(profile);
     const level = state.levels[domain] || 1;
@@ -1666,7 +1669,6 @@
       item.screenPresentation = digitalRotation.present(slot, item);
     }
     if(wantMathProblems&&(item?.type!=='mathProblem'||item.mathVersion!==2))throw Error('Esta versión de Resolución de problemas necesita una actualización del servicio.');
-    if(comparison&&comparisonIndex===startIndex&&item?.execution?.format===comparisonFormat)comparisonIndex++;
     if(kind==='exercise'&&domain==='memory'&&!digitalOnly&&!executedOnly&&!memoryAudioOnly&&item){
       if(photoOnly!==Boolean(item.photoTask?.kind==='recall'))throw new Error('La actividad de memoria recibida pertenece a otra modalidad.');
     }

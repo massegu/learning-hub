@@ -130,6 +130,21 @@ def cp_ec(page):
     assert_width(page)
 
 
+    choose_profile(page, 'early')
+    area(page, 'attention').click()
+    set_level(page, 1)
+    open_mode(page, 'EC')
+    if current_case(page)!='EC193-01':
+        page.locator('#r192NewRound').press('Enter')
+    expect(page.locator('#exerciseOptions')).to_have_attribute('data-case','EC193-01')
+    page.get_by_role('radio',name='Sí. La regla dice qué hacer al cerrar.').check()
+    page.get_by_role('button',name='Comprobar',exact=True).click()
+    expect(page.locator('#exerciseFeedback')).to_contain_text('Deja sin decidir el color')
+    page.locator('#exerciseNext').click()
+    expect(page.locator('#exerciseOptions')).to_have_attribute('data-case','EC01')
+    assert_width(page)
+
+
 def information(page):
     choose_profile(page, 'early')
     area(page, 'executive').click()
