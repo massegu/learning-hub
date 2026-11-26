@@ -195,6 +195,26 @@
     validSubmit(area, () => selected() ? {choice: selected(), evidence: evidence()} : undefined, finish);
   }
 
+  function renderEditorialInformation(item, {area, assist}, publish) {
+    const label=node('label','Escribe el dato que falta');
+    const input=node('textarea');
+    input.id='r193-editorial-answer';
+    input.rows=3;
+    input.maxLength=500;
+    label.htmlFor=input.id;
+    let support;
+    const hint=button('Necesito una pista',()=>{
+      if (support) return;
+      support='hint';
+      assist?.('hint');
+      hint.after(node('p',item.presentation.hint));
+      hint.disabled=true;
+    });
+    area.append(label,input,hint,button('Comprobar',()=>{
+      publish(root.GliaxR193Editorial.grade(item,input.value),support);
+    },'primary-btn'));
+  }
+
   function renderInformation(item, {area, assist}, publish) {
     const round = root.GliaxR192IN.startInformation(item);
     const open = node('div', '', 'r192-open');
@@ -383,7 +403,9 @@
     }
     const grade = item.editorial ? root.GliaxR193Editorial.grade : modes[item.family].grade ?? root.GliaxR192Bank.gradeCase;
     const finish = response => publish(grade(item, response));
-    if (item.family === 'CP') renderPlan(item, ui, finish);
+    if (item.editorial && item.family==='IN') renderEditorialInformation(item,ui,publish);
+    else if (item.editorial && item.family!=='AR') renderSources(item,ui,finish);
+    else if (item.family === 'CP') renderPlan(item, ui, finish);
     else if (item.family === 'EC') renderSources(item, ui, finish);
     else if (item.family === 'IN') renderInformation(item, ui, publish);
     else if (item.family === 'AR') renderRuleAction(item, ui, finish);

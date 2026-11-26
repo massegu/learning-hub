@@ -53,3 +53,28 @@ test('the event omits free text and exposes assisted and initial correctness sep
   assert.equal(api.enabled({r193Longitudinal:true,supabaseUrl:'https://example.com'},{hostname:'localhost'}),false);
   assert.equal(api.enabled({r193Longitudinal:true,supabaseUrl:'http://127.0.0.1:54321'},{hostname:'localhost'}),true);
 });
+
+test('confirmed comparable results change delivery weights in the real teen resources bank',()=>{
+  const actual={family:'constraints',ageBand:'teen',level:3,seed:42,includeEditorial:true};
+  const pool=require('../js/gliax-r192-diversity').candidates(actual);
+  const samples=[...new Map(pool.filter(entry=>entry.mechanism==='resources').map(entry=>[entry.structure,entry])).values()].slice(0,3);
+  function picks(initial){
+    const observations=Array.from({length:12},(_,index)=>{
+      const entry=samples[index%3];
+      const draft=api.createDraft(entry.item,entry);
+      draft.observe(initial);
+      return {clientAttemptId:'r'+index,sessionId:'s'+index%3,level:3,ts:new Date(now-index*86400000).toISOString(),detail:draft.summary()};
+    });
+    const {gradingVersion,contentVersion}=samples[0].item;
+    const indicators=api.analyze(observations,{...actual,contentVersion},gradingVersion,now);
+    const selector=createSelector(42,{prioritizeStructuralDiversity:true});
+    const selected=Array.from({length:1500},()=>selector.next(actual,pool,entry=>api.weight(indicators.mechanisms.get(entry.mechanism))));
+    assert.equal(new Set(selected.map(entry=>entry.mechanism)).size,3);
+    assert.ok(selected.every((entry,index)=>index===0 || entry.id!==selected[index-1].id));
+    return selected.filter(entry=>entry.mechanism==='resources').length;
+  }
+  const mastered=picks('correct');
+  const practice=picks('incorrect');
+  console.log(JSON.stringify({bancoReal:{mastered,practice,deliveriesPerProfile:1500}}));
+  assert.ok(practice>mastered);
+});

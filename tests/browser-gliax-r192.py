@@ -310,6 +310,21 @@ def executive(page):
     assert page.evaluate('({requests:__requests.length,saves:__saved.length,results:localStorage.getItem("__mock_exercise_results")})') == boundary
 
 
+def editorial_planning(page):
+    choose_profile(page, 'early')
+    area(page, 'executive').click()
+    set_level(page, 2)
+    open_mode(page, 'planning')
+    if current_case(page) != 'PL193-01':
+        new_round_until(page, "__r4Round.id === 'PL193-01'")
+    for label in ('Papel, vaso, agua.', 'Vaso, papel, agua.'):
+        page.get_by_role('radio', name=label, exact=True).check()
+        page.get_by_role('button', name='Comprobar', exact=True).press('Enter')
+        expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status','correct')
+        expect(page.locator('#exerciseFeedback')).to_contain_text('en cualquier orden')
+        page.get_by_role('button', name='Repetir', exact=True).press('Enter')
+
+
 def inventory(page):
     assert page.evaluate('''() => {
       const ids = new Set();
@@ -405,6 +420,7 @@ def main():
             executive(page)
             page.set_viewport_size({"width": 390, "height": 844})
             executive(page)
+            editorial_planning(page)
             legacy_reports(page)
             page.evaluate('window.LH_CONFIG.r192Practice = false')
             area(page, 'executive').click()

@@ -1,6 +1,6 @@
 # Ampliación editorial de R19.3
 
-Primera entrega integrada de **5 casos de Encuentra la contradicción**, con tres opciones, feedback propio y solución comprobada por reglas. Se conservan los 58 identificadores históricos. Quedan 495 casos de la meta inicial. Los ocho casos de Correo, Archivos, Formularios y Reservas pertenecen al catálogo digital y se contabilizan por separado.
+La muestra integrada contiene **12 casos en las ocho familias**, con feedback específico y solución comprobada por reglas. Se conservan los 58 identificadores históricos. Quedan 488 casos de la meta inicial. Los ocho casos de Correo, Archivos, Formularios y Reservas pertenecen al catálogo digital y se contabilizan por separado.
 
 | ID | Edad | Nivel | Operación que distingue el caso |
 | --- | --- | --- | --- |
@@ -10,11 +10,21 @@ Primera entrega integrada de **5 casos de Encuentra la contradicción**, con tre
 | EC193-04 | 13–15 | 2 | Ciclo de precedencia entre tres instrucciones aunque cada instrucción aislada sea ejecutable. |
 | EC193-05 | 16–18 | 3 | Paridad tras tres cambios. El número exacto inicial no es necesario. |
 
-Las preguntas exigen evidencia de las fuentes en niveles 2 y 3. La opción correcta con evidencia incompleta queda como respuesta parcial. La corrección se comprueba con los cinco tipos de razonamiento, sin depender de la posición de una alternativa. Se verificaron las soluciones, distractores, feedback y exposición de los casos. Estas pruebas acreditan verificación técnica y dejan pendiente la revisión humana de lectura y dificultad.
+| CP193-01 | 8–10 | 2 | Sustituir una tarea sin alterar las asignaciones válidas. |
+| IN193-01 | 11–12 | 2 | Pedir la única dimensión faltante, con interpretación conservadora de la respuesta abierta. |
+| AR193-01 | 13–15 | 1 | Cambiar dos veces de criterio y recuperar la primera regla. Las señales quedan fuera del cómputo. |
+| PL193-01 | 6–7 | 2 | Dos pasos intercambiables deben completarse antes de un tercer paso. Se aceptan ambos órdenes. |
+| RT193-01 | 16–18 | 3 | Comprobar dos restricciones simultáneas con una parte fija y una pieza seleccionable. |
+| CO193-01 | 8–10 | 2 | Sustituir el objetivo manteniendo la ventana de entrega. |
+| SU193-01 | 11–12 | 3 | Detectar el error de precedencia sin rehacer componentes válidos. |
+
+Las preguntas EC exigen evidencia de las fuentes en niveles 2 y 3. La opción correcta con evidencia incompleta queda como respuesta parcial. La corrección se comprueba con los cinco tipos de razonamiento, sin depender de la posición de una alternativa. Se verificaron las soluciones y distractores. También se probaron órdenes equivalentes, respuestas abiertas no interpretables y señales AR no puntuables. Estas pruebas acreditan verificación técnica y dejan pendiente la revisión humana de lectura y dificultad.
 
 [Inventario por edad, nivel y familia](INVENTARIO-EDITORIAL.json). El campo `technicalApproval` corresponde a la proporción de casos nuevos incorporados con pruebas técnicas, expresada en porcentaje. Las celdas sin nuevos casos llevan valor vacío. Los mecanismos y estructuras cuentan por celda, sin sumar variantes de presentación como mecanismos nuevos.
 
-`node tools/gliax-r193/editorial-inventory.cjs` reproduce la comparación. Con 119 transiciones en cada una de las cinco celdas, las repeticiones consecutivas de caso, mecanismo y estructura bajaron de 595 de 595 a 0 de 595. Las celdas con un solo candidato pasaron de 51 a 46. Cada celda ampliada tiene dos casos y conserva una secuencia limitada. La interfaz indica esa limitación.
+`node tools/gliax-r193/editorial-inventory.cjs` reproduce la comparación, con 119 transiciones por cada una de las 12 celdas ampliadas. Sobre 1.428 transiciones, las repeticiones consecutivas de caso pasaron de 833 a 0, las de mecanismo de 1.190 a 0 y las de estructura de 952 a 0. Las celdas con un solo candidato pasaron de 51 a 44. Las celdas con un caso o dos tienen un aviso de cobertura. Los resultados corresponden a una semilla de estímulo fija y no acreditan percepción humana fuera de las celdas medidas.
+
+Se conservaron las metas por familia. Cambio de plan 1/60, Encuentra la contradicción 5/80, ¿Qué necesitas saber? 1/60, Actúa con reglas 1/60, Planificación 1/60, Recursos y tiempo 1/60, Cambio de objetivo 1/60 y Supervisión 1/60.
 
 ## Correcciones asociadas
 

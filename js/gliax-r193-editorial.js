@@ -1,6 +1,7 @@
 (function (root) {
   'use strict';
   const {fingerprint,shuffled,outcome} = typeof module !== 'undefined' ? require('./gliax-r192') : root.GliaxR192;
+  const extended=typeof module!=='undefined'?require('./gliax-r193-editorial-executive'):root.GliaxR193EditorialExecutive;
   const cases = [
     {
       id:'EC193-01', ageBand:'early', level:1, mechanism:'one-way-rule', context:'library-door',
@@ -61,7 +62,7 @@
 
   function get(id, seed) {
     const entry=byId.get(id);
-    if (!entry) throw new RangeError('Unknown R19.3 editorial case');
+    if (!entry) return extended.get(id,seed);
     const {ageBand,level,mechanism,context,prompt,rows,facts,feedback} = entry;
     const sources=rows.map((text,index)=>({id:'source-'+(index+1),text}));
     const options=[
@@ -77,6 +78,7 @@
   }
 
   function grade(item,response) {
+    if (item.family!=='EC') return extended.grade(item,response);
     const {facts,evidenceIds}=item.answerModel;
     if (response?.choice!==(agrees(facts)?'compatible':'conflicting')) return outcome('incorrect');
     const evidence = response.evidence;
@@ -84,9 +86,9 @@
       evidenceIds.every(id=>evidence.includes(id));
     return outcome(item.presentation.evidenceRequired&&!exact?'partial':'correct');
   }
-  const ids=()=>[...byId.keys()];
+  const ids=()=>[...byId.keys(),...extended.ids()];
   const pool=({family,ageBand,level,seed})=>family==='EC'
-    ? cases.filter(entry=>entry.ageBand===ageBand&&entry.level===level).map(entry=>get(entry.id,seed)) : [];
+    ? cases.filter(entry=>entry.ageBand===ageBand&&entry.level===level).map(entry=>get(entry.id,seed)) : extended.pool({family,ageBand,level,seed});
   const api={ids,pool,get,grade};
   root.GliaxR193Editorial=api;
   if (typeof module!=='undefined') module.exports=api;

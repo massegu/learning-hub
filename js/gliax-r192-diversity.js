@@ -71,6 +71,7 @@
   };
 
   function mechanismOf(item) {
+    if (item.editorial) return item.mechanic;
     const model = item.answerModel;
     if (item.family === 'CP') return planMechanisms[item.mechanic] ?? item.mechanic;
     if (item.family === 'EC' && ['format', 'requirement'].includes(model.facts.kind)) return 'compliance';
