@@ -3432,7 +3432,6 @@ body {
 #appShell #exerciseModalities .activity-toolbar button{align-self:start;min-width:0;min-height:44px;padding:7px 10px;font-size:.95rem;line-height:1.22}
 #appShell #exerciseModalities .mira-choices:not(.hidden){display:flex;flex-wrap:wrap;align-items:start;gap:.5rem;grid-column:1/-1}
 #appShell #exerciseModalities .mira-choices button{width:auto}
-#digitalFamilyControl{display:grid;align-content:start;gap:.35rem;grid-column:1/-1}
 #digitalFamilySelect{max-width:100%;width:fit-content;min-height:44px}
 @media(max-width:480px){
  #appShell #exerciseModalities .activity-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -3641,3 +3640,25 @@ body {
 .math-graph-row {display:grid;grid-template-columns:minmax(4.5rem,auto) minmax(3rem,1fr) auto;align-items:center;gap:.4rem}
 .math-graph-row small {margin:0}
 .math-graph-track {border-inline-start:1px solid #456d65;background:#e0eee9}
+
+/* The exercise source stays available while inspecting a result or agenda entry. */
+.digital-search .search-field:has(input) {
+  display: block;
+  border-radius: .6rem;
+  background: #f3f8f6;
+}
+.digital-search .search-field label {display:grid;gap:.35rem;padding:.3rem 0;color:#244e53;font-weight:700}
+.digital-search .search-field input {
+  width:100%;min-height:44px;min-width:0;padding:.45rem .6rem;font:inherit;
+  border:1px solid #6d978e;border-radius:.35rem;background:#fff;color:#213144;
+}
+.digital-search .r193-search-status {margin:.55rem 1rem 0;color:#30505a}
+.digital-search .search-results [hidden] {display:none}
+.digital-editor .team-agenda button {
+  width:100%;min-height:44px;padding:.35rem .45rem;text-align:start;font:inherit;font-weight:700;
+  color:#174e4a;background:#edf5f2;border:1px solid #a4c6bd;border-radius:.35rem;overflow-wrap:anywhere;
+}
+.digital-editor .team-agenda button[aria-expanded=true] {background:#244e53;color:#fff}
+.r193-agenda-detail {margin:.75rem;padding:.75rem;background:#edf5f2;border-inline-start:3px solid #1a655c;overflow-wrap:anywhere}
+.r193-agenda-detail p {margin:.3rem 0 0}
+.digital-search input:focus-visible,.digital-editor button:focus-visible {outline:2px solid #174e4a;outline-offset:2px}

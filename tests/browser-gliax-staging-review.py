@@ -35,18 +35,29 @@ with review.ReviewServer(('127.0.0.1', 0), review.prepare()) as server:
 
             page.route('**/*', keep_local)
             page.goto(local, wait_until='networkidle')
+            page.evaluate('''() => {
+              const original=LearningAPI.requestContent;
+              LearningAPI.requestContent=async request=>{
+                const response=await original(request);
+                if(request.digital_only)window.__stagingSimulation=response.items?.[0];
+                return response;
+              };
+            }''')
             for profile, viewport in [('teen', {'width': 1360, 'height': 950}),
                                       ('early', {'width': 390, 'height': 844})]:
                 page.set_viewport_size(viewport)
                 workspace(page).locator('#profileSelect').select_option(profile)
                 area(page, 'communication').click()
                 page.locator('#digitalModeButton').click()
-                for family, view in [('message','chat'),('clip','video'),('story','story'),('search','search'),
-                                     ('post','social'),('notice','settings'),('app','editor')]:
-                    page.locator('#digitalFamilySelect').select_option(family)
+                assert not page.locator('#digitalFamilySelect').count()
+                views = ['chat','social','video','story','search','settings','editor']
+                for index, view in enumerate(views):
+                    if index:
+                        page.locator('#exerciseOptions .option-btn').first.click()
+                        page.locator('#exerciseNext').click()
                     screen = page.locator(f'#exerciseVisual .digital-{view}')
                     expect(screen).to_be_visible()
-                    expect(screen.locator('dt').first).to_be_visible()
+                    expect(screen.locator('dt, .search-results h4, .team-agenda tbody th').first).to_be_visible()
                     expect(page.locator('#exerciseOptions button')).to_have_count(3)
                     assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
                     if view == 'video':
@@ -59,9 +70,7 @@ with review.ReviewServer(('127.0.0.1', 0), review.prepare()) as server:
                     if evidence and view in ('chat','video','search'):
                         screen.screenshot(path=evidence / f'{profile}-{view}.png')
                 answer = page.evaluate("""() => {
-                    const item=CommunicationContent.digitalPool(
-                      document.querySelector('#appShell').dataset.ageRoute,
-                      Number(document.querySelector('#exerciseLevelSelect').value),'app')[0];
+                    const item=window.__stagingSimulation;
                     const locale=LearningAPI.effectiveLocale();
                     return LocaleContent.localizeItem(item,locale,'communication').a;
                 }""")

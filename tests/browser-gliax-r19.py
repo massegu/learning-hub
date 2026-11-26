@@ -88,16 +88,17 @@ def digital_format(page, domain, fmt, expected_type):
     mode=page.locator('#digitalModeButton')
     if mode.get_attribute('aria-pressed')!='true':
         mode.press('Enter')
-    select=page.locator('#digitalFamilySelect')
-    for _ in range(4):
+        latest(page,domain,digital_only=True)
+    for _ in range(22):
+        request=page.evaluate('r19.at(-1)')
+        item=request['item']
+        if request['request'].get('digital_family')==fmt and item['type']==expected_type:
+            return item
         n=page.evaluate('r19.length')
-        if select.input_value()==fmt:
-            select.dispatch_event('change')
-        else:
-            select.select_option(fmt)
-        page.wait_for_function('n=>r19.length>n&&r19.at(-1).request.digital_family',arg=n)
-        item=latest(page,domain,digital_family=fmt)
-        if item['type']==expected_type:return item
+        mode.press('Enter')
+        page.wait_for_function('n=>r19.length>n && !r19.at(-1).request.digital_only',arg=n)
+        mode.press('Enter')
+        page.wait_for_function('n=>r19.length>n+1 && r19.at(-1).request.digital_only',arg=n)
     raise AssertionError(f'{fmt} no entregó {expected_type}')
 
 
@@ -160,15 +161,32 @@ with review.ReviewServer(('127.0.0.1',0),review.prepare()) as server:
             digital_button.press('Enter')
             expect(digital_button).to_have_attribute('aria-pressed','true')
             assert contrast()>=4.5
-            select=page.locator('#digitalFamilySelect')
-            for fmt,layout in [('message','.message-thread'),('post','.social-feed'),('clip','.digital-clip-frame'),
-                               ('story','.story-timeline'),('search','.search-results'),('notice','.settings-log'),('app','.team-agenda')]:
-                select.select_option(fmt)
+            assert not page.locator('#digitalFamilySelect').count()
+            for index,(fmt,layout) in enumerate([('message','.message-thread'),('post','.social-feed'),('clip','.digital-clip-frame'),
+                               ('story','.story-timeline'),('search','.search-results'),('notice','.settings-log'),('app','.team-agenda')]):
+                if index:
+                    page.locator('#exerciseOptions .option-btn').first.click()
+                    page.locator('#exerciseNext').press('Enter')
                 item=latest(page,'communication',digital_family=fmt)
                 assert item['contentKey'].startswith('digital-v2:')
                 screen=page.locator('#exerciseVisual .digital-stimulus')
                 expect(screen.locator(layout)).to_be_visible()
                 assert 'simulación' not in screen.inner_text().lower()
+                if fmt=='search':
+                    field=screen.get_by_role('searchbox',name='Buscar en estos resultados')
+                    before=screen.locator('.search-results li').count()
+                    field.fill('no-contiene-este-texto')
+                    expect(screen.get_by_role('status')).to_contain_text('Sin coincidencias')
+                    assert screen.locator('.search-results li:visible').count()==0
+                    field.fill('')
+                    assert screen.locator('.search-results li:visible').count()==before
+                if fmt=='app':
+                    entry=screen.locator('.team-agenda button').first
+                    entry.press('Enter')
+                    expect(entry).to_have_attribute('aria-expanded','true')
+                    expect(screen.locator('.r193-agenda-detail')).to_be_visible()
+                    entry.press('Enter')
+                    expect(screen.locator('.r193-agenda-detail')).to_be_hidden()
                 if fmt=='clip':
                     summary=screen.get_by_text('Subtítulos y comentarios',exact=True)
                     summary.press('Enter');expect(screen.locator('details')).not_to_have_attribute('open','')

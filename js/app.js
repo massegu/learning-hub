@@ -153,7 +153,7 @@
     state = null,
     subject = null,
     mode = "grammar",
-    mathProblems=false,documentOnly = false, digitalOnly = false, digitalFamily = "",
+    mathProblems=false,documentOnly = false, digitalOnly = false,
     photoOnly = false,
     memoryAudioOnly = false,
     interactionOnly = false,
@@ -164,10 +164,14 @@
     counter = 0,
     requestGeneration = 0,
     guidedSession = null;
+  const digitalRotation = window.GliaxR193Digital.createRotation();
   let r192Family = '', r192Session = null, r192Round = null;
   function resetR192Practice(keepSelectionHistory = false) {
     r192Family = '';
-    if (!keepSelectionHistory) r192Session = null;
+    if (!keepSelectionHistory) {
+      r192Session = null;
+      digitalRotation.clear();
+    }
     r192Round = null;
   }
   const API = window.LearningAPI;
@@ -1110,7 +1114,7 @@
     $("#independentSessionBtn").textContent=independent?"Terminar sesión independiente":"Empezar sesión independiente";
     $("#independentSessionStatus").textContent=independent?"Los resultados de esta sesión no se guardan. El uso se contabiliza por cuenta. Al terminar o recargar se descartan.":"Seguimiento individual: los resultados se guardan en este perfil.";
     $("#deleteProfileBtn").disabled=independent;$("#profilePrivacyBtn").disabled=independent;
-    mathProblems=false;digitalOnly=false;digitalFamily="";photoOnly = false;memoryAudioOnly=false;roomSpeedOnly=false;speedUnpairedOnly=false;executedOnly=false;executedFamily='';comparisonIndex=0;miraOpen=false;cognitiveOnly=false;cognitiveFamily='';
+    mathProblems=false;digitalOnly=false;photoOnly = false;memoryAudioOnly=false;roomSpeedOnly=false;speedUnpairedOnly=false;executedOnly=false;executedFamily='';comparisonIndex=0;miraOpen=false;cognitiveOnly=false;cognitiveFamily='';
     guidedSession=null;
     hideGuidedBar();
     $('#appShell').classList.toggle('early-experience',Boolean(window.ContentPolicy.forProfile(p)));
@@ -1236,7 +1240,7 @@
   }
   function setupExercise() {
     if(profile?.id&&!profile._sessionOnly){try{localStorage.setItem(`lh_v16_last_subject_${profile.id}`,subject);}catch{}}
-    if(configuredSubject!==null&&configuredSubject!==subject){mathProblems=false;miraOpen=false;digitalOnly=false;digitalFamily="";documentOnly=false;photoOnly=false;memoryAudioOnly=false;interactionOnly=false;interactionKind=subject==='attention'?'room':'symbols';roomSpeedOnly=false;speedUnpairedOnly=false;cognitiveOnly=false;cognitiveFamily='';executedOnly=false;executedFamily='';}
+    if(configuredSubject!==null&&configuredSubject!==subject){mathProblems=false;miraOpen=false;digitalOnly=false;documentOnly=false;photoOnly=false;memoryAudioOnly=false;interactionOnly=false;interactionKind=subject==='attention'?'room':'symbols';roomSpeedOnly=false;speedUnpairedOnly=false;cognitiveOnly=false;cognitiveFamily='';executedOnly=false;executedFamily='';}
     configuredSubject=subject;
     if(guidedSession?.randomFamilies){
       const family=guidedSession.randomFamilies[guidedSession.index];
@@ -1373,12 +1377,8 @@
     const digitalMode=$('#digitalModeButton');
     const digitalFormats=window.CommunicationContent.availableFormats(route,state.levels[subject]||1,subject,19);
     if(!digitalFormats.length)digitalOnly=false;
-    if(!digitalFormats.includes(digitalFamily))digitalFamily='';
     digitalMode.classList.toggle('hidden',!digitalFormats.length);
     digitalMode.setAttribute('aria-pressed',String(digitalOnly));
-    $('#digitalFamilyControl').classList.toggle('hidden',!digitalFormats.length||!digitalOnly);
-    digitalSelect.replaceChildren(new Option('Todas las pantallas',''),...digitalFormats.map(id=>new Option(window.CommunicationContent.digitalFamilies[id],id)));
-    digitalSelect.value=digitalFamily;
     syncLanguageModeButtons();
     $('#wordFitMode').setAttribute('aria-pressed',String(cognitiveOnly&&cognitiveFamily==='words'));
     const r192Controls=$('#r192Modalities');
@@ -1411,8 +1411,6 @@
     newExercise();
   }
   $('#mathProblemMode').onclick=()=>{mathProblems=!mathProblems;setupExercise();};
-  const digitalSelect=$('#digitalFamilySelect');
-  digitalSelect.onchange=()=>{digitalFamily=digitalSelect.value;setupExercise();};
   $('#digitalModeButton').onclick=()=>{
     digitalOnly=!digitalOnly;
     cognitiveOnly=false;executedOnly=false;interactionOnly=false;photoOnly=false;documentOnly=false;
@@ -1574,6 +1572,13 @@
     const formats=window.ExecutedTasks.comparisonFormats;
     const startIndex=comparisonIndex;
     const comparisonFormat=comparison?formats[startIndex%formats.length]:null;
+    const launchingDigital = kind === 'exercise' && digitalOnly;
+    const age = window.AgeStages.route(profile);
+    const level = state.levels[domain] || 1;
+    const slot = [age, domain, level].join(':');
+    const formatsForSlot = launchingDigital ? window.CommunicationContent.availableFormats(age,level,domain,19) : [];
+    const digitalChoice = launchingDigital ? digitalRotation.peek(slot, formatsForSlot) : null;
+    const digitalGeneration = requestGeneration;
     const res = await requestForProfile({
       ...(kind==='exercise'&&cognitiveOnly?{cognitive_only:true,cognitive_family:cognitiveFamily||null}:{}),
       ...(kind==='exercise'&&executedOnly?{executed_only:true,...(executedFamily?{executed_family:executedFamily}:{}),...(comparisonFormat?{comparison_format:comparisonFormat}:{})}:{}),
@@ -1582,7 +1587,7 @@
       kind,
       domain,
       ...(wantMathProblems?{math_problem:true,math_problem_version:2}:{}),
-      ...(kind==='exercise'&&digitalOnly?{digital_only:true,...(digitalFamily?{digital_family:digitalFamily}:{})}:{}),
+      ...(launchingDigital?{digital_only:true,...(digitalChoice?{digital_family:digitalChoice.format}:{})}:{}),
       ...(kind==='exercise'&&domain==='speedReasoning'?{room_speed_only:roomSpeedOnly}:{}),
       ...(kind==='exercise'&&domain==='speedReasoning'&&speedUnpairedOnly?{speed_mechanic:'unpaired'}:{}),
       ...(kind==='exercise'&&domain==='memory'&&memoryAudioOnly?{memory_audio_only:true}:{}),
@@ -1598,6 +1603,7 @@
       $('#dailyUsageExplanation').textContent=`Tu cuota es de ${res.usage.limit} ${kind==='worksheet'?'fichas':kind==='game'?'juegos':'ejercicios'} al día. El contador registra contenido entregado, aunque no se complete. Se comparte entre perfiles, áreas y variantes de la cuenta para ese tipo de contenido.`;
     }
     const item=res?.items?.[0]||null;
+    if (digitalChoice && item?.simulation?.format === digitalChoice.format && requestGeneration === digitalGeneration) digitalRotation.confirm(digitalChoice);
     if(wantMathProblems&&(item?.type!=='mathProblem'||item.mathVersion!==2))throw Error('Esta versión de Resolución de problemas necesita una actualización del servicio.');
     if(comparison&&comparisonIndex===startIndex&&item?.execution?.format===comparisonFormat)comparisonIndex++;
     if(kind==='exercise'&&domain==='memory'&&!digitalOnly&&!executedOnly&&!memoryAudioOnly&&item){
@@ -1791,6 +1797,7 @@
     if (scenario&&!scenarioShown)
       $("#exerciseVisual").insertAdjacentHTML(it.stimulus?.length?'afterbegin':'beforeend',
         `<div class="scenario-card"><span class="scenario-label">Situación</span><p>${escapeHtml(scenario)}</p></div>`);
+    if (it.simulation) window.GliaxR193Digital.mount($('#exerciseVisual'));
     if(readingAid&&$('#exerciseVisual').querySelector('[data-reader-text]')&&window.ReaderAssist)stopReaderAssist=window.ReaderAssist.mount($('#exerciseVisual'));
     $("#exercisePrompt").textContent = it.q || "Actividad";
     if(it.type==='mathProblem'){
