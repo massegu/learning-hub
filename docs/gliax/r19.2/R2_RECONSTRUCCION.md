@@ -13,3 +13,7 @@ R2 tiene identidades y versiones propias y usa las huellas, la semilla y los est
 ## Restricciones de recursos y tiempo
 
 Se reutilizan los paquetes, proyectos y duraciones de R19.1. Cambiar los límites de coste o cantidad permite verificar alternativas válidas y casos con condiciones incompatibles sin modificar los datos de los paquetes. La disponibilidad se exige desde N2 de acuerdo con el banco existente. El tiempo se comprueba con dos, tres o cuatro tareas consecutivas según nivel y distingue holgura, ajuste exacto y falta de tiempo. El currículo de 6–7 no ofrece estos problemas de presupuesto y duración. Su cobertura se mantiene en planificación, cambio de objetivo y supervisión, sin introducir cálculo monetario nuevo.
+
+## Cambio de objetivo y prioridades
+
+Los encuentros de R19.1 conservan las prioridades «preparar a tiempo» y «comunicar el aplazamiento». Los cuatro contextos históricos comparten una huella por criterio y no se cuentan como cuatro mecanismos al generar. N3 utiliza los modelos CP documentados para conservar requisitos, resolver incompatibilidades o justificar una decisión, en lugar de repetir el mismo criterio de N2 con otra etiqueta. CP08 mantiene ambas reasignaciones, CP12 admite ausencia de solución y CP15 deriva a revisión cuando el argumento no puede verificarse.
