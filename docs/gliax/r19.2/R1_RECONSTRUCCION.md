@@ -11,3 +11,7 @@ La auditoría de partida recorrió 4.892 instancias. Detectó sesgos de posició
 ## Cambio de plan
 
 CP01–CP15 conservan las combinaciones de edad y nivel del documento maestro. CP08 ofrece dos reasignaciones viables con disponibilidad y revisión explícitas. CP11 y CP14 corrigen cualquier orden completo que cumpla sus dependencias y ventanas. CP12 compara hora y presupuesto en unidades enteras y permite declarar inviabilidad. CP15 admite ambos cursos de acción si se justifican mediante sus componentes. El texto sin interpretación fiable queda pendiente. Las etiquetas de los planes se separan del modelo de corrección y las opciones no tienen posición canónica visible.
+
+## Encuentra la contradicción
+
+EC01–EC15 distinguen incumplimiento, cumplimiento, afirmaciones incompatibles, compatibilidad, actualización temporal e información insuficiente. EC10 admite las dos lecturas previstas. En N2 y N3 se pide la evidencia además de la relación. Los totales y diferencias de los conflictos inferidos se calculan al corregir y quedan fuera de las opciones, con apoyo visual de cantidades para EC01 y EC06.
