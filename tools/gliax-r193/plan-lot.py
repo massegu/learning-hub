@@ -1,4 +1,4 @@
-"""Reproduce the first structured lot. Keep only distinct solution spaces."""
+"""Reproduce the structured plan lots. Keep only distinct solution spaces."""
 from itertools import combinations, permutations, product
 from pathlib import Path
 import json
@@ -31,7 +31,29 @@ contexts = {
     ],
 }
 
-families = {'planning':('PL',18),'supervision':('SU',18),'CP':('CP',18)}
+families = {'planning':('PL',38),'supervision':('SU',38),'CP':('CP',38)}
+extra_contexts={
+    'early': [
+        ('Preparar el banco de semillas',['Traer sobres','Poner la caja','Traer las semillas','Poner el aviso']),
+        ('Preparar el espacio de lectura',['Poner un cojín','Traer un cuento','Abrir la cortina','Poner un cartel'])
+    ],
+    'junior': [
+        ('Preparar una mesa de intercambio',['Traer los libros','Escribir el aviso','Preparar los marcadores','Buscar sillas','Reservar una mesa']),
+        ('Organizar una zona de juegos',['Buscar un reloj','Poner los conos','Colgar el aviso','Traer pelotas','Marcar el paso'])
+    ],
+    'primary': [
+        ('Preparar un encuentro en el planetario',['Confirmar las visitas','Traer los planos','Organizar las fichas','Repartir las linternas','Reservar el pasillo']),
+        ('Montar una mesa para una muestra de mapas',['Traer las escalas','Preparar la cartelera','Poner sillas','Acordar los turnos','Reservar el espacio'])
+    ],
+    'middle': [
+        ('Organizar un punto de préstamo',['Preparar los carritos','Traer la lista de contacto','Comprobar las luces','Marcar las colas','Reservar el almacén']),
+        ('Preparar un concurso de sonido',['Reservar la sala','Traer auriculares','Publicar los turnos','Preparar las tarjetas','Marcar las posiciones'])
+    ],
+    'teen': [
+        ('Preparar la recepción de un encuentro',['Acordar los avisos','Preparar las acreditaciones','Revisar la sala','Marcar las salidas','Confirmar al equipo']),
+        ('Coordinar la recogida de materiales',['Confirmar el transporte','Reservar el almacén','Traer cajas','Acordar la señalización','Preparar el equipo'])
+    ]
+}
 
 
 def passes(order, rule):
@@ -95,13 +117,14 @@ def make():
         seen=set()
         family_count=0
         slots=list(product(contexts,[1,2,3]))
-        for index,(age,level) in enumerate(slots+slots):
+        for index,(age,level) in enumerate(slots*8):
             if family_count==target:
                 break
             # Early readers get at most four known actions. Harder cases for
             # older groups use one more action or an additional condition.
             n=4 if age in ('early','junior') or level==1 else 5
-            context,labels=contexts[age][(level+index//len(slots)-1)%3]
+            collection=contexts[age] if family_count<18 else contexts[age]+extra_contexts[age]
+            context,labels=collection[(level+index//len(slots)-1)%len(collection)]
             for limits,eligible,orders,key in shapes(n,level):
                 if key in seen:
                     continue
@@ -121,7 +144,8 @@ def make():
                 signature=';'.join(''.join(map(str,order)) for order in key)
                 mechanic={'planning':'coordinate-order', 'supervision':'audit-proposed-order','CP':'revise-with-new-order-condition'}[family]
                 grouping='-'.join(sorted(set(rule[0] for rule in limits)))
-                entry=dict(id=f'{prefix}193-B1-{family_count:02}',family=family,ageBand=age,
+                lot='B1' if family_count<=18 else 'B4'
+                entry=dict(id=f'{prefix}193-{lot}-{family_count:02}',family=family,ageBand=age,
                            level=level,context=context,steps=labels[:n],rules=limits,structure=signature,
                            mechanic=mechanic+':'+grouping)
                 if observed is not None:

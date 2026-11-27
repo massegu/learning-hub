@@ -64,3 +64,7 @@ La comparación normaliza la tabla de verdad de cada sistema bajo renombrado de 
 Actúa con reglas incorpora 12 mecanismos de actualización en las cuatro edades habilitadas. Las señales pueden establecer una excepción temporal, recuperar el criterio previo, intervenir solo en un criterio o aplicar una excepción superior. Se verificaron las trazas de respuesta de cada caso. Las señales están fuera del recuento y no se deducen indicadores de inhibición a partir de esta muestra.
 
 El lote se mantuvo por debajo de 50 para conservar diferencias entre mecanismos y redactar cada necesidad de información. Pasaron las pruebas de corrección, alternativas, errores interpretables, señales y navegación. Total acumulado: 162 de 500.
+
+## Lote 4. Espacios de solución más amplios
+
+60 casos, 20 por familia de Planificación, Supervisión y Cambio de plan. Se conservaron íntegros los 54 casos del lote 1. Los nuevos casos se filtraron con la misma equivalencia bajo renombrado, con condiciones no redundantes y con más de un orden válido. Se añadieron contextos de preparación, recepción y préstamo. Los cambios de contexto no cuentan por separado. La verificación enumeró los órdenes, el fallo exacto del plan anterior y las infracciones identificables en Supervisión. Total acumulado: 222 de 500.

@@ -22,10 +22,11 @@ function violations(plan,rules){
   });
 }
 
-test('the first lot covers 54 distinct, non-redundant plan structures',()=>{
-  assert.equal(records.length,54);
-  assert.equal(new Set(records.map(record=>record.id)).size,54);
-  assert.equal(new Set(records.map(record=>record.family+':'+record.structure)).size,54);
+test('the plan lots retain distinct, non-redundant solution spaces',()=>{
+  assert.equal(records.filter(record=>record.id.includes('-B1-')).length,54);
+  assert.equal(records.filter(record=>record.id.includes('-B4-')).length,60);
+  assert.equal(new Set(records.map(record=>record.id)).size,records.length);
+  assert.equal(new Set(records.map(record=>record.family+':'+record.structure)).size,records.length);
   for(const record of records){
     const item=editorial.get(record.id,2026);
     const space=permutations(record.steps.length);
@@ -63,7 +64,7 @@ test('the selector reaches every family in the lot and keeps its age and level',
     const pool=candidates(query);
     const selector=createSelector('lot-1',{prioritizeStructuralDiversity:true});
     const ids=Array.from({length:64},()=>selector.next(query,pool).id);
-    assert.ok(ids.some(id=>id.includes('-B1-')),slot);
+    assert.ok(ids.some(id=>records.some(record=>record.id===id)),slot);
     assert.ok(ids.slice(1).every((id,index)=>id!==ids[index]),slot);
   }
 });
