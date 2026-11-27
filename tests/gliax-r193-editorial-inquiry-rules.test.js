@@ -6,11 +6,12 @@ const inquiry=require('../js/gliax-r193-editorial-inquiry');
 const ar=require('../js/gliax-r193-editorial-rule-batch');
 const {candidates}=require('../js/gliax-r192-diversity');
 
-test('inquiry covers twenty-four unique information requirements with conservative grading',()=>{
+test('inquiry covers unique information requirements with conservative grading',()=>{
   const ids=inquiry.ids();
-  assert.equal(ids.length,24);
+  assert.equal(ids.filter(id=>id.includes('-B3-')).length,24);
+  assert.equal(ids.filter(id=>id.includes('-B9-')).length,35);
   const entries=ids.map(id=>bank.get(id,1));
-  assert.equal(new Set(entries.map(e=>e.mechanic)).size,24);
+  assert.equal(new Set(entries.map(e=>e.mechanic)).size,59);
   assert.equal(new Set(entries.map(e=>e.ageBand+':'+e.level)).size,15);
   for(const item of entries){
     for(const set of item.answerModel.sets){

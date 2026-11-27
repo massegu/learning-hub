@@ -1,6 +1,6 @@
 # Ampliación editorial de R19.3
 
-La muestra integrada contiene **12 casos en las ocho familias**, con feedback específico y solución comprobada por reglas. Se conservan los 58 identificadores históricos. Quedan 488 casos de la meta inicial. Los ocho casos de Correo, Archivos, Formularios y Reservas pertenecen al catálogo digital y se contabilizan por separado.
+La muestra piloto integró **12 casos en las ocho familias**, con feedback específico y solución comprobada por reglas. Se conservan los 58 identificadores históricos. Los 488 casos restantes se incorporaron en nueve lotes. Los ocho casos de Correo, Archivos, Formularios y Reservas pertenecen al catálogo digital y se contabilizan por separado.
 
 | ID | Edad | Nivel | Operación que distingue el caso |
 | --- | --- | --- | --- |
@@ -24,7 +24,7 @@ Las preguntas EC exigen evidencia de las fuentes en niveles 2 y 3. La opción co
 
 `node tools/gliax-r193/editorial-inventory.cjs` reproduce la comparación, con 119 transiciones por cada una de las 12 celdas ampliadas. Sobre 1.428 transiciones, las repeticiones consecutivas de caso pasaron de 833 a 0, las de mecanismo de 1.190 a 0 y las de estructura de 952 a 0. Las celdas con un solo candidato pasaron de 51 a 44. Las celdas con un caso o dos tienen un aviso de cobertura. Los resultados corresponden a una semilla de estímulo fija y no acreditan percepción humana fuera de las celdas medidas.
 
-Se conservaron las metas por familia. Cambio de plan 1/60, Encuentra la contradicción 5/80, ¿Qué necesitas saber? 1/60, Actúa con reglas 1/60, Planificación 1/60, Recursos y tiempo 1/60, Cambio de objetivo 1/60 y Supervisión 1/60.
+La contribución inicial del piloto a las metas fue la siguiente. Cambio de plan 1/60, Encuentra la contradicción 5/80, ¿Qué necesitas saber? 1/60, Actúa con reglas 1/60, Planificación 1/60, Recursos y tiempo 1/60, Cambio de objetivo 1/60 y Supervisión 1/60.
 
 ## Correcciones asociadas
 
@@ -41,7 +41,7 @@ Se distinguieron las modalidades históricas de ordenar instrucciones y responde
 | Distractores, 10 % | Los distractores representan omisión de un dato, restricción incumplida o una inferencia no sostenida. | Verificar si producen los errores previstos en cada franja. |
 | Feedback, 10 % | Cada caso explica la condición decisiva. Las pruebas de navegador revisaron EC y los dos órdenes válidos de Planificación. | Observar si las explicaciones permiten enmendar una respuesta autónomamente. |
 
-La muestra prioriza celdas pequeñas y mecanismos identificables. La revisión documental no asigna una puntuación pedagógica global ni valida clínicamente el banco. La ampliación restante conserva sus objetivos por familia y requiere lotes con soluciones, distractores y feedback revisados.
+La muestra prioriza celdas pequeñas y mecanismos identificables. La revisión documental no asigna una puntuación pedagógica global ni valida clínicamente el banco. Los lotes siguientes conservaron los objetivos por familia y añadieron soluciones, distractores y feedback revisados.
 
 ## Lote 1. Orden y revisión de condiciones
 
@@ -86,3 +86,7 @@ El lote se mantuvo por debajo de 50 para conservar diferencias entre mecanismos 
 47 casos de Actúa con reglas en las 12 celdas de edad y nivel habilitadas. La prueba deduplicó la pareja de reglas antes y después de la señal mediante tablas de salida invariantes a renombrar los rasgos o intercambiar A y B. Se exige un cambio de respuesta comprobable entre fases. Cada fase presenta las combinaciones de los rasgos de los que depende su regla. Las señales quedan fuera de puntuación y la espera solo se ofrece donde existe una condición explícita.
 
 El navegador probó la selección junto a los casos históricos y el test independiente evaluó cada figura desde los rasgos visibles. Actúa con reglas alcanza 60 casos. Total acumulado: 465 de 500.
+
+## Lote 9. Datos decisivos en respuestas abiertas
+
+35 casos nuevos de ¿Qué necesitas saber?, distribuidos entre las cinco edades y los tres niveles. Incluyen rutas con un pasillo común, conjuntos solapados, secuencias de eventos recibidos con retraso, comparaciones ponderadas y verificación de restricciones. Se comprobó la admisión de cada respuesta suficiente documentada, el tratamiento conservador de las negaciones y la elegibilidad en el selector. Total acumulado: 500 de 500.
