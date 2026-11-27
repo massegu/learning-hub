@@ -1,0 +1,37 @@
+{
+  "sourceCommit": "063f53a90d2f0db02dff659548ac266559476bd5",
+  "stagingProject": "wejcfaralctolzxjbcil",
+  "pagesProject": "gliax-staging",
+  "function": "request-learning-content",
+  "verifyJwt": true,
+  "longitudinalEnabled": false,
+  "artifacts": [
+    {
+      "file": "GLIAX-R19.3-Pages-Staging.zip",
+      "sha256": "aea5b94b31c92e0ac1165cb414ded753634dd0a33de0e20f1164f64b985a40da",
+      "bytes": 118460628,
+      "files": 389,
+      "fileManifest": "GLIAX-R19.3-Pages-Staging.files.sha256",
+      "fileManifestSha256": "f66343bcb789044779456bb749df7fa3546722d8af32d8f834c3674757e817be"
+    },
+    {
+      "file": "GLIAX-R19.3-Edge-Staging.zip",
+      "sha256": "2283d33e38821a09d9b543527e33b94908e6639d402de0f4e76016ef5d654e0c",
+      "bytes": 458794,
+      "files": 29,
+      "fileManifest": "GLIAX-R19.3-Edge-Staging.files.sha256",
+      "fileManifestSha256": "c9502bd49d09e0bbb6b102df68c7d2b7051ca90372586010e0799b97606c22b6"
+    }
+  ],
+  "rollback": {
+    "edge": {
+      "file": "RETORNO-R19.2-Edge-v6.eszip",
+      "version": 6,
+      "verifyJwt": true,
+      "bytes": 10339337,
+      "sha256": "a60b1da1fdb151aaa7ab0047d6ae6f971cc4b0b285718104a1e10cfcf2cd0114",
+      "hostedEzbrSha256": "3e8db7b178060b2fa76fb2e1ffacd2d276bfcd9a63752ce343f444642ccc2265"
+    },
+    "pagesDeployment": "5992b25a-8fd2-44b5-9c26-8ea2920e2169"
+  }
+}

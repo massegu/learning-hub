@@ -25,3 +25,11 @@ Con el interruptor apagado, comprobar el par publicado, rutas anteriores, 500 ca
 ## Reproducción de artefactos
 
 Con Node y las dependencias bloqueadas del repositorio, utilizar `python tools/staging/package_r193.py <directorio-de-entrega>` desde el commit de código indicado en el manifiesto. Proporcionar `GLIAX_STAGING_REF`, `GLIAX_STAGING_ORIGIN` y la clave publicable de Staging `GLIAX_STAGING_PUBLISHABLE_KEY` por el entorno. El empaquetador vuelve a generar Pages, valida la configuración y emite ZIP, inventarios y SHA-256. El código editorial reside en Pages. Edge contiene el servidor de generación, los casos digitales y sus validadores.
+
+## Evidencia del candidato
+
+[Manifiesto de artefactos](STAGING-ARTEFACTOS.json) y [huellas por archivo](manifiestos-staging/). El SHA de código en el manifiesto fija la compilación. Pages incluye 389 archivos. Edge incluye 28 módulos y los metadatos de despliegue. Ambos pasaron la verificación después de empaquetar. El ESZIP de retorno v6 descargado por la API de gestión coincide byte por byte con la exportación efectuada al publicar R19.2.
+
+La configuración publicable proviene del ZIP R19.2 verificado por SHA-256. La lectura HTTP directa de `/js/config.js` del dominio de Staging respondió 403 desde este entorno. La API de gestión confirmó el despliegue canónico. La vigencia de la clave en el flujo de Auth alojado queda para el QA autorizado.
+
+Pasaron 41 pruebas focalizadas de Node y PostgreSQL. Chromium verificó persistencia con servicio simulado compartido por dos clientes, reconciliación de resultados, simulaciones digitales en escritorio y móvil y los archivos extraídos del ZIP Pages. El recorrido del ZIP sirvió sus cabeceras, cargó las bibliotecas reales, probó Matemáticas v2 con Edge local, mantuvo la adaptación apagada y comprobó las exportaciones DOCX, ZIP, CSV y XLSX. El recorrido alojado con Auth y RLS reales queda pendiente.
