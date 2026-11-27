@@ -124,3 +124,18 @@ El inventario final usa el mismo selector, semilla de sesión y semillas de pres
 | Estímulo | 2.179 | 0 |
 
 Las celdas con un único candidato pasan de 51 a 0. La simulación seleccionó 1.091 de los 1.331 candidatos disponibles en 120 rondas por celda. La cobertura de los 500 casos se comprobó también directamente en los catálogos elegibles. La prueba con el banco real de Recursos y tiempo registró 488 selecciones del mecanismo de refuerzo frente a 452 con el historial de dominio, sobre 1.500 entregas por perfil sintético. Se conservó la separación por perfil en el navegador con un adaptador de datos local. La integración en Supabase alojado y la revisión editorial con usuarios y profesionales quedan pendientes.
+
+## Regresión de cierre
+
+El código quedó fijado en `4e0e1aa65e2c4bd48162c206f4d9ebd5e40453e6` para la batería final, con 374 pruebas Node y 32 pruebas Python superadas. También pasaron seis recorridos Chromium sobre servidores locales.
+
+| Recorrido | Cobertura |
+| --- | --- |
+| `browser-gliax-r192.py` | Navegación real, familias R1/R2, cursores de ronda, nuevo caso IN, movilidad, teclado y exportaciones CSV/XLSX históricas. |
+| `browser-gliax-r193-longitudinal.py` | Guardado, recuperación tras recarga, recomendaciones por perfil y control profesional. Autenticación y resultados mediante un adaptador sintético. |
+| `browser-gliax-r193-digital.py` | Siete interfaces digitales, selección automática, dos presentaciones, escritorio y móvil. |
+| `browser-gliax-r19-1-math.py` | Matemáticas por pasos, respuesta de Edge local, rutas válidas y recuperación tras interrupción. |
+| `browser-privacy.py` | Separación entre práctica y registro, operaciones por perfil, exportación JSON y recuperación de un error simulado. |
+| `browser-documents.py` | 26 actividades, DOCX con las 22 imágenes fuente y navegación histórica. Se ajustó el guion para abrir el panel de opciones antes de cambiar el nivel. |
+
+La validación se realizó con datos locales o sintéticos. No se preparó un paquete de Pages para probarlo con los encabezados del artefacto de Staging.
