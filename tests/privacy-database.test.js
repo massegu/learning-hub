@@ -144,6 +144,7 @@ test('R19.3 observations recover under the owning account and stay isolated thro
  const attempt='ac83a543-39f0-4229-875c-93fb3285e127';
  const put='insert into exercise_results(profile_id,correct,client_attempt_id,detail) values($1,null,$2,$3) on conflict(profile_id,client_attempt_id) do nothing';
  await as(A);
+ const before=(await db.query("select progress from learner_profiles where id=$1",[profile])).rows[0];
  await db.query(put,[profile,attempt,event]);
  await db.query(put,[profile,attempt,event]);
  await db.exec('reset role');
@@ -153,6 +154,13 @@ test('R19.3 observations recover under the owning account and stay isolated thro
  await db.exec('reset role');
  await as(A);
  assert.deepEqual((await db.query('select correct,detail from exercise_results where client_attempt_id=$1',[attempt])).rows,[{correct:null,detail:event}]);
+ assert.deepEqual((await db.query('select progress from learner_profiles where id=$1',[profile])).rows[0],before);
+ const exported=(await db.query("select manage_learner_privacy('export',$1) as data",[profile])).rows[0].data;
+ assert.equal(exported.results.length,1);
+ assert.equal(exported.results[0].detail,event);
+ await db.query("select manage_learner_privacy('delete',$1)",[profile]);
+ await db.exec('reset role');
+ assert.equal((await db.query('select detail from exercise_results where client_attempt_id=$1',[attempt])).rows.length,0);
 });
 
 
@@ -160,7 +168,9 @@ test('the hosted preflight is a read-only catalog query on the local privacy sch
  await db.exec('reset role; set default_transaction_read_only = on;');
  try {
   const results=await db.exec(fs.readFileSync('supabase/diagnostics/r193-longitudinal-preflight.sql','utf8'));
-  const grants=results.at(-1).rows.find(row=>row.relname==='exercise_results');
+  const grants=results[3].rows.find(row=>row.relname==='exercise_results');
+  assert.ok(results[4].rows.some(row=>row.tablename==='exercise_results'&&row.indexdef.includes('(profile_id, client_attempt_id)')));
+  assert.ok(results[5].rows.some(row=>row.authenticated_execute&&!row.anonymous_execute&&row.definition.includes('exercise_results')));
   assert.equal(grants.relrowsecurity,true);
   assert.equal(grants.authenticated_insert,true);
   assert.equal(grants.anonymous_insert,false);

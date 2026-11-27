@@ -106,12 +106,34 @@
     return 0.88 + 0.37 * (1 - metrics.firstCorrect / metrics.observations);
   }
 
+  const stagingOrigin = 'https://gliax-staging.pages.dev';
+  const stagingApi = 'https://wejcfaralctolzxjbcil.supabase.co';
+  const hosted = (config, location) => config?.staging === true && config.supabaseUrl === stagingApi &&
+    location?.origin === stagingOrigin;
+  let hostedActive = false, controlRequest;
+
   function enabled(config = root.LH_CONFIG, location = root.location) {
     const local = host => ['localhost', '127.0.0.1', '[::1]'].includes(host);
-    if (config?.r193Longitudinal !== true || !local(location?.hostname)) return false;
+    if (config?.r193Longitudinal !== true) return false;
+    if (hosted(config, location)) return hostedActive;
+    if (!local(location?.hostname)) return false;
     try { return local(new URL(config.supabaseUrl).hostname); } catch { return false; }
   }
-  const api = {schema, isObservation, createDraft, analyze, recommend, weight, enabled};
+  function refresh(config = root.LH_CONFIG, location = root.location, fetchControl = root.fetch) {
+    if (config?.r193Longitudinal !== true || !hosted(config, location)) return Promise.resolve(enabled(config, location));
+    if (!controlRequest) {
+      hostedActive = false;
+      controlRequest = Promise.resolve().then(async () => {
+        const response = await fetchControl('/r193-longitudinal.json', {
+          cache:'no-store', redirect:'error', credentials:'omit', signal:AbortSignal.timeout(2000)
+        });
+        hostedActive = response.ok && (await response.json())?.enabled === true;
+        return hostedActive;
+      }).catch(() => false).finally(() => { controlRequest = null; });
+    }
+    return controlRequest;
+  }
+  const api = {schema, isObservation, createDraft, analyze, recommend, weight, enabled, refresh};
   root.GliaxR193Longitudinal = api;
   if (typeof module !== 'undefined') module.exports = api;
 })(globalThis);

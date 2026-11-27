@@ -78,3 +78,24 @@ test('confirmed comparable results change delivery weights in the real teen reso
   console.log(JSON.stringify({bancoReal:{mastered,practice,deliveriesPerProfile:1500}}));
   assert.ok(practice>mastered);
 });
+
+test('the hosted switch is fail-closed and restricted to the exact staging pair', async () => {
+  const location = {origin:'https://gliax-staging.pages.dev', hostname:'gliax-staging.pages.dev'};
+  const config = {staging:true, r193Longitudinal:true, supabaseUrl:'https://wejcfaralctolzxjbcil.supabase.co'};
+  const on = async (url, options) => {
+    assert.equal(url,'/r193-longitudinal.json');
+    assert.equal(options.cache,'no-store');
+    assert.equal(options.credentials,'omit');
+    return {ok:true,json:async()=>({enabled:true})};
+  };
+  assert.equal(api.enabled(config,location),false);
+  assert.equal(await api.refresh(config,location,on),true);
+  assert.equal(api.enabled({...config,staging:false},location),false);
+  assert.equal(api.enabled(config,{origin:'https://alias.gliax-staging.pages.dev'}),false);
+  assert.equal(api.enabled({...config,supabaseUrl:'https://example.com'},location),false);
+  assert.equal(await api.refresh(config,location,async()=>({ok:true,json:async()=>({enabled:false})})),false);
+  assert.equal(api.enabled(config,location),false);
+  assert.equal(await api.refresh(config,location,on),true);
+  assert.equal(await api.refresh(config,location,async()=>{throw Error('offline');}),false);
+  assert.equal(api.enabled(config,location),false);
+});

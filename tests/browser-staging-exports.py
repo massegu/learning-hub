@@ -49,6 +49,8 @@ class PagesHandler(SimpleHTTPRequestHandler):
     def end_headers(self):
         for key, value in self.pages_headers.items():
             self.send_header(key, value)
+        if urlsplit(self.path).path == '/r193-longitudinal.json':
+            self.send_header('Cache-Control','no-store')
         super().end_headers()
 
     def log_message(self, *_):
@@ -61,9 +63,17 @@ def start(server):
 
 
 def pages_headers(dist):
-    pattern, *headers = (dist / '_headers').read_text().splitlines()
+    raw = (dist / '_headers').read_text()
+    assert '/r193-longitudinal.json\n  Cache-Control: no-store\n' in raw
+    pattern, *lines = raw.splitlines()
     assert pattern == '/*'
-    return dict(line.strip().split(': ', 1) for line in headers)
+    headers = {}
+    for line in lines:
+        if not line.startswith(' '):
+            break
+        name, value = line.strip().split(': ', 1)
+        headers[name] = value
+    return headers
 
 
 def fake_token(expires):
@@ -135,6 +145,14 @@ def site_test(page, dist, vendors, evidence, local, edge, headers):
     page.click('#authSignIn')
     expect(page.locator('#profileSelect option[value="teen"]')).to_have_count(1)
     workspace(page).locator('#profileSelect').select_option('teen')
+    area(page, 'executive').click()
+    with page.expect_response('**/r193-longitudinal.json') as flag:
+        page.locator('[data-r192-family="planning"]').click()
+    assert flag.value.json() == {'enabled':False}
+    assert flag.value.header_value('cache-control') == 'no-store'
+    expect(page.locator('#exerciseOptions')).to_have_attribute('data-age','teen')
+    expect(page.locator('#r193ProfessionalControl')).to_be_hidden()
+    assert page.evaluate('!GliaxR193Longitudinal.enabled()')
     area(page, 'teenMath').click()
     page.locator('#mathProblemMode').press('Enter')
     expect(page.locator('.math-sequence legend')).to_contain_text('Qué datos necesitas')

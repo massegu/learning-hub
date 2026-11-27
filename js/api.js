@@ -51,6 +51,9 @@
     const previous=resultWriteQueues.get(key)||Promise.resolve();
     const operation=previous.catch(()=>{}).then(async()=>{
       const persisted=readOutboxRecord(key)||record;
+      const longitudinal=window.GliaxR193Longitudinal;
+      if(longitudinal?.isObservation(persisted)&&!await longitudinal.refresh())return false;
+      if(!API.user?.id||key!==resultOutboxKey(persisted.profile_id,persisted.client_attempt_id))return false;
       try{
         persisted.state='pending';persisted.updated_at=new Date().toISOString();writeOutboxRecord(key,persisted);
         const {error}=await client.from('exercise_results').upsert(resultPayload(persisted),{onConflict:'profile_id,client_attempt_id',ignoreDuplicates:true});
@@ -85,7 +88,7 @@
     const pending=API.pendingResults(profileId).filter(record=>includeFailed||record.state!=='failed');
     let confirmed=0,failed=0,uncertain=0;
     for(const record of pending){
-      try{await queueRecord(record);confirmed++;}
+      try{if(await queueRecord(record))confirmed++;}
       catch(error){if(error.state==='uncertain')uncertain++;else failed++;}
     }
     return {attempted:pending.length,confirmed,failed,uncertain,remaining:API.pendingResults(profileId).length};
@@ -154,6 +157,7 @@
   };
   API.saveResult=async(profile_id,row)=>{
     if(API.isIndependent(profile_id)||row?.sessionOnly)return false;
+    if(window.GliaxR193Longitudinal?.isObservation(row)&&!window.GliaxR193Longitudinal.enabled())return false;
     const clientAttemptId=row?.clientAttemptId||row?.client_attempt_id||newAttemptId();
     if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clientAttemptId))throw new Error('El identificador del intento no es válido.');
     const record={profile_id,client_attempt_id:clientAttemptId,occurred_at:row.ts,session_id:row.sessionId||null,session_started_at:row.sessionStartedAt||null,subject:row.subject,level:row.level,correct:row.correct===null?null:Boolean(row.correct),points:Number(row.points)||0,item_id:row.itemId||null,detail:row.detail||null,state:'pending',created_at:new Date().toISOString(),updated_at:new Date().toISOString()};

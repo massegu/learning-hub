@@ -26,3 +26,17 @@ select relname, relrowsecurity, relforcerowsecurity,
 from pg_class
 where oid in (to_regclass('public.exercise_results'),to_regclass('public.learner_profiles'))
 order by relname;
+
+
+select tablename, indexname, indexdef
+from pg_indexes
+where schemaname = 'public' and tablename in ('exercise_results','learner_profiles')
+order by tablename, indexname;
+
+select p.oid::regprocedure as routine, p.prosecdef as security_definer,
+  has_function_privilege('authenticated', p.oid, 'EXECUTE') as authenticated_execute,
+  has_function_privilege('anon', p.oid, 'EXECUTE') as anonymous_execute,
+  pg_get_functiondef(p.oid) as definition
+from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+where n.nspname = 'public' and p.proname = 'manage_learner_privacy'
+order by routine;

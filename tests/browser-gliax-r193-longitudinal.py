@@ -1,6 +1,7 @@
 """Browser integration on loopback using a synthetic Auth and results adapter."""
 import functools
 import http.server
+import json
 import os
 import threading
 
@@ -16,13 +17,57 @@ try:
         browser=playwright.chromium.launch(executable_path=os.getenv('CHROMIUM_EXECUTABLE','/usr/bin/chromium'),args=['--no-sandbox'])
         page=browser.new_page(viewport={'width':1440,'height':1000})
         denied=[]
+        rows, attempts = {}, []
+        dropped = [False]
+        result_sdk = SDK + r"""
+const createSyntheticClient = supabase.createClient;
+supabase.createClient = () => {
+  const client = createSyntheticClient();
+  const account = {id:'account',email:'test@example.invalid'};
+  client.auth.getSession = async()=>({data:{session:sessionStorage.getItem('signed-out')?null:{user:account}}});
+  client.auth.signOut = async()=>{sessionStorage.setItem('signed-out','yes')};
+  client.auth.signInWithPassword = async()=>{
+    sessionStorage.removeItem('signed-out');
+    return {data:{session:{user:account},user:account}};
+  };
+  const from = client.from.bind(client);
+  client.from = table => {
+    if (table !== 'exercise_results') return from(table);
+    let profile, data;
+    const query = {
+      select:()=>query, order:()=>query, range:()=>query,
+      eq:(_, value)=>{profile=value;return query;},
+      upsert:value=>{data=value;return query;},
+      then: (resolve,reject)=>fetch('/synthetic-results'+(data?'':'?profile='+encodeURIComponent(profile)),
+        data?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}:undefined)
+        .then(async response=>response.json()).then(resolve,reject)
+    };
+    return query;
+  };
+  return client;
+};
+"""
         def intercept(route):
             address=route.request.url
             if address==url+'js/config.js':
                 config=f"\nObject.assign(LH_CONFIG,{{supabaseUrl:{url!r},r192Practice:true,r193Longitudinal:true}});"
                 route.fulfill(content_type='application/javascript',body=(ROOT/'js/config.js').read_text()+config)
             elif 'cdn.jsdelivr.net/npm/@supabase/supabase-js' in address:
-                route.fulfill(content_type='application/javascript',body=SDK)
+                route.fulfill(content_type='application/javascript',body=result_sdk)
+            elif address.startswith(url+'synthetic-results'):
+                if route.request.method == 'POST':
+                    result = route.request.post_data_json
+                    key = (result['profile_id'],result['client_attempt_id'])
+                    rows.setdefault(key,result)
+                    attempts.append(key)
+                    if dropped and not dropped[0]:
+                        dropped[0] = True
+                        route.fulfill(status=503,json={'error':{'status':503,'message':'response lost after commit'}})
+                    else:
+                        route.fulfill(json={'data':None,'error':None})
+                else:
+                    profile = address.split('profile=')[-1]
+                    route.fulfill(json={'data':[row for (owner,_),row in rows.items() if owner==profile],'error':None})
             elif address.startswith(url):
                 route.continue_()
             else:
@@ -48,15 +93,16 @@ try:
           }
           return {profiles,rows};
         }''')
-        import json
-        page.add_init_script('''(() => {
+        for fixture in datasets.pop('rows').values():
+            rows[(fixture['profile_id'],fixture['client_attempt_id'])] = fixture
+        bootstrap = '''(() => {
           if (sessionStorage.getItem('r193-seeded')) return;
           sessionStorage.setItem('r193-seeded','yes');
           const fixtures = ''' + json.dumps(datasets) + ''';
           localStorage.setItem('__mock_profiles',JSON.stringify(fixtures.profiles));
-          localStorage.setItem('__mock_exercise_results',JSON.stringify(fixtures.rows));
           localStorage.setItem('lh_current_profile','A');
-        })();''')
+        })();'''
+        page.add_init_script(bootstrap)
         page.set_default_timeout(7000)
         page.reload(wait_until='networkidle')
 
@@ -97,12 +143,19 @@ try:
         page.get_by_role('radio',name='Ana prepara imágenes. Revisamos al terminar texto e imágenes').check()
         page.get_by_role('button',name='Comprobar',exact=True).click()
         expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status','correct')
-        page.locator('#exerciseNext').click()
-        page.wait_for_function("()=>Object.values(JSON.parse(localStorage.getItem('__mock_exercise_results'))).length===25")
-        result=page.evaluate("""()=>Object.values(JSON.parse(localStorage.getItem('__mock_exercise_results')))
-          .find(row=>row.item_id==='CP08')""")
+        with page.expect_response(lambda response: response.status == 503 and 'synthetic-results' in response.url):
+            page.locator('#exerciseNext').click()
+        page.wait_for_function("()=>LearningAPI.pendingResults('A').some(row=>row.state==='uncertain')")
+        recovery=page.evaluate("()=>LearningAPI.retryPendingResults('A')")
+        assert recovery['confirmed']==1 and recovery['remaining']==0
+        assert len(rows)==25 and len(attempts)==2 and attempts[0]==attempts[1]
+        result=rows[attempts[0]]
         assert result['profile_id']=='A' and result['correct'] is None
         assert 'Revisamos' not in result['detail']
+        page.evaluate("()=>LearningAPI.signOut()")
+        page.reload(wait_until='networkidle')
+        assert page.evaluate("()=>LearningAPI.user===null")
+        page.evaluate("()=>LearningAPI.signIn('test@example.invalid','fixture-only')")
         page.reload(wait_until='networkidle')
         exercise('A','constraints')
         recommendation('nivel 3')
@@ -110,8 +163,23 @@ try:
         expect(page.locator('#r193Adaptive')).not_to_be_checked()
         page.locator('#r193Adaptive').check()
         recommendation('reforzar')
+        second = browser.new_context(viewport={'width':1440,'height':1000})
+        client = second.new_page()
+        client.route('**/*',intercept)
+        client.add_init_script(bootstrap)
+        client.goto(url,wait_until='networkidle')
+        assert client.evaluate("()=>LearningAPI.pendingResults('A').length") == 0
+        assert rows[attempts[0]]['client_attempt_id'] in client.evaluate(
+            "async()=> (await LearningAPI.listResults('A')).map(row=>row.clientAttemptId)")
+        page = client
+        exercise('A','constraints')
+        recommendation('nivel 3')
+        exercise('B','constraints')
+        recommendation('reforzar')
+        exercise('B','CP')
+        expect(page.locator('#r193Recommendation')).to_contain_text('Aún faltan')
         assert not denied, denied
         browser.close()
-    print('PASS: observed save, recovery after reload, profile-specific recommendations, professional override and synthetic Auth.')
+    print('PASS: persisted once after an interrupted response, sign-out/sign-in, second context recovery, profile-specific recommendations, abstention and professional override with synthetic Auth.')
 finally:
     server.shutdown()

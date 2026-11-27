@@ -107,6 +107,7 @@ def build():
         "supportEmail": "",
         "staging": True,
         "billingEnabled": False,
+        "r193Longitudinal": True,
     }
     patched_config = re.sub(
         r"window\.LH_CONFIG\s*=\s*\{.*?\};",
@@ -160,11 +161,13 @@ def build():
         text = re.sub(r"<title>", "<title>GLIAX STAGING / TEST - ", text, count=1, flags=re.I)
         page.write_text(text, encoding="utf-8")
 
+    (OUT / "r193-longitudinal.json").write_text('{"enabled":false}\n', encoding="utf-8")
     (OUT / "_headers").write_text(
         "/*\n  Content-Security-Policy: " + csp + "\n"
         "  X-Content-Type-Options: nosniff\n"
         "  Referrer-Policy: no-referrer\n"
-        "  X-Robots-Tag: noindex, nofollow\n",
+        "  X-Robots-Tag: noindex, nofollow\n"
+        "/r193-longitudinal.json\n  Cache-Control: no-store\n",
         encoding="utf-8"
     )
 

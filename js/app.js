@@ -810,20 +810,20 @@
   }
   async function recoverConfirmedResults(profileId){
     if(!profileId||!API.listResults||profile?._sessionOnly||API.isIndependent?.(profileId))return false;
-    const userId=API.user?.id;
+    const userId=API.user?.id, owner=observationOwner;
     try{
       // Resolve the durable outbox before reading confirmed rows. Otherwise a
       // just-confirmed retry can race with this query and be missed until the
       // next profile open.
       await recoverPendingResults(profileId);
-      if(profile?.id!==profileId||profile._sessionOnly||API.isIndependent?.(profileId)||API.user?.id!==userId)return false;
+      if(owner!==observationOwner||profile?.id!==profileId||profile._sessionOnly||API.isIndependent?.(profileId)||API.user?.id!==userId)return false;
       const rows=await API.listResults(profileId);
-      if(profile?.id!==profileId||profile._sessionOnly||API.isIndependent?.(profileId)||API.user?.id!==userId)return false;
+      if(owner!==observationOwner||profile?.id!==profileId||profile._sessionOnly||API.isIndependent?.(profileId)||API.user?.id!==userId)return false;
       if($('#pendingResultStatus')?.textContent.startsWith('No se pudieron consultar los resultados guardados'))setPendingResultHomeStatus();
       const original = [];
       for (const row of rows) {
         if (!longitudinal.isObservation(row)) original.push(row);
-        else if (canRecordObservation() && row.clientAttemptId) observations.set(row.clientAttemptId,row);
+        else if (row.clientAttemptId) observations.set(row.clientAttemptId,row);
       }
       const merged=mergeConfirmedResultHistory(state.history,original);
       if(!merged.added)return true;
@@ -1716,11 +1716,12 @@
     setLoading(true);
     try {
       if(r192Family){
-        if (canRecordObservation()) {
-          await observationsReady;
-          await pendingObservation;
-          if (profile!==requestedProfile || subject!==requestedSubject || generation!==requestGeneration) return;
-        }
+        await pendingObservation;
+        await longitudinal.refresh();
+        if (canRecordObservation()) await observationsReady;
+        if (profile!==requestedProfile || subject!==requestedSubject || generation!==requestGeneration) return;
+        $('#r193ProfessionalControl').classList.toggle('hidden',!canRecordObservation());
+        $('#r193Adaptive').checked = usesAdaptation();
         const practice=window.GliaxR192Practice;
         const age=window.AgeStages.route(profile),level=state.levels[subject]||1;
         r192Session??=practice.createSession();
