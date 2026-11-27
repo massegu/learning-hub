@@ -172,6 +172,10 @@
   function renderSources(item, {visual, area}, finish) {
     const data = item.presentation;
     const {rows, options, evidenceRequired} = data;
+    if (item.logicEditorial) {
+      visual.append(node('h4', data.context),node('p','Selecciona al menos un elemento. Disponibles: '+data.items.join(', ')+'.'));
+      if (data.previous) visual.append(node('p','Selección anterior: '+data.previous));
+    }
     if (data.visual) {
       const figure = node('figure', '', 'r192-quantity');
       figure.append(node('figcaption', data.visual.label));

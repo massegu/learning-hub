@@ -139,13 +139,22 @@ def cp_ec(page):
     set_level(page, 1)
     open_mode(page, 'EC')
     if current_case(page)!='EC193-01':
-        page.locator('#r192NewRound').press('Enter')
+        new_round_until(page, "__r4Round.id === 'EC193-01'")
     expect(page.locator('#exerciseOptions')).to_have_attribute('data-case','EC193-01')
     page.get_by_role('radio',name='Sí. La regla dice qué hacer al cerrar.').check()
     page.get_by_role('button',name='Comprobar',exact=True).click()
     expect(page.locator('#exerciseFeedback')).to_contain_text('Deja sin decidir el color')
     page.locator('#exerciseNext').click()
-    expect(page.locator('#exerciseOptions')).to_have_attribute('data-case','EC01')
+    assert current_case(page) != 'EC193-01'
+    if not page.evaluate('!!__r4Round.logicEditorial'):
+        new_round_until(page, '__r4Round.logicEditorial')
+    option=page.evaluate('''()=>{
+      const item=__r4Round;
+      return item.presentation.options.find(o=>GliaxR193Editorial.grade(item,{choice:o.id}).status==='correct').label;
+    }''')
+    page.get_by_role('radio',name=option,exact=True).check()
+    page.get_by_role('button',name='Comprobar',exact=True).click()
+    expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status','correct')
     assert_width(page)
 
 
@@ -308,6 +317,8 @@ def executive(page):
     page.get_by_role('button', name='Comprobar', exact=True).press('Enter')
     expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status', 'correct')
     page.locator('#exerciseNext').press('Enter')
+    if page.evaluate('__r4Round.answerModel.kind') != 'priority':
+        new_round_until(page, "__r4Round.answerModel.kind === 'priority' && __r4Round.opts.includes('Enviar el cambio de hora a quienes asisten')")
     assert page.evaluate('__r4Round.answerModel.kind') == 'priority'
     page.get_by_role('radio', name='Enviar el cambio de hora a quienes asisten').check()
     page.get_by_role('button', name='Comprobar', exact=True).press('Enter')

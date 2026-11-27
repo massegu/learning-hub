@@ -7,7 +7,7 @@ const {createSelector}=require('../js/gliax-r192-selector');
 
 test('five authored EC cases use distinct mechanisms and require the right evidence',()=>{
   const expected=['compatible','conflicting','compatible','conflicting','conflicting'];
-  const cases=bank.ids().filter(id=>id.startsWith('EC')).map(id=>bank.get(id,1));
+  const cases=bank.ids().filter(id=>/^EC193-0[1-5]$/.test(id)).map(id=>bank.get(id,1));
   assert.deepEqual(cases.map(item=>item.ageBand),['early','junior','primary','middle','teen']);
   assert.equal(new Set(cases.map(item=>item.cognitiveFingerprint)).size,5);
   for (const [index,item] of cases.entries()) {
@@ -22,25 +22,25 @@ test('five authored EC cases use distinct mechanisms and require the right evide
 });
 
 test('the extended bank adds exact slot coverage without changing the R19.2 references',()=>{
-  for (const id of bank.ids().filter(id=>id.startsWith('EC'))) {
+  for (const id of bank.ids().filter(id=>/^EC193-0[1-5]$/.test(id))) {
     const item=bank.get(id,1);
     const query={family:item.family,ageBand:item.ageBand,level:item.level,seed:1};
     const existing=candidates(query);
     const expanded=candidates({...query,includeEditorial:true});
     assert.equal(existing.length,1);
-    assert.equal(expanded.length,2);
+    assert.ok(expanded.length>=2);
     assert.notEqual(expanded[0].structure,expanded[1].structure);
     assert.notEqual(expanded[0].mechanism,expanded[1].mechanism);
     const selector=createSelector(12,{prioritizeStructuralDiversity:true});
     const ids=Array.from({length:12},()=>selector.next(query,expanded).id);
-    assert.equal(new Set(ids).size,2);
+    assert.ok(new Set(ids).size>=2);
     assert.ok(ids.slice(1).every((id,index)=>id!==ids[index]));
   }
 });
 
 
 test('the balanced pilot covers eight families with alternative plans and rule signals',()=>{
- const newCases=bank.ids().map(id=>bank.get(id,5)).filter(item=>!item.planEditorial);
+ const newCases=bank.ids().map(id=>bank.get(id,5)).filter(item=>!item.planEditorial && !item.logicEditorial);
  assert.equal(newCases.length,12);
  assert.equal(new Set(newCases.map(item=>item.family)).size,8);
  assert.equal(new Set(newCases.map(item=>item.cognitiveFingerprint)).size,12);

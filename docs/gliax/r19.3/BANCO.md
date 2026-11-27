@@ -50,3 +50,9 @@ La muestra prioriza celdas pequeñas y mecanismos identificables. La revisión d
 En Planificación se aceptan todos los órdenes válidos. Cambio de plan parte de un orden que cumplía las condiciones anteriores e incumple exactamente la condición nueva. Supervisión exige marcar el conjunto exacto de incumplimientos. Hay requisitos de posición, consecutividad, separación y precedencia. Los contextos ilustran acciones paralelas realizables por separado. En 6–7 hay cuatro acciones y en edades posteriores puede haber cinco.
 
 La prueba independiente enumeró todos los órdenes para cada caso. El navegador seleccionó un caso del lote desde el selector y lo corrigió mediante sus controles reales. La incorporación técnica no reemplaza una revisión con usuarios. Total acumulado tras este lote: 66 de 500.
+
+## Lote 2. Compatibilidad de reglas y requisitos
+
+60 casos nuevos. Encuentra la contradicción incorpora 24 casos que distinguen compatibilidad demostrable de un conjunto de reglas imposible. Recursos y tiempo incorpora 18 problemas de selección bajo condiciones conjuntas. Cambio de objetivo incorpora 18 problemas en los que una condición nueva invalida exactamente la selección anterior y otras condiciones se mantienen.
+
+La comparación normaliza la tabla de verdad de cada sistema bajo renombrado de elementos y reordenación de reglas. Se excluyen equivalentes y restricciones redundantes. Los distractores de selección incumplen una sola condición. Cuando hay dos soluciones ofrecidas, ambas se aceptan. El feedback muestra una selección válida o una condición concreta que falla. Las pruebas enumeran las selecciones no vacías y comprueban casos imposibles, alternativas y evidencia. El navegador seleccionó un caso del lote y completó su corrección dentro de GLIAX. Total acumulado: 126 de 500.
