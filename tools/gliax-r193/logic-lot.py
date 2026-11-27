@@ -30,7 +30,7 @@ CONTEXTS = {
         ('Equipos para un taller de fotografía', ['Cámara','Trípode','Reflector','Medidor de luz']),
     ],
 }
-TARGETS = {'EC': ('EC',44), 'constraints':('RT',38), 'goal-change':('CO',38)}
+TARGETS = {'EC': ('EC',75), 'constraints':('RT',59), 'goal-change':('CO',59)}
 FIRST_LOT = {'EC':24, 'constraints':18, 'goal-change':18}
 EXTENDED_CONTEXTS={
     'early': [
@@ -121,7 +121,7 @@ def build():
         used=set()
         count=0
         slots=[(age,level) for age in CONTEXTS for level in [1,2,3] if age!='early' or family!='constraints']
-        for index,(age,level) in enumerate(slots*9):
+        for index,(age,level) in enumerate(slots*14):
             if count==target:
                 break
             n=3 if age in ('early','junior') or level==1 else 4
@@ -146,7 +146,7 @@ def build():
                 continue
             rules,options,old,exists,key=shape
             count+=1
-            lot='B2' if count<=FIRST_LOT[family] else 'B5'
+            lot='B2' if count<=FIRST_LOT[family] else 'B5' if count<=FIRST_LOT[family]+20 else 'B7'
             record=dict(id=f'{prefix}193-{lot}-{count:02}',family=family,ageBand=age,level=level,context=context,items=items[:n],
                         rules=rules,structure=':'.join(map(str,key)), options=options,previous=old)
             results.append(record)

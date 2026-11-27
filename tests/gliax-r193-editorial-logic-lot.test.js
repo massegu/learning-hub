@@ -14,6 +14,7 @@ const picked=(value,items)=>items.map((_,i)=>i).filter(i=>(value>>i)%2);
 test('logic lots have distinct rule systems, viable distractors and traceable conflicts',()=>{
   assert.equal(data.filter(row=>row.id.includes('-B2-')).length,60);
   assert.equal(data.filter(row=>row.id.includes('-B5-')).length,60);
+  assert.equal(data.filter(row=>row.id.includes('-B7-')).length,73);
   assert.equal(new Set(data.map(row=>row.family+':'+row.items.length+':'+row.structure)).size,data.length);
   let impossible=0,alternative=0;
   for (const row of data){

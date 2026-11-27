@@ -76,3 +76,7 @@ El lote se mantuvo por debajo de 50 para conservar diferencias entre mecanismos 
 ## Lote 6. Cierre de las familias de orden
 
 63 casos, 21 por familia de Cambio de plan, Planificación y Supervisión. Se conservaron los 114 casos ya publicados con las mismas definiciones e identificadores. El filtro normalizado y la enumeración de las soluciones siguen siendo obligatorios. Cada una de las tres familias alcanza 60 casos contando el piloto. Total acumulado: 345 de 500.
+
+## Lote 7. Cierre de contradicción, restricciones y cambio de objetivo
+
+73 casos. Se añadieron 31 de Encuentra la contradicción, 21 de Recursos y tiempo y 21 de Cambio de objetivo. Los 120 casos de los lotes 2 y 5 conservan todas sus definiciones. Las pruebas exhaustivas preservan las alternativas válidas, prueban el fallo del plan anterior y verifican la necesidad de todas las condiciones. Las tres familias alcanzan respectivamente 80, 60 y 60 casos contando el piloto. Total acumulado: 418 de 500.
