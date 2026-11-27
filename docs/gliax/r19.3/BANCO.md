@@ -72,3 +72,7 @@ El lote se mantuvo por debajo de 50 para conservar diferencias entre mecanismos 
 ## Lote 5. Compatibilidad y revisión de requisitos
 
 60 casos, 20 por familia de Encuentra la contradicción, Recursos y tiempo y Cambio de objetivo. El lote anterior se conserva íntegro. La tabla de verdad normalizada evita duplicaciones. La prueba verificó que cada condición aporta información y que cualquier distractor propuesto infringe solo una condición. Se añadieron contextos de materiales, clasificación y preparación de equipos. Total acumulado: 282 de 500.
+
+## Lote 6. Cierre de las familias de orden
+
+63 casos, 21 por familia de Cambio de plan, Planificación y Supervisión. Se conservaron los 114 casos ya publicados con las mismas definiciones e identificadores. El filtro normalizado y la enumeración de las soluciones siguen siendo obligatorios. Cada una de las tres familias alcanza 60 casos contando el piloto. Total acumulado: 345 de 500.

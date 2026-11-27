@@ -25,6 +25,7 @@ function violations(plan,rules){
 test('the plan lots retain distinct, non-redundant solution spaces',()=>{
   assert.equal(records.filter(record=>record.id.includes('-B1-')).length,54);
   assert.equal(records.filter(record=>record.id.includes('-B4-')).length,60);
+  assert.equal(records.filter(record=>record.id.includes('-B6-')).length,63);
   assert.equal(new Set(records.map(record=>record.id)).size,records.length);
   assert.equal(new Set(records.map(record=>record.family+':'+record.structure)).size,records.length);
   for(const record of records){

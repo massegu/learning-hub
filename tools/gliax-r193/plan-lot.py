@@ -31,7 +31,7 @@ contexts = {
     ],
 }
 
-families = {'planning':('PL',38),'supervision':('SU',38),'CP':('CP',38)}
+families = {'planning':('PL',59),'supervision':('SU',59),'CP':('CP',59)}
 extra_contexts={
     'early': [
         ('Preparar el banco de semillas',['Traer sobres','Poner la caja','Traer las semillas','Poner el aviso']),
@@ -117,7 +117,7 @@ def make():
         seen=set()
         family_count=0
         slots=list(product(contexts,[1,2,3]))
-        for index,(age,level) in enumerate(slots*8):
+        for index,(age,level) in enumerate(slots*12):
             if family_count==target:
                 break
             # Early readers get at most four known actions. Harder cases for
@@ -144,7 +144,7 @@ def make():
                 signature=';'.join(''.join(map(str,order)) for order in key)
                 mechanic={'planning':'coordinate-order', 'supervision':'audit-proposed-order','CP':'revise-with-new-order-condition'}[family]
                 grouping='-'.join(sorted(set(rule[0] for rule in limits)))
-                lot='B1' if family_count<=18 else 'B4'
+                lot='B1' if family_count<=18 else 'B4' if family_count<=38 else 'B6'
                 entry=dict(id=f'{prefix}193-{lot}-{family_count:02}',family=family,ageBand=age,
                            level=level,context=context,steps=labels[:n],rules=limits,structure=signature,
                            mechanic=mechanic+':'+grouping)
