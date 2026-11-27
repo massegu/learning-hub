@@ -209,6 +209,14 @@ def information(page):
         expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status', 'correct')
         if not index:
             page.locator('#exerciseNext').press('Enter')
+    choose_profile(page, 'early')
+    area(page, 'executive').click()
+    set_level(page, 1)
+    open_mode(page, 'IN', 'IN193-B9-01')
+    answer = page.evaluate("()=>__r4Round.answerModel.sets[0].join(' y ')")
+    page.get_by_role('textbox', name='Escribe el dato que falta').fill(answer)
+    page.get_by_role('button', name='Comprobar', exact=True).click()
+    expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status', 'correct')
     assert_width(page)
 
 

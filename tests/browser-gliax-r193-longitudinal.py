@@ -71,14 +71,28 @@ try:
             expect(page.locator('#exerciseOptions')).to_have_attribute('data-level','2')
             expect(page.locator('#r193Adaptive')).to_be_visible()
 
+        def seek(predicate):
+            for _ in range(50):
+                if page.evaluate(predicate):
+                    return
+                page.locator('#r192NewRound').click()
+            raise AssertionError(f'Activity state did not appear: {predicate}')
+
+        def recommendation(text):
+            placeholder = page.locator('#r193Recommendation')
+            expect(placeholder).not_to_be_empty()
+            seek(f"()=>document.querySelector('#r193Recommendation').textContent.includes({json.dumps(text)})")
+            expect(placeholder).to_contain_text(text)
+
         exercise('A','constraints')
-        expect(page.locator('#r193Recommendation')).to_contain_text('nivel 3')
+        recommendation('nivel 3')
         exercise('B','constraints')
-        expect(page.locator('#r193Recommendation')).to_contain_text('reforzar')
+        recommendation('reforzar')
         page.locator('#r193Adaptive').uncheck()
         expect(page.locator('#r193Recommendation')).to_be_empty()
         page.wait_for_function("()=>__profiles.find(p=>p.id==='B').progress.r193Adaptive===false")
         exercise('A','CP')
+        seek("()=>document.querySelector('#exerciseOptions').dataset.case==='CP08'")
         expect(page.locator('#exerciseVisual')).to_contain_text('Práctica registrada al continuar')
         page.get_by_role('radio',name='Ana prepara imágenes. Revisamos al terminar texto e imágenes').check()
         page.get_by_role('button',name='Comprobar',exact=True).click()
@@ -91,11 +105,11 @@ try:
         assert 'Revisamos' not in result['detail']
         page.reload(wait_until='networkidle')
         exercise('A','constraints')
-        expect(page.locator('#r193Recommendation')).to_contain_text('nivel 3')
+        recommendation('nivel 3')
         exercise('B','constraints')
         expect(page.locator('#r193Adaptive')).not_to_be_checked()
         page.locator('#r193Adaptive').check()
-        expect(page.locator('#r193Recommendation')).to_contain_text('reforzar')
+        recommendation('reforzar')
         assert not denied, denied
         browser.close()
     print('PASS: observed save, recovery after reload, profile-specific recommendations, professional override and synthetic Auth.')

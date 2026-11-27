@@ -54,6 +54,8 @@ try:
    for source in (ROOT/'assets/documents').glob('*.png'):assert source.read_bytes() in media,source
   # A real eight-row association table and inverse sequence fit on phone/desktop.
   page.clock.install();it=open_area('memory')
+  options=page.locator('#activityOptions')
+  if not options.evaluate('node=>node.open'):options.locator('summary').click()
   page.evaluate('window.__current=null');page.locator('#exerciseLevelSelect').select_option('3');it=current()
   for n in range(12):
    if it['mechanic']=='memory_association':break

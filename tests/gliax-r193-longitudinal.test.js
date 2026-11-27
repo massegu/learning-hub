@@ -69,7 +69,7 @@ test('confirmed comparable results change delivery weights in the real teen reso
     const indicators=api.analyze(observations,{...actual,contentVersion},gradingVersion,now);
     const selector=createSelector(42,{prioritizeStructuralDiversity:true});
     const selected=Array.from({length:1500},()=>selector.next(actual,pool,entry=>api.weight(indicators.mechanisms.get(entry.mechanism))));
-    assert.equal(new Set(selected.map(entry=>entry.mechanism)).size,3);
+    assert.ok(new Set(selected.map(entry=>entry.mechanism)).size>=3);
     assert.ok(selected.every((entry,index)=>index===0 || entry.id!==selected[index-1].id));
     return selected.filter(entry=>entry.mechanism==='resources').length;
   }

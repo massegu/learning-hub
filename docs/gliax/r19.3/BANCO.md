@@ -9,7 +9,6 @@ La muestra piloto integró **12 casos en las ocho familias**, con feedback espec
 | EC193-03 | 11–12 | 2 | Compatibilidad de márgenes con un extremo incluido y compartido. |
 | EC193-04 | 13–15 | 2 | Ciclo de precedencia entre tres instrucciones aunque cada instrucción aislada sea ejecutable. |
 | EC193-05 | 16–18 | 3 | Paridad tras tres cambios. El número exacto inicial no es necesario. |
-
 | CP193-01 | 8–10 | 2 | Sustituir una tarea sin alterar las asignaciones válidas. |
 | IN193-01 | 11–12 | 2 | Pedir la única dimensión faltante, con interpretación conservadora de la respuesta abierta. |
 | AR193-01 | 13–15 | 1 | Cambiar dos veces de criterio y recuperar la primera regla. Las señales quedan fuera del cómputo. |
@@ -90,3 +89,38 @@ El navegador probó la selección junto a los casos históricos y el test indepe
 ## Lote 9. Datos decisivos en respuestas abiertas
 
 35 casos nuevos de ¿Qué necesitas saber?, distribuidos entre las cinco edades y los tres niveles. Incluyen rutas con un pasillo común, conjuntos solapados, secuencias de eventos recibidos con retraso, comparaciones ponderadas y verificación de restricciones. Se comprobó la admisión de cada respuesta suficiente documentada, el tratamiento conservador de las negaciones y la elegibilidad en el selector. Total acumulado: 500 de 500.
+
+## Integración de los 500 casos
+
+| Familia | Casos nuevos | Estructuras | Mecanismos etiquetados |
+| --- | ---: | ---: | ---: |
+| Cambio de plan | 60 | 60 | 8 |
+| Encuentra la contradicción | 80 | 80 | 37 |
+| ¿Qué necesitas saber? | 60 | 60 | 60 |
+| Actúa con reglas | 60 | 60 | 17 |
+| Planificación | 60 | 60 | 8 |
+| Recursos y tiempo | 60 | 60 | 29 |
+| Cambio de objetivo | 60 | 60 | 23 |
+| Supervisión | 60 | 60 | 8 |
+
+| Edad | Nivel 1 | Nivel 2 | Nivel 3 |
+| --- | ---: | ---: | ---: |
+| 6–7 | 17 | 36 | 28 |
+| 8–10 | 22 | 48 | 36 |
+| 11–12 | 22 | 44 | 42 |
+| 13–15 | 22 | 43 | 40 |
+| 16–18 | 20 | 40 | 40 |
+
+Las 114 celdas habilitadas por familia, edad y nivel disponen de casos nuevos. Actúa con reglas y Recursos y tiempo conservan su exclusión anterior en los tres niveles de 6–7. Los 500 casos son elegibles desde el selector de la práctica real. Las huellas estructurales son únicas dentro de cada familia editorial. Algunos mecanismos se comparten entre estructuras.
+
+El inventario final usa el mismo selector, semilla de sesión y semillas de presentación antes y después de incorporar los casos. Las 114 celdas habilitadas aportan 13.566 transiciones por configuración.
+
+| Repetición consecutiva | Banco anterior | Banco ampliado |
+| --- | ---: | ---: |
+| Caso | 6.069 | 0 |
+| Mecanismo etiquetado | 11.305 | 0 |
+| Estructura | 8.211 | 0 |
+| Contexto | 7.616 | 833 |
+| Estímulo | 2.179 | 0 |
+
+Las celdas con un único candidato pasan de 51 a 0. La simulación seleccionó 1.091 de los 1.331 candidatos disponibles en 120 rondas por celda. La cobertura de los 500 casos se comprobó también directamente en los catálogos elegibles. La prueba con el banco real de Recursos y tiempo registró 488 selecciones del mecanismo de refuerzo frente a 452 con el historial de dominio, sobre 1.500 entregas por perfil sintético. Se conservó la separación por perfil en el navegador con un adaptador de datos local. La integración en Supabase alojado y la revisión editorial con usuarios y profesionales quedan pendientes.
