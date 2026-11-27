@@ -56,3 +56,11 @@ La prueba independiente enumeró todos los órdenes para cada caso. El navegador
 60 casos nuevos. Encuentra la contradicción incorpora 24 casos que distinguen compatibilidad demostrable de un conjunto de reglas imposible. Recursos y tiempo incorpora 18 problemas de selección bajo condiciones conjuntas. Cambio de objetivo incorpora 18 problemas en los que una condición nueva invalida exactamente la selección anterior y otras condiciones se mantienen.
 
 La comparación normaliza la tabla de verdad de cada sistema bajo renombrado de elementos y reordenación de reglas. Se excluyen equivalentes y restricciones redundantes. Los distractores de selección incumplen una sola condición. Cuando hay dos soluciones ofrecidas, ambas se aceptan. El feedback muestra una selección válida o una condición concreta que falla. Las pruebas enumeran las selecciones no vacías y comprueban casos imposibles, alternativas y evidencia. El navegador seleccionó un caso del lote y completó su corrección dentro de GLIAX. Total acumulado: 126 de 500.
+
+## Lote 3. Información faltante y control de reglas
+
+36 casos nuevos. Se incorporaron 24 respuestas abiertas de ¿Qué necesitas saber? para las cinco edades y los tres niveles. Los mecanismos cubren identificación, vigencia, comparación de unidades, datos conjuntos, redondeo y otras inferencias. Se aceptan conceptos equivalentes y conjuntos alternativos suficientes. Si la respuesta queda fuera del vocabulario revisado se marca como no interpretable. La práctica conserva únicamente el resultado categórico.
+
+Actúa con reglas incorpora 12 mecanismos de actualización en las cuatro edades habilitadas. Las señales pueden establecer una excepción temporal, recuperar el criterio previo, intervenir solo en un criterio o aplicar una excepción superior. Se verificaron las trazas de respuesta de cada caso. Las señales están fuera del recuento y no se deducen indicadores de inhibición a partir de esta muestra.
+
+El lote se mantuvo por debajo de 50 para conservar diferencias entre mecanismos y redactar cada necesidad de información. Pasaron las pruebas de corrección, alternativas, errores interpretables, señales y navegación. Total acumulado: 162 de 500.

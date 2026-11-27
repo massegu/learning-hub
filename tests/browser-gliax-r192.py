@@ -195,8 +195,12 @@ def information(page):
     set_level(page, 3)
     open_mode(page, 'IN')
     answers = {'IN06': 'Depende del tiempo de viaje', 'IN-06 complete-data': 'Sí, llego a las 16:50'}
+    if current_case(page) not in answers:
+        new_round_until(page, "['IN06','IN-06 complete-data'].includes(__r4Round.id)")
     first = current_case(page)
     for index in range(2):
+        if index and current_case(page) not in answers:
+            new_round_until(page, "['IN06','IN-06 complete-data'].includes(__r4Round.id)")
         item = current_case(page)
         if index:
             assert item != first
@@ -223,6 +227,18 @@ def rules(page):
     }
 
     def solve():
+        if current_case(page).startswith('AR193-B3-'):
+            events=page.evaluate("()=>{const item=__r4Round;const byId=new Map(GliaxR193EditorialRules.evaluate(item).map(e=>[e.id,e]));return item.presentation.events.map(e=>[e.type,e.label,byId.get(e.id)?.expected]);}")
+            for kind,label,answer in events:
+                expect(page.locator('.r192-rule-label')).to_have_text(label)
+                if kind=='signal':
+                    page.get_by_role('button',name='Continuar',exact=True).press('Enter')
+                else:
+                    if answer!='wait':
+                        page.get_by_role('button',name=answer,exact=True).press('Enter')
+                    page.get_by_role('button',name='Siguiente estímulo').press('Enter')
+            expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status','correct')
+            return
         sequence = schedules[current_case(page)]
         for event in sequence:
             if event is None:
