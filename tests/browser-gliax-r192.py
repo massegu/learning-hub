@@ -227,14 +227,14 @@ def rules(page):
     }
 
     def solve():
-        if current_case(page).startswith('AR193-B3-'):
-            events=page.evaluate("()=>{const item=__r4Round;const byId=new Map(GliaxR193EditorialRules.evaluate(item).map(e=>[e.id,e]));return item.presentation.events.map(e=>[e.type,e.label,byId.get(e.id)?.expected]);}")
+        if current_case(page).startswith(('AR193-B3-','AR193-B8-')):
+            events=page.evaluate("()=>{const item=__r4Round;const grade=item.routingEditorial?GliaxR193EditorialRouting.trials(item):GliaxR193EditorialRules.evaluate(item);const byId=new Map(grade.map(e=>[e.id,e]));return item.presentation.events.map(e=>[e.type,e.label,byId.get(e.id)?.expected]);}")
             for kind,label,answer in events:
                 expect(page.locator('.r192-rule-label')).to_have_text(label)
                 if kind=='signal':
                     page.get_by_role('button',name='Continuar',exact=True).press('Enter')
                 else:
-                    if answer!='wait':
+                    if answer not in ('wait','W'):
                         page.get_by_role('button',name=answer,exact=True).press('Enter')
                     page.get_by_role('button',name='Siguiente estímulo').press('Enter')
             expect(page.locator('#exerciseFeedback')).to_have_attribute('data-status','correct')

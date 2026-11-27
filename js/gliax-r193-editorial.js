@@ -6,6 +6,7 @@
   const logic=typeof module!=='undefined'?require('./gliax-r193-editorial-logic'):root.GliaxR193EditorialLogic;
   const inquiry=typeof module!=='undefined'?require('./gliax-r193-editorial-inquiry'):root.GliaxR193EditorialInquiry;
   const rulesBatch=typeof module!=='undefined'?require('./gliax-r193-editorial-rule-batch'):root.GliaxR193EditorialRules;
+  const routing=typeof module!=='undefined'?require('./gliax-r193-editorial-routing'):root.GliaxR193EditorialRouting;
   const cases = [
     {
       id:'EC193-01', ageBand:'early', level:1, mechanism:'one-way-rule', context:'library-door',
@@ -66,7 +67,7 @@
 
   function get(id, seed) {
     const entry=byId.get(id);
-    if (!entry) return inquiry.get(id) ?? rulesBatch.get(id) ?? logic.get(id,seed) ?? plans.get(id,seed) ?? extended.get(id,seed);
+    if (!entry) return inquiry.get(id) ?? routing.get(id,seed) ?? rulesBatch.get(id) ?? logic.get(id,seed) ?? plans.get(id,seed) ?? extended.get(id,seed);
     const {ageBand,level,mechanism,context,prompt,rows,facts,feedback} = entry;
     const sources=rows.map((text,index)=>({id:'source-'+(index+1),text}));
     const options=[
@@ -82,6 +83,7 @@
   }
 
   function grade(item,response) {
+    if (item.routingEditorial) return routing.grade(item,response);
     if (item.inquiryEditorial) return inquiry.grade(item,response);
     if (item.rulesEditorial) return rulesBatch.grade(item,response);
     if (item.logicEditorial) return logic.grade(item,response);
@@ -94,13 +96,13 @@
       evidenceIds.every(id=>evidence.includes(id));
     return outcome(item.presentation.evidenceRequired&&!exact?'partial':'correct');
   }
-  const ids=()=>[...byId.keys(),...extended.ids(),...plans.ids(),...logic.ids(),...inquiry.ids(),...rulesBatch.ids()];
+  const ids=()=>[...byId.keys(),...extended.ids(),...plans.ids(),...logic.ids(),...inquiry.ids(),...rulesBatch.ids(),...routing.ids()];
   function pool(query) {
     const {family,ageBand,level,seed}=query;
     const baseline=family==='EC'
       ? cases.filter(entry=>entry.ageBand===ageBand&&entry.level===level).map(entry=>get(entry.id,seed))
       : [...extended.pool(query),...plans.pool(query)];
-    return [...baseline,...logic.pool(query),...inquiry.pool(query),...rulesBatch.pool(query)];
+    return [...baseline,...logic.pool(query),...inquiry.pool(query),...rulesBatch.pool(query),...routing.pool(query)];
   }
   const api={ids,pool,get,grade};
   root.GliaxR193Editorial=api;

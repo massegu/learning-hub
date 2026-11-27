@@ -80,3 +80,9 @@ El lote se mantuvo por debajo de 50 para conservar diferencias entre mecanismos 
 ## Lote 7. Cierre de contradicción, restricciones y cambio de objetivo
 
 73 casos. Se añadieron 31 de Encuentra la contradicción, 21 de Recursos y tiempo y 21 de Cambio de objetivo. Los 120 casos de los lotes 2 y 5 conservan todas sus definiciones. Las pruebas exhaustivas preservan las alternativas válidas, prueban el fallo del plan anterior y verifican la necesidad de todas las condiciones. Las tres familias alcanzan respectivamente 80, 60 y 60 casos contando el piloto. Total acumulado: 418 de 500.
+
+## Lote 8. Reglas compuestas y señales
+
+47 casos de Actúa con reglas en las 12 celdas de edad y nivel habilitadas. La prueba deduplicó la pareja de reglas antes y después de la señal mediante tablas de salida invariantes a renombrar los rasgos o intercambiar A y B. Se exige un cambio de respuesta comprobable entre fases. Cada fase presenta las combinaciones de los rasgos de los que depende su regla. Las señales quedan fuera de puntuación y la espera solo se ofrece donde existe una condición explícita.
+
+El navegador probó la selección junto a los casos históricos y el test independiente evaluó cada figura desde los rasgos visibles. Actúa con reglas alcanza 60 casos. Total acumulado: 465 de 500.
