@@ -11,9 +11,10 @@ function fits(selected,[kind,a,b]){
     either:first||second,exactly:Number(first)+Number(second)===1, link:first===second}[kind];
 }
 const picked=(value,items)=>items.map((_,i)=>i).filter(i=>(value>>i)%2);
-test('lot 2 has different non-redundant rule systems, viable distractors and traceable conflicts',()=>{
-  assert.equal(data.length,60);
-  assert.equal(new Set(data.map(row=>row.family+':'+row.items.length+':'+row.structure)).size,60);
+test('logic lots have distinct rule systems, viable distractors and traceable conflicts',()=>{
+  assert.equal(data.filter(row=>row.id.includes('-B2-')).length,60);
+  assert.equal(data.filter(row=>row.id.includes('-B5-')).length,60);
+  assert.equal(new Set(data.map(row=>row.family+':'+row.items.length+':'+row.structure)).size,data.length);
   let impossible=0,alternative=0;
   for (const row of data){
     const item=editorial.get(row.id,'test');
@@ -44,6 +45,6 @@ test('lot 2 has different non-redundant rule systems, viable distractors and tra
     }
     assert.ok(candidates({...row,seed:'test',includeEditorial:true}).some(candidate=>candidate.id===row.id));
   }
-  assert.ok(impossible>0&&impossible<24);
+  assert.ok(impossible>0&&impossible<data.filter(row=>row.family==='EC').length);
   assert.ok(alternative>0);
 });

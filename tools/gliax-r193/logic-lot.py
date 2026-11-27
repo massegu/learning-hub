@@ -30,7 +30,30 @@ CONTEXTS = {
         ('Equipos para un taller de fotografía', ['Cámara','Trípode','Reflector','Medidor de luz']),
     ],
 }
-TARGETS = {'EC': ('EC',24), 'constraints':('RT',18), 'goal-change':('CO',18)}
+TARGETS = {'EC': ('EC',44), 'constraints':('RT',38), 'goal-change':('CO',38)}
+FIRST_LOT = {'EC':24, 'constraints':18, 'goal-change':18}
+EXTENDED_CONTEXTS={
+    'early': [
+        ('Qué poner en la mesa de música',['Pandereta','Caja','Flauta','Maracas']),
+        ('Material para una visita al patio',['Gorra','Botella','Bolsa','Mapa'])
+    ],
+    'junior': [
+        ('Qué llevar a la zona de costura',['Tela','Hilo','Tijeras','Regla']),
+        ('Elementos para mostrar títeres',['Telón','Muñeco','Caja','Linterna'])
+    ],
+    'primary': [
+        ('Piezas para una mesa de astronomía',['Mapa lunar','Linterna','Prismáticos','Soporte']),
+        ('Materiales disponibles para una maqueta',['Cartón','Madera','Cinta','Bridas'])
+    ],
+    'middle': [
+        ('Recursos para analizar una grabación',['Monitor','Auriculares','Altavoz','Interfaz']),
+        ('Instrumentos para un puesto de medición',['Termómetro','Balanza','Probeta','Cronómetro'])
+    ],
+    'teen': [
+        ('Selección de equipo para una demostración de energía',['Batería','Convertidor','Panel solar','Medidor']),
+        ('Preparar un puesto de catalogación',['Cámara','Balanza','Escáner','Portátil'])
+    ],
+}
 
 
 def allows(rule, mask):
@@ -98,11 +121,12 @@ def build():
         used=set()
         count=0
         slots=[(age,level) for age in CONTEXTS for level in [1,2,3] if age!='early' or family!='constraints']
-        for index,(age,level) in enumerate(slots+slots):
+        for index,(age,level) in enumerate(slots*9):
             if count==target:
                 break
             n=3 if age in ('early','junior') or level==1 else 4
-            context,items=CONTEXTS[age][(level-1+index//len(slots))%3]
+            collection=CONTEXTS[age] if count<FIRST_LOT[family] else CONTEXTS[age]+EXTENDED_CONTEXTS[age]
+            context,items=collection[(level-1+index//len(slots))%len(collection)]
             # Alternate satisfiable and contradictory cases where there is a
             # qualified choice; preserve the acceptance predicate either way.
             shape=None
@@ -122,7 +146,8 @@ def build():
                 continue
             rules,options,old,exists,key=shape
             count+=1
-            record=dict(id=f'{prefix}193-B2-{count:02}',family=family,ageBand=age,level=level,context=context,items=items[:n],
+            lot='B2' if count<=FIRST_LOT[family] else 'B5'
+            record=dict(id=f'{prefix}193-{lot}-{count:02}',family=family,ageBand=age,level=level,context=context,items=items[:n],
                         rules=rules,structure=':'.join(map(str,key)), options=options,previous=old)
             results.append(record)
     return results

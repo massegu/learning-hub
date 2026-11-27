@@ -68,3 +68,7 @@ El lote se mantuvo por debajo de 50 para conservar diferencias entre mecanismos 
 ## Lote 4. Espacios de solución más amplios
 
 60 casos, 20 por familia de Planificación, Supervisión y Cambio de plan. Se conservaron íntegros los 54 casos del lote 1. Los nuevos casos se filtraron con la misma equivalencia bajo renombrado, con condiciones no redundantes y con más de un orden válido. Se añadieron contextos de preparación, recepción y préstamo. Los cambios de contexto no cuentan por separado. La verificación enumeró los órdenes, el fallo exacto del plan anterior y las infracciones identificables en Supervisión. Total acumulado: 222 de 500.
+
+## Lote 5. Compatibilidad y revisión de requisitos
+
+60 casos, 20 por familia de Encuentra la contradicción, Recursos y tiempo y Cambio de objetivo. El lote anterior se conserva íntegro. La tabla de verdad normalizada evita duplicaciones. La prueba verificó que cada condición aporta información y que cualquier distractor propuesto infringe solo una condición. Se añadieron contextos de materiales, clasificación y preparación de equipos. Total acumulado: 282 de 500.
