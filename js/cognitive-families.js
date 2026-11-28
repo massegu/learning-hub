@@ -1,6 +1,7 @@
 (function(root){
 'use strict';
 const ages=['early','junior','primary','middle','teen'];
+const ruleDiscovery=typeof module!=='undefined'&&module.exports?require('./gliax-r194-rule-discovery'):root.GliaxR194RuleDiscovery;
 const definitions={
  rules:{title:'Adivina la regla',primaryConstruct:'inductiveReasoning',secondaryLoads:['hypothesisTesting','workingMemory'],functionalPurpose:'Inferir una regla, contrastarla con ejemplos progresivos y aplicarla a un caso nuevo',printable:'interactive-only'},
  wait:{title:'Espera guiada',primaryConstruct:'guidedWaitPractice',secondaryLoads:['externalTimeCue'],functionalPurpose:'Practicar la espera con una señal temporal visible y acompañamiento profesional',printable:'interactive-only'},
@@ -250,7 +251,7 @@ const ruleSets=[
  {id:'measurement',yes:['calculadora','brújula','regla'],no:['guitarra','tijeras','regalo'],rule:'Pulsa al ver algo que sirve para medir o para orientarte. Con los otros objetos, espera.'}
 ];
 function rules(age,level,index){
- const task=root.GliaxR194RuleDiscovery.build(age,level,index);
+ const task=ruleDiscovery.build(age,level,index);
  return {task,scenario:'inductive-rule.'+index,q:'Descubre la regla con los ejemplos.',
    stimulus:[],sample:'Actividad interactiva de descubrimiento progresivo.',
    why:'Compara ejemplos, revisa tu hipótesis y compruébala con un dibujo nuevo.',
