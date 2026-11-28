@@ -29,15 +29,13 @@
     if (!options.length) throw new Error('Documented planning case has no solution');
     const showLabel = id => steps.find(step => step.id === id).label;
     const tokens = shuffled(steps.filter(step => !completed.includes(step.id)), request.seed, key + ':tokens').map(step => step.label);
-    const relevantRules = before.filter(([, b]) => !completed.includes(b));
     const stimulus = [core.text(prompt)];
     if (completed.length) stimulus.push(core.text('Ya está hecho: ' + completed.map(showLabel).join(', ') + '.'));
-    if (!sourceRules) {
-      const rules = shuffled(relevantRules, request.seed, key + ':rules')
-        .map(([a, b]) => 'Para «' + showLabel(b) + '», antes hace falta «' + showLabel(a) + '».');
-      stimulus.push({type: 'list', label: 'Reglas del plan', items: rules});
-    }
-    const q = completed.length ? 'Ordena lo que queda por hacer.' : 'Ordena las acciones respetando las reglas.';
+    // Ordinary procedural sequencing must not disclose each predecessor as a solved chain.
+    // Constraint-based CP cases retain their contextual rules in the authored prompt.
+    const q = completed.length ? 'Ordena lo que queda por hacer.' :
+      sourceRules ? 'Ordena las acciones según las condiciones del encargo.' :
+      'Ordena los pasos para alcanzar el objetivo.';
     const answer = options[0].map(showLabel);
     return core.createItem(request, family, key, {before, completed, steps: steps.length},
       {q, stimulus, tokens}, model,
