@@ -16,24 +16,26 @@ test('cognitive families keep canonical age/level metadata and localized deliver
   for(const field of ['q','sample','cognitiveTask','ageRoute'])assert.throws(()=>families.validate({...it,[field]:'tampered'},age));
   assert.throws(()=>families.validate(it,age==='teen'?'early':'teen'));
  }
- assert.equal(variants,390);assert.equal(scenarios.size,5);assert.ok([...scenarios.values()].every(s=>s.size>=4));
- const teenRules=families.pool('teen','executive',1,'rules').map(it=>JSON.stringify(it.cognitiveTask));for(const label of ['cámara','teléfono','auriculares','calculadora','brújula','regla'])assert.ok(teenRules.some(task=>task.includes(label)),label);
+ assert.equal(variants,330);assert.equal(scenarios.size,4);assert.ok([...scenarios.values()].every(s=>s.size>=4));
+ const teenRules=families.pool('teen','executive',1,'rules').map(it=>it.cognitiveTask);assert.equal(teenRules.length,6);assert.ok(teenRules.every(task=>task.kind==='ruleDiscovery'&&task.cognitiveContract==='inductive_hypothesis_testing'));
  for(const label of ['Cámara','Teléfono','Auriculares','Calculadora','Brújula','Regla'])assert.match(model.visualLabel(label,{iconProfile:profile('teen')}),/class="picture-icon"/);
  for(const age of ages)for(const level of [1,2,3])assert.equal(families.pool(age,'executive',level).some(it=>it.cognitiveTask.kind==='words'),false);
  for(const age of ages)for(const level of [1,2,3]){assert.equal(families.pool(age,'executive',level).some(it=>it.cognitiveTask.kind==='contradiction'),false);assert.equal(families.pool(age,'attention',level).some(it=>it.cognitiveTask.kind==='information'),false);assert.ok(families.pool(age,'attention',level).every(it=>it.cognitiveTask.kind==='contradiction'));}
  for(const age of ages)for(const level of [1,2,3])assert.ok(families.pool(age,'language',level,'words').length>0);
 });
-test('guided waiting is a separate, non-motor practice with levelled visible intervals and no response grading',()=>{
+test('guided waiting is not selected in ordinary practice, while historical content remains valid',()=>{
+ for(const age of ages)for(const level of [1,2,3])assert.ok(families.pool(age,'executive',level).every(it=>it.cognitiveTask.kind!=='guidedWait'));
+
  const rows=ages.flatMap(age=>[1,2,3].map(level=>families.pool(age,'executive',level,'wait')[0]));
  for(const it of rows){const t=it.cognitiveTask;assert.equal(t.kind,'guidedWait');assert.equal(t.answer[0],'complete');assert.equal(it.printable,'interactive-only');assert.equal(it.motorDemand,'none');assert.equal(it.mechanic,'guided_wait_v1');assert.ok(t.intervalMs>0);assert.equal(families.grade(it,['complete']),true);assert.equal(families.grade(it,['act']),false);}
  assert.deepEqual([1,2,3].map(level=>families.pool('early','executive',level,'wait')[0].cognitiveTask.intervalMs),[4000,6000,8000]);
- assert.equal(families.pool('early','executive',1,'rules')[0].cognitiveTask.kind,'rules');
+ assert.equal(families.pool('early','executive',1,'rules')[0].cognitiveTask.kind,'ruleDiscovery');
 });
 test('solutions derive independently from clues, facts, constraints, dependencies and rule history',()=>{
  for(const age of ages)for(const level of [1,2,3])for(const it of [...families.pool(age,'executive',level),...families.pool(age,'attention',level),...families.pool(age,'language',level,'words')]){
   const t=it.cognitiveTask;let answer;
   if(t.kind==='information')assert.match(it.q,new RegExp(`Situación: .+marca exactamente ${t.answer.length} datos que necesitas`,'i'));
-  if(t.kind==='rules'){let inverted=false;answer=t.trials.map(trial=>{if(trial.switchBefore)inverted=!inverted;assert.equal(trial.inverted,inverted);return trial.target!==inverted?'act':'wait';});assert.equal(t.trials.filter(x=>x.switchBefore).length,level-1);}
+  if(t.kind==='ruleDiscovery'){answer=t.answer;assert.equal(t.correctId,level===1?'shape':level===2?'both':'either');assert.ok(t.examples.length>=3);}
   if(t.kind==='guidedWait')answer=t.answer;
   if(t.kind==='words'){
    const valid=t.options.filter(word=>families.wordFits(word,t));assert.equal(valid.length,1);answer=[valid[0]];
