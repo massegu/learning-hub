@@ -14,6 +14,7 @@ await import("./content-quality.js");
 await import("./transfer-content.js");
 await import("./functional-content.js");
 await import("./communication-content.js");
+await import("./gliax-r194-rule-discovery.js");
 await import("./cognitive-families.js");
 await import("./executed-tasks.js");
 await import("./math-sequencing.js");
