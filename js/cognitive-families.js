@@ -282,7 +282,7 @@ function falling(age,level,index){
 const builders={rules,wait:waitPractice,words,deduction,change,information,contradiction,falling},cache=new Map();
 function pool(age,domain,level=1,family=null,revision=1){
  if(!ages.includes(age)||![1,2,3].includes(level)||!['executive','language','middleLanguage','teenLanguage','attention','literacy','reading','middleReading','speedReasoning'].includes(domain))return [];
- const allowed=domain==='executive'?Object.keys(definitions).filter(kind=>!['words','contradiction','falling'].includes(kind)):domain.includes('Language')||domain==='language'?(family==='falling'?['falling']:['words']):domain==='speedReasoning'?(family==='words'||family==='falling'?[family]:[]):['contradiction'];
+ const allowed=domain==='executive'?Object.keys(definitions).filter(kind=>!['words','contradiction','falling','wait'].includes(kind)):domain.includes('Language')||domain==='language'?(family==='falling'?['falling']:['words']):domain==='speedReasoning'?(family==='words'||family==='falling'?[family]:[]):['contradiction'];
  if(family&&!allowed.includes(family))return [];
  const advancedWords=revision>=2&&Boolean(lexicalContexts[age]);
  const key=[age,domain,level,family||'all',revision].join(':');if(cache.has(key))return structuredClone(cache.get(key));const out=[];
