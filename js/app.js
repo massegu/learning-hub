@@ -1364,7 +1364,7 @@
     $('#interactionModeBtn').classList.toggle('hidden',!capability.roomSearch);
     $('#interactionModeBtn').textContent='Busca a tu alrededor';
     $('#interactionModeBtn').setAttribute('aria-pressed',String(interactionOnly&&interactionKind==='room'));
-    const waitAvailable=subject==='executive'&&capability.cognitiveKinds.includes('guidedWait');
+    const waitAvailable=false; // R19.4: waiting is a trial outcome, not a selectable activity.
     const miraAvailable=waitAvailable||supportedInteractionKinds.includes('movement')||supportedInteractionKinds.includes('symbols');
     const miraActive=miraAvailable&&miraOpen;
     $('#interactionKindSwitch').classList.toggle('hidden',!interactionSupport&&!miraAvailable);
