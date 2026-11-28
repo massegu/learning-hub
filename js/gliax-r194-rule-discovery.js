@@ -13,24 +13,27 @@
   ];
   const ages = ['early','junior','primary','middle','teen'];
   const neutral = {name:'gris',hex:'#797e91'};
+  const glyphs={'círculo':'●','cuadrado':'■','triángulo':'▲','estrella':'★','rombo':'◆','corazón':'♥'};
   function build(age,level,index) {
     if (!ages.includes(age) || ![1,2,3].includes(level) || !Number.isInteger(index) || index<0 || index>5) throw Error('R19.4: parámetros de regla incorrectos');
     const [shapeA,shapeB,iconA,iconB] = shapes[index];
     const [colorA,colorB,hexA,hexB] = palettes[index];
     const stimulus=(shape,color)=>({
       id:shape+'-'+color, shape,color,
-      glyph:shape===shapeA?iconA:iconB,
+      glyph:glyphs[shape],
       hex:color===colorA?hexA:color===colorB?hexB:neutral.hex,
       label:shape+' '+color
     });
     const plus=stimulus(shapeA,colorA), neither=stimulus(shapeB,colorB);
     const shapeOnly=stimulus(shapeA,colorB), colorOnly=stimulus(shapeB,colorA);
-    const transfer=stimulus(shapeA,neutral.name);
+    const transfer=level===3
+      ? stimulus(Object.keys(glyphs).find(shape=>shape!==shapeA&&shape!==shapeB),colorA)
+      : stimulus(shapeA,neutral.name);
     const hypotheses=[
-      {id:'shape',label:'Son '+(shapeA==='corazón'?'corazones':shapeA==='estrella'?'estrellas':shapeA==='círculo'?'círculos':shapeA==='triángulo'?'triángulos':shapeA==='cuadrado'?'cuadrados':'rombos')},
+      {id:'shape',label:'Tienen forma de '+shapeA},
       {id:'color',label:'Son de color '+colorA},
-      {id:'both',label:'Son '+shapeA+' y de color '+colorA},
-      {id:'either',label:'Son '+shapeA+' o de color '+colorA}
+      {id:'both',label:'Tienen forma de '+shapeA+' y son de color '+colorA},
+      {id:'either',label:'Tienen forma de '+shapeA+' o son de color '+colorA}
     ];
     const correctId=level===1?'shape':level===2?'both':'either';
     const allowed=level===1?['shape','color','both']:level===2?['shape','color','both']:['shape','color','either'];
@@ -68,7 +71,8 @@
         task.examples[1].belongs!==false || remaining(task,2).length<2 ||
         remaining(task,task.examples.length).length!==1 ||
         remaining(task,task.examples.length)[0].id!==task.correctId ||
-        task.examples.some(e=>e.stimulus.label.includes('undefined'))) {
+        task.examples.some(e=>e.stimulus.label.includes('undefined')) ||
+        task.examples.some(e=>e.stimulus.id===task.transfer.stimulus.id)) {
       throw Error('R19.4: la regla no es inferible o se revela antes de tiempo');
     }
     return true;
