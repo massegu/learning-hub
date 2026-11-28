@@ -311,30 +311,43 @@
     const responses = Object.create(null);
     const card = node('div', '', 'r192-rule-card');
     const controls = node('div', '', 'r192-rule-controls');
-    visual.append(card);
+    const guidance=node('p','Cada tarjeta tiene un tiempo de respuesta. Pulsa solo cuando corresponda; si debes esperar, no pulses.','r192-rule-guidance');
+    visual.append(guidance,card);
     area.append(controls);
-    if (measuresWithholding) {
-      area.prepend(node('p', 'Cuando la regla pida esperar, continúa sin marcar una respuesta.'));
-    }
-    let index = 0;
+    let index = 0, clock = null, stopped = false, started=false;
+    const durationMs = item.level === 1 ? 4500 : item.level === 2 ? 4000 : 3500;
+    function clearClock(){if(clock!==null){clearTimeout(clock);clock=null;}}
+    function cancel(){stopped=true;clearClock();document.removeEventListener('keydown',onKey);}
     function advance() {
-      index++;
+      if(stopped)return;
+      clearClock();index++;
       if (index === events.length) {
-        controls.replaceChildren();
-        finish(responses);
+        controls.replaceChildren();cancel();finish(responses);
       } else render(true);
     }
-
+    function respond(action){
+      if(stopped||!started||events[index]?.type!=='trial')return;
+      started=false;responses[events[index].id]=action;advance();
+    }
+    function onKey(event){
+      if(!started||event.repeat||event.ctrlKey||event.metaKey||event.altKey||event.shiftKey||event.isComposing)return;
+      if(event.target?.closest?.('button,input,select,textarea,a,[contenteditable],[role="button"]'))return;
+      const code=event.code==='Space'&&actions.includes('act')?'act':
+        ['KeyA','KeyB'].includes(event.code)&&actions.includes(event.code.slice(-1))?event.code.slice(-1):null;
+      if(code){event.preventDefault();respond(code);}
+    }
+    document.addEventListener('keydown',onKey);
     function render(focus) {
+      if(stopped)return;
+      clearClock();started=false;
       const event = events[index];
       const signal = event.type === 'signal';
       card.dataset.event = signal ? 'signal' : 'trial';
       const label = node('p', event.label, 'r192-rule-label');
       label.tabIndex = -1;
-      card.replaceChildren();
-      controls.replaceChildren();
+      card.replaceChildren();controls.replaceChildren();
       if (signal) {
-        card.append(node('strong', 'Señal de regla'), label);
+        card.append(node('strong', 'Señal de cambio'), label);
         controls.append(button('Continuar', advance, 'primary-btn'));
       } else {
         const {form, color, name, border, star, letter} = event.stimulus;
@@ -353,24 +366,27 @@
           card.append(picture);
         }
         card.append(label);
-        let selected = null;
-        const choices = actions.map(action => {
-          const control = button(action === 'act' ? 'Responder' : action, () => {
-            selected = selected === action ? null : action;
-            choices.forEach(({key, control}) => control.setAttribute('aria-pressed', String(key === selected)));
-          });
-          control.setAttribute('aria-pressed', 'false');
-          return {key: action, control};
-        });
-        controls.append(...choices.map(({control}) => control), button('Siguiente estímulo', () => {
-          responses[event.id] = selected;
-          advance();
-        }, 'primary-btn'));
+        const timing=node('div',undefined,'r194-response-timer');
+        const fill=node('span',undefined,'r194-response-timer-fill');
+        fill.style.animationDuration=durationMs+'ms';
+        timing.append(fill);timing.setAttribute('role','timer');
+        timing.setAttribute('aria-label','Tiempo disponible para responder');
+        card.append(timing);
+        for(const action of actions)controls.append(button(action==='act'?'Responder':action,()=>respond(action),'primary-btn'));
+        started=true;
+        clock=setTimeout(()=>respond('wait'),durationMs);
       }
       if (focus) label.focus();
     }
-
+    function visibility(){if(document.hidden&&!stopped){
+      cancel();card.replaceChildren(node('p','Actividad interrumpida. Vuelve a iniciar la ronda; no se registrará este intento.'));
+      controls.replaceChildren();
+    }}
+    document.addEventListener('visibilitychange',visibility);
+    const originalCancel=cancel;
+    // The returned cleanup removes both event listeners on unmount.
     render(false);
+    return ()=>{originalCancel();document.removeEventListener('visibilitychange',visibility);};
   }
 
   function mount(item, ui) {
@@ -423,6 +439,7 @@
       repeat.disabled = false;
       next.focus();
     }
+    let stopRuleAction = null;
     const grade = item.editorial ? root.GliaxR193Editorial.grade : modes[item.family].grade ?? root.GliaxR192Bank.gradeCase;
     const finish = response => publish(grade(item, response));
     if (item.planEditorial) renderEditorialPlan(item,ui,finish);
@@ -431,11 +448,12 @@
     else if (item.family === 'CP') renderPlan(item, ui, finish);
     else if (item.family === 'EC') renderSources(item, ui, finish);
     else if (item.family === 'IN') renderInformation(item, ui, publish);
-    else if (item.family === 'AR') renderRuleAction(item, ui, finish);
+    else if (item.family === 'AR') stopRuleAction = renderRuleAction(item, ui, finish);
     else renderExecutive(item, ui, finish);
     area.append(repeat);
     prompt.focus();
     return () => {
+      stopRuleAction?.();
       if (ui.observe) document.removeEventListener('visibilitychange', visibilityChanged);
       area.replaceChildren();
       visual.replaceChildren();
