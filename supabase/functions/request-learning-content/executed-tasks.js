@@ -78,13 +78,13 @@ function pool(age,domain,level=1,revision=4){
     answer=execution.steps;
     q='Elige los pasos necesarios, ordénalos y deja fuera los que sobran.';
     paperQuestion=q+' Escribe la secuencia.';
-    const rules=execution.dependencies.map(([a,b])=>'«'+execution.steps[b]+'» requiere haber hecho «'+execution.steps[a]+'».').reverse();
-    stimulus=[{type:'text',text:older?'Prepara la entrega con las condiciones del equipo.':setting},{type:'list',items:rules},{type:'list',label:'Tarjetas disponibles',items:execution.choices}];
+    const context=older?(home?'Necesitas preparar un único archivo comprimido para compartir los documentos solicitados. Comprueba que contiene lo necesario y envíalo al equipo.':'Debes preparar un informe fiable y entregarlo al terminar.'):(home?'Quieres dejar el material dentro de la caja y llevarla cerrada, sin olvidar comprobar el contenido.':'Quieres preparar la mochila para salir y comprobar que lleva todo lo necesario.');
+    stimulus=[{type:'text',text:context},{type:'list',label:'Tarjetas disponibles',items:execution.choices}];
     feedback='Comprueba los pasos necesarios y respeta qué debe ocurrir antes de cada acción.';
    }else{
    const steps=home?['Abrir la caja','Guardar el material','Cerrar la caja','Pegar la etiqueta','Llevar la caja']:['Abrir la mochila','Guardar el cuaderno','Cerrar la mochila','Colgar la mochila','Preparar la salida'];
    execution.steps=steps.slice(0,count);if(early&&level===3)execution.steps=['Guardar el material','Comprobar el contenido','Cerrar la caja'];execution.dependencies=execution.steps.slice(1).map((_,i)=>[i,i+1]);answer=execution.steps;q='Haz el encargo: pulsa los pasos en el orden necesario.';paperQuestion='Ordena los pasos respetando las dependencias.';
-   stimulus=[{type:'text',text:setting},{type:'list',items:execution.dependencies.map(([a,b])=>'Antes de «'+execution.steps[b]+'», termina «'+execution.steps[a]+'».')}];feedback='Completar primero cada requisito permite ejecutar el plan sin saltarse pasos.';
+   stimulus=[{type:'text',text:home?'Quieres preparar una caja y llevarla lista, con el material guardado.':'Quieres dejar la mochila preparada para salir.'},{type:'list',label:'Acciones disponibles',items:[...execution.steps].reverse()}];feedback='Completar primero cada requisito permite ejecutar el plan sin saltarse pasos.';
    }
   }else{
    execution.trials=Array.from({length:early?2+level*2:4+level*2},(_,i)=>({symbol:(i+offset)%3===0?'pelota':'libro',reversed:kind==='switch'&&i>=Math.floor((early?2+level*2:4+level*2)/2)}));
