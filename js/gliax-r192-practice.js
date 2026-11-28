@@ -314,16 +314,20 @@
     const guidance=node('p','Cada tarjeta tiene un tiempo de respuesta. Pulsa solo cuando corresponda; si debes esperar, no pulses.','r192-rule-guidance');
     visual.append(guidance,card);
     area.append(controls);
-    let index = 0, clock = null, stopped = false, started=false;
+    let index = 0, clock = null, transition = null, stopped = false, started=false;
     const durationMs = item.level === 1 ? 4500 : item.level === 2 ? 4000 : 3500;
-    function clearClock(){if(clock!==null){clearTimeout(clock);clock=null;}}
+    function clearClock(){if(clock!==null){clearTimeout(clock);clock=null;}if(transition!==null){clearTimeout(transition);transition=null;}}
     function cancel(){stopped=true;clearClock();document.removeEventListener('keydown',onKey);}
     function advance() {
       if(stopped)return;
       clearClock();index++;
       if (index === events.length) {
         controls.replaceChildren();cancel();finish(responses);
-      } else render(true);
+      } else {
+        card.replaceChildren(node('p','Próxima figura...'));
+        controls.replaceChildren();
+        transition=setTimeout(()=>render(true),500);
+      }
     }
     function respond(action){
       if(stopped||!started||events[index]?.type!=='trial')return;
