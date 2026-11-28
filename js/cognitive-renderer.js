@@ -3,6 +3,7 @@
 function mount(item,{visual,area,onFinish,onSkip}){
  root.CognitiveFamilies.validate(item);const t=item.cognitiveTask;
  if(t.kind==='falling')return root.FallingWords.mount(item,{visual,area,onFinish});
+ if(t.kind==='ruleDiscovery')return root.GliaxR194RuleDiscovery.mount(item,{visual,area,onFinish});
  const wordMetrics=mode=>({schema:'gliax.exercise-metrics.v1',modality:'word_fit',definition_version:t.accepted?3:2,response_mode:mode,purpose:item.domain==='speedReasoning'?'lexical_selection':'lexical_search'});let stopped=false,finished=false,timer=null,round=0,trialOpen=false,response=[],trialStartedAt=0,ruleStats=[];
  const n=(tag,text,cls)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(cls)el.className=cls;return el;};
  const b=(label,fn)=>{const el=n('button',label,'secondary-btn');el.type='button';el.onclick=fn;return el;};
