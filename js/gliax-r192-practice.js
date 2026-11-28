@@ -379,8 +379,11 @@
       if (focus) label.focus();
     }
     function visibility(){if(document.hidden&&!stopped){
-      cancel();card.replaceChildren(node('p','Actividad interrumpida. Vuelve a iniciar la ronda; no se registrará este intento.'));
-      controls.replaceChildren();
+      cancel();card.replaceChildren(node('p','Actividad interrumpida. Este intento no se registra.'));
+      controls.replaceChildren(button('Reiniciar sin registrar',()=>{
+        index=0;started=false;stopped=false;for(const key of Object.keys(responses))delete responses[key];
+        document.addEventListener('keydown',onKey);render(false);
+      },'primary-btn'));
     }}
     document.addEventListener('visibilitychange',visibility);
     const originalCancel=cancel;
