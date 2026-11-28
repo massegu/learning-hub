@@ -11,3 +11,8 @@
 #appShell .r194-rule-options button[aria-pressed=true]{border-color:#e52986;background:#fff0f8;box-shadow:0 0 0 2px #e5298628}
 #appShell .r194-rule-options button:focus-visible{outline:3px solid #4775f5;outline-offset:2px}
 @media(max-width:580px){#appShell .r194-rule-evidence{gap:.5rem}#appShell .r194-rule-group{padding:.65rem}#appShell .r194-rule-options{grid-template-columns:1fr}}
+
+/* The same neutral countdown appears for action and no-go stimuli. */
+#appShell .r194-response-timer{height:.45rem;overflow:hidden;border-radius:999px;background:#dfe3f2;margin:.75rem 0 0;width:100%}
+#appShell .r194-response-timer-fill{display:block;height:100%;width:100%;transform-origin:left center;background:#4775f5;animation-name:r194-time-shrink;animation-timing-function:linear;animation-fill-mode:forwards}
+@keyframes r194-time-shrink{from{transform:scaleX(1)}to{transform:scaleX(0)}}
