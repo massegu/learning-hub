@@ -98,9 +98,9 @@ function mount(item,{visual,area,onFinish,iconProfile}){
   if(task.kind==='plan'){
    if(task.choices){
     visual.append(node('p',item.stimulus[0].text));
-    const rules=node('ul',undefined,'plan-constraints');item.stimulus[1].items.forEach(text=>rules.append(node('li',text)));visual.append(rules);
+    if(item.stimulus[1]?.label!=='Tarjetas disponibles'){const rules=node('ul',undefined,'plan-constraints');item.stimulus[1].items.forEach(text=>rules.append(node('li',text)));visual.append(rules);}
     arrangePlan();
-   }else{visual.append(node('p',[...item.stimulus[1].items].reverse().join(' ')));sequence([...task.steps].reverse());}
+   }else{visual.append(node('p',item.stimulus[0].text));sequence([...task.steps].reverse());}
    return;
   }
   if(task.kind==='cancel'){visual.append(node('p','Modelos'));task.targets.forEach(x=>visual.append(picture(x)));selection(task.cells);return;}
