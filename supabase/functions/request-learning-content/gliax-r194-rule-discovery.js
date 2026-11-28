@@ -83,7 +83,7 @@
       transferChoice=null,atTransfer=false,examplesRequested=0;
     const node=(tag,text,className)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(className)el.className=className;return el;};
     const button=(label,action)=>{const el=node('button',label,'secondary-btn');el.type='button';el.onclick=action;return el;};
-    const title=node('p','Mira los ejemplos y descubre qué tienen en común.','cognitive-status');
+    const title=node('p',task.ageBand==='early'?'Mira los dibujos. Piensa por qué algunos van juntos.':'Mira los ejemplos y descubre qué tienen en común.','cognitive-status');
     title.setAttribute('role','status');
     function sample(sample) {
       const row=node('div',undefined,'r194-rule-sample'),glyph=node('span',sample.stimulus.glyph,'r194-rule-glyph');
@@ -100,6 +100,20 @@
       task.examples.slice(0,shown).forEach(e=>(e.belongs?yes:no).append(sample(e)));
       evidence.append(yes,no);visual.replaceChildren(title,evidence);
       area.replaceChildren();
+      if(task.ageBand==='early'&&root.speechSynthesis&&root.SpeechSynthesisUtterance){
+        const speak=button('Escuchar la consigna',()=>{
+          root.speechSynthesis.cancel();
+          const spoken=!atTransfer
+            ? 'Mira los dibujos. Los de una caja van juntos. ¿Qué crees que tienen en común? '+
+              task.hypotheses.map(h=>h.label).join('. ')
+            : 'Ahora mira el dibujo nuevo. ¿Cumple la regla? Elige sí o no.';
+          const utterance=new root.SpeechSynthesisUtterance(spoken);
+          utterance.lang='es-ES';utterance.rate=.9;
+          root.speechSynthesis.speak(utterance);
+        });
+        speak.setAttribute('aria-label','Escuchar las instrucciones de este ejercicio');
+        area.append(speak);
+      }
       if(!atTransfer) {
         area.append(node('p','¿Cuál crees que es la regla?','gliax-instruction'));
         const options=node('div',undefined,'r194-rule-options');
@@ -154,7 +168,7 @@
       onFinish(ruleCorrect&&transferCorrect,explanation,metrics);
     }
     render();
-    return ()=>{stopped=true;};
+    return ()=>{stopped=true;if(task.ageBand==='early')root.speechSynthesis?.cancel();};
   }
   const api={build,remaining,validate,mount};
   root.GliaxR194RuleDiscovery=api;
