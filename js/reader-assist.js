@@ -1,6 +1,6 @@
 (function(root){
  'use strict';
- const defaults={scale:1,spacing:false,warm:false,font:false};
+ const defaults={scale:1,spacing:false,warm:false,font:false,wordColors:false};
  const key='lh_reader_assist_v1';
  const reviewed=new Map([
   ['acción',['ac','ción']],['árbol',['ár','bol']],['biblioteca',['bi','blio','te','ca']],
@@ -36,10 +36,10 @@
   const state=read(),toolbar=document.createElement('section');
   const registry=root.CSS?.highlights;
   const highlightSupported=Boolean(registry&&root.Highlight);
-  let color=false,guide=false,line=0,lines=[];
+  let color=Boolean(state.wordColors),guide=false,line=0,lines=[];
   toolbar.className='reader-assist';toolbar.setAttribute('aria-label','Ayudas opcionales para leer');
   toolbar.innerHTML='<strong>Ayudas para leer</strong><button type="button" data-action="smaller" aria-label="Reducir tamaño del texto">A−</button><button type="button" data-action="larger" aria-label="Aumentar tamaño del texto">A+</button><button type="button" data-action="spacing" aria-pressed="false">Más espacio</button><button type="button" data-action="warm" aria-pressed="false">Fondo cálido</button><button type="button" data-action="font" aria-pressed="false">Letra clara</button><button type="button" data-action="speak">Leer en voz alta</button>';
-  if(highlightSupported)toolbar.insertAdjacentHTML('beforeend','<button type="button" data-action="syllables" aria-pressed="false">Colorear sílabas</button><button type="button" data-action="guide" aria-pressed="false">Guía de lectura</button><div class="reader-guide-nav" hidden><button type="button" data-action="prior">Línea anterior</button><button type="button" data-action="next">Línea siguiente</button><span role="status"></span></div>');
+  if(highlightSupported)toolbar.insertAdjacentHTML('beforeend','<button type="button" data-action="words" aria-pressed="false">Colorear palabras</button><button type="button" data-action="guide" aria-pressed="false">Guía de lectura</button><div class="reader-guide-nav" hidden><button type="button" data-action="prior">Línea anterior</button><button type="button" data-action="next">Línea siguiente</button><span role="status"></span></div>');
   container.prepend(toolbar);
   const button=action=>toolbar.querySelector(`[data-action="${action}"]`);
   const range=(node,start,end)=>{
@@ -58,17 +58,15 @@
   }
   function paintColors(){
    if(!highlightSupported)return;
-   registry.delete('gliax-syllable-a');registry.delete('gliax-syllable-b');
+   for(const name of ['gliax-syllable-a','gliax-syllable-b','gliax-word-a','gliax-word-b','gliax-word-c','gliax-word-d'])registry.delete(name);
    if(!color)return;
-   const marks=[[],[]];
-   for(const {text,start,value} of tokens()){
-    let at=start;
-    syllables(value)?.forEach((part,i)=>{
-     marks[i%2].push(range(text,at,at+part.length));at+=part.length;
-    });
+   const marks=[[],[],[],[]];
+   tokens().forEach(({text,start,value},index)=>{
+    marks[index%4].push(range(text,start,start+value.length));
+   });
+   for(let i=0;i<marks.length;i++){
+    registry.set(['gliax-word-a','gliax-word-b','gliax-word-c','gliax-word-d'][i],new root.Highlight(...marks[i]));
    }
-   registry.set('gliax-syllable-a',new root.Highlight(...marks[0]));
-   registry.set('gliax-syllable-b',new root.Highlight(...marks[1]));
   }
   function paintGuide(rebuild=false){
    if(!highlightSupported)return;
@@ -99,7 +97,7 @@
     for(const [name,on] of [['wide-spacing',state.spacing],['warm',state.warm],['clear-font',state.font]])p.classList.toggle('reader-'+name,on);
    }
    for(const name of ['spacing','warm','font'])button(name).setAttribute('aria-pressed',String(state[name]));
-   button('syllables')?.setAttribute('aria-pressed',String(color));
+   button('words')?.setAttribute('aria-pressed',String(color));
    button('guide')?.setAttribute('aria-pressed',String(guide));
    paintColors();paintGuide(true);
   };
@@ -111,7 +109,7 @@
    if(action==='smaller')state.scale=Math.max(.85,Math.round((state.scale-.1)*100)/100);
    else if(action==='larger')state.scale=Math.min(1.6,Math.round((state.scale+.1)*100)/100);
    else if(action==='spacing'||action==='warm'||action==='font')state[action]=!state[action];
-   else if(action==='syllables')color=!color;
+   else if(action==='words'){color=!color;state.wordColors=color;}
    else if(action==='guide'){guide=!guide;line=0;}
    else if(action==='prior'||action==='next'){
     line+=action==='prior'?-1:1;paintGuide();return;
@@ -128,7 +126,7 @@
   });
   return ()=>{
    stop();toolbar.remove();root.removeEventListener('resize',resize);
-   for(const name of ['gliax-syllable-a','gliax-syllable-b','gliax-reading-line'])registry?.delete(name);
+   for(const name of ['gliax-syllable-a','gliax-syllable-b','gliax-word-a','gliax-word-b','gliax-word-c','gliax-word-d','gliax-reading-line'])registry?.delete(name);
    for(const p of paragraphs){
     p.style.removeProperty('--reader-scale');p.classList.remove('reader-wide-spacing','reader-warm','reader-clear-font');
    }
