@@ -106,6 +106,18 @@ function validate(item,age){
  for(const field of ['type','q','paperQuestion','stimulus','sample','execution','primaryConstruct','memorySystem','secondaryLoads','readingDemand','visualDemand','motorDemand','mechanic','qualityDescriptor'])if(JSON.stringify(item[field])!==JSON.stringify(expected[field]))throw Error('La fuente o respuesta interactiva ha cambiado: '+field);
  return true;
 }
-function grade(item,response){validate(item);if(!Array.isArray(response))return false;const actual=response.map(String),expected=item.execution.answer.map(String);return JSON.stringify(item.execution.ordered?actual:[...new Set(actual)].sort())===JSON.stringify(item.execution.ordered?expected:[...expected].sort());}
-const api={pool,validate,grade,definitions,comparisonFormats};root.ExecutedTasks=api;if(typeof module!=='undefined')module.exports=api;
+function validPlanOrder(steps,dependencies,submitted){
+ if(!Array.isArray(steps)||!Array.isArray(dependencies)||!Array.isArray(submitted))return false;
+ if(new Set(submitted).size!==steps.length||submitted.length!==steps.length||steps.some(step=>!submitted.includes(step)))return false;
+ return dependencies.every(([before,after])=>Number.isInteger(before)&&Number.isInteger(after)&&
+   before>=0&&after>=0&&before<steps.length&&after<steps.length&&
+   submitted.indexOf(steps[before])<submitted.indexOf(steps[after]));
+}
+function grade(item,response){
+ validate(item);if(!Array.isArray(response))return false;
+ const actual=response.map(String),expected=item.execution.answer.map(String);
+ if(item.execution.kind==='plan')return validPlanOrder(item.execution.steps,item.execution.dependencies,actual);
+ return JSON.stringify(item.execution.ordered?actual:[...new Set(actual)].sort())===JSON.stringify(item.execution.ordered?expected:[...expected].sort());
+}
+const api={pool,validate,grade,validPlanOrder,definitions,comparisonFormats};root.ExecutedTasks=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);
