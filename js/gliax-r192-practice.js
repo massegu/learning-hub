@@ -373,8 +373,7 @@
         const timing=node('div',undefined,'r194-response-timer');
         const fill=node('span',undefined,'r194-response-timer-fill');
         fill.style.animationDuration=durationMs+'ms';
-        timing.append(fill);timing.setAttribute('role','timer');
-        timing.setAttribute('aria-label','Tiempo disponible para responder');
+        timing.append(fill);timing.setAttribute('aria-hidden','true');
         card.append(timing);
         for(const action of actions)controls.append(button(action==='act'?'Responder':action,()=>respond(action),'primary-btn'));
         started=true;
